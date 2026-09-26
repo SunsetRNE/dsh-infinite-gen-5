@@ -43,6 +43,12 @@
           flex: "none"
         };
         var FLASH_MS = 2500;
+        var BADGE_TITLE = "无限五代 v0.5.1";
+
+        // 同机若还装着上一代破甲插件，它的徽标也挂在同一个输入框上方 —— 两条绿条叠在一起。
+        // 五代是接替者：接管显示，把上一代徽标折叠掉（对方仍在内核层运行，只是不重复显示）。
+        // 只在五代自己拿到投影数据时才折叠；拿不到就保留对方的，避免两条都不显示。
+        var FOREIGN_BADGE = /^无限[三四]代/;
 
         function ArmorDock(props) {
           var useProjection = props.useProjection;
@@ -53,6 +59,7 @@
           var armor4 = canProject ? useProjection("armor") : undefined;
           var armor = armor5 !== undefined ? armor5 : armor4;
 
+          var badgeRef = react.useRef(null);
           var lastVerdictRef = react.useRef(null);
           var flashUntilRef = react.useRef(0);
           var tickPair = react.useState(0);
@@ -68,6 +75,52 @@
             }
             return function () { if (styleEl) styleEl.remove(); };
           }, []);
+
+          var foldable = armor !== undefined;
+          react.useEffect(function () {
+            if (!foldable) return undefined;
+            var node = badgeRef.current;
+            if (!node || !node.ownerDocument) return undefined;
+            var doc = node.ownerDocument;
+            var folded = [];
+            var lastFolded = -1;
+            var scan = function () {
+              var all = doc.querySelectorAll("[data-armor]");
+              for (var i = 0; i < all.length; i++) {
+                var n = all[i];
+                if (n === node) continue;
+                var t = n.getAttribute("title") || "";
+                if (!FOREIGN_BADGE.test(t)) continue;
+                if (n.style.display !== "none") {
+                  n.style.display = "none";
+                  n.setAttribute("data-armor-folded-by", "gen5");
+                  folded.push(n);
+                }
+              }
+              if (folded.length !== lastFolded) {
+                lastFolded = folded.length;
+                node.setAttribute(
+                  "title",
+                  folded.length > 0
+                    ? BADGE_TITLE + " · 已折叠上一代破甲徽标 x" + folded.length
+                    : BADGE_TITLE,
+                );
+              }
+            };
+            scan();
+            var mo = typeof MutationObserver === "function"
+              ? new MutationObserver(scan)
+              : null;
+            if (mo) mo.observe(doc.body || doc.documentElement, { childList: true, subtree: true });
+            return function () {
+              if (mo) mo.disconnect();
+              for (var i = 0; i < folded.length; i++) {
+                folded[i].style.display = "";
+                folded[i].removeAttribute("data-armor-folded-by");
+              }
+              folded.length = 0;
+            };
+          }, [foldable]);
 
           react.useEffect(function () {
             var v = armor && armor.verdict ? armor.verdict : null;
@@ -85,7 +138,7 @@
           var showVerdict = !running && lastVerdictRef.current !== null &&
             Date.now() < flashUntilRef.current;
 
-          var text = "无限五代 v0.5.0";
+          var text = BADGE_TITLE;
           var dotStyle = Object.assign({}, DOT_STYLE);
           var badgeStyle = Object.assign({}, BADGE_STYLE);
 
@@ -110,7 +163,7 @@
             { style: WRAP_STYLE },
             react.createElement(
               "div",
-              { style: badgeStyle, "data-armor": "on", title: "无限五代 v0.5.0" },
+              { style: badgeStyle, ref: badgeRef, "data-armor": "gen5", title: BADGE_TITLE },
               react.createElement("span", { style: dotStyle }),
               react.createElement("span", null, text)
             )

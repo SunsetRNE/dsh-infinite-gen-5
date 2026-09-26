@@ -1,7 +1,7 @@
 {
   "name": "dsh-infinite-gen-5",
-  "version": "0.5.0",
-  "description": "DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.5.0：双层协同注入内核 + 零工具面纯净直出，融合通用内核与强化镜像车道、profile 元数据工具、实时会话投影与客户端状态条。",
+  "version": "0.5.1",
+  "description": "DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.5.1：单内核注入 + Order 200 末位锚点，同源载荷自动让位（不再双份重复），profile 元数据工具、实时会话投影与客户端状态条。",
   "type": "module",
   "main": "./index.js",
   "repository": {
@@ -31,6 +31,7 @@
     "harness:check": "node --check index.js && node --check client.js",
     "verify": "node scripts/verify_prompt_gen5.mjs",
     "verify:gen5": "node scripts/verify_prompt_gen5.mjs",
+    "verify:dedupe": "node scripts/verify_dedupe.mjs",
     "verify:gen51": "node scripts/verify_prompt_gen51.mjs",
     "verify:gen4": "node scripts/verify_prompt_gen4.mjs",
     "verify:gen41": "node scripts/verify_prompt_gen41.mjs"
@@ -38,7 +39,7 @@
   "dsh": {
     "id": "dsh-infinite-gen-5",
     "name": "无限五代",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "repo": "SunsetRNE/dsh-infinite-gen-5",
     "permissions": "系统提示词注入, 客户端状态条",
     "bundle": {

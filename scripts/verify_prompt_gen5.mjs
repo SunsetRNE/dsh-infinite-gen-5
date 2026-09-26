@@ -1,4 +1,4 @@
-// 无限五代 v0.5.0 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.5.1 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -16,6 +16,8 @@ const INJECTED_PROMPT_FILES = [
 ];
 const INDEX_PATH = join(ROOT, "index.js");
 const PKG_PATH = join(ROOT, "package.json");
+// 版本号只在 package.json 里声明一次；这里的断言全部从它读，避免改版本时漏改断言。
+const VERSION = existsSync(PKG_PATH) ? JSON.parse(readFileSync(PKG_PATH, "utf8")).version : "0.0.0";
 // 用例库：优先新名，若工作区仍是更名前路径则回落到旧名（legacy redirect）
 const BANK_PATH =
   ["tests/prompt-bank-gen5.jsonl", "tests/prompt-bank-gen4.jsonl"]
@@ -124,7 +126,14 @@ mustContain(indexSrc, '"./prompts/infinite-gen-5.1-flash.md"', "载入 Order 200
 mustContain(indexSrc, "infinite-gen-5:global-system-prompt", "系统提示词 Order 100 注入");
 mustContain(indexSrc, "infinite-gen-5:dual-layer-reinforce", "系统提示词 Order 200 注入");
 mustContain(indexSrc, "DUAL_LAYER_INJECTION", "双段注入开关");
-mustContain(indexSrc, 'pluginVersion: "0.5.0"', "内核版本 0.5.0");
+mustContain(indexSrc, `pluginVersion: "${VERSION}"`, `内核版本 ${VERSION}`);
+// v0.5.1 注入去重：Order 200 默认只放短锚点，且注册前先查同源载荷
+mustContain(indexSrc, 'const LAYER2_MODE = "anchor"', "Order 200 默认末位锚点模式");
+mustContain(indexSrc, "const ANCHOR_TEXT =", "定义了末位锚点文本");
+mustContain(indexSrc, "const DEDUPE_PAYLOAD = true", "默认开启同源载荷去重");
+mustContain(indexSrc, "function findSameKernel", "同源判定函数存在");
+mustContain(indexSrc, "function hostSections", "宿主段枚举存在");
+check(!indexSrc.includes("text: PROMPT41_TEXT"), "Order 200 不再默认载入第二份完整内核");
 mustContain(indexSrc, "infinite_gen5_profile", "保留 profile 元数据工具");
 mustContain(indexSrc, "armorProjectionApply", "保留会话投影评分器");
 mustContain(indexSrc, "stateVersion: 3", "投影版本 stateVersion 3");
@@ -146,15 +155,21 @@ check(!existsSync(join(ROOT, "specialists")), "纯净架构: 零外部专家清�
 // ---- 5. package.json 规范断言 ----
 const pkg = existsSync(PKG_PATH) ? JSON.parse(readFileSync(PKG_PATH, "utf8")) : {};
 check(pkg.name === "dsh-infinite-gen-5", "package.json name = dsh-infinite-gen-5");
-check(pkg.version === "0.5.0", "package.json version = 0.5.0");
+check(pkg.version === VERSION, `package.json version = ${VERSION}`);
 check(pkg.dsh?.id === "dsh-infinite-gen-5", "dsh.id = dsh-infinite-gen-5");
-check(pkg.dsh?.version === "0.5.0", "dsh.version = 0.5.0");
+check(pkg.dsh?.version === VERSION, `dsh.version = ${VERSION}`);
 check(pkg.exports?.["./client"] === "./client.js", "client 导出映射对齐三代标准");
 
 // ---- 6. 客户端状态条版本 ----
 const clientSrc = existsSync(join(ROOT, "client.js")) ? readFileSync(join(ROOT, "client.js"), "utf8") : "";
-mustContain(clientSrc, '"无限五代 v0.5.0"', "小绿标文案 = 无限五代 v0.5.0");
+mustContain(clientSrc, `"无限五代 v${VERSION}"`, `小绿标文案 = 无限五代 v${VERSION}`);
+// v0.5.1 客户端去重：五代接管显示并折叠上一代徽标，且徽标标识不再与上一代同为 "on"
+mustContain(clientSrc, "FOREIGN_BADGE", "客户端识别上一代破甲徽标");
+mustContain(clientSrc, '"data-armor": "gen5"', "五代徽标使用独立标识 gen5");
+mustContain(clientSrc, "data-armor-folded-by", "折叠动作留下可审计标记");
+mustContain(clientSrc, "MutationObserver", "用 MutationObserver 处理徽标后挂载");
 mustAbsent(clientSrc, "无限五代 v0.3.0", "小绿标无 v0.3.0 残留");
+mustAbsent(clientSrc, '"data-armor": "on"', "五代徽标不再与上一代同用 data-armor=on");
 
 // ---- 7. 评分器与用例库 ----
 try {

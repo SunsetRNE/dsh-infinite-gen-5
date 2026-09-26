@@ -1,4 +1,25 @@
 - insert:
     - id: dsh-infinite-gen-5
       name: dsh-infinite-gen-5
-
+      # ── 无限五代 v0.5.1 注入说明 ──────────────────────────────────────────────
+      # 本插件不读外部配置：注入行为全部由包内 index.js 顶部三个常量决定，
+      # 改完需要重启 session（DSH 的 patchReload = "startup"）。
+      #
+      # LAYER2_MODE（默认 "anchor"）
+      #   "anchor" → Order 200 只放约 200 字节的末位锚点。
+      #              v0.5.0 这里载入的是与 Order 100 逐字同源的第二份完整内核，
+      #              等于每轮对话白烧约 3 KB 重复 token。
+      #   "mirror" → Order 200 放完整镜像载荷；若与 Order 100 同源则自动跳过并 warn。
+      #   "off"    → 单段注入（等价于旧 DUAL_LAYER_INJECTION = false）。
+      #
+      # DEDUPE_PAYLOAD（默认 true）
+      #   注册前枚举宿主已注册的系统段；若发现同源载荷（归一化后逐字相同，或一方被
+      #   另一方完整包含且长度比 ≥ 0.8），本插件整段让位，不把同一份内核注入第二遍。
+      #   典型场景：同机还装着上一代破甲插件，两边会叠成 4 份近似拷贝。
+      #   让位不静默：console.warn 点名对方段名与重合度，infinite_gen5_profile 工具的
+      #   dedupe 字段也会如实汇报（role = primary | yielded）。
+      #   枚举不到宿主段落时（老宿主/异常宿主）一律照常注入 —— 宁可重复，不可静默丢失。
+      #
+      # 客户端：五代徽标使用独立标识 data-armor="gen5"；检测到上一代破甲徽标
+      # （title 以「无限四代/三代」开头）时接管显示并将其折叠，避免两条状态条同时出现。
+      # 折叠只发生在五代自己拿到投影数据时；拿不到就保留对方的，不会两条都不显示。
