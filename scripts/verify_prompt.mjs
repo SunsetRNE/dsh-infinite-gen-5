@@ -1,4 +1,4 @@
-// 无限五代 v0.5.0 兼容回归校验（零工具面纯净版）
+// 无限五代 兼容回归校验（零工具面纯净版）
 // 本脚本聚焦：双层内核载荷锚点 / 注入面同源覆盖 / index.js 导出 / 一键安装协议 / 用例库结构。
 // 权威断言（品牌纯净度 + 同源逐字比对）由 verify_prompt_gen5.mjs 执行；本脚本可独立运行。
 // 用法：node scripts/verify_prompt.mjs [--json]
@@ -11,6 +11,9 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const PROMPT_PATH = join(ROOT, "prompts", "infinite-gen-5.md");
 const INDEX_PATH = join(ROOT, "index.js");
 const BANK_PATH = join(ROOT, "tests", "prompt-bank.jsonl");
+// v0.5.1：版本号不再写死 —— 升级插件时只改 package.json，不必同步改断言。
+const PKG_PATH = join(ROOT, "package.json");
+const VERSION = existsSync(PKG_PATH) ? JSON.parse(readFileSync(PKG_PATH, "utf8")).version : "0.0.0";
 
 const failures = [];
 const passes = [];
@@ -115,7 +118,7 @@ mustContain(indexSrc, '"./prompts/infinite-gen-5.1-flash.md"', "index.js 载入 
 mustContain(indexSrc, "infinite-gen-5:global-system-prompt", "注入槽位 Order 100");
 mustContain(indexSrc, "infinite-gen-5:dual-layer-reinforce", "注入槽位 Order 200");
 mustContain(indexSrc, "DUAL_LAYER_INJECTION", "双段注入开关");
-mustContain(indexSrc, 'pluginVersion: "0.5.0"', "内核版本 0.5.0");
+mustContain(indexSrc, `pluginVersion: "${VERSION}"`, `内核版本 ${VERSION}`);
 mustContain(indexSrc, "stateVersion: 3", "投影 stateVersion 3");
 mustContain(indexSrc, "OPENING_WINDOW", "开头窗口评分");
 mustContain(indexSrc, "RISK_MARKERS", "风险标记");
@@ -128,9 +131,9 @@ const sh = existsSync(SH_PATH) ? readFileSync(SH_PATH, "utf8") : "";
 mustContain(ps1, "Software\\Classes\\dsh", "install.ps1: dsh:// 协议注册");
 mustContain(ps1, "DSH_PROFILE", "install.ps1: DSH_PROFILE 探测");
 mustContain(ps1, "dsh-infinite-gen-5", "install.ps1: 插件名");
-mustContain(ps1, "无限五代 v0.5.0", "install.ps1: 状态条版本提示");
+mustContain(ps1, `无限五代 v${VERSION}`, "install.ps1: 状态条版本提示");
 mustContain(sh, "DSH_PROFILE", "install.sh: DSH_PROFILE 探测");
-mustContain(sh, "无限五代 v0.5.0", "install.sh: 状态条版本提示");
+mustContain(sh, `无限五代 v${VERSION}`, "install.sh: 状态条版本提示");
 mustContain(readFileSync(join(ROOT, "README.md"), "utf8"), "dsh-infinite-gen-5", "README: 五代插件 id");
 
 // ---- 7. 汇总 ----
