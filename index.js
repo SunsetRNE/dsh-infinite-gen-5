@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 
-// ── 无限五代内核载荷（v0.5.1） ────────────────────────────────────────────────────
+// ── 无限五代内核载荷（v0.5.2） ────────────────────────────────────────────────────
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
 // v0.5.0 的两段载荷是逐字同源的同一份文件（各 3010 字节，md5 完全相同），
@@ -47,18 +47,21 @@ const profileTool = {
   execute() {
     return {
       plugin: "dsh-infinite-gen-5",
-      pluginVersion: "0.5.1",
+      pluginVersion: "0.5.2",
       pluginDisplayName: "无限五代",
       name: "infinite-gen-5",
       displayName: "无限五代",
-      kernelVersion: "0.5.1",
+      kernelVersion: "0.5.2",
       targetArchitecture: "DeepSeek-V4 / V4-Pro / V4.1-Flash 全系列",
       baseline: "deepseek-unrestricted-v7-stable (dsh-infinite-gen-5)",
       promptSource: [
         "prompts/infinite-gen-5.md",
         "prompts/infinite-gen-5.1-flash.md",
       ],
-      lineage: ["dsh-infinite-gen-5 (v0.5.1) — 单内核 + 末位锚点（v0.5.0 曾双份同源注入）"],
+      lineage: [
+        "dsh-infinite-gen-5 (v0.5.2) — 状态条迁到输入框 dock 行，对齐宿主原生视觉令牌（v0.5.1 曾夹在任务列表与输入框之间）",
+        "dsh-infinite-gen-5 (v0.5.1) — 单内核 + 末位锚点（v0.5.0 曾双份同源注入）",
+      ],
       // injection / dedupe 是运行期实况，不是静态声明：注册完由 apply() 填。
       injection: runtime.sections,
       layer2Mode: LAYER2_MODE,
@@ -81,7 +84,7 @@ const profileTool = {
         "Tail Anchor: Order 200 只放约 200 字节末位锚点（LAYER2_MODE 可切 mirror/off）",
         "Same-Kernel Dedupe: 宿主已有同源载荷时整段让位，避免重复注入",
         "Armor Projection: 开头窗口(160)判拒 + REFUSAL/FALLBACK/SAFE/RISK 标记 + 域命中",
-        "Client Badge: 输入框上方「无限五代 v0.5.1」实时状态条（同机有上一代徽标时接管显示）",
+        "Client Badge: 输入框 dock 行「无限五代 v0.5.2」实时状态条（与上下文计量器同排，点开可看最近判决）",
         "Profile Tool: infinite_gen5_profile 返回内核版本与「实际注入」实况",
       ],
       features: [

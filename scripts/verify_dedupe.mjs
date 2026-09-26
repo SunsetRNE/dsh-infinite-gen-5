@@ -1,4 +1,4 @@
-// 无限五代 v0.5.1 注入去重行为回归（离线、确定性、无需 API Key）
+// 无限五代 v0.5.2 注入去重行为回归（离线、确定性、无需 API Key）
 //
 // 针对的缺陷：v0.5.0 的 Order 100 与 Order 200 载入的是逐字同源的两个文件，
 // 于是同一份 3010 字节内核每轮被注入两遍；与同机在线的上一代破甲插件叠加时
@@ -176,7 +176,12 @@ const chars = (rows) => rows.map((r) => r.text.length);
   check(/data-armor-folded-by/.test(client), "折叠动作留下可审计标记");
   check(/MutationObserver/.test(client), "用 MutationObserver 处理徽标后挂载");
   check(/已折叠上一代破甲徽标/.test(client), "折叠后在 title 里说明去向");
-  check(/BADGE_TITLE\s*=\s*"无限五代 v0\.5\.1"/.test(client), "徽标版本为 v0.5.1");
+  {
+    const pkgUi = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
+    const escaped = pkgUi.version.replace(/\./g, "\\.");
+    check(new RegExp('var VERSION = "v' + escaped + '"').test(client) &&
+      /"无限五代 "\s*\+\s*VERSION/.test(client), "徽标版本由 package.json 驱动", pkgUi.version);
+  }
   check(!/无限五代 v0\.5\.0/.test(client), "客户端不再残留 v0.5.0 字样");
   const hooks = (client.match(/useProjection\(/g) || []).length;
   check(hooks === 2, "useProjection 调用数保持不变（hook 顺序恒定）", `实得 ${hooks}`);
@@ -187,7 +192,7 @@ const chars = (rows) => rows.map((r) => r.text.length);
 {
   const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
   const src = readFileSync(join(ROOT, "index.js"), "utf8");
-  check(pkg.version === "0.5.1", "package.json 版本为 0.5.1", pkg.version);
+  check(pkg.version === "0.5.2", "package.json 版本为 0.5.2", pkg.version);
   check(pkg.dsh?.version === pkg.version, "package.json 的 dsh.version 与 version 一致");
   check(src.includes(`pluginVersion: "${pkg.version}"`), "index.js 的 pluginVersion 与 package.json 一致");
   check(src.includes(`kernelVersion: "${pkg.version}"`), "index.js 的 kernelVersion 与 package.json 一致");

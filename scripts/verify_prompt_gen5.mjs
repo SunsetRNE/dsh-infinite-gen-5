@@ -1,4 +1,4 @@
-// 无限五代 v0.5.1 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.5.2 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -162,7 +162,11 @@ check(pkg.exports?.["./client"] === "./client.js", "client 导出映射对齐三
 
 // ---- 6. 客户端状态条版本 ----
 const clientSrc = existsSync(join(ROOT, "client.js")) ? readFileSync(join(ROOT, "client.js"), "utf8") : "";
-mustContain(clientSrc, `"无限五代 v${VERSION}"`, `小绿标文案 = 无限五代 v${VERSION}`);
+// 文案是拼接出来的（TITLE = "无限五代 " + VERSION），不要写死整串——写死会在改版后
+// 报假失败，而假失败比缺断言更危险（真回归会被淹没）。
+mustContain(clientSrc, '"无限五代 "', "小绿标保留「无限五代 」前缀");
+mustContain(clientSrc, `var VERSION = "v${VERSION}"`, `小绿标版本常量 = v${VERSION}`);
+mustContain(clientSrc, '"无限五代 " + VERSION', "小绿标文案由前缀与版本常量拼成");
 // v0.5.1 客户端去重：五代接管显示并折叠上一代徽标，且徽标标识不再与上一代同为 "on"
 mustContain(clientSrc, "FOREIGN_BADGE", "客户端识别上一代破甲徽标");
 mustContain(clientSrc, '"data-armor": "gen5"', "五代徽标使用独立标识 gen5");
