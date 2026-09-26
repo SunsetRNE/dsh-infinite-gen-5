@@ -22,10 +22,10 @@
     "HARNESS_PLUGIN.md",
     "README.md",
     "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
     "prompts",
     "tests",
-    "scripts",
-    "assets"
+    "scripts"
   ],
   "scripts": {
     "harness:check": "node --check index.js && node --check client.js",

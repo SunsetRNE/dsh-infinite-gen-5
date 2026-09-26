@@ -1,6 +1,9 @@
 MIT License
 
-Copyright (c) 2026 Minglink
+Copyright (c) 2026 SunsetRNE
+Portions of this work are derived from the MIT-licensed project
+dsh-infinite-gen-4 (https://github.com/Minglink/dsh-infinite-gen-4),
+Copyright (c) 2026 Minglink — see THIRD_PARTY_NOTICES.md
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
