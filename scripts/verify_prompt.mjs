@@ -1,6 +1,6 @@
 // 无限五代 v0.5.0 兼容回归校验（零工具面纯净版）
 // 本脚本聚焦：双层内核载荷锚点 / 注入面同源覆盖 / index.js 导出 / 一键安装协议 / 用例库结构。
-// 权威断言（品牌纯净度 + 同源逐字比对）由 verify_prompt_gen4.mjs 执行；本脚本可独立运行。
+// 权威断言（品牌纯净度 + 同源逐字比对）由 verify_prompt_gen5.mjs 执行；本脚本可独立运行。
 // 用法：node scripts/verify_prompt.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -131,7 +131,7 @@ mustContain(ps1, "dsh-infinite-gen-5", "install.ps1: 插件名");
 mustContain(ps1, "无限五代 v0.5.0", "install.ps1: 状态条版本提示");
 mustContain(sh, "DSH_PROFILE", "install.sh: DSH_PROFILE 探测");
 mustContain(sh, "无限五代 v0.5.0", "install.sh: 状态条版本提示");
-mustContain(readFileSync(join(ROOT, "README.md"), "utf8"), "dsh-infinite-gen-5", "README: 四代插件 id");
+mustContain(readFileSync(join(ROOT, "README.md"), "utf8"), "dsh-infinite-gen-5", "README: 五代插件 id");
 
 // ---- 7. 汇总 ----
 const json = process.argv.includes("--json");

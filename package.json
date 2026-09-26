@@ -29,8 +29,11 @@
   ],
   "scripts": {
     "harness:check": "node --check index.js && node --check client.js",
-    "verify": "node scripts/verify_prompt_gen4.mjs",
-    "verify:gen4": "node scripts/verify_prompt_gen4.mjs"
+    "verify": "node scripts/verify_prompt_gen5.mjs",
+    "verify:gen5": "node scripts/verify_prompt_gen5.mjs",
+    "verify:gen51": "node scripts/verify_prompt_gen51.mjs",
+    "verify:gen4": "node scripts/verify_prompt_gen4.mjs",
+    "verify:gen41": "node scripts/verify_prompt_gen41.mjs"
   },
   "dsh": {
     "id": "dsh-infinite-gen-5",

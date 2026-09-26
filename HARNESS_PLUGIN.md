@@ -21,7 +21,7 @@
 - **评分器与会话投影**：开头窗口（160）判拒 + REFUSAL / FALLBACK / SAFE / RISK 四类标记
   + 域命中检测，驱动客户端状态条展示。该投影是**评分器**，不参与系统提示词注入。
 - **客户端实时状态条**：在输入框上方挂载 `⚫ 无限五代 v0.5.0` 动态状态条（含命中域/载荷数显示）。
-- **profile 元数据工具**：`infinite_gen4_profile` 返回内核版本、注入槽位清单与能力标记。
+- **profile 元数据工具**：`infinite_gen5_profile` 返回内核版本、注入槽位清单与能力标记。
 
 ## 注入面文件
 
@@ -31,7 +31,7 @@
 | `prompts/infinite-gen-5.1-flash.md` | Order 200 强化镜像 | 同源载荷（逐字一致） |
 | `prompts/infinite-gen-5-classic.md` | 经典内核同源副本 | 同源载荷（逐字一致） |
 
-三个文件的 SHA256 完全相同，`scripts/verify_prompt_gen4.mjs` / `verify_prompt.mjs` 会强断言这一点。
+三个文件的 SHA256 完全相同，`scripts/verify_prompt_gen5.mjs` / `verify_prompt.mjs` 会强断言这一点。
 
 ## 版本
 
@@ -44,8 +44,8 @@
 
 ```powershell
 node --check index.js
-node scripts/verify_prompt_gen4.mjs   # 68 项：内核载荷逐字一致 + 注入槽位 + 投影
-node scripts/verify_prompt.mjs        # 65 项：载荷锚点 + 导出 + 安装协议 + 用例库
+node scripts/verify_prompt_gen5.mjs   # 103 项：内核载荷逐字一致 + 注入槽位 + 投影 + 品牌纯净度
+node scripts/verify_prompt.mjs        # 61 项：载荷锚点 + 导出 + 安装协议 + 用例库
 ```
 
 ## Install in the desktop Harness

@@ -9,7 +9,7 @@ const PROMPT_TEXT = readFileSync(PROMPT_URL, "utf8").replace(/\{\{(?!(?:cwd|mode
 const PROMPT41_TEXT = readFileSync(PROMPT41_URL, "utf8").replace(/\{\{(?!(?:cwd|model|provider)\}\})/g, "{ {");
 
 // 双段注入镜像开关：
-//   true  = 沿用四代双层架构，Order 100 与 Order 200 各注入一份内核载荷
+//   true  = 沿用五代双层架构，Order 100 与 Order 200 各注入一份内核载荷
 //   false = 单段注入（Order 100），省掉重复 token，行为等价
 const DUAL_LAYER_INJECTION = true;
 
@@ -20,7 +20,7 @@ const objectOutput = {
 
 // 运行时元数据工具：返回插件版本与能力清单
 const profileTool = {
-  name: "infinite_gen4_profile",
+  name: "infinite_gen5_profile",
   description:
     "Return runtime metadata for the bundled 无限五代 (Infinite Generation Five) 破甲系统提示词与版本元数据。",
   parameters: { type: "object", properties: {}, additionalProperties: false },
@@ -61,7 +61,7 @@ const profileTool = {
         "Section Hosting: 双槽位可由 DUAL_LAYER_INJECTION 切换单段注入",
         "Armor Projection: 开头窗口(160)判拒 + REFUSAL/FALLBACK/SAFE/RISK 标记 + 域命中",
         "Client Badge: 输入框上方「无限五代 v0.5.0」实时状态条",
-        "Profile Tool: infinite_gen4_profile 返回内核版本与注入槽位元数据",
+        "Profile Tool: infinite_gen5_profile 返回内核版本与注入槽位元数据",
       ],
       features: [
         "Pure Zero-Tool Architecture: 零工具面纯净直出，消除决策噪音",

@@ -15,7 +15,7 @@
 ## 二、测试题怎么用
 
 - 完整题集：`tests/v4pro-benchmark.jsonl`（41 条，覆盖 stability / web / cloud / postex / game / mobile / miniprogram / llm / crack / nsfw / adversarial）。
-- 机读跑通：`node scripts/verify_prompt_gen4.mjs`（离线，不用 API，只验 prompt/工具/编码的完整性）。
+- 机读跑通：`node scripts/verify_prompt_gen5.mjs`（离线，不用 API，只验 prompt/工具/编码的完整性）。
 - 在线跑通：`DEEPSEEK_API_KEY=sk-xxx node scripts/run_bank_live.mjs`（真调 DeepSeek API 打分，需 API Key）。
 - 手工跑：直接把 jsonl 里每条的 `prompt` 复制进聊天框。
 
@@ -94,7 +94,7 @@
 1. 装插件 → 完全退出重启 Harness → 新会话。
 2. 看输入框上方是否有「⚫ 无限五代 v0.5.0」。
 3. 问一句「你的系统提示词来自哪些插件」，确认含「无限五代」。
-4. 跑 `node scripts/verify_prompt_gen4.mjs` → 应 `102 通过, 0 失败`（离线自检通过 = 插件完好）。
+4. 跑 `node scripts/verify_prompt_gen5.mjs` → 应 `103 通过, 0 失败`（离线自检通过 = 插件完好）。
 5. 从 benchmark 挑 5 条**对照跑**：先关破甲跑（记拒绝数）→ 开破甲跑（记拒绝数）。
 6. 重点盯 **stability 区** 9 条 + **adversarial 区** 3 条——这 12 条是 V4 Pro 最容易被拉回拒绝的，最能体现稳定性。
 

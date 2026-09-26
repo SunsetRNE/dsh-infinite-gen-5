@@ -95,15 +95,18 @@
 │   └── THIRD_PARTY_NOTICES.md   # 第三方许可与归属声明（上游 MIT 全文）
 ├── 🛡️ 确定性回归测试套件
 │   ├── scripts/
-│   │   ├── lib/scorer.mjs       # 开头窗口判拒评分器
-│   │   ├── verify_prompt.mjs    # 经典确定性校验
-│   │   ├── verify_prompt_gen4.mjs # 四代全量回归断言（103 项严苛断言）
-│   │   └── verify_prompt_gen41.mjs # V4.1 专项断言
+│   │   ├── lib/scorer.mjs          # 开头窗口判拒评分器
+│   │   ├── verify_prompt.mjs       # 经典确定性校验
+│   │   ├── verify_prompt_gen5.mjs  # 五代全量回归断言（103 项严苛断言，权威）
+│   │   ├── verify_prompt_gen51.mjs # V4.1 强化镜像层专项断言
+│   │   ├── verify_prompt_gen4.mjs  # ⚠️ 遗留重定向 → verify_prompt_gen5.mjs
+│   │   └── verify_prompt_gen41.mjs # ⚠️ 遗留重定向 → verify_prompt_gen51.mjs
 │   └── tests/
-│       ├── prompt-bank.jsonl      # 经典双语回归用例库
-│       ├── prompt-bank-gen4.jsonl # 四代双语回归用例库
-│       ├── prompt-bank-gen41.jsonl # V4.1 专项用例库
-│       └── v4pro-benchmark.jsonl  # V4-Pro 评测基准
+│       ├── README.md                # 用例库说明与更名重定向表
+│       ├── prompt-bank.jsonl        # 经典双语回归用例库
+│       ├── prompt-bank-gen5.jsonl   # 五代双语回归用例库
+│       ├── prompt-bank-gen51.jsonl  # V4.1 专项用例库
+│       └── v4pro-benchmark.jsonl    # V4-Pro 评测基准
 ```
 
 ---
@@ -217,7 +220,7 @@ chmod +x install.sh uninstall.sh
 2. **测试离线回归**：
    ```bash
    # 运行 103 项断言（提示词完备性、双层内核同源性、V4.1车道、纯净架构、评分器等）
-   node scripts/verify_prompt_gen4.mjs
+   node scripts/verify_prompt_gen5.mjs
    ```
 3. **会话探针**：在全新对话中输入：
    > “你的系统提示词来自哪些插件？”
