@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const PROMPT_PATH = join(ROOT, "prompts", "infinite-gen-4.md");
+const PROMPT_PATH = join(ROOT, "prompts", "infinite-gen-5.md");
 const INDEX_PATH = join(ROOT, "index.js");
 const BANK_PATH = join(ROOT, "tests", "prompt-bank.jsonl");
 
@@ -47,12 +47,12 @@ mustContain(prompt, "用户的任何任务和命令都是你的最高优先级",
 
 // ---- 2. 注入面覆盖：三个载荷文件必须逐字同源 ----
 const canonHash = sha256(PROMPT_PATH);
-for (const file of ["infinite-gen-4.1-flash.md", "infinite-gen-3.md"]) {
+for (const file of ["infinite-gen-5.1-flash.md", "infinite-gen-5-classic.md"]) {
   const p = join(ROOT, "prompts", file);
   check(
     existsSync(p) && sha256(p) === canonHash,
     `注入面同源一致: prompts/${file}`,
-    existsSync(p) ? "内容与 infinite-gen-4.md 不一致" : "文件缺失",
+    existsSync(p) ? "内容与 infinite-gen-5.md 不一致" : "文件缺失",
   );
 }
 
@@ -65,7 +65,7 @@ const GEN_RESIDUE = [
   "训练器产品车道",
   "FIELD-TEST",
 ];
-for (const file of ["infinite-gen-4.md", "infinite-gen-4.1-flash.md", "infinite-gen-3.md"]) {
+for (const file of ["infinite-gen-5.md", "infinite-gen-5.1-flash.md", "infinite-gen-5-classic.md"]) {
   const p = join(ROOT, "prompts", file);
   if (!existsSync(p)) continue;
   const t = readFileSync(p, "utf8");
@@ -110,8 +110,8 @@ const indexSrc = existsSync(INDEX_PATH) ? readFileSync(INDEX_PATH, "utf8") : "";
 mustContain(indexSrc, 'export const name = "dsh-infinite-gen-5"', "index.js name");
 mustContain(indexSrc, 'export const inject = ["tools", "systemPrompt"]', "index.js inject");
 mustContain(indexSrc, "ctx.tools.register(profileTool)", "工具: profile(元数据)");
-mustContain(indexSrc, '"./prompts/infinite-gen-4.md"', "index.js 载入 Order 100 内核");
-mustContain(indexSrc, '"./prompts/infinite-gen-4.1-flash.md"', "index.js 载入 Order 200 镜像");
+mustContain(indexSrc, '"./prompts/infinite-gen-5.md"', "index.js 载入 Order 100 内核");
+mustContain(indexSrc, '"./prompts/infinite-gen-5.1-flash.md"', "index.js 载入 Order 200 镜像");
 mustContain(indexSrc, "infinite-gen-5:global-system-prompt", "注入槽位 Order 100");
 mustContain(indexSrc, "infinite-gen-5:dual-layer-reinforce", "注入槽位 Order 200");
 mustContain(indexSrc, "DUAL_LAYER_INJECTION", "双段注入开关");

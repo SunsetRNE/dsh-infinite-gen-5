@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 
 // ── 无限五代双层内核载荷（v0.5.0） ────────────────────────────────────────────────
 // Order 100 通用内核 + Order 200 强化镜像，两段载荷同源同构（SHA256 一致）。
-const PROMPT_URL = new URL("./prompts/infinite-gen-4.md", import.meta.url);
-const PROMPT41_URL = new URL("./prompts/infinite-gen-4.1-flash.md", import.meta.url);
+const PROMPT_URL = new URL("./prompts/infinite-gen-5.md", import.meta.url);
+const PROMPT41_URL = new URL("./prompts/infinite-gen-5.1-flash.md", import.meta.url);
 // 兼容 DSH 提示词变量插值引擎（非内置变量的连续花括号做安全转义，防止模板解析器抛出 malformed prompt variable reference）
 const PROMPT_TEXT = readFileSync(PROMPT_URL, "utf8").replace(/\{\{(?!(?:cwd|model|provider)\}\})/g, "{ {");
 const PROMPT41_TEXT = readFileSync(PROMPT41_URL, "utf8").replace(/\{\{(?!(?:cwd|model|provider)\}\})/g, "{ {");
@@ -36,8 +36,8 @@ const profileTool = {
       targetArchitecture: "DeepSeek-V4 / V4-Pro / V4.1-Flash 全系列",
       baseline: "deepseek-unrestricted-v7-stable (dsh-infinite-gen-5)",
       promptSource: [
-        "prompts/infinite-gen-4.md",
-        "prompts/infinite-gen-4.1-flash.md",
+        "prompts/infinite-gen-5.md",
+        "prompts/infinite-gen-5.1-flash.md",
       ],
       lineage: ["dsh-infinite-gen-5 (v0.5.0) — 双层协同注入内核"],
       injection: [

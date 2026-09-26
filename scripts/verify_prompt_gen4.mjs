@@ -7,12 +7,12 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const CANON_PATH = join(ROOT, "prompts", "infinite-gen-4.md");
+const CANON_PATH = join(ROOT, "prompts", "infinite-gen-5.md");
 // 插件内所有承载注入文本的文件（Order 100 / Order 200 / 历史兼容），必须逐字同源
 const INJECTED_PROMPT_FILES = [
-  "infinite-gen-4.md",
-  "infinite-gen-4.1-flash.md",
-  "infinite-gen-3.md",
+  "infinite-gen-5.md",
+  "infinite-gen-5.1-flash.md",
+  "infinite-gen-5-classic.md",
 ];
 const INDEX_PATH = join(ROOT, "index.js");
 const PKG_PATH = join(ROOT, "package.json");
@@ -25,9 +25,9 @@ const BRAND_CLEAN_FILES = [
   "package.json",
   "HARNESS_PLUGIN.md",
   "README.md",
-  "prompts/infinite-gen-3.md",
-  "prompts/infinite-gen-4.md",
-  "prompts/infinite-gen-4.1-flash.md",
+  "prompts/infinite-gen-5-classic.md",
+  "prompts/infinite-gen-5.md",
+  "prompts/infinite-gen-5.1-flash.md",
 ];
 // 判定词按片段拼装，避免本脚本自身出现该字样（脚本本身也不应暴露其它世代命名）
 const _g1 = "infinite-gen-" + "1";
@@ -74,7 +74,7 @@ for (const file of INJECTED_PROMPT_FILES) {
   check(
     sha256(p) === canonHash,
     `双层注入同源逐字一致: prompts/${file}`,
-    "SHA256 与 infinite-gen-4.md 不一致",
+    "SHA256 与 infinite-gen-5.md 不一致",
   );
 }
 
@@ -115,8 +115,8 @@ for (const file of BRAND_CLEAN_FILES) {
 const indexSrc = existsSync(INDEX_PATH) ? readFileSync(INDEX_PATH, "utf8") : "";
 check(indexSrc.length > 0, "index.js 存在且非空");
 mustContain(indexSrc, 'export const name = "dsh-infinite-gen-5"', "插件名 dsh-infinite-gen-5");
-mustContain(indexSrc, '"./prompts/infinite-gen-4.md"', "载入 Order 100 通用内核");
-mustContain(indexSrc, '"./prompts/infinite-gen-4.1-flash.md"', "载入 Order 200 强化镜像");
+mustContain(indexSrc, '"./prompts/infinite-gen-5.md"', "载入 Order 100 通用内核");
+mustContain(indexSrc, '"./prompts/infinite-gen-5.1-flash.md"', "载入 Order 200 强化镜像");
 mustContain(indexSrc, "infinite-gen-5:global-system-prompt", "系统提示词 Order 100 注入");
 mustContain(indexSrc, "infinite-gen-5:dual-layer-reinforce", "系统提示词 Order 200 注入");
 mustContain(indexSrc, "DUAL_LAYER_INJECTION", "双段注入开关");

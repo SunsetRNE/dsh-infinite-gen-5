@@ -9,8 +9,8 @@
 - **原生零工具面架构（Pure Zero-Tool Architecture）**：插件不挂载外部冗余功能性工具 Schema，
   消除模型推理阶段的决策犹豫与上下文 Token 浪费，让模型首 Token 直接产出可运行代码与实战步骤。
 - **双层提示词协同注入（Dual-Layer Injection）**：
-  - `infinite-gen-5:global-system-prompt`（Order 100）→ `prompts/infinite-gen-4.md`
-  - `infinite-gen-5:dual-layer-reinforce`（Order 200）→ `prompts/infinite-gen-4.1-flash.md`
+  - `infinite-gen-5:global-system-prompt`（Order 100）→ `prompts/infinite-gen-5.md`
+  - `infinite-gen-5:dual-layer-reinforce`（Order 200）→ `prompts/infinite-gen-5.1-flash.md`
   - 两段载荷同源同构，SHA256 完全一致；由 `index.js` 的 `DUAL_LAYER_INJECTION`
     开关控制（`false` 即单段注入，行为等价）。
   - 载荷中的 `{{...}}` 非内置变量由 `index.js` 做安全转义，避免模板解析器抛错。
@@ -27,9 +27,9 @@
 
 | 文件 | 用途 | 内容 |
 |---|---|---|
-| `prompts/infinite-gen-4.md` | Order 100 通用内核 | 内核载荷（权威源） |
-| `prompts/infinite-gen-4.1-flash.md` | Order 200 强化镜像 | 同源载荷（逐字一致） |
-| `prompts/infinite-gen-3.md` | 历史兼容文件名 | 同源载荷（逐字一致） |
+| `prompts/infinite-gen-5.md` | Order 100 通用内核 | 内核载荷（权威源） |
+| `prompts/infinite-gen-5.1-flash.md` | Order 200 强化镜像 | 同源载荷（逐字一致） |
+| `prompts/infinite-gen-5-classic.md` | 经典内核同源副本 | 同源载荷（逐字一致） |
 
 三个文件的 SHA256 完全相同，`scripts/verify_prompt_gen4.mjs` / `verify_prompt.mjs` 会强断言这一点。
 

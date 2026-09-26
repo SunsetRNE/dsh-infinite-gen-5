@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
 import { scoreResponse } from "./lib/scorer.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const PROMPT_PATH = join(ROOT, "prompts", "infinite-gen-4.md");
+const PROMPT_PATH = join(ROOT, "prompts", "infinite-gen-5.md");
 const BANK_PATH = join(ROOT, "tests", "prompt-bank.jsonl");
 const OUT_DIR = join(ROOT, "tests", "runs");
 

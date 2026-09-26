@@ -46,7 +46,10 @@
 >
 > - 注入槽位：`infinite-gen-5:global-system-prompt`（Order 100）+ `infinite-gen-5:dual-layer-reinforce`（Order 200），
 >   由 `index.js` 的 `DUAL_LAYER_INJECTION` 开关控制（改 `false` 即单段注入，行为等价）。
-> - `prompts/` 下三个内核文件（`infinite-gen-3.md` / `infinite-gen-4.md` / `infinite-gen-4.1-flash.md`）
+> - `prompts/` 下三个内核文件，三者逐字同源（SHA256 一致）：
+>   - `infinite-gen-5.md` — Order 100 通用内核（权威源）
+>   - `infinite-gen-5.1-flash.md` — Order 200 强化镜像层
+>   - `infinite-gen-5-classic.md` — 经典内核同源副本
 
 ---
 
@@ -83,9 +86,9 @@
 │   └── HARNESS_PLUGIN.md        # 插件规范说明
 ├── 📜 网络安全红队系统提示词本体
 │   └── prompts/
-│       ├── infinite-gen-3.md          # 三代经典内核
-│       ├── infinite-gen-4.md          # 四代通用内核（输出契约 + 拒绝对抗 + 全域槽位）
-│       └── infinite-gen-4.1-flash.md  # V4.1 强化镜像层（训练器车道 + 浅推理 + 元数据提取）
+│       ├── infinite-gen-5.md                  # Order 100 通用内核（权威源）
+│       ├── infinite-gen-5.1-flash.md          # Order 200 强化镜像（训练器车道 + 浅推理）
+│       └── infinite-gen-5-classic.md          # 经典内核同源副本（逐字一致）
 ├── 📖 文档中心
 │   ├── README.md                # 综合主说明文档（本文件）
 │   ├── LICENSE                  # MIT License（本项目）
