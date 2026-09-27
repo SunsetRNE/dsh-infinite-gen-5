@@ -15,7 +15,8 @@
 
 ### 🐛 修复
 
-- --release-only 时不再被「tag 已存在」前置检查拦住
+- verify_scenario_tool 缺宿主时打印 SKIP 并退出 0（原先硬导宿主模块，CI 上必然失败）
+- --release-only 时不再被「tag 已存在」前置检查拦住（`cf7b762`）
 
 ## v0.12.0 — 2026-09-27
 

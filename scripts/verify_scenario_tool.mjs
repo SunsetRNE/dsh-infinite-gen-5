@@ -2,14 +2,48 @@
 // 检查：两个工具都注册且都可被模型调用（都不延迟加载）/ 参数契约 / 索引与包的实际返回
 //       / 非法入参不抛 / 领域包文本绝不进入 system prompt（这是「按需付费」的核心承诺）
 // 用法：node scripts/verify_scenario_tool.mjs [--json]
-import { readFileSync } from "node:fs";
-import { Context } from "/usr/local/lib/node_modules/@deepseek-ai/cordis/lib/index.js";
-import {
-  SystemPrompt,
-  renderPrompt,
-} from "/usr/local/lib/node_modules/@deepseek-ai/dsh-system-prompt/lib/index.js";
-import { fileURLToPath } from "node:url";
+import { existsSync, readFileSync } from "node:fs";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
+
+// ── 找宿主：插件仓库里没有 node_modules，只能从 dsh 安装目录取真模块 ──────────
+// 找不到（裸机 / CI 容器）时打印 SKIP 并 exit 0：缺宿主是环境限制，不是回归。
+const hostArg = process.argv.find((a) => a.startsWith("--host="));
+const candidates = [
+  hostArg && hostArg.slice("--host=".length),
+  process.env.IG5_DSH_ROOT,
+  "/usr/local/lib/node_modules/@deepseek-ai/dsh",
+  join(dirname(process.execPath), "..", "lib", "node_modules", "@deepseek-ai", "dsh"),
+  join(dirname(process.execPath), "..", "node_modules", "@deepseek-ai", "dsh"),
+].filter((p) => typeof p === "string" && p.length > 0);
+
+function locateHost() {
+  for (const root of candidates) {
+    const cordis = join(root, "node_modules", "@deepseek-ai", "cordis", "lib", "index.js");
+    const prompt = join(root, "node_modules", "@deepseek-ai", "dsh-system-prompt", "lib", "index.js");
+    if (existsSync(cordis) && existsSync(prompt)) return { root, cordis, prompt };
+  }
+  return null;
+}
+
+const dshHost = locateHost();
+if (!dshHost) {
+  const message = [
+    "SKIP: 没找到 dsh 宿主（@deepseek-ai/cordis + dsh-system-prompt），领域工具挂载自检只在装有 DSH 的机器上跑。",
+    "  找过：" + candidates.join(" · "),
+    "  指定安装位置：node scripts/verify_scenario_tool.mjs --host=/path/to/node_modules/@deepseek-ai/dsh",
+    "  这条不是回归失败：插件本身不依赖宿主包，CI 上跳过即可。",
+  ];
+  if (process.argv.includes("--json")) {
+    console.log(JSON.stringify({ skipped: true, reason: "no dsh host", candidates, passed: 0, failed: 0 }, null, 1));
+  } else {
+    for (const line of message) console.log(line);
+  }
+  process.exit(0);
+}
+
+const { Context } = await import(pathToFileURL(dshHost.cordis).href);
+const { SystemPrompt, renderPrompt } = await import(pathToFileURL(dshHost.prompt).href);
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 
