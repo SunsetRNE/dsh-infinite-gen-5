@@ -448,20 +448,30 @@ chmod +x install.sh uninstall.sh
 
 ### 开发循环：改仓库 ≠ 改线上（而且不重启就不生效）
 
-安装脚本是**复制**而不是软链 —— `install.sh` 把仓库整份拷进 `~/.dsh/plugins/dsh-infinite-gen-5`，profile 的依赖写成 `file:../../plugins/dsh-infinite-gen-5`、并在 profile 的 `cordis.patch.yml` 里插一条 `id: dsh-infinite-gen-5` 接线。所以改完仓库**必须重跑安装脚本 + 重启 DSH 进程**才会进线上：
+「装在哪、谁负责更新」有三种接线，`verify:install` 都能认出来（混用会告警）：
+
+| 接线 | profile 依赖 | 接线入口 | 谁负责更新 |
+|---|---|---|---|
+| **管理器式**（宿主插件管理器的「链接安装 / 更新」写入） | `link:<dshHome>/plugin-src/dsh-infinite-gen-5` | `dsh.profile.bundles` | 宿主插件管理器（按 `~/.dsh/plugin-sources.json` 里记的 GitHub 地址拉新版） |
+| install.sh 式（本仓库脚本写入） | `file:../../plugins/dsh-infinite-gen-5` | profile `cordis.patch.yml` 的 insert 条目 | 本仓库 `./install.sh` |
+| dev 热链接（开发期临时） | 上述任一位置换成指向仓库的软链 | 与软链同侧 | 无人——改仓库即刻可见 |
+
+所以「改仓库」和「改线上」是两件事：**不重装、不重启，就不生效**。
 
 ```bash
 npm run verify:all     # 1) 本地全量自检（与 CI 同一入口）
-./install.sh           # 2) 覆盖 ~/.dsh/plugins/ 副本（自动留 package.json 备份 + plugin-src 快照）
-npm run verify:install # 3) 体检：盘上三处版本是否一致、接线是哪一种、进程是不是比副本更旧
+./install.sh           # 2) 只有 install.sh 式需要：覆盖 ~/.dsh/plugins/ 副本（自动留 package.json 备份 + plugin-src 快照）
+npm run verify:install # 3) 体检：加载的是哪棵树、与仓库对不对得上、接线有没有重复、进程是不是比那棵树更旧
 # 4) 重启 DSH 进程，进 GUI 确认状态条 / 设置台
 ```
 
-`verify:install` 专治两种「看着装了其实没生效」：**装了没重启**（dsh web 进程启动时间早于副本 mtime → 警告）与**接线漂移**（`link:` 旧接线、patch insert 与 `bundles` 双接线、`node_modules` 副本没同步）。缺 `~/.dsh` 时它打印 SKIP 并退出 0，所以 CI 上不会误伤；本地想把它当门禁用就加 `--strict`（警告也算失败）。
+管理器式下有个坑值得记：插件的落点 `~/.dsh/plugin-src/dsh-infinite-gen-5` 必须是**实体副本**，不能是指向仓库的软链 —— 管理器的原位覆盖会失败（本机踩过：dev 热链接态下点「覆盖式更新」报错，只能卸载重装）。要用 dev 热链接开发，先 `npm run dev:restore` 把落点还原成实体。
+
+`verify:install` 专治两种「看着装了其实没生效」：**装了没重启**（dsh web 进程启动时间早于运行时文件 mtime → 警告）与**接线漂移**（patch insert 与 `bundles` 双接线、依赖目标解析不到、`node_modules` 与依赖声明不是同一棵树）。缺 `~/.dsh` 时它打印 SKIP 并退出 0，所以 CI 上不会误伤；本地想把它当门禁用就加 `--strict`（警告也算失败）。
 
 ### 开发热链接（dev-link）：改一行立刻可见，不必重跑安装
 
-上面那条循环每轮都要 `./install.sh` + 重启，很钝。开发期可以切成**软链**：
+上面那条循环每轮都要 `./install.sh` + 重启，很钝。开发期可以切成**软链**（适用于 install.sh 式接线；管理器式下还要把 profile 依赖临时指向仓库，否则 `verify:install` 会报「`node_modules` 与依赖声明不是同一棵树」）：
 
 ```bash
 npm run dev:link       # 切热链接：~/.dsh/plugins/dsh-infinite-gen-5 → 仓库根（原副本改名 .bak-*-pre-devlink 留存）

@@ -8,7 +8,8 @@
 
 ### ✨ 新特性
 
-- 「装了没重启」只看运行时文件（index.js/client.js/cordis.patch.yml/prompts/data），文档与脚本改动不再误报
+- 接线体检认三种接线（管理器式/install.sh 式/dev 热链接）+ 去掉双接线 + 清 dev-link 残留
+- 「装了没重启」只看运行时文件（index.js/client.js/cordis.patch.yml/prompts/data），文档与脚本改动不再误报（`8a94d2c`）
 
 ### 🧹 杂务与维护
 
