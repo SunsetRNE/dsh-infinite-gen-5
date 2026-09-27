@@ -16,9 +16,9 @@ import {
 } from "./data/scenarios.mjs";
 import { probeEnv, renderEnvSummary, ENV_SCHEMA } from "./data/probe.mjs";
 
-// ── 无限五代内核载荷（v0.11.0） ────────────────────────────────────────────────────
+// ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.11.0";
+const PLUGIN_VERSION = "0.11.1";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -78,7 +78,8 @@ const profileTool = {
         "prompts/infinite-gen-5.1-flash.md",
       ],
       lineage: [
-        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 工具调用卫生：内核新增 Tool-call rule —— 一轮一个工具、参数短而平（禁裸换行 / 未转义引号 / 单次塞整份文件正文）、长输出按行范围分段小写、坏 JSON 或空包视为重试信号改小重发；针对反复出现的 DeepSeek Messages stream: tool input is invalid JSON；内核 6393 → 6789 B（预算仍 ≤6800 B）`,
+        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 设置台归位与比例精修：设置页入口从最顶部（order -100）挪到官方「插件」之后（order 16，nav 变成 账户 -10 / 通用 0 / 模型 10 / 插件 15 / 无限五代 16）—— 附着在同类功能旁边，不再抢占视线；同一页重做比例：限宽 560px、形态四档两列网格、挂载位置三列、预览换成带「空闲 / 执行中 / 判决」标签的内嵌面板、只读信息两栏对齐、按钮统一 30px 高（「完成」用宿主主按钮样式）；verify_ui 135 项`,
+        `dsh-infinite-gen-5 (v0.11.0) — 工具调用卫生：内核新增 Tool-call rule —— 一轮一个工具、参数短而平（禁裸换行 / 未转义引号 / 单次塞整份文件正文）、长输出按行范围分段小写、坏 JSON 或空包视为重试信号改小重发；针对反复出现的 DeepSeek Messages stream: tool input is invalid JSON；内核 6393 → 6789 B（预算仍 ≤6800 B）`,
         `dsh-infinite-gen-5 (v0.10.0) — 客户端设置台：设置页最顶部注册一个「无限五代」入口（settings.section，order -100，排在官方 general/models 之前），点开就是插件自己的独立页面 —— 形态四档（glyph/compact/full/dot）、挂载位置三档（输入框 dock / 会话标题栏 / 输入区）、可选的侧栏入口（main 面板 + sidebar.panellist 图标，与官方「插件」面板同款），全部即时生效并写进 localStorage（dsh-infinite-gen-5:prefs，刷新后还在）；设置页与状态条共用同一个偏好源，页面里改什么状态条当场变`,
         "dsh-infinite-gen-5 (v0.9.0) — 离线评测闭环：把 tests/ 里 110 条语料的 expected_domain / expected_verdict 接进计量 （scripts/lib/corpus.mjs 纯函数库 + scripts/eval-corpus.mjs CLI）—— 混淆矩阵、每类 P/R/F1、Top-1/Top-3、误判样本、覆盖缺口、以及 tests/eval-baseline.json 回归门禁（回退超过 0.5 个百分点即失败）；首批实测 Top-1 68.2% / Top-3 76.5%，并抓出 llm 召回 17.6%、postex 缺包、5 个标签假阳三处真问题",
         "dsh-infinite-gen-5 (v0.8.2) — 客户端状态条入口压成单字符记号：空闲与执行中只留圆点（执行中呼吸），判决只留 ✓ 通过 / ✕ 拒绝 / ! 兜底（按宿主 success/error 令牌着色）并替代圆点；领域、候选排名、命中标记词、扫描范围、载荷数一律进点击浮层与悬停 title；形态由 client.js 的 TRIGGER_MODE 控制（glyph 默认 / compact 短词 / full 长文字 / dot 纯圆点）",

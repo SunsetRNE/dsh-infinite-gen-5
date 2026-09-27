@@ -235,8 +235,10 @@ ok("__meta 暴露的位置与注册结果一致",
 const sectionReg = registrations.find((r) => r.options.name === "settings.section");
 ok("设置页入口注册进 settings.section（宿主原生做法，与官方「插件」页同槽）",
   sectionReg !== undefined, JSON.stringify(registrations.map((r) => r.options.name)));
-ok("设置页入口排在最顶部（order -100，早于官方 general/models 的 0）",
-  sectionReg.options.order === -100, String(sectionReg.options.order));
+ok("设置页入口排在官方「插件」之后（order 16 > plugins 的 15，不再挤到最顶部）",
+  sectionReg.options.order === 16, String(sectionReg.options.order));
+ok("入口顺序取自 __meta.consoleOrder（不是散落的字面量）",
+  sectionReg.options.order === mod.__meta.consoleOrder);
 ok("设置页入口 id 与 __meta.consoleKey 一致", sectionReg.options.id === mod.__meta.consoleKey, sectionReg.options.id);
 ok("设置页入口 label 是 thunk（宿主每次投影重读，可跟随语言）",
   typeof sectionReg.options.label === "function" && sectionReg.options.label() === mod.__meta.idleLabel,
@@ -834,9 +836,17 @@ if (process.argv.includes("--emit-html")) {
   const consoleInstance = loadInstance({ storage: fakeStorage({}) });
   const consoleTree = mountComponent(consoleInstance.page, undefined).tree;
   const consoleHtml = toHtml(consoleTree);
-  const navLabels = [consoleInstance.meta.idleLabel, "通用", "模型", "插件", "账户", "关于"];
+  // 官方 nav 顺序（order 升序）：账户 -10 / 通用 0 / 模型 10 / 插件 15，我们的条目 order 16 紧随其后。
+  const navLabels = [
+    { label: "账户", mine: false },
+    { label: "通用", mine: false },
+    { label: "模型", mine: false },
+    { label: "插件", mine: false },
+    { label: consoleInstance.meta.idleLabel, mine: true },
+    { label: "关于", mine: false }
+  ];
   const navHtml = navLabels
-    .map((label, i) => `<button class="settings-nav-item${i === 0 ? " is-active mine" : ""}" type="button">${label}</button>`)
+    .map((row) => `<button class="settings-nav-item${row.mine ? " is-active mine" : ""}" type="button">${row.label}</button>`)
     .join("");
 
   const mo = mount({ "infinite-gen-5:armor": PASS });

@@ -1,6 +1,6 @@
 (() => {
   try {
-    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 + 设置台 v0.11.0 */
+    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 + 设置台 v0.11.1 */
     window.__ModuleLoader__.load({
       id: "dsh-infinite-gen-5",
       factory: (require) => {
@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.11.0";
+        var VERSION = "v0.11.1";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -109,43 +109,62 @@
           ".dsh-armor5-rows .k{color:var(--dsw-alias-label-tertiary,#8b8b8b);flex:none;min-width:64px}",
           ".dsh-armor5-rows .v{color:var(--dsw-alias-label-primary,#e6e6e6);overflow-wrap:anywhere}",
           ".dsh-armor5-note{margin:8px 0 0;color:var(--dsw-alias-label-caption,#8b8b8b)}",
-          // ── 设置台（settings.section 里的那一页，v0.10.0） ──
-          // 令牌取自设置页自己用的那一套（bg-layer-2 / border-l2 / label-* / business-primary）。
-          ".armor5-console{box-sizing:border-box;display:flex;flex-direction:column;gap:18px;",
-          "min-width:0;max-width:640px;padding:2px 0 28px;color:var(--dsw-alias-label-secondary,#b4b4b4);",
+          // ── 设置台（settings.section 里的那一页） ──
+          // 令牌全部取自设置页自己用的那一套（bg-layer-2 / border-l2 / label-* / business-primary），
+          // 每个都带兜底色。比例按设置页的节奏调：可选块用两/三列网格，预览块是一块内嵌面板，
+          // 只读块两栏对齐，按钮统一 30px 高。
+          ".armor5-console{box-sizing:border-box;display:flex;flex-direction:column;gap:20px;",
+          "min-width:0;max-width:560px;padding:0 0 20px;color:var(--dsw-alias-label-secondary,#b4b4b4);",
           "font-size:var(--dsh-content-font-size-secondary,13px);line-height:20px}",
-          ".armor5-console-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}",
-          ".armor5-console-head b{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:15px;font-weight:600}",
-          ".armor5-console-ver{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-variant-numeric:tabular-nums}",
-          ".armor5-console-hint{color:var(--dsw-alias-label-caption,#8b8b8b)}",
+          ".armor5-console-head{display:flex;flex-direction:column;gap:3px}",
+          ".armor5-console-title{display:flex;align-items:center;gap:8px}",
+          ".armor5-console-title b{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:15px;font-weight:600}",
+          ".armor5-console-ver{display:inline-flex;align-items:center;height:17px;padding:0 7px;border-radius:999px;",
+          "background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08));color:var(--dsw-alias-label-tertiary,#8b8b8b);",
+          "font-size:11px;font-variant-numeric:tabular-nums}",
+          ".armor5-console-hint{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:12px}",
           ".armor5-console-group{display:flex;flex-direction:column;gap:8px}",
-          ".armor5-console-group-title{color:var(--dsw-alias-label-primary,#e6e6e6);font-weight:500}",
-          ".armor5-console-choices{display:flex;flex-wrap:wrap;gap:8px}",
-          ".armor5-console-choice{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;",
-          "padding:8px 12px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
-          "border-radius:var(--dsw-radius-lg,12px);background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.06));",
-          "color:inherit;font:inherit;cursor:pointer}",
+          ".armor5-console-group-title{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:12px;font-weight:600}",
+          ".armor5-console-choices{display:grid;gap:8px}",
+          ".armor5-console-choices-2{grid-template-columns:repeat(2,minmax(0,1fr))}",
+          ".armor5-console-choices-3{grid-template-columns:repeat(3,minmax(0,1fr))}",
+          ".armor5-console-choices-1{grid-template-columns:minmax(0,1fr)}",
+          ".armor5-console-choice{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;",
+          "min-height:54px;padding:9px 11px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
+          "border-radius:var(--dsw-radius-lg,12px);background:0 0;color:inherit;font:inherit;cursor:pointer;",
+          "transition:background-color .12s ease,border-color .12s ease}",
           ".armor5-console-choice:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12))}",
           ".armor5-console-choice:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary,#4d6bfe);outline-offset:2px}",
-          ".armor5-console-choice.is-active{border-color:var(--dsw-alias-state-business-primary,#4d6bfe)}",
-          ".armor5-console-choice-label{color:var(--dsw-alias-label-primary,#e6e6e6)}",
-          ".armor5-console-choice-hint{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:12px}",
-          ".armor5-console-dock{display:flex;align-items:center;justify-content:center;gap:12px;padding:8px;",
-          "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
+          ".armor5-console-choice.is-active{border-color:var(--dsw-alias-state-business-primary,#4d6bfe);",
+          "background:var(--dsw-alias-interactive-bg-hover-accent,rgba(77,107,254,.10))}",
+          ".armor5-console-choice-label{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:13px}",
+          ".armor5-console-choice-hint{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11.5px;line-height:16px}",
+          ".armor5-console-previews{display:flex;flex-direction:column;gap:2px;padding:8px 10px;",
+          "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.20));",
           "border-radius:var(--dsw-radius-lg,12px);background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.06))}",
-          ".armor5-console-meter{color:var(--dsw-alias-label-tertiary,#8b8b8b)}",
-          ".armor5-console-badge{display:inline-flex;align-items:center;gap:6px;color:var(--dsw-alias-label-tertiary,#8b8b8b)}",
+          ".armor5-console-preview{display:flex;align-items:center;gap:10px;height:28px}",
+          ".armor5-console-preview-tag{flex:none;width:42px;color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11.5px}",
+          ".armor5-console-dock{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;",
+          "padding:3px 6px 3px 0}",
+          ".armor5-console-meter{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:12px;",
+          "font-variant-numeric:tabular-nums}",
+          ".armor5-console-badge{display:inline-flex;align-items:center;gap:6px;color:var(--dsw-alias-label-tertiary,#8b8b8b);",
+          "font-size:12px}",
           ".armor5-console-badge[data-kind=pass]{color:var(--dsw-alias-state-success-primary,#3fb950)}",
-          ".armor5-console-rows{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}",
-          ".armor5-console-rows li{display:flex;gap:8px;align-items:baseline}",
-          ".armor5-console-rows .k{flex:none;min-width:88px;color:var(--dsw-alias-label-tertiary,#8b8b8b)}",
-          ".armor5-console-rows .v{color:var(--dsw-alias-label-primary,#e6e6e6);overflow-wrap:anywhere}",
-          ".armor5-console-foot{display:flex;gap:8px}",
-          ".armor5-console-btn{padding:6px 12px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
+          ".armor5-console-rows{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}",
+          ".armor5-console-rows li{display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;align-items:baseline}",
+          ".armor5-console-rows .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:12px}",
+          ".armor5-console-rows .v{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:12px;overflow-wrap:anywhere}",
+          ".armor5-console-foot{display:flex;gap:8px;padding-top:2px}",
+          ".armor5-console-btn{height:30px;padding:0 13px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
           "border-radius:var(--dsw-radius-sm,6px);background:0 0;color:var(--dsw-alias-label-secondary,#b4b4b4);",
-          "font:inherit;cursor:pointer}",
+          "font:inherit;font-size:12.5px;cursor:pointer;transition:background-color .12s ease,color .12s ease}",
           ".armor5-console-btn:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12));",
           "color:var(--dsw-alias-label-primary,#e6e6e6)}",
+          ".armor5-console-btn.is-primary{border-color:transparent;",
+          "background:var(--dsw-alias-button-primary-fill,#4d6bfe);color:var(--dsw-alias-label-primary-foreground,#fff)}",
+          ".armor5-console-btn.is-primary:hover{background:var(--dsw-alias-button-primary-hover,#3d5bee);",
+          "color:var(--dsw-alias-label-primary-foreground,#fff)}",
           ".armor5-console-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;",
           "color:var(--dsw-alias-label-tertiary,#8b8b8b)}"
         ].join("");
@@ -420,8 +439,10 @@
         // 宿主把「设置页的一项 = 一个 nav 按钮 + 一页独立内容」做在同一个槽位里：
         // client-ui-settings-general 里 renderSlot("settings.section", { close },
         // { only: active })，nav 行的 label 与顺序就来自注册项。官方「插件」页
-        // （client-ui-settings-plugins）也是这么注册的。我们声明 order -100 排到
-        // 最顶部，页面内容完全自己渲染 —— 不 require 任何宿主组件包。
+        // （client-ui-settings-plugins）也是这么注册的。官方各节顺序是 账户 -10 /
+        // 通用 0 / 模型 10 / 插件 15；我们声明 order 16 紧随「插件」之后（v0.11.1
+        // 起，此前 -100 挤在最顶部让用户觉得别扭）。页面内容完全自己渲染 —— 不
+        // require 任何宿主组件包。
         //
         // 偏好落在 localStorage["dsh-infinite-gen-5:prefs"]；没有本地存储（隐私
         // 模式 / 自检沙箱）时退化成「只在本会话生效」，不抛错。
@@ -438,7 +459,9 @@
           sidebarIcon: function (v) { return typeof v === "boolean"; }
         };
         var CONSOLE_KEY = "armor5";
-        var CONSOLE_ORDER = -100;
+        // 设置页 nav 里排在官方「插件」那一项（order 15）后面：不常用，顺使用习惯，
+        // 但仍在同一条 nav 里、点开就是自己的独立页面。
+        var CONSOLE_ORDER = 16;
         var prefsCache = null;
         var prefsListeners = [];
 
@@ -540,14 +563,17 @@
 
         function ArmorPreviewRow(props) {
           var view = previewOf(props.mode, props.kind);
-          return react.createElement("div", { className: "armor5-console-dock" },
-            react.createElement("span", { className: "armor5-console-meter" }, "上下文 12%"),
-            react.createElement("span", { className: "armor5-console-badge", "data-kind": props.kind },
-              view.text ? react.createElement("span", { className: "dsh-armor5-text" }, view.text) : null,
-              view.dot ? react.createElement("span", {
-                className: "dsh-armor5-dot",
-                "data-busy": props.kind === "busy" ? "true" : undefined
-              }) : null
+          return react.createElement("div", { className: "armor5-console-preview" },
+            react.createElement("span", { className: "armor5-console-preview-tag" }, props.tag),
+            react.createElement("span", { className: "armor5-console-dock" },
+              react.createElement("span", { className: "armor5-console-meter" }, "上下文 12%"),
+              react.createElement("span", { className: "armor5-console-badge", "data-kind": props.kind },
+                view.text ? react.createElement("span", { className: "dsh-armor5-text" }, view.text) : null,
+                view.dot ? react.createElement("span", {
+                  className: "dsh-armor5-dot",
+                  "data-busy": props.kind === "busy" ? "true" : undefined
+                }) : null
+              )
             )
           );
         }
@@ -595,9 +621,9 @@
           });
 
           var slotChoices = [
-            { value: "composer", hint: "与原生上下文计量器同排（推荐）" },
+            { value: "composer", hint: "与原生计量器同排（推荐）" },
             { value: "header", hint: "会话标题栏右侧角落" },
-            { value: "zone", hint: "输入框上方那一列，会与任务列表同列" }
+            { value: "zone", hint: "输入框上方，与任务列表同列" }
           ].map(function (row) {
             return react.createElement(ArmorChoice, {
               key: row.value,
@@ -611,27 +637,31 @@
 
           return react.createElement("div", { className: "armor5-console" },
             react.createElement("div", { className: "armor5-console-head" },
-              react.createElement("b", null, IDLE_LABEL),
-              react.createElement("span", { className: "armor5-console-ver" }, VERSION),
-              react.createElement("span", { className: "armor5-console-hint" }, "面板形态与位置，改完立即生效并保存在本机")
+              react.createElement("div", { className: "armor5-console-title" },
+                react.createElement("b", null, IDLE_LABEL),
+                react.createElement("span", { className: "armor5-console-ver" }, VERSION)
+              ),
+              react.createElement("span", { className: "armor5-console-hint" }, "面板形态与挂载位置，改完立即生效并保存在本机")
             ),
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "上屏多少信息（TRIGGER_MODE）"),
-              react.createElement("div", { className: "armor5-console-choices" }, modeChoices)
+              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-2" }, modeChoices)
             ),
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "预览"),
-              react.createElement(ArmorPreviewRow, { mode: mode, kind: "idle" }),
-              react.createElement(ArmorPreviewRow, { mode: mode, kind: "busy" }),
-              react.createElement(ArmorPreviewRow, { mode: mode, kind: "pass" })
+              react.createElement("div", { className: "armor5-console-previews" },
+                react.createElement(ArmorPreviewRow, { mode: mode, kind: "idle", tag: "空闲" }),
+                react.createElement(ArmorPreviewRow, { mode: mode, kind: "busy", tag: "执行中" }),
+                react.createElement(ArmorPreviewRow, { mode: mode, kind: "pass", tag: "判决" })
+              )
             ),
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "挂到哪个槽位（SLOT_MODE）"),
-              react.createElement("div", { className: "armor5-console-choices" }, slotChoices)
+              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-3" }, slotChoices)
             ),
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "入口"),
-              react.createElement("div", { className: "armor5-console-choices" },
+              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-1" },
                 react.createElement(ArmorChoice, {
                   value: "sidebar",
                   label: prefs.sidebarIcon ? "侧栏入口：已开启" : "侧栏入口：已关闭",
@@ -660,7 +690,7 @@
               }, "恢复默认"),
               onClose ? react.createElement("button", {
                 type: "button",
-                className: "armor5-console-btn",
+                className: "armor5-console-btn is-primary",
                 onClick: onClose
               }, "完成") : null
             )
