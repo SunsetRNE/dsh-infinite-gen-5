@@ -1,6 +1,6 @@
 (() => {
   try {
-    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 v0.9.0 */
+    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 + 设置台 v0.10.0 */
     window.__ModuleLoader__.load({
       id: "dsh-infinite-gen-5",
       factory: (require) => {
@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.9.0";
+        var VERSION = "v0.10.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -108,7 +108,46 @@
           ".dsh-armor5-rows li{display:flex;gap:8px;align-items:baseline}",
           ".dsh-armor5-rows .k{color:var(--dsw-alias-label-tertiary,#8b8b8b);flex:none;min-width:64px}",
           ".dsh-armor5-rows .v{color:var(--dsw-alias-label-primary,#e6e6e6);overflow-wrap:anywhere}",
-          ".dsh-armor5-note{margin:8px 0 0;color:var(--dsw-alias-label-caption,#8b8b8b)}"
+          ".dsh-armor5-note{margin:8px 0 0;color:var(--dsw-alias-label-caption,#8b8b8b)}",
+          // ── 设置台（settings.section 里的那一页，v0.10.0） ──
+          // 令牌取自设置页自己用的那一套（bg-layer-2 / border-l2 / label-* / business-primary）。
+          ".armor5-console{box-sizing:border-box;display:flex;flex-direction:column;gap:18px;",
+          "min-width:0;max-width:640px;padding:2px 0 28px;color:var(--dsw-alias-label-secondary,#b4b4b4);",
+          "font-size:var(--dsh-content-font-size-secondary,13px);line-height:20px}",
+          ".armor5-console-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}",
+          ".armor5-console-head b{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:15px;font-weight:600}",
+          ".armor5-console-ver{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-variant-numeric:tabular-nums}",
+          ".armor5-console-hint{color:var(--dsw-alias-label-caption,#8b8b8b)}",
+          ".armor5-console-group{display:flex;flex-direction:column;gap:8px}",
+          ".armor5-console-group-title{color:var(--dsw-alias-label-primary,#e6e6e6);font-weight:500}",
+          ".armor5-console-choices{display:flex;flex-wrap:wrap;gap:8px}",
+          ".armor5-console-choice{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;",
+          "padding:8px 12px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
+          "border-radius:var(--dsw-radius-lg,12px);background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.06));",
+          "color:inherit;font:inherit;cursor:pointer}",
+          ".armor5-console-choice:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12))}",
+          ".armor5-console-choice:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary,#4d6bfe);outline-offset:2px}",
+          ".armor5-console-choice.is-active{border-color:var(--dsw-alias-state-business-primary,#4d6bfe)}",
+          ".armor5-console-choice-label{color:var(--dsw-alias-label-primary,#e6e6e6)}",
+          ".armor5-console-choice-hint{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:12px}",
+          ".armor5-console-dock{display:flex;align-items:center;justify-content:center;gap:12px;padding:8px;",
+          "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
+          "border-radius:var(--dsw-radius-lg,12px);background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.06))}",
+          ".armor5-console-meter{color:var(--dsw-alias-label-tertiary,#8b8b8b)}",
+          ".armor5-console-badge{display:inline-flex;align-items:center;gap:6px;color:var(--dsw-alias-label-tertiary,#8b8b8b)}",
+          ".armor5-console-badge[data-kind=pass]{color:var(--dsw-alias-state-success-primary,#3fb950)}",
+          ".armor5-console-rows{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}",
+          ".armor5-console-rows li{display:flex;gap:8px;align-items:baseline}",
+          ".armor5-console-rows .k{flex:none;min-width:88px;color:var(--dsw-alias-label-tertiary,#8b8b8b)}",
+          ".armor5-console-rows .v{color:var(--dsw-alias-label-primary,#e6e6e6);overflow-wrap:anywhere}",
+          ".armor5-console-foot{display:flex;gap:8px}",
+          ".armor5-console-btn{padding:6px 12px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
+          "border-radius:var(--dsw-radius-sm,6px);background:0 0;color:var(--dsw-alias-label-secondary,#b4b4b4);",
+          "font:inherit;cursor:pointer}",
+          ".armor5-console-btn:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12));",
+          "color:var(--dsw-alias-label-primary,#e6e6e6)}",
+          ".armor5-console-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;",
+          "color:var(--dsw-alias-label-tertiary,#8b8b8b)}"
         ].join("");
 
         function sameNode(a, b) {
@@ -117,6 +156,8 @@
 
         function ArmorDock(props) {
           var useProjection = props.useProjection;
+          // 形态来自设置台（默认值 = 源码常量），所以「设置里改了」与「状态条上显示」永远同源。
+          var triggerMode = usePrefs().triggerMode;
           // 两个 useProjection 都是无条件调用，保持 hook 顺序恒定。
           // 五代用自己的投影键；"armor" 留给同机安装的四代（key: "armor"）。
           var canProject = typeof useProjection === "function";
@@ -267,12 +308,12 @@
           }
           // 上屏文字：glyph 用单字符（空闲/执行中无文字）、compact 用短词、full 用长文、
           // dot 一律无文字。文字以外的信息一律走 title（悬停）与浮层（点击）。
-          var text = TRIGGER_MODE === "full" ? fullText
-            : TRIGGER_MODE === "compact" ? shortText
-              : TRIGGER_MODE === "glyph" ? glyphText
+          var text = triggerMode === "full" ? fullText
+            : triggerMode === "compact" ? shortText
+              : triggerMode === "glyph" ? glyphText
                 : "";
           // glyph 形态下判决有记号就不必再画圆点（圆点是空闲/执行中的形态）。
-          var showDot = !(TRIGGER_MODE === "glyph" && glyphText !== "");
+          var showDot = !(triggerMode === "glyph" && glyphText !== "");
 
           var candidatesText = ranked.length
             ? ranked.map(function (row) {
@@ -373,21 +414,348 @@
           );
         }
 
-        function apply(ctx) {
-          // inject 只在宿主声明了该槽位后才回调，所以未声明的槽位不会抛错，只是不渲染。
-          ctx.slots.inject(SLOT_NAME, () =>
-            ctx.slots.register({
-              name: SLOT_NAME,
-              id: SLOT_ID,
-              order: SLOT_ORDER
-            }, ArmorDock)
+        // ────────────────────────────────────────────────────────────────────
+        // 设置台（v0.10.0）：形态 / 位置 / 侧栏入口从设置页调，不再改源码
+        //
+        // 宿主把「设置页的一项 = 一个 nav 按钮 + 一页独立内容」做在同一个槽位里：
+        // client-ui-settings-general 里 renderSlot("settings.section", { close },
+        // { only: active })，nav 行的 label 与顺序就来自注册项。官方「插件」页
+        // （client-ui-settings-plugins）也是这么注册的。我们声明 order -100 排到
+        // 最顶部，页面内容完全自己渲染 —— 不 require 任何宿主组件包。
+        //
+        // 偏好落在 localStorage["dsh-infinite-gen-5:prefs"]；没有本地存储（隐私
+        // 模式 / 自检沙箱）时退化成「只在本会话生效」，不抛错。
+        // ────────────────────────────────────────────────────────────────────
+        var PREF_KEY = "dsh-infinite-gen-5:prefs";
+        var PREF_DEFAULTS = Object.freeze({
+          triggerMode: TRIGGER_MODE,
+          slotMode: SLOT_MODE,
+          sidebarIcon: false
+        });
+        var PREF_CHECKS = {
+          triggerMode: function (v) { return TRIGGER_MODES.indexOf(v) >= 0; },
+          slotMode: function (v) { return Object.prototype.hasOwnProperty.call(SLOT_MODES, v); },
+          sidebarIcon: function (v) { return typeof v === "boolean"; }
+        };
+        var CONSOLE_KEY = "armor5";
+        var CONSOLE_ORDER = -100;
+        var prefsCache = null;
+        var prefsListeners = [];
+
+        function safeStorage() {
+          try {
+            if (typeof localStorage !== "undefined" && localStorage) return localStorage;
+            if (typeof window !== "undefined" && window && window.localStorage) return window.localStorage;
+          } catch (err) { /* 隐私模式 / 沙箱禁止访问：只落在内存 */ }
+          return null;
+        }
+
+        function readPrefs() {
+          if (prefsCache) return prefsCache;
+          var raw = null;
+          var store = safeStorage();
+          if (store) {
+            try { raw = JSON.parse(store.getItem(PREF_KEY) || "null"); } catch (err) { raw = null; }
+          }
+          var out = {};
+          for (var key in PREF_DEFAULTS) {
+            var value = raw && typeof raw === "object" ? raw[key] : undefined;
+            out[key] = PREF_CHECKS[key](value) === true ? value : PREF_DEFAULTS[key];
+          }
+          prefsCache = Object.freeze(out);
+          return prefsCache;
+        }
+
+        function writePrefs(patch) {
+          var current = readPrefs();
+          var next = {};
+          for (var key in PREF_DEFAULTS) {
+            if (!patch || !Object.prototype.hasOwnProperty.call(patch, key)) {
+              next[key] = current[key];
+            } else {
+              // 非法写入直接忽略：留着用户原来的选择，比悄悄重置成出厂值更不意外。
+              next[key] = PREF_CHECKS[key](patch[key]) === true ? patch[key] : current[key];
+            }
+          }
+          prefsCache = Object.freeze(next);
+          var store = safeStorage();
+          if (store) {
+            try { store.setItem(PREF_KEY, JSON.stringify(next)); } catch (err) { /* 配额 / 只读 */ }
+          }
+          for (var i = 0; i < prefsListeners.length; i += 1) {
+            try { prefsListeners[i](prefsCache); } catch (err) { /* 单个订阅者出错不影响其他 */ }
+          }
+          return prefsCache;
+        }
+
+        function subscribePrefs(listener) {
+          prefsListeners.push(listener);
+          return function () {
+            var at = prefsListeners.indexOf(listener);
+            if (at >= 0) prefsListeners.splice(at, 1);
+          };
+        }
+
+        function usePrefs() {
+          var pair = react.useState(readPrefs());
+          var setCurrent = pair[1];
+          react.useEffect(function () {
+            return subscribePrefs(function () { setCurrent(readPrefs()); });
+          }, []);
+          return pair[0];
+        }
+
+        function effectiveSlotMode() {
+          var mode = readPrefs().slotMode;
+          return Object.prototype.hasOwnProperty.call(SLOT_MODES, mode) ? mode : SLOT_MODE;
+        }
+
+        function effectiveSlotName() {
+          return SLOT_MODES[effectiveSlotMode()] || SLOT_MODES.composer;
+        }
+
+        // 设置页里的预览用与状态条同一条规则算文字：同源，避免「设置里写 A、条上显示 B」。
+        var PREVIEW_TEXT = { idle: IDLE_LABEL, pass: "通过 · web(3) · 载荷 2", short: "通过 web(3)" };
+        function previewOf(mode, kind) {
+          // 三行预览与状态条同规则：空闲「无限五代」、执行中圆点呼吸、判决 ✓。
+          var full = kind === "idle" ? PREVIEW_TEXT.idle : kind === "busy" ? "执行中" : PREVIEW_TEXT.pass;
+          var short = kind === "pass" ? PREVIEW_TEXT.short : "";
+          var glyph = kind === "pass" ? VERDICT_GLYPHS.pass : "";
+          var text = mode === "full" ? full : mode === "compact" ? short : mode === "glyph" ? glyph : "";
+          return { text: text, dot: !(mode === "glyph" && glyph !== "") };
+        }
+
+        function ArmorChoice(props) {
+          return react.createElement("button", {
+            type: "button",
+            className: "armor5-console-choice" + (props.active ? " is-active" : ""),
+            "data-choice": props.value,
+            "aria-pressed": props.active ? "true" : "false",
+            onClick: props.onPick
+          },
+            react.createElement("span", { className: "armor5-console-choice-label" }, props.label),
+            props.hint ? react.createElement("span", { className: "armor5-console-choice-hint" }, props.hint) : null
           );
+        }
+
+        function ArmorPreviewRow(props) {
+          var view = previewOf(props.mode, props.kind);
+          return react.createElement("div", { className: "armor5-console-dock" },
+            react.createElement("span", { className: "armor5-console-meter" }, "上下文 12%"),
+            react.createElement("span", { className: "armor5-console-badge", "data-kind": props.kind },
+              view.text ? react.createElement("span", { className: "dsh-armor5-text" }, view.text) : null,
+              view.dot ? react.createElement("span", {
+                className: "dsh-armor5-dot",
+                "data-busy": props.kind === "busy" ? "true" : undefined
+              }) : null
+            )
+          );
+        }
+
+        /**
+         * 设置页里我们自己的那一页（settings.section，排在最顶部）。
+         * 只读偏好 + 写偏好，改动立刻反映到状态条（同一个 prefs 源）。
+         */
+        function ArmorConsolePage(props) {
+          var prefs = usePrefs();
+          var mode = prefs.triggerMode;
+          var onClose = props && typeof props.close === "function" ? props.close : null;
+          var store = safeStorage();
+
+          function pick(field, value) {
+            var patch = {};
+            patch[field] = value;
+            return function () { writePrefs(patch); };
+          }
+
+          var rows = [
+            ["版本", TITLE],
+            ["形态", mode + "（" + TRIGGER_MODES.length + " 档：glyph 记号 / compact 短词 / full 长文 / dot 纯圆点）"],
+            ["位置", prefs.slotMode + " → " + (SLOT_MODES[prefs.slotMode] || SLOT_MODES.composer)],
+            ["内核载荷", "Order 100 单段载荷 + Order 200 末位锚点，同源命中自动让位"],
+            ["判定源", "本次会话的实时投影（key armor），判决一直留到你的下一条发言"],
+            ["领域与工具", "56 域 × 7 族；infinite_gen5_scenario 取领域包，infinite_gen5_env 看本机环境"],
+            ["存储", store ? "本机 localStorage（" + PREF_KEY + "）" : "仅本会话（当前环境没有本地存储）"]
+          ];
+
+          var modeChoices = [
+            { value: "glyph", label: "✓ 记号", hint: "空闲/执行中只有圆点，判决只一个字符（默认）" },
+            { value: "compact", label: "短词", hint: "判决写「通过 web(3)」" },
+            { value: "full", label: "长文字", hint: "判决写「通过 · web(3) · 载荷 2」" },
+            { value: "dot", label: "纯圆点", hint: "上屏只有圆点，全部信息进浮层" }
+          ].map(function (row) {
+            return react.createElement(ArmorChoice, {
+              key: row.value,
+              value: row.value,
+              label: row.label,
+              hint: row.hint,
+              active: mode === row.value,
+              onPick: pick("triggerMode", row.value)
+            });
+          });
+
+          var slotChoices = [
+            { value: "composer", hint: "与原生上下文计量器同排（推荐）" },
+            { value: "header", hint: "会话标题栏右侧角落" },
+            { value: "zone", hint: "输入框上方那一列，会与任务列表同列" }
+          ].map(function (row) {
+            return react.createElement(ArmorChoice, {
+              key: row.value,
+              value: row.value,
+              label: row.value,
+              hint: row.hint,
+              active: prefs.slotMode === row.value,
+              onPick: pick("slotMode", row.value)
+            });
+          });
+
+          return react.createElement("div", { className: "armor5-console" },
+            react.createElement("div", { className: "armor5-console-head" },
+              react.createElement("b", null, IDLE_LABEL),
+              react.createElement("span", { className: "armor5-console-ver" }, VERSION),
+              react.createElement("span", { className: "armor5-console-hint" }, "面板形态与位置，改完立即生效并保存在本机")
+            ),
+            react.createElement("div", { className: "armor5-console-group" },
+              react.createElement("div", { className: "armor5-console-group-title" }, "上屏多少信息（TRIGGER_MODE）"),
+              react.createElement("div", { className: "armor5-console-choices" }, modeChoices)
+            ),
+            react.createElement("div", { className: "armor5-console-group" },
+              react.createElement("div", { className: "armor5-console-group-title" }, "预览"),
+              react.createElement(ArmorPreviewRow, { mode: mode, kind: "idle" }),
+              react.createElement(ArmorPreviewRow, { mode: mode, kind: "busy" }),
+              react.createElement(ArmorPreviewRow, { mode: mode, kind: "pass" })
+            ),
+            react.createElement("div", { className: "armor5-console-group" },
+              react.createElement("div", { className: "armor5-console-group-title" }, "挂到哪个槽位（SLOT_MODE）"),
+              react.createElement("div", { className: "armor5-console-choices" }, slotChoices)
+            ),
+            react.createElement("div", { className: "armor5-console-group" },
+              react.createElement("div", { className: "armor5-console-group-title" }, "入口"),
+              react.createElement("div", { className: "armor5-console-choices" },
+                react.createElement(ArmorChoice, {
+                  value: "sidebar",
+                  label: prefs.sidebarIcon ? "侧栏入口：已开启" : "侧栏入口：已关闭",
+                  hint: "在侧栏底部再加一个独立页面入口（与官方「插件」面板同款 main 面板）",
+                  active: prefs.sidebarIcon === true,
+                  onPick: function () { writePrefs({ sidebarIcon: prefs.sidebarIcon !== true }); }
+                })
+              )
+            ),
+            react.createElement("div", { className: "armor5-console-group" },
+              react.createElement("div", { className: "armor5-console-group-title" }, "只读"),
+              react.createElement("ul", { className: "armor5-console-rows" },
+                rows.map(function (row) {
+                  return react.createElement("li", { key: row[0] },
+                    react.createElement("span", { className: "k" }, row[0]),
+                    react.createElement("span", { className: "v" }, row[1])
+                  );
+                })
+              )
+            ),
+            react.createElement("div", { className: "armor5-console-foot" },
+              react.createElement("button", {
+                type: "button",
+                className: "armor5-console-btn",
+                onClick: function () { writePrefs(PREF_DEFAULTS); }
+              }, "恢复默认"),
+              onClose ? react.createElement("button", {
+                type: "button",
+                className: "armor5-console-btn",
+                onClick: onClose
+              }, "完成") : null
+            )
+          );
+        }
+
+        /** 侧栏入口（可选）的图标：宿主负责按钮外壳，这里只给内容。 */
+        function ConsoleSidebarIcon() {
+          return react.createElement("span",
+            { className: "armor5-console-icon", "aria-hidden": "true" }, "◆");
+        }
+
+        function apply(ctx) {
+          // 状态条：槽位在注册期决定，改「位置」偏好就得卸掉旧的重新挂一次。
+          var status = { mode: null, dispose: null };
+          function mountStatus() {
+            var mode = effectiveSlotMode();
+            if (status.mode === mode) return;
+            if (typeof status.dispose === "function") status.dispose();
+            var slotName = SLOT_MODES[mode] || SLOT_MODES.composer;
+            // inject 只在宿主声明了该槽位后才回调，所以未声明的槽位不会抛错，只是不渲染。
+            var dispose = ctx.slots.inject(slotName, function () {
+              return ctx.slots.register({
+                name: slotName,
+                id: SLOT_ID,
+                order: SLOT_ORDER
+              }, ArmorDock);
+            });
+            status.mode = mode;
+            status.dispose = typeof dispose === "function" ? dispose : null;
+          }
+          mountStatus();
+          var offStatus = subscribePrefs(mountStatus);
+
+          // 设置页最顶部的入口 + 我们自己的那一页（独立渲染，不依赖宿主组件包）。
+          var offSection = ctx.slots.inject("settings.section", function () {
+            return ctx.slots.register({
+              name: "settings.section",
+              id: CONSOLE_KEY,
+              order: CONSOLE_ORDER,
+              label: function () { return IDLE_LABEL; }
+            }, ArmorConsolePage);
+          });
+
+          // 可选的侧栏入口：main 面板 + sidebar.panellist 图标（官方「插件」面板同款），
+          // 两者用同一个 id，所以点侧栏图标就切到我们的页。
+          var sidebar = { on: false, disposers: [] };
+          function syncSidebar() {
+            var want = readPrefs().sidebarIcon === true;
+            if (want === sidebar.on) return;
+            while (sidebar.disposers.length) {
+              var dispose = sidebar.disposers.pop();
+              if (typeof dispose === "function") dispose();
+            }
+            sidebar.on = want;
+            if (!want) return;
+            sidebar.disposers.push(ctx.slots.inject("main", function () {
+              return ctx.slots.register({ name: "main", key: CONSOLE_KEY }, ArmorConsolePage);
+            }));
+            sidebar.disposers.push(ctx.slots.inject("sidebar.panellist", function () {
+              return ctx.slots.register({
+                name: "sidebar.panellist",
+                id: CONSOLE_KEY,
+                order: 40,
+                label: function () { return IDLE_LABEL; }
+              }, ConsoleSidebarIcon);
+            }));
+          }
+          syncSidebar();
+          var offSidebar = subscribePrefs(syncSidebar);
+
+          function dispose() {
+            offStatus();
+            offSidebar();
+            if (typeof offSection === "function") offSection();
+            if (typeof status.dispose === "function") status.dispose();
+            while (sidebar.disposers.length) {
+              var off = sidebar.disposers.pop();
+              if (typeof off === "function") off();
+            }
+          }
+          if (typeof ctx.effect === "function") {
+            ctx.effect(function () { return dispose; }, "ui-armor5: 状态条与设置台");
+          }
+          return dispose;
         }
 
         exports.name = "dsh-infinite-gen-5";
         exports.inject = ["slots"];
         exports.apply = apply;
         // 供自检脚本读取（浏览器侧无副作用）。
+        // 设置台的程序化入口，与页面里点选走同一条路径（改完立刻通知订阅者）。
+        exports.getPrefs = function () { return readPrefs(); };
+        exports.setPrefs = function (patch) { return writePrefs(patch); };
+
         exports.__meta = {
           version: VERSION,
           slotMode: SLOT_MODE,
@@ -396,7 +764,15 @@
           idleLabel: IDLE_LABEL,
           triggerMode: TRIGGER_MODE,
           triggerModes: TRIGGER_MODES,
-          verdictGlyphs: VERDICT_GLYPHS
+          verdictGlyphs: VERDICT_GLYPHS,
+          prefKey: PREF_KEY,
+          prefDefaults: PREF_DEFAULTS,
+          prefFields: Object.keys(PREF_DEFAULTS),
+          consoleKey: CONSOLE_KEY,
+          consoleOrder: CONSOLE_ORDER,
+          sectionSlot: "settings.section",
+          sidebarSlot: "sidebar.panellist",
+          mainSlot: "main"
         };
         return module.exports;
       }

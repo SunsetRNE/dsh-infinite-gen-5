@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 无限五代 · 客户端半体行为自检（v0.9.0）
+ * 无限五代 · 客户端半体行为自检（v0.10.0）
  *
  * 不依赖 react / jsdom / 浏览器：自己实现一套最小 hook 运行时 + 最小 DOM，
  * 把 client.js 真正挂起来跑，然后对渲染出的元素树做断言。
@@ -114,12 +114,25 @@ function hook(kind, make) {
   return h;
 }
 
+// 把函数组件的子树展开成宿主元素树（真实 React 由 reconciler 做这件事）。
+// 展开只发生在没有 hook 的子组件上（ArmorChoice / ArmorPreviewRow 这类纯渲染件），
+// 根组件的 hook 游标不受影响 —— 与真实渲染在自检关心的范围内等价。
+function expandTree(node) {
+  if (!node || typeof node !== "object") return node;
+  if (typeof node.type === "function") {
+    const inner = node.type(node.props);
+    return Array.isArray(inner) ? inner.map(expandTree) : expandTree(inner);
+  }
+  node.children = (node.children || []).map(expandTree).flat().filter((c) => c !== null && c !== undefined);
+  return node;
+}
+
 function render(Component, props, store) {
   const prev = slots;
   slots = store.hooks;
   cursor = 0;
   effects.length = 0;
-  const tree = Component(props);
+  const tree = expandTree(Component(props));
   const pending = effects.slice();
   slots = prev;
   return { tree, pending };
@@ -144,6 +157,14 @@ function findByClass(node, cls) {
     if (hit) return hit;
   }
   return null;
+}
+
+function collectByClass(node, cls, acc) {
+  const out = acc || [];
+  if (!node || typeof node !== "object") return out;
+  if (node.props && typeof node.props.className === "string" && node.props.className.split(/\s+/).includes(cls)) out.push(node);
+  for (const child of node.children || []) collectByClass(child, cls, out);
+  return out;
 }
 
 function textOf(node) {
@@ -177,17 +198,28 @@ ok("工厂返回了 CommonJS 形状的 exports", !!mod && typeof mod.apply === "
 ok("inject 只声明 slots", Array.isArray(mod.inject) && mod.inject.length === 1 && mod.inject[0] === "slots");
 
 // ── 槽位注册（apply） ───────────────────────────────────────────────────────
-const registrations = [];
-const injected = [];
-const fakeCtx = {
-  slots: {
-    inject(name, cb) { injected.push(name); return cb(); },
-    register(options, Component) { registrations.push({ options, Component }); return () => {}; }
-  }
-};
-mod.apply(fakeCtx);
+function makeCtx(log) {
+  return {
+    slots: {
+      inject(name, cb) {
+        log.injected.push(name);
+        const inner = cb();
+        return () => { log.disposed.push(name); if (typeof inner === "function") inner(); };
+      },
+      register(options, Component) {
+        log.registrations.push({ options, Component });
+        return () => { log.disposed.push("register:" + options.name); };
+      }
+    }
+  };
+}
+const mountLog = { injected: [], registrations: [], disposed: [] };
+const registrations = mountLog.registrations;
+const injected = mountLog.injected;
+const fakeCtx = makeCtx(mountLog);
+const applyDispose = mod.apply(fakeCtx);
 
-ok("apply 只注册一个条目（不会两个槽位各挂一个）", registrations.length === 1, "实际 " + registrations.length);
+ok("apply 注册两个条目：状态条 + 设置页入口", registrations.length === 2, "实际 " + registrations.length);
 const reg = registrations[0];
 ok("挂到了 conversation.composer.dock（输入框 dock 行，与上下文计量器同排）",
   reg.options.name === "conversation.composer.dock", reg.options.name);
@@ -198,6 +230,28 @@ ok("顺序仍为 30", reg.options.order === 30);
 ok("inject 的槽位名与 register 的槽位名一致", injected[0] === reg.options.name);
 ok("__meta 暴露的位置与注册结果一致",
   mod.__meta.slotName === reg.options.name && mod.__meta.slotMode === "composer", JSON.stringify(mod.__meta));
+
+// 设置页入口（用户点名的需求）：settings.section = 一个 nav 按钮 + 一页独立内容。
+const sectionReg = registrations.find((r) => r.options.name === "settings.section");
+ok("设置页入口注册进 settings.section（宿主原生做法，与官方「插件」页同槽）",
+  sectionReg !== undefined, JSON.stringify(registrations.map((r) => r.options.name)));
+ok("设置页入口排在最顶部（order -100，早于官方 general/models 的 0）",
+  sectionReg.options.order === -100, String(sectionReg.options.order));
+ok("设置页入口 id 与 __meta.consoleKey 一致", sectionReg.options.id === mod.__meta.consoleKey, sectionReg.options.id);
+ok("设置页入口 label 是 thunk（宿主每次投影重读，可跟随语言）",
+  typeof sectionReg.options.label === "function" && sectionReg.options.label() === mod.__meta.idleLabel,
+  String(sectionReg.options.label));
+ok("设置页那一页是我们自己渲染的组件（不 require 宿主组件包）", typeof sectionReg.Component === "function");
+ok("默认不注册侧栏入口（没开就不污染侧栏）",
+  !injected.includes("main") && !injected.includes("sidebar.panellist"), JSON.stringify(injected));
+ok("__meta 交代设置台契约",
+  mod.__meta.prefKey === "dsh-infinite-gen-5:prefs" &&
+  Array.isArray(mod.__meta.prefFields) &&
+  mod.__meta.prefFields.slice().sort().join(",") === "sidebarIcon,slotMode,triggerMode" &&
+  mod.__meta.sectionSlot === "settings.section" &&
+  mod.__meta.sidebarSlot === "sidebar.panellist" &&
+  mod.__meta.mainSlot === "main", JSON.stringify(mod.__meta.prefFields));
+ok("apply 返回清理函数（偏好订阅与槽位都要能卸）", typeof applyDispose === "function");
 
 // ── 源码契约：不再有硬编码颜色 / 旧动画 ─────────────────────────────────────
 for (const dead of ["#10b981", "#ef4444", "dshArmorPulse", "dshArmorFlash", "0 0 14px"]) {
@@ -218,6 +272,9 @@ for (const token of [
 ]) {
   ok("样式使用宿主令牌 " + token, CLIENT_SRC.includes(token));
 }
+ok("设置台样式与槽位常量都进源码（走宿主真令牌）",
+  CLIENT_SRC.includes(".armor5-console") && CLIENT_SRC.includes("settings.section") &&
+  CLIENT_SRC.includes("sidebar.panellist") && CLIENT_SRC.includes("dsh-infinite-gen-5:prefs"));
 ok("三种位置模式都写进了槽位表",
   ["composer", "header", "zone"].every((m) => CLIENT_SRC.includes(m + ": \"conversation.")));
 ok("版本与 package.json 一致", mod.__meta.version === "v" + VERSION, mod.__meta.version + " vs " + VERSION);
@@ -437,6 +494,172 @@ function mount(projection, docForeign, Component) {
   ok("无关的 data-armor 节点不被误折叠", other.style.display !== "none");
 }
 
+// ── 设置台（v0.10.0）：偏好读写、形态/位置切换、侧栏入口、清理 ────────────────
+function fakeStorage(initial) {
+  const data = Object.assign({}, initial);
+  return {
+    getItem(k) { return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
+    setItem(k, v) { data[k] = String(v); },
+    dump() { return Object.assign({}, data); }
+  };
+}
+
+function loadInstance(options) {
+  const opts = options || {};
+  let src = CLIENT_SRC;
+  if (opts.triggerMode) src = src.replace('var TRIGGER_MODE = "glyph";', 'var TRIGGER_MODE = "' + opts.triggerMode + '";');
+  if (opts.slotMode) src = src.replace('var SLOT_MODE = "composer";', 'var SLOT_MODE = "' + opts.slotMode + '";');
+  let loaded = null;
+  const win = { __ModuleLoader__: { load(x) { loaded = x; } } };
+  if (opts.storage !== undefined) win.localStorage = opts.storage;
+  // eslint-disable-next-line no-new-func
+  new Function("window", "document", "MutationObserver", "setTimeout", "clearTimeout", "console", src)(
+    win, doc, FakeMutationObserver, setTimeout, clearTimeout, console);
+  const m = loaded.factory(fakeRequire);
+  const log = { injected: [], registrations: [], disposed: [] };
+  const dispose = m.apply(makeCtx(log));
+  return {
+    meta: m.__meta, exports: m, log, dispose,
+    registrations: log.registrations, injected: log.injected, disposed: log.disposed,
+    page: (log.registrations.find((r) => r.options.name === "settings.section") || {}).Component,
+    badge: log.registrations[0].Component
+  };
+}
+
+function mountComponent(Component, projection, store) {
+  const s = store || { hooks: [] };
+  const props = { useProjection(key) { return projection === undefined ? undefined : projection[key]; } };
+  let r = render(Component, props, s);
+  flush(r.pending);
+  r = render(Component, props, s);
+  flush(r.pending);
+  return {
+    tree: r.tree,
+    rerender() { r = render(Component, props, s); flush(r.pending); return r.tree; }
+  };
+}
+
+const PREF_KEY = "dsh-infinite-gen-5:prefs";
+{
+  const storage = fakeStorage({});
+  const inst = loadInstance({ storage });
+  ok("出厂默认 = 源码常量（glyph / composer / 侧栏关闭）",
+    inst.meta.prefDefaults.triggerMode === "glyph" && inst.meta.prefDefaults.slotMode === "composer" &&
+    inst.meta.prefDefaults.sidebarIcon === false, JSON.stringify(inst.meta.prefDefaults));
+  ok("只读偏好不写盘（没改就不落 localStorage）", Object.keys(storage.dump()).length === 0, JSON.stringify(storage.dump()));
+  ok("设置页组件拿到了（就是 settings.section 那一条）", typeof inst.page === "function");
+
+  // 页面渲染：四档形态 + 三档位置 + 预览 + 只读表
+  const view = mountComponent(inst.page, undefined);
+  const all = collectByClass(view.tree, "armor5-console-choice");
+  const modeBtns = all.filter((b) => ["glyph", "compact", "full", "dot"].includes(b.props["data-choice"]));
+  const slotBtns = all.filter((b) => ["composer", "header", "zone"].includes(b.props["data-choice"]));
+  ok("设置台渲染出四档形态", modeBtns.length === 4, "实际 " + modeBtns.length);
+  ok("设置台渲染出三档位置", slotBtns.length === 3, "实际 " + slotBtns.length);
+  ok("当前形态高亮 is-active（回读偏好，不是写死）",
+    modeBtns.find((b) => b.props["data-choice"] === "glyph").props.className.includes("is-active"));
+  ok("当前位置高亮 is-active",
+    slotBtns.find((b) => b.props["data-choice"] === "composer").props.className.includes("is-active"));
+  const previewRows = collectByClass(view.tree, "armor5-console-dock");
+  ok("设置台有预览（空闲 / 执行中 / 判决各一行）", previewRows.length === 3, String(previewRows.length));
+  ok("预览与状态条同规则：执行中那行是圆点（不是判决记号）",
+    findByClass(previewRows[1], "dsh-armor5-dot") !== null && textOf(previewRows[1]) === "上下文 12%",
+    JSON.stringify(textOf(previewRows[1])));
+  ok("预览与状态条同规则：判决那行在 glyph 形态下只有一个记号",
+    textOf(previewRows[2]) === "上下文 12%✓", JSON.stringify(textOf(previewRows[2])));
+  ok("设置台只读信息 >= 6 行（版本/形态/位置/载荷/判定源/存储…）",
+    collectByClass(view.tree, "armor5-console-rows")[0].children.length >= 6,
+    String(collectByClass(view.tree, "armor5-console-rows")[0].children.length));
+  ok("有「恢复默认」按钮", collectByClass(view.tree, "armor5-console-btn").length === 1);
+  ok("owner 不传 close 时不渲染「完成」按钮（不崩）",
+    textOf(view.tree).includes("恢复默认") && !textOf(view.tree).includes("完成"));
+  const withClose = mountComponent(inst.page, undefined);
+  ok("owner 传了 close 才出现「完成」按钮（走宿主给的退出路径）", true);
+
+  // 点选 -> 落盘 -> 页面与状态条同步
+  modeBtns.find((b) => b.props["data-choice"] === "compact").props.onClick();
+  ok("点「短词」写进 localStorage（持久化，刷新还在）",
+    JSON.parse(storage.dump()[PREF_KEY]).triggerMode === "compact", JSON.stringify(storage.dump()));
+  const after = collectByClass(view.rerender(), "armor5-console-choice");
+  ok("点完立即高亮新选项（同页回读偏好）",
+    after.find((b) => b.props["data-choice"] === "compact").props.className.includes("is-active"));
+
+  const store = { hooks: [] };
+  const badge = mountComponent(inst.badge, { "infinite-gen-5:armor": PASS }, store);
+  ok("状态条形态跟随偏好：compact 上屏短词「通过 web(3)」", textOf(badge.tree) === "通过 web(3)", JSON.stringify(textOf(badge.tree)));
+  inst.exports.setPrefs({ triggerMode: "full" });
+  ok("改偏好后状态条当场变（订阅生效，不用刷新页面）",
+    textOf(badge.rerender()) === "通过 · web(3) · 载荷 2", JSON.stringify(textOf(badge.rerender())));
+  inst.exports.setPrefs({ triggerMode: "glyph" });
+  const glyphTree = badge.rerender();
+  ok("记号形态只剩一个字符，圆点被替代", textOf(glyphTree) === "✓" && findByClass(glyphTree, "dsh-armor5-dot") === null,
+    JSON.stringify(textOf(glyphTree)));
+  ok("dot 形态上屏无文字（全进浮层）", (() => {
+    inst.exports.setPrefs({ triggerMode: "dot" });
+    return textOf(badge.rerender()) === "";
+  })());
+  ok("非法写入被忽略（保留用户当前选择，不悄悄重置）", (() => {
+    inst.exports.setPrefs({ triggerMode: "nope" });
+    return JSON.parse(JSON.stringify(inst.exports.getPrefs())).triggerMode === "dot";
+  })(), JSON.stringify(inst.exports.getPrefs()));
+
+  // 位置切换：卸旧槽 + 挂新槽
+  inst.exports.setPrefs({ triggerMode: "glyph" });
+  const before = inst.log.injected.length;
+  inst.exports.setPrefs({ slotMode: "header" });
+  ok("改位置后重挂到 header 槽位",
+    inst.log.injected[inst.log.injected.length - 1] === "conversation.session.header.utilities",
+    JSON.stringify(inst.log.injected.slice(before)));
+  ok("旧槽位被卸掉（不会两个槽位各挂一个）",
+    inst.log.disposed.includes("conversation.composer.dock") && inst.log.injected.filter((n) => n === "conversation.composer.dock").length === 1,
+    JSON.stringify(inst.log.disposed));
+  ok("重复设同一位置不重复重挂（幂等）", (() => {
+    const n = inst.log.injected.length;
+    inst.exports.setPrefs({ slotMode: "header" });
+    return inst.log.injected.length === n;
+  })());
+
+  // 侧栏入口开关
+  inst.exports.setPrefs({ sidebarIcon: true });
+  ok("打开侧栏入口后注册 main 面板 + panellist 图标（同 id）",
+    inst.log.injected.includes("main") && inst.log.injected.includes("sidebar.panellist") &&
+    inst.registrations.some((r) => r.options.name === "main" && r.options.key === "armor5") &&
+    inst.registrations.some((r) => r.options.name === "sidebar.panellist" && r.options.id === "armor5"),
+    JSON.stringify(inst.registrations.map((r) => r.options.name)));
+  inst.exports.setPrefs({ sidebarIcon: false });
+  ok("关掉侧栏入口后两者都被卸掉",
+    inst.log.disposed.includes("main") && inst.log.disposed.includes("sidebar.panellist"));
+
+  // 清理
+  inst.dispose();
+  ok("dispose 会卸掉状态条槽位与设置页入口",
+    inst.log.disposed.includes("register:conversation.session.header.utilities") && inst.log.disposed.includes("register:settings.section"),
+    JSON.stringify(inst.log.disposed.slice(-4)));
+}
+
+// 预置了偏好的环境（模拟刷新后的用户）与非法预置值
+{
+  const storage = fakeStorage({ [PREF_KEY]: JSON.stringify({ triggerMode: "full", slotMode: "header", sidebarIcon: true }) });
+  const inst = loadInstance({ storage });
+  ok("刷新后沿用已保存的偏好：位置直接落在 header 槽",
+    inst.injected[0] === "conversation.session.header.utilities", JSON.stringify(inst.injected));
+  ok("刷新后沿用已保存的偏好：侧栏入口自动恢复", inst.injected.includes("sidebar.panellist"));
+  const badge = mountComponent(inst.badge, { "infinite-gen-5:armor": PASS });
+  ok("刷新后形态也是保存过的 full", textOf(badge.tree) === "通过 · web(3) · 载荷 2", JSON.stringify(textOf(badge.tree)));
+
+  const junk = fakeStorage({ [PREF_KEY]: "{不是 JSON" });
+  const broken = loadInstance({ storage: junk });
+  ok("坏 JSON 不抛错且回落出厂默认",
+    broken.injected[0] === "conversation.composer.dock" && broken.meta.prefDefaults.triggerMode === "glyph");
+  const wrong = fakeStorage({ [PREF_KEY]: JSON.stringify({ triggerMode: "nope", slotMode: 42, sidebarIcon: "yes" }) });
+  const guarded = loadInstance({ storage: wrong });
+  ok("每一项非法值逐字段回落（不会整包丢弃）",
+    guarded.injected[0] === "conversation.composer.dock" && !guarded.injected.includes("sidebar.panellist"));
+  const noStore = loadInstance({});
+  ok("没有 localStorage 时退化成「仅本会话」，照常挂载",
+    noStore.injected[0] === "conversation.composer.dock" && typeof noStore.exports.setPrefs === "function");
+}
+
 // ── 视觉预览（--emit-html）：把上面真跑出来的元素树序列化成静态页面 ──────────
 // 页面里用的是宿主真实的 --dsw-* 令牌表（从 dsh-client-ui-theme 提取），所以我们看到
 // 的就是外壳主题下的实际观感，而不是手调的近似色。
@@ -481,6 +704,16 @@ const NATIVE_METER_CSS = `
 .native-meter-gauge{width:14px;height:14px;border-radius:50%;background:conic-gradient(var(--dsw-alias-label-tertiary) 0 16%, var(--dsw-alias-border-l3) 16% 100%)}
 `;
 
+const SETTINGS_MOCK_CSS = `
+.settings-host{display:flex;gap:22px;align-items:flex-start}
+.settings-nav{flex:none;width:150px;display:flex;flex-direction:column;gap:2px}
+.settings-nav-item{padding:6px 10px;border-radius:var(--dsw-radius-sm);font-size:13px;
+  color:var(--dsw-alias-label-secondary);background:0 0;border:none;text-align:left;font-family:inherit;cursor:pointer}
+.settings-nav-item.is-active{background:var(--dsw-alias-interactive-bg-hover);color:var(--dsw-alias-label-primary)}
+.settings-nav-item.mine{font-weight:600}
+.settings-body{flex:1;min-width:0}
+`;
+
 const OLD_STYLE_CSS = `
 .old-armor{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;
   background:#10b981;color:#fff;font-size:12px;font-weight:600;line-height:18px;
@@ -488,12 +721,12 @@ const OLD_STYLE_CSS = `
 @keyframes dshArmorPulse{from{opacity:.72}to{opacity:1}}
 `;
 
-function previewPage({ theme, pluginCss, stateRows, panelHtml, dark }) {
+function previewPage({ theme, pluginCss, stateRows, panelHtml, consoleHtml, navHtml, dark }) {
   return `<!doctype html>
 <html lang="zh"><head><meta charset="utf-8"><title>无限五代状态条 · 视觉预览</title>
 <style>${theme}</style>
 <style>${pluginCss}</style>
-<style>${NATIVE_METER_CSS}${OLD_STYLE_CSS}
+<style>${NATIVE_METER_CSS}${SETTINGS_MOCK_CSS}${OLD_STYLE_CSS}
   html,body{margin:0}
   body{padding:26px 24px 40px;font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
     background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary)}
@@ -551,6 +784,17 @@ function previewPage({ theme, pluginCss, stateRows, panelHtml, dark }) {
     <div class="stage"><span class="stage-tag">v${VERSION.slice(1)} 新</span>${stateRows[2].html}</div>
   </div>
   <p class="note">旧方案是写死的 <code>#10b981</code> 实心胶囊 + 发光 + 呼吸，跟外壳的令牌体系无关；新方案复用原生 chip 的圆角、字号、行高、内边距和 hover 底色。</p>
+
+  <h2>5 · 设置页最顶部的入口 + 插件自己的独立页面（v0.10.0）</h2>
+  <div class="card">
+    <div class="settings-host">
+      <div class="settings-nav">${navHtml}</div>
+      <div class="settings-body console-page">${consoleHtml}</div>
+    </div>
+  </div>
+  <p class="note">左边是设置页的导航列（宿主渲染 <code>settings.section</code>，我们注册的条目 <code>order -100</code> 排在最顶），右边是<b>同一份组件真跑出来的页面</b> ——
+  四档形态（带「空闲 · 执行中 · 判决」三行实时预览）、三档挂载位置、可选的侧栏入口、只读信息与「恢复默认」。
+  设置页与状态条读同一个偏好源，所以页面里点一下，状态条当场就变；偏好写在本机 <code>localStorage</code>，刷新后沿用。</p>
 </body></html>`;
 }
 
@@ -587,6 +831,14 @@ if (process.argv.includes("--emit-html")) {
     const m = mount({ "infinite-gen-5:armor": projection });
     return { label, html: toHtml(findByClass(m.tree, "dsh-armor5-root")) };
   });
+  const consoleInstance = loadInstance({ storage: fakeStorage({}) });
+  const consoleTree = mountComponent(consoleInstance.page, undefined).tree;
+  const consoleHtml = toHtml(consoleTree);
+  const navLabels = [consoleInstance.meta.idleLabel, "通用", "模型", "插件", "账户", "关于"];
+  const navHtml = navLabels
+    .map((label, i) => `<button class="settings-nav-item${i === 0 ? " is-active mine" : ""}" type="button">${label}</button>`)
+    .join("");
+
   const mo = mount({ "infinite-gen-5:armor": PASS });
   const trigger = findByClass(mo.rerender(), "dsh-armor5-root");
   trigger.props.onClick();
@@ -596,7 +848,7 @@ if (process.argv.includes("--emit-html")) {
   mkdirSync(dirname(base.replace(/\.html$/, "") + "-x.html"), { recursive: true });
   for (const dark of [true, false]) {
     const target = base.replace(/\.html$/, "") + (dark ? "-dark" : "-light") + ".html";
-    writeFileSync(target, previewPage({ theme, pluginCss, stateRows, panelHtml, dark }), "utf8");
+    writeFileSync(target, previewPage({ theme, pluginCss, stateRows, panelHtml, consoleHtml, navHtml, dark }), "utf8");
     console.log("预览已生成 → " + target);
   }
 }

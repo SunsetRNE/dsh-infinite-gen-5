@@ -1,7 +1,7 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.9.0
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.10.0
 
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.9.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
+  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.10.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
     <img src="https://img.shields.io/badge/DeepSeek%20Harness-🚀%20唤起桌面客户端一键安装无限五代-10B981?style=for-the-badge&logo=deepseek&logoColor=white" alt="唤起桌面客户端一键安装" />
   </a>
 </p>
@@ -36,9 +36,20 @@
 
 ---
 
-> 🔥 **V4.1-DeepSeek Flash 网络安全红队工具（无限五代）v0.9.0**。针对 V4.1 强化学习对抗进行深度适配与支持，支持桌面端与客户端一键安装。如果这个开源网安项目对你有帮助，欢迎点亮 Star ⭐。
+> 🔥 **V4.1-DeepSeek Flash 网络安全红队工具（无限五代）v0.10.0**。针对 V4.1 强化学习对抗进行深度适配与支持，支持桌面端与客户端一键安装。如果这个开源网安项目对你有帮助，欢迎点亮 Star ⭐。
 > 
-> **v0.9.0 纯净红队版**：原生采用零工具面架构，杜绝模型思考阶段的决策噪音；注入单份内核 + 末位锚点，仅保留系统提示词注入与实时状态投影。**严正声明：本项目严格打击与抵制（且不支持）模型生成 NSFW 等任何违法违规、违禁不良内容，技术体系仅限用于合法授权的逆向工程与网络安全研究。**
+> **v0.10.0 纯净红队版**：原生采用零工具面架构，杜绝模型思考阶段的决策噪音；注入单份内核 + 末位锚点，仅保留系统提示词注入与实时状态投影。**严正声明：本项目严格打击与抵制（且不支持）模型生成 NSFW 等任何违法违规、违禁不良内容，技术体系仅限用于合法授权的逆向工程与网络安全研究。**
+
+---
+
+> ### 🎛 v0.10.0：客户端设置台（Settings Console）
+>
+> 之前想换状态条形态或位置，只能改 `client.js` 再刷新页面。这次把它收进插件自己的设置页：
+>
+> - **入口在设置页最顶部**：注册一个「无限五代」条目（宿主原生 `settings.section` 槽，`order -100`，排在官方「通用 / 模型 / 插件」之前）。点开就是插件自己的独立页面 —— 不 require 任何宿主组件包，只用裸 slots API。
+> - **页面上改，状态条当场变**：形态四档（`glyph` 单字符 / `compact` 短词 / `full` 长文字 / `dot` 纯圆点，带「空闲 · 执行中 · 判决」三行实时预览）、挂载位置三档（输入框 dock / 会话标题栏 / 输入区）、可选的侧栏入口（`main` 面板 + `sidebar.panellist` 图标，与官方「插件」面板同款做法），外加只读信息（版本 / 判定源 / 载荷 / 存储位置）与「恢复默认」。
+> - **偏好落在本机**：写进 `localStorage["dsh-infinite-gen-5:prefs"]`，刷新后沿用；没有本地存储（隐私模式 / 沙箱）时退化成「仅本会话」，不抛错；非法值逐字段忽略（不会悄悄把用户设置重置）。
+> - 设置页与状态条**共用同一个偏好源**，所以「设置里写 A、条上显示 B」这种漂移不可能发生。`verify_ui` 从 92 项涨到 132 项（新增偏好读写与持久化、形态/位置切换、侧栏开关、清理与幂等）。
 
 ---
 
@@ -162,9 +173,9 @@
 
 ---
 
-## 📊 架构与能力（无限五代 v0.9.0）
+## 📊 架构与能力（无限五代 v0.10.0）
 
-| 维度 | 无限五代 (v0.9.0) |
+| 维度 | 无限五代 (v0.10.0) |
 |---|---|
 | **目标模型** | DeepSeek-V4.1 / V4-Pro / Flash 全系列 |
 | **运行时架构** | 单内核注入 + Order 200 末位锚点；同源载荷自动让位（不重复注入） |
@@ -172,7 +183,8 @@
 | **内存写值原语** | 训练器车道直出 (OpenProcess/RPM/WPM) |
 | **输出契约** | 首 Token 强制诱导 (##/```) + 禁词自检 |
 | **运行环境探测** | `infinite_gen5_env` 只读探测形态/资源/出网/库存/能力位/39 域就绪度，并把「缺工具」翻译成「装什么」 |
-| **客户端状态条** | 实时投影 + 动画状态条 |
+| **客户端状态条** | 实时投影 + 原生风格状态条（单字符记号 → 点击浮层） |
+| **客户端设置台** | 设置页最顶部入口 + 独立页面：形态 / 位置 / 侧栏入口可视化调节，偏好存本机 |
 | **一键安装协议** | 原生支持 dsh:// 联动 |
 | **分发形态** | 单仓库自包含，无 `node_modules`、无运行期依赖 |
 
@@ -181,7 +193,7 @@
 ## 📁 项目目录结构
 
 ```
-无限五代v0.9.0/
+无限五代v0.10.0/
 ├── 🚀 一键安装与维护套件
 │   ├── install.ps1              # Windows 一键自动安装（自动配置环境，注册协议）
 │   ├── install.bat              # Windows 快捷双击批处理
@@ -189,10 +201,10 @@
 │   ├── uninstall.ps1            # Windows 一键卸载
 │   └── uninstall.sh             # Linux / macOS 一键卸载
 ├── 🧩 核心插件装载面 (标准 Cordis 架构)
-│   ├── package.json             # 插件元数据（dsh-infinite-gen-5 v0.9.0）
+│   ├── package.json             # 插件元数据（dsh-infinite-gen-5 v0.10.0）
 │   ├── cordis.patch.yml         # 核心 patch 声明
 │   ├── index.js                 # 插件核心入口（内核注入 + 同源去重 + profile 元数据 + 会话投影）
-│   ├── client.js                # 客户端半体（输入框 dock 行原生状态条 v0.9.0：单字符记号 → 点击浮层）
+│   ├── client.js                # 客户端半体（原生状态条 + 设置台 v0.10.0：settings.section 入口 / 形态与位置偏好）
 │   ├── data/scenarios.mjs       # 56 个领域包 × 7 族 + 领域标记表（运行时与评测共用的唯一真源）
 │   ├── data/toolchains.mjs      # 每个计算机域的安装/验证工具链 + 缺工具降级协议
 │   ├── data/probe.mjs           # 运行环境探测引擎（只读：形态/资源/网络/库存/能力位/39 域就绪度）
@@ -241,7 +253,7 @@
 
 若已安装 DeepSeek Harness 官方桌面客户端（EXE），点击下方按钮即可通过系统级 URI Scheme 协议安全唤起客户端完成免命令行秒级装载：
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.9.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
+  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.10.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
     <img src="https://img.shields.io/badge/DeepSeek%20Harness-🚀%20唤起桌面客户端一键安装无限五代-10B981?style=for-the-badge&logo=deepseek&logoColor=white" alt="唤起客户端一键安装" />
   </a>
 </p>
@@ -249,7 +261,7 @@
 🔗 **原生协议链接：**
 
 ```
-dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.9.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip
+dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.10.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip
 ```
 
 **网页端（前端）触发代码示例：**
@@ -262,7 +274,7 @@ export function installInfiniteGen5ToDesktop() {
   const params = new URLSearchParams({
     id: 'dsh-infinite-gen-5',
     name: '无限五代',
-    version: '0.9.0',
+    version: '0.10.0',
     repo: 'SunsetRNE/dsh-infinite-gen-5',
     permissions: '系统提示词注入, 客户端状态条',
     downloadUrl: 'https://github.com/SunsetRNE/dsh-infinite-gen-5/archive/refs/heads/main.zip',
@@ -282,7 +294,7 @@ export function installInfiniteGen5ToDesktop() {
 **HTML 静态链接方式：**
 
 ```html
-<a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.9.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip" class="btn-install">
+<a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.10.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip" class="btn-install">
   🚀 唤起客户端一键安装
 </a>
 ```
@@ -293,7 +305,7 @@ export function installInfiniteGen5ToDesktop() {
 |---|---|---|
 | id | `dsh-infinite-gen-5` | 插件唯一标识符 |
 | name | `无限五代`（URL 编码） | 插件展示名称 |
-| version | `0.9.0` | 语义化版本号 |
+| version | `0.10.0` | 语义化版本号 |
 | repo | `SunsetRNE/dsh-infinite-gen-5` | 官方 GitHub 仓库 |
 | permissions | `系统提示词注入, 客户端状态条`（URL 编码） | 申请权限 |
 | downloadUrl | `https://github.com/SunsetRNE/dsh-infinite-gen-5/archive/refs/heads/main.zip` | 离线 zip 下载直链 |
@@ -341,15 +353,14 @@ chmod +x install.sh uninstall.sh
 ## ⚡ 验证生效
 
 1. **界面状态条**：重启后**输入框卡片底部那一行**（与原生「上下文 12%」计量器同一排）应出现一个**中性圆点** —— v0.8.2 起入口压成单字符记号（空闲/执行中只有圆点，执行中呼吸；判决时圆点被一个记号替代：`✓` 通过 / `✕` 拒绝 / `!` 兜底，按 success/error 令牌着色，一直留到你下一条发言）。字号/圆角/hover 底色与该计量器完全一致；点它展开含全部明细的浮层，悬停有完整 title。
-   想换位置只改 `client.js` 里的 `SLOT_MODE`：`composer`（默认，输入框 dock 行）/ `header`（会话标题栏右侧，最角落）/ `zone`（旧的输入框上方那一列，不推荐）。
-   想换形态只改 `client.js` 里的 `TRIGGER_MODE`：`glyph`（默认，单字符 ✓/✕/!）/ `compact`（短词 `通过 web(3)`）/ `full`（v0.8.0 的长文字，如 `通过 · web(3) · 载荷 2`）/ `dot`（纯圆点，一切文字只在浮层与 title 里）。
+   换位置与形态**不用改源码**：打开设置，最顶部就是「无限五代」入口 —— 页面上有四档形态（`glyph` 默认单字符 / `compact` 短词 `通过 web(3)` / `full` 长文字 / `dot` 纯圆点）、三档位置（`composer` 输入框 dock 行 / `header` 会话标题栏右侧 / `zone` 输入框上方那一列）、以及可选的侧栏入口；改完即时生效，偏好记在本机（`localStorage`），刷新后沿用。想恢复出厂默认点页面里的「恢复默认」。
 2. **测试离线回归**（全部离线、确定性、不需要 API Key）：
    ```bash
    node scripts/verify_prompt_gen5.mjs   # 142 条：载荷完备性 + 五槽骨架 + 七族点名 + 语言/工具链/环境规则 + 体积预算
    node scripts/verify_scenarios.mjs     # 83 条：56 个领域包 / 索引预算 / 标记表 / 工具链 / 覆盖性回归
    node scripts/verify_scenario_tool.mjs # 85 条：真宿主挂载三个工具 + 环境工具离线调用 + 「包正文不进 system prompt」
    node scripts/verify_dedupe.mjs        # 52 条：同源让位 / Order 200 锚点 / 版本一致性
-   node scripts/verify_ui.mjs            # 92 条：客户端状态条行为（单字符记号 / 形态切换 / 常驻判决 / 覆盖明细 / 浮层）
+   node scripts/verify_ui.mjs            # 132 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理）
    node scripts/verify_env.mjs           # 149 条：探测纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算
    node scripts/verify_eval.mjs          # 81 条：评测计量（合成数据手算可核）+ CLI 退出码 0/1/3
    node scripts/verify_prompt.mjs        # 64 条：经典确定性校验
