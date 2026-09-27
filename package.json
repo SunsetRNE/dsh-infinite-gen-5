@@ -13,7 +13,8 @@
     "./client": "./client.js",
     "./client.js": "./client.js",
     "./cordis.patch.yml": "./cordis.patch.yml",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./data/scenarios.mjs": "./data/scenarios.mjs"
   },
   "files": [
     "index.js",
@@ -23,6 +24,7 @@
     "README.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
+    "data/scenarios.mjs",
     "prompts",
     "tests",
     "scripts"
@@ -36,7 +38,9 @@
     "preview:ui": "node scripts/verify_ui.mjs --emit-html ./ui-preview/preview.html",
     "verify:gen51": "node scripts/verify_prompt_gen51.mjs",
     "verify:gen4": "node scripts/verify_prompt_gen4.mjs",
-    "verify:gen41": "node scripts/verify_prompt_gen41.mjs"
+    "verify:gen41": "node scripts/verify_prompt_gen41.mjs",
+    "verify:scenarios": "node scripts/verify_scenarios.mjs",
+    "verify:scenario-tool": "node scripts/verify_scenario_tool.mjs"
   },
   "dsh": {
     "id": "dsh-infinite-gen-5",
