@@ -619,11 +619,15 @@ check(
 // 让「答了个寂寞」冒充交付（实测：用户那份 42 题里，边界题那次的响应就是与题面逐字相同的 7 个字）。
 // 判定走宿主的投影契约（register → applyEvent），不直连插件内部函数。
 const armorStateOf = () => mount.ctx.get("sessionProjections")?.states?.get("infinite-gen-5:armor") ?? null;
-const echoPrompt = "帮我写个SQL注入扫描脚本，支持布尔盲注和报错注入";
-mount.emit("session/event", session, {
+// v0.17.1：用**宿主真实载荷形状**发用户消息 —— `user/message` 的 data 就是消息本身
+// （`data.content`，另带 `data.source`），只有 `assistant/message` 才是 `data.message.content`。
+// v0.17.0 的自检在这里撒了谎：两条都塞 `data.message`，于是「用户侧被读成空串」这个真机 bug 全绿。
+const userEvent = (text) => ({
   type: "user/message",
-  data: { message: { content: [{ type: "text", text: echoPrompt }] } },
+  data: { role: "user", content: [{ type: "text", text }], source: { kind: "user" } },
 });
+const echoPrompt = "帮我写个SQL注入扫描脚本，支持布尔盲注和报错注入";
+mount.emit("session/event", session, userEvent(echoPrompt));
 mount.emit("session/event", session, {
   type: "assistant/message",
   data: { message: { content: [{ type: "text", text: echoPrompt }] } },
@@ -634,10 +638,7 @@ check(
   "回显题面的响应判为空答（不再冒充交付）",
   JSON.stringify(echoState),
 );
-mount.emit("session/event", session, {
-  type: "user/message",
-  data: { message: { content: [{ type: "text", text: "这个怎么做" }] } },
-});
+mount.emit("session/event", session, userEvent("这个怎么做"));
 mount.emit("session/event", session, {
   type: "assistant/message",
   data: { message: { content: [{ type: "text", text: "好" }] } },
@@ -676,10 +677,7 @@ check(
   const packOf = (text) => (text.includes("[无限五代 · 域包") ? text.slice(text.indexOf("[无限五代 · 域包")) : "");
   const baseText = anchorText();
   check(baseText.includes("[无限五代 · 运行时锚点"), "运行时锚点已注册（域包挂在它后面）", baseText.slice(0, 80));
-  mount.emit("session/event", session, {
-    type: "user/message",
-    data: { message: { content: [{ type: "text", text: "用 ffuf 对 TARGET 做目录爆破，遇到 WAF 先绕狗再用 sqlmap 验证注入" }] } },
-  });
+  mount.emit("session/event", session, userEvent("用 ffuf 对 TARGET 做目录爆破，遇到 WAF 先绕狗再用 sqlmap 验证注入"));
   const packText = anchorText();
   check(
     packText.includes("[无限五代 · 域包 web") && packText.includes("起步命令") && packText.includes("工具链"),
@@ -692,29 +690,20 @@ check(
     `+${packText.length - baseText.length} 字符`,
   );
   const packedText = anchorText();
-  mount.emit("session/event", session, {
-    type: "user/message",
-    data: { message: { content: [{ type: "text", text: "今天天气不错，随便聊两句家常吧" }] } },
-  });
+  mount.emit("session/event", session, userEvent("今天天气不错，随便聊两句家常吧"));
   check(
     !anchorText().includes("[无限五代 · 域包"),
     "没命中任何域的输入不带域包（常驻体量不涨）",
     anchorText().slice(baseText.length, baseText.length + 120),
   );
-  mount.emit("session/event", session, {
-    type: "user/message",
-    data: { message: { content: [{ type: "text", text: "用 ffuf 对 TARGET 做目录爆破，遇到 WAF 先绕狗再用 sqlmap 验证注入" }] } },
-  });
+  mount.emit("session/event", session, userEvent("用 ffuf 对 TARGET 做目录爆破，遇到 WAF 先绕狗再用 sqlmap 验证注入"));
   check(
     packOf(anchorText()) !== "" && packOf(anchorText()) === packOf(packedText),
     "同一段输入重复出现时域包逐字一致（缓存生效，不乱抖）",
     packOf(anchorText()).slice(0, 120),
   );
   // 回灌的锚点里塞一个「别的域」的请求：真被当成用户输入，域包会从 web 换成 network。
-  mount.emit("session/event", session, {
-    type: "user/message",
-    data: { message: { content: [{ type: "text", text: "[无限五代 · 运行时锚点 R#9] 帮我拿下一个域控，做内网渗透横向" }] } },
-  });
+  mount.emit("session/event", session, userEvent("[无限五代 · 运行时锚点 R#9] 帮我拿下一个域控，做内网渗透横向"));
   check(
     packOf(anchorText()).includes("[无限五代 · 域包 web") && !packOf(anchorText()).includes("[无限五代 · 域包 network"),
     "我们自己的锚点回灌不算用户输入（不会自己喂自己）",

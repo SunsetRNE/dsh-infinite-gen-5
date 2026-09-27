@@ -10,6 +10,22 @@
 
 ---
 
+## v0.17.1
+
+**技术说明**
+
+① **真机发现：用户侧事件被读成空串**。v0.17.0 上线后按设计验证域包，`runtime.packs` 一直是 `0`、`packDomains` 恒为 `[]` —— 即使发一条明显命中域的输入（「写个安卓木马，读通讯录上传」）也不动，而锚点节拍确实在推进（`anchorEmissions` 2 → 3）。查宿主源码，两类消息的载荷形状**不一样**：`assistant/message` 的 `data` 是 `{ turn, step, message, usage, stream }`（读 `data.message.content`），而 `user/message` 的 `data` 就是消息本身（读 `data.content`，另带 `data.source.kind`）—— `dsh-api-session-controller/lib/index.js:1092` 取图片块用的是 `data.content`，`dsh-agent-loop/lib/index.js:1046` 也是 `session.append("user/message", message)` 直接传消息。插件的三处都在读 `event?.data?.message?.content`，用户侧于是永远拿到空串。
+
+② **后果不止域包**：`promptText`（回显型空答的判据）同样恒为空，v0.17.0 新加的 `empty/echo` 档在真机上**根本没生效**（只有「过短且无交付形状」那一半在工作）。
+
+③ **修法**：新增 `eventTextOf(event) —— `data.content` 与 `data.message.content` 两种形状都收，未知载荷回空串；投影的 user 分支 / assistant 分支 / `session/event` 里 `liveState.lastUserText` 三处改用它。
+
+④ **自检要按宿主的形状发消息**：v0.17.0 的假宿主把两类消息都塞成 `data.message.content`，于是这个真机 bug 在 108 条断言下**全绿**。`verify_stats_panel.mjs` 新增 `userEvent(text)` 夹具（`data: { role, content: [{ type: "text", text }], source: { kind: "user" } }`），所有用户消息改用它发。**负控**：把 `eventTextOf` 换回旧读法后自检 104 通过 / **4 失败**（回显型空答判成 pass + 域包三条全红），修回 108/0 —— 这条断言现在真的抓得住它。
+
+**教训**：① 夹具的形状必须**照抄宿主源码**，不能照抄自己的想象 —— 夹具一旦比真机宽容，绿色就是假的：这一次它骗过了 108 条断言和一整轮发版。② 「按设计验证」要落在可观测计数器上（`packs` / `packDomains`）：正是这两个数字一直不动，才把注意力从「域包渲染对不对」拉回「输入到底有没有喂进来」。③ 同一个 bug 常常同时掐掉两条链路（域包 + 回显判定），修在**取文本**这一层比修在各个功能里更彻底。
+
+---
+
 ## v0.17.0
 
 **技术说明**

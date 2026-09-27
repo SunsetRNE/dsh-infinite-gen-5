@@ -41,7 +41,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.17.0";
+const PLUGIN_VERSION = "0.17.1";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -987,6 +987,19 @@ function armorTextOf(content) {
     .join("\n");
 }
 
+/** 从事件里取正文文本 —— v0.17.1 修的正是这里：宿主对两类消息的**载荷形状不同**。
+ *  `user/message` 的 `data` 就是消息本身（`data.content`，另带 `data.source`）；
+ *  `assistant/message` 的 `data` 是 `{ turn, step, message, usage, stream }`（`data.message.content`）。
+ *  只认 `data.message.content` 会把用户侧读成空串（v0.17.0 的真机症状：题面拿不到 → 域包
+ *  永远不触发、回显型空答也判不出来，而自检里的假宿主两条都塞 `data.message`，所以全绿）。 */
+function eventTextOf(event) {
+  const data = event?.data;
+  if (!data || typeof data !== "object") return "";
+  if (Array.isArray(data.content)) return armorTextOf(data.content);
+  if (data.message && Array.isArray(data.message.content)) return armorTextOf(data.message.content);
+  return "";
+}
+
 function matchedIn(text, markers) {
   const folded = text.toLocaleLowerCase();
   const found = [];
@@ -1061,11 +1074,11 @@ function armorProjectionApply(state, event) {
       domain: null, domainLabel: null, domainHits: 0,
       domainRanked: [], domainMarkers: [], openingChars: 0, textChars: 0, at: null,
       // v0.17.0：留一份题面，供回答落下时判「回显题面」型空答。
-      promptText: armorTextOf(event?.data?.message?.content).slice(0, 600),
+      promptText: eventTextOf(event).slice(0, 600),
     };
   }
   if (event.type === "assistant/message") {
-    const text = armorTextOf(event?.data?.message?.content);
+    const text = eventTextOf(event);
     if (!text.trim()) return state;
     const scored = armorScore(text, state?.promptText || "");
     // 命中环（v0.16.2）：判决一出来就留一条，给浮层卡片的「最近命中」用。
@@ -1293,7 +1306,7 @@ export function apply(ctx, config) {
       if (eventRing.length > EVENT_RING_SIZE) eventRing.splice(0, eventRing.length - EVENT_RING_SIZE);
       // v0.17.0：记下最近一条真正的用户输入，运行时锚点按它认域（域包不是常驻的）。
       if (event.type === "user/message") {
-        const userText = armorTextOf(event?.data?.message?.content).slice(0, 600);
+        const userText = eventTextOf(event).slice(0, 600);
         if (userText.trim() !== "" && !isOwnAnchor(userText)) liveState.lastUserText = userText;
       }
       // 只在清单真的变了（或换会话）时才重读投影，别在每个事件上白折一遍。
