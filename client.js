@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.16.0";
+        var VERSION = "v0.16.1";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -216,6 +216,9 @@
           var anchorPair = react.useState(null);
           var anchor = anchorPair[0];
           var setAnchor = anchorPair[1];
+          // 浮层卡片里的「实时」四行（v0.16.1）：与设置页那组同源同文案，但只在卡片开着时
+          // retain 统计库 —— 关着就不为它多开一条 SSE、多回读一次。
+          var liveState = useStatsView(open);
 
           // 1) 样式表：全局只注入一次，卸载时回收。
           react.useEffect(function () {
@@ -396,7 +399,7 @@
               : "—"],
             ["位置", SLOT_MODE + " · " + SLOT_NAME],
             ["版本", TITLE]
-          ].map(function (pair, index) {
+          ].concat(open ? liveRowPairs(liveState.liveDoc, liveState.link) : []).map(function (pair, index) {
             return react.createElement(
               "li",
               { key: index },
@@ -424,7 +427,7 @@
               react.createElement(
                 "p",
                 { className: "dsh-armor5-note" },
-                "载荷已注入系统提示词最前，Order 200 末位锚点复述。判定取自本次会话的实时投影；判决会一直留到你的下一条发言。领域候选按命中数排序，带 * 的是主判。"
+                "载荷已注入系统提示词最前，Order 200 末位锚点复述。判定取自本次会话的实时投影；判决会一直留到你的下一条发言。领域候选按命中数排序，带 * 的是主判。末尾四行「实时」读插件本体落盘的统计库（推送优先、断线自动回落轮询），只在这张卡片开着时订阅。"
               )
             )
             : null;
@@ -704,14 +707,28 @@
         // 「刚才还在动」的判据：这段时间内数据变过，就按活跃频率追。
         var PANEL_ACTIVE_WINDOW_MS = 6000;
         var PANEL_POLL_MS = PANEL_POLL_IDLE_MS;
-        function useTuning() {
-          var pair = react.useState({
+        // 统计库的唯一持有者（v0.16.1）。这段状态机原来长在 useTuning() 里，于是「谁渲染谁就连一条
+        // SSE」：设置页一条、浮层卡片再一条，连接数（服务端 SSE_MAX_CLIENTS = 4）与回读都要翻倍。
+        // 现在提成模块级单例 —— 一条 SSE、一个自续定时器、一份 state；想读的面用 retain()/release()
+        // 引用计数订阅，引用归零才停流停表（所以卡片关着时，浮层不为它多付一分钱）。
+        function createStatsStore() {
+          var state = {
             phase: "loading", data: null, database: null, source: null, draft: null,
             error: null, note: null, busy: false, taskBusy: false, taskNote: null,
             link: null, liveDoc: null
-          });
+          };
+          var subs = [];
+          var refs = 0;
+          var notify = function () {
+            // 遍历副本：订阅者在回调里退订（组件卸载）不该把这一轮的通知错位。
+            var list = subs.slice();
+            for (var i = 0; i < list.length; i++) {
+              try { list[i](state); } catch (error) { /* 一个订阅者崩了，不该带倒别人 */ }
+            }
+          };
           var update = function (part) {
-            pair[1](function (prev) { return Object.assign({}, prev, part); });
+            state = Object.assign({}, state, part);
+            notify();
           };
           // 数据变化的时间线：stamp 是库里那份的 generatedAt，changedAt 是本地最后一次看到它变。
           // 自适应轮询靠 changedAt 判断「现在忙不忙」，不靠猜。
@@ -756,17 +773,15 @@
             });
           };
           var stage = function (key, value) {
-            pair[1](function (prev) {
-              var draft = Object.assign({}, prev.draft);
-              draft[key] = value;
-              return Object.assign({}, prev, { draft: draft, note: null });
-            });
+            var draft = Object.assign({}, state.draft);
+            draft[key] = value;
+            update({ draft: draft, note: null });
           };
           var save = function (reset) {
             var bridge = statsBridge();
             if (!bridge) return;
             update({ busy: true, error: null, note: null });
-            var body = reset ? { reset: true } : { overrides: pair[0].draft };
+            var body = reset ? { reset: true } : { overrides: state.draft };
             panelFetch(bridge, bridge.tuningPath, "POST", body).then(function (r) {
               if (r.status !== 200 || !r.doc || r.doc.ok !== true) throw new Error((r.doc && r.doc.error) || ("HTTP " + r.status));
               var changes = (r.doc.changes || []).filter(function (k) { return r.doc.effective[k] !== undefined; });
@@ -881,7 +896,10 @@
             schedule();
             read(true);
           };
-          react.useEffect(function () {
+          // 引用计数：第一个订阅者进来才连流、才起步轮询；最后一个走了就收摊。
+          var acquire = function () {
+            refs += 1;
+            if (refs > 1) return;
             read();
             poll.stopped = false;
             poll.transport = "polling";
@@ -890,19 +908,70 @@
             }
             connect();
             schedule();
+          };
+          var release = function () {
+            refs = Math.max(0, refs - 1);
+            if (refs > 0) return;
+            poll.stopped = true;
+            clearTimer();
+            if (poll.es) {
+              try { poll.es.close(); } catch (error) { /* 已经断了 */ }
+              poll.es = null;
+            }
+            if (typeof document !== "undefined" && typeof document.removeEventListener === "function") {
+              document.removeEventListener("visibilitychange", onVisible);
+            }
+          };
+          return {
+            state: function () { return state; },
+            subscribe: function (fn) {
+              subs.push(fn);
+              return function () {
+                var index = subs.indexOf(fn);
+                if (index >= 0) subs.splice(index, 1);
+              };
+            },
+            retain: acquire,
+            release: release,
+            stage: stage,
+            save: save,
+            read: read,
+            writeTasks: writeTasks
+          };
+        }
+
+        // 全插件共用一份（模块级单例）：谁渲染都读它，不再各连一条 SSE。
+        var statsStore = createStatsStore();
+
+        /**
+         * 订阅统计库的通用钩子。enabled === false 时不 retain（浮层卡片关着就不连、不轮询）。
+         * 每次库更新都会重渲染订阅者：state 对象每次 update 都换新的，所以比较引用即可。
+         */
+        function useStatsView(enabled) {
+          var pair = react.useState(0);
+          var bump = pair[1];
+          var active = enabled !== false;
+          react.useEffect(function () {
+            if (!active) return undefined;
+            statsStore.retain();
+            var off = statsStore.subscribe(function () { bump(function (n) { return n + 1; }); });
             return function () {
-              poll.stopped = true;
-              clearTimer();
-              if (poll.es) {
-                try { poll.es.close(); } catch (error) { /* 已经断了 */ }
-                poll.es = null;
-              }
-              if (typeof document !== "undefined" && typeof document.removeEventListener === "function") {
-                document.removeEventListener("visibilitychange", onVisible);
-              }
+              off();
+              statsStore.release();
             };
-          }, []);
-          return { state: pair[0], stage: stage, save: save, read: read, writeTasks: writeTasks };
+          }, [active]);
+          return statsStore.state();
+        }
+
+        // 设置页那条既有调用面保持不变（它现在只是单例的一个订阅者）。
+        function useTuning() {
+          return {
+            state: useStatsView(),
+            stage: statsStore.stage,
+            save: statsStore.save,
+            read: statsStore.read,
+            writeTasks: statsStore.writeTasks
+          };
         }
 
         function tuningStatusText(state) {
@@ -1110,9 +1179,11 @@
           seconds = Math.max(0, Math.round(seconds / 1000));
           return seconds < 60 ? seconds + " 秒" : Math.round(seconds / 60) + " 分钟";
         }
-        function liveGroup(state) {
-          var live = state.liveDoc;
-          var link = state.link;
+        /**
+         * 「实时」那四行的文案，只有这一处（v0.16.1）。
+         * 浮层卡片与设置页那组共用同一个构造，免得两处各写一遍、改一处忘一处。
+         */
+        function liveRowPairs(live, link) {
           var rows = [];
           rows.push(["信号", (link ? (LIVE_MODE_LABEL[link.mode] || link.mode) + " · " + link.text : "等第一条信号…") +
             (live && live.at ? "　·　库 " + fmtAgo(live.at) : "")]);
@@ -1126,14 +1197,21 @@
             rows.push(["本轮", turn && turn.active
               ? "进行中 · 已 " + fmtSpan(Date.now() - started) + "（最后事件 " + fmtAgo(turn.lastEventAt) + "）"
               : "空闲 · 最后事件 " + fmtAgo(turn ? turn.lastEventAt : null)]);
+            // 分母用 spanMs（真正参与计算的那个跨度）：高事件率下环被截断，分子不再是 30 秒里的事，
+            // 拿 windowMs 当分母就会出现「60 次 / 30 秒（3.x 次/秒）」这种自己打自己的写法。
+            var spanMs = Number(events && (events.spanMs || events.windowMs)) || 0;
             rows.push(["事件速率", events
-              ? events.count + " 次 / " + Math.round((events.windowMs || 0) / 1000) + " 秒（" + (events.perSecond || 0) + " 次/秒）"
+              ? events.count + " 次 / " + Math.round(spanMs / 1000) + " 秒（" + (events.perSecond || 0) + " 次/秒）"
               : "—"]);
             var recent = (tools && tools.recent) || [];
             rows.push(["最近工具", recent.length
               ? recent.slice(-4).map(function (item) { return item.tool + "(" + fmtBytes(item.bytes) + ")"; }).join(" → ")
               : "本进程还没调过工具"]);
           }
+          return rows;
+        }
+        function liveGroup(state) {
+          var rows = liveRowPairs(state.liveDoc, state.link);
           return react.createElement("div", { className: "armor5-console-group" },
             react.createElement("div", { className: "armor5-console-group-title" }, "实时（信号来源 / 本轮 / 工具流水）"),
             react.createElement("ul", { className: "armor5-live-rows" },
@@ -1145,7 +1223,7 @@
             ),
             react.createElement("span", { className: "armor5-console-hint" },
               "推送只当闹钟：统计库一落盘就推一帧，面板收到立刻回读 /stats；推送不可用时自动回落到自适应轮询" +
-              "（活跃 400 ms / 空闲 3 s），页面切到后台就停。")
+              "（活跃 400 ms / 空闲 3 s），页面切到后台就停。同一份数据也画在状态条浮层卡片上。")
           );
         }
 

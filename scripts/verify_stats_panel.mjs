@@ -537,6 +537,15 @@ check(
   "perSecond 与 30s 窗口同分母：窗口里有事件就不可能算出 0",
   JSON.stringify(liveDoc?.events),
 );
+// v0.16.1：面板那行「N 次 / M 秒（x 次/秒）」里的 M 必须是算速率用过的分母。
+// 30s 内条数没顶到环容量（EVENT_RING_SIZE = 60）时 M ≈ 30s；超过 2 次/秒、分子被环截断时，
+// 只有 M 会把这件事如实暴露出来（windowMs 固定 30 秒会把「60 次」写成一个假分母）。
+check(
+  Number.isFinite(liveDoc?.events?.spanMs) && liveDoc.events.spanMs >= 1000 && liveDoc.events.spanMs <= 30000 &&
+    Math.abs(liveDoc.events.perSecond - liveDoc.events.count / (liveDoc.events.spanMs / 1000)) < 0.01,
+  "live.events.spanMs = 速率的真实分母（面板不再拿 windowMs 硬当 30 秒）",
+  JSON.stringify(liveDoc?.events),
+);
 check(
   Array.isArray(liveDoc?.tools?.recent) && liveDoc.tools.recent.length >= 1 &&
     liveDoc.tools.recent.at(-1).tool === "infinite_gen5_scenario",

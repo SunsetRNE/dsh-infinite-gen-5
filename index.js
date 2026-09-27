@@ -41,7 +41,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.16.0";
+const PLUGIN_VERSION = "0.16.1";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -1453,6 +1453,10 @@ export function apply(ctx, config) {
       },
       events: {
         windowMs: EVENT_WINDOW_MS,
+        // spanMs 是真正参与计算的分母（环里最早事件到现在，封顶在窗口长度上）。
+        // 面板要显示「N 次 / M 秒」时必须用这个 M：高事件率下环被 EVENT_RING_SIZE 截断，
+        // 分子不再是 30 秒里发生的事，拿 windowMs 当分母就会写出「60 次 / 30 秒（3.x 次/秒）」。
+        spanMs: Math.round(spanMs),
         count: eventRing.length,
         perSecond: Number((eventRing.length / (spanMs / 1000)).toFixed(2)),
       },

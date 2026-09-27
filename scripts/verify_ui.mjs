@@ -473,8 +473,16 @@ function mount(projection, docForeign, Component) {
   ok("命中标记列出真正命中的词（不是黑箱）", panelText.includes("渗透") && panelText.includes("sql注入"));
   ok("扫描范围写明全文与判拒窗口", panelText.includes("全文 1288 字") && panelText.includes("160"));
   ok("最近判决带落笔时刻", /最近判决 pass（\d\d:\d\d:\d\d）/.test(panelText.replace(/\s+/g, " ")) || panelText.includes("pass"), panelText.slice(0, 120));
+  // v0.16.1：浮层卡片自己也订一份统计库（与设置页那组同源），卡片没拿到桥时至少要有「信号 / 本轮」两行。
+  ok("浮层卡片带「实时」行（卡片自己订阅统计库）",
+    panelText.includes("信号") && panelText.includes("本轮"), panelText.slice(-160));
   ok("浮层打开时 aria-expanded=true", findByClass(tree, "dsh-armor5-root").props["aria-expanded"] === "true");
-  ok("浮层打开后挂了 outside-click / Esc 监听", doc.__listeners.length === 2);
+  // 统计库的 visibilitychange 监听也挂在 document 上（v0.16.1 卡片订阅），所以不再数总数，
+  // 只按类型数：卡片必须恰好挂一个 pointerdown + 一个 keydown。
+  ok("浮层打开后挂了 outside-click / Esc 监听",
+    doc.__listeners.filter((pair) => pair[0] === "pointerdown").length === 1 &&
+    doc.__listeners.filter((pair) => pair[0] === "keydown").length === 1,
+    JSON.stringify(doc.__listeners.map((pair) => pair[0])));
   button = findByClass(tree, "dsh-armor5-root");
   button.props.onClick();
   tree = m.rerender();
