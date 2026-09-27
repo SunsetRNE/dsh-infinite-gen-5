@@ -491,8 +491,10 @@ function previewPage({ theme, pluginCss, stateRows, panelHtml, dark }) {
   <div class="card">
     ${stateRows.map((r) => `<div class="stage"><span class="stage-tag">${r.label}</span><span class="native-meter">上下文 12%</span>${r.html}</div>`).join("")}
   </div>
-  <p class="note">空闲态是「无限五代 + 中性圆点」；运行中呼吸；<b>判决常驻 — 不再 3.2 秒淡出</b>，
-  一直留到你发出下一条消息（落笔时刻显示在浮层的「最近判决」一行）。领域命中数 &gt;1 时标在域名后，如 <code>web(3)</code>。
+  <p class="note">v0.8.1 起入口是<b>多态指示器</b>：空闲与执行中只有一个圆点（执行中呼吸），判决时圆点变色并只留一个短词，
+  <b>判决常驻 — 不再 3.2 秒淡出</b>，一直留到你发出下一条消息（落笔时刻显示在浮层的「最近判决」一行）。
+  候选领域、命中标记词、扫描范围、载荷数等明细全部收进点击浮层与悬停 title；领域命中数 &gt;1 时标在域名后，如 <code>web(3)</code>。
+  形态由 <code>client.js</code> 的 <code>TRIGGER_MODE</code> 切换：<code>compact</code>（当前）/ <code>full</code>（v0.8.0 的长文字）/ <code>dot</code>（纯圆点）。
   文字颜色全部来自 <code>--dsw-alias-*</code>，外壳换主题时我们跟着变。</p>
 
   <h2>3 · 点击展开最近判决（固定浮层：判决 + 覆盖明细，锚在触发器上方）</h2>
