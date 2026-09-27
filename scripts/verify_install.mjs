@@ -132,6 +132,7 @@ const profileDirs = existsSync(profilesRoot)
   ? readdirSync(profilesRoot).map((n) => join(profilesRoot, n)).filter((p) => existsSync(join(p, "package.json")))
   : [];
 let wired = 0;
+let bundleWired = false;
 for (const prof of profileDirs) {
   const pkg = readJson(join(prof, "package.json"));
   if (!pkg) continue;
@@ -146,6 +147,7 @@ for (const prof of profileDirs) {
   const inserted = new RegExp("^\\s*-\\s*id:\\s*" + NAME + "\\b", "m").test(patch);
   check(true, `${label} 依赖声明`, `${spec}`);
   check(inserted || inBundles, `${label} 有接线入口`, inserted ? "cordis.patch.yml insert" : inBundles ? "dsh.profile.bundles" : "两处都没有，插件不会加载");
+  if (inBundles) bundleWired = true;
   if (inserted && inBundles) warn(`${label} 双接线`, "patch insert 与 bundles 同时存在，可能被加载两次");
   const nm = join(prof, "node_modules", NAME);
   const resolved = readJson(join(nm, "package.json"));
@@ -224,6 +226,12 @@ if (rec) {
       "宿主插件管理器激活记录过期",
       `${short(actFile)} 记的是 ${rec.version}，实际 ${repoVersion} —— 管理器界面会显示旧版本，重启后应自动刷新`,
     );
+    if ((rec.status === "queued" || rec.status === "attempted") && !bundleWired) {
+      warn(
+        "管理器会把本插件判为未启用",
+        `记录 status=${rec.status}，而管理器的「已启用」集合取自 profile 的 dsh.profile.bundles；本插件走的是 cordis.patch.yml insert —— 别用管理器启用它，否则会被标 disabled`,
+      );
+    }
   } else {
     passes.push({ label: "宿主插件管理器激活记录 = 仓库版本", detail: `${rec.version || "?"}（${rec.status || "?"}）` });
   }
