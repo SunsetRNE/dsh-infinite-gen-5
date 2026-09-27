@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.13.9)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.13.10)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -82,7 +82,7 @@ node scripts/verify_scenarios.mjs     # 83 项：56 个领域包 / 索引预算 
 node scripts/verify_vocab.mjs         # 15 项：1931 条扩展词条形态 / 跨族签字 / 英文碰撞 / 102 条真实语料 + 20 条行话 + 6 条负样本
 node scripts/verify_scenario_tool.mjs # 85 项：真宿主挂载三个工具（+ 环境工具离线调用） + 工具链返回 + 「包正文不进 system prompt」硬断言
 node scripts/verify_tool_budget.mjs   # 48 项：唯一解析入口 / 结果体积闸（真实 render 驱动）/ 工具参数扁平 / 服务端与页面体积上限同值
-node scripts/verify_stats_panel.mjs   # 64 项：统计数据库（原子写 / 防抖 / 只读不写盘 / 写失败不抛）+ 任务清单（读 todos 投影、写走 todo/write）+ 面板只读库
+node scripts/verify_stats_panel.mjs   # 66 项：统计数据库（原子写 / 防抖 / 只读不写盘 / 写失败不抛）+ 任务清单（读 todos 投影、写走 todo/write）+ 面板只读库
 node scripts/verify_dedupe.mjs        # 84 项：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本单一真源
 node scripts/verify_injection.mjs     # 41 项：真实宿主演习台（装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级；无宿主时 SKIP 并以 0 退出）
 node scripts/verify_tuning.mjs        # 45 项：设置页调参接口（路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位 / 无 webServer 降级 / webServer 晚挂补挂；无宿主时 SKIP 并以 0 退出）

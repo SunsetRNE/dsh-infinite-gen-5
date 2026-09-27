@@ -376,6 +376,24 @@ const mirroredAt = sink.snapshot().tasks.at;
 mount.emit("session/event", session, { type: "assistant/message", data: {} });
 check(sink.snapshot().tasks.at === mirroredAt, "非 todo 事件不重读投影（省掉每个事件白折一遍）");
 
+// sessions.lastAt 的语义：是「这个会话最近一次被处理的时间」，而不是「最近一次换会话」（v0.13.10 修）
+await new Promise((resolve) => setTimeout(resolve, 5));
+const beforeEvent = Date.now();
+mount.emit("session/event", session, { type: "user/message", data: {} });
+const afterEvent = Date.now();
+const activityDoc = sink.snapshot();
+const lastAtMs = Date.parse(activityDoc.sessions.lastAt);
+check(
+  Number.isFinite(lastAtMs) && lastAtMs >= beforeEvent && lastAtMs <= afterEvent,
+  "sessions.lastAt 跟着每个事件刷新（换会话之外也要走）",
+  JSON.stringify({ lastAt: activityDoc.sessions.lastAt, window: [beforeEvent, afterEvent] }),
+);
+check(
+  activityDoc.sessions.seen === 1 && activityDoc.sessions.lastId === "sess-1",
+  "同一会话反复来事件不会重复涨 sessions.seen",
+  JSON.stringify({ seen: activityDoc.sessions.seen, lastId: activityDoc.sessions.lastId }),
+);
+
 // 面板写侧：restore 走与官方工具同一条事件
 const restore = await call(mount.server, "/infinite-gen-5/tasks", "POST", { action: "restore" }, bridge.token);
 const restoreAppend = session.appends.at(-1);

@@ -32,7 +32,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.13.9";
+const PLUGIN_VERSION = "0.13.10";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -1044,11 +1044,14 @@ export function apply(ctx, config) {
     if (!session || typeof session !== "object") return;
     taskMirror.session = session;
     const id = sessionIdOf(session);
-    if (id !== null && id !== taskMirror.sessionId) {
+    if (id === null) return;
+    if (id !== taskMirror.sessionId) {
       taskMirror.sessionId = id;
       stats.bump("sessions.seen");
-      stats.patch("sessions", { lastId: id, lastAt: new Date().toISOString() });
     }
+    // lastAt 是「这个会话最近一次被处理的时间」（不是「最近一次换会话」）：每个事件都刷新。
+    // 同一格早已被 bump("sessions.events") 置脏，所以写它不会多出一次落盘。
+    stats.patch("sessions", { lastId: id, lastAt: new Date().toISOString() });
   };
   if (typeof ctx.on === "function") {
     ctx.on("session/created", (session) => {
