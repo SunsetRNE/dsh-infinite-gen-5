@@ -526,6 +526,8 @@ npm run release:pack -- --out=dist
 
 给历史 tag 补产物：Actions → release → Run workflow（填 tag），或 `gh workflow run release.yml -f tag=vX.Y.Z`。
 
+> 补产物的前提是**那个 tag 的树自己能在 runner 上跑过 `verify:all`**（v0.12.1 起都满足；更早的 tag 会卡在自检 —— 比如 v0.12.0 落在「自检脚本硬导宿主绝对路径」修好之前）。这种情况就在本地按该 tag 的树打包再传：`git worktree add --detach /tmp/wt vX.Y.Z` → 把 `scripts/package-release.mjs` 拷进去 → `node scripts/package-release.mjs --out=dist` → 用 REST `POST https://uploads.github.com/repos/<slug>/releases/<id>/assets?name=<文件名>` 传附件（v0.12.0 就是这么补的）。
+
 `scripts/version-targets.mjs` 是「当前版本锚点」的唯一真源（`index.js` 的 `PLUGIN_VERSION`、`client.js` 的 `VERSION`、`cordis.patch.yml` 头注释、README / HARNESS_PLUGIN 标题、两个 verify 脚本头注释），改写器与自检共用它。README 版本沿革、`package.json` description、`ENV_PROBE.md` 里「随插件 v0.8.0 引入」、以及生成物 `CHANGELOG.md` 这类**记录当时**的版本号刻意不改、只在 `PROSE_ALLOWED_FILES` 里登记放行 —— 发版改写它们等于篡改历史。`verify_version.mjs` 另外断言：文档里不出现比当前更新的版本号、全仓没有未登记的版本号字面量（新增文件里硬写版本号会被抓出来）。
 
 ### CI 门禁
