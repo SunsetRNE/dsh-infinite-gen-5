@@ -174,9 +174,14 @@ done
 # ---------- [6] 完成 ----------
 step "安装完成"
 
+# 版本号取自刚落盘的插件副本，避免脚本里硬写版本（曾长期停在 v0.5.0）
+PLUGIN_VERSION="$(node -p "require('$DEST_DIR/package.json').version" 2>/dev/null || true)"
+[[ -n "$PLUGIN_VERSION" ]] || PLUGIN_VERSION="$(grep -m1 '"version"' "$DEST_DIR/package.json" | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
+[[ -n "$PLUGIN_VERSION" ]] || PLUGIN_VERSION="?"
+
 cat <<EOF
 
-  ✔ $PLUGIN_LABEL v0.5.0 已安装！
+  ✔ $PLUGIN_LABEL v$PLUGIN_VERSION 已安装！
   目标 profile：$(printf '%s ' "${PROFILE_DIRS[@]}" | sed 's/ *$//')
   最后一步：重启 DeepSeek Harness（Web 版刷新页面 / 桌面版重新打开），新建会话即可生效。
   验证方法 1：重启后输入框卡片底部那一行（与原生「上下文 12%」计量器同排）应出现「无限五代 ●」状态条；
