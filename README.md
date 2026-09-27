@@ -1,4 +1,4 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.13.10
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.14.0
 
 <p align="center">
   <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
@@ -46,7 +46,7 @@
 
 逐版「改了什么、为什么」统一收在仓库内《更新文档》—— [`UPDATE.md`](UPDATE.md)（随包分发）。README 只留机制解释与最近几条摘要：
 
-- **最近**：v0.13.10 `sessions.lastAt` 语义修正（「最近活跃」名副其实 + 真回归断言）· v0.13.9 任务清单与统计库解耦（核心写库、面板只读 + 任务进度上屏）· v0.13.8 JSON 边界统一强化（唯一解析入口 + 结果体积闸 + 参数/结果两个方向）· v0.13.7 工具调用坏包修复回路（内核 + 运行时锚点）· v0.13.6 命中词汇深度（词表扩展 + 索引命中行 + 语料测出路由缺陷）· v0.13.5 远端补发与产物描述压缩 —— 全文与更早各版见 [`UPDATE.md`](UPDATE.md)。
+- **最近**：v0.14.0 领域包 56 → 62（新增 evasion / privesc / phishing / rat_c2 / dos / drm，词表扩到 2053 条）· v0.13.10 `sessions.lastAt` 语义修正（「最近活跃」名副其实 + 真回归断言）· v0.13.9 任务清单与统计库解耦（核心写库、面板只读 + 任务进度上屏）· v0.13.8 JSON 边界统一强化（唯一解析入口 + 结果体积闸 + 参数/结果两个方向）· v0.13.7 工具调用坏包修复回路（内核 + 运行时锚点）· v0.13.6 命中词汇深度（词表扩展 + 索引命中行 + 语料测出路由缺陷）· v0.13.5 远端补发与产物描述压缩 —— 全文与更早各版见 [`UPDATE.md`](UPDATE.md)。
 - **机械清单**：[`CHANGELOG.md`](CHANGELOG.md)（`node scripts/changelog.mjs` 生成，别手改）。
 - **发布产物与 Release 正文**：只带最近一次更新（压缩过）并指回 `UPDATE.md`。
 
@@ -198,10 +198,10 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   ├── client.js                # 客户端半体（原生状态条 + 设置台：只读统计库，另有任务进度条与「恢复上次清单」）
 │   ├── stats-store.mjs          # 统计数据库（原子写 + 防抖；核心只写、面板只读；schema ig5-stats/1）
 │   ├── tasks.mjs                # 任务清单规则（读宿主 todos 投影 / 写 todo/write 事件 / 单 in_progress 策略）
-│   ├── data/scenarios.mjs       # 56 个领域包 × 7 族 + 领域标记表（运行时与评测共用的唯一真源）
+│   ├── data/scenarios.mjs       # 62 个领域包 × 7 族 + 领域标记表（运行时与评测共用的唯一真源）
 │   ├── data/vocabulary.mjs      # 命中词汇的规则与护栏：形态校验 / 白名单 / 跨族签字 / 预算常量
 │   ├── data/vocabulary-data.mjs # 扩展词条生成物（源在 data/vocab/*.json，由 vocab-build 合成，别手改）
-│   ├── data/vocab/              # 扩展词条源文件：A 攻防核心 / B 逆向样本 / C 网络云 / D 工程密码数据 AI / E 人工校准
+│   ├── data/vocab/              # 扩展词条源：A 攻防核心 / B 逆向样本 / C 网络云 / D 工程密码数据 AI / E 人工校准 / F v0.14.0 新域 / G v0.14.0 回填
 │   ├── data/toolchains.mjs      # 每个计算机域的安装/验证工具链 + 缺工具降级协议
 │   ├── data/probe.mjs           # 运行环境探测引擎（只读：形态/资源/网络/库存/能力位/39 域就绪度）
 │   ├── ENV_PROBE.md             # 环境探测设计说明书（分层、数据形状、性能预算、安全边界、已知局限）
@@ -212,9 +212,9 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   ├── scripts/verify_eval.mjs  # 评测闭环自检（合成数据手算可核 + CLI 退出码真跑）
 │   ├── tests/eval-baseline.json # 指标基线：--gate 用它拦回退
 │   ├── scripts/verify_ui.mjs    # 状态条行为自检（假宿主真跑组件，可选 --emit-html 出视觉预览）
-│   ├── scripts/verify_scenarios.mjs     # 56 个领域包 / 索引 / 标记表 / 工具链数据层自检
+│   ├── scripts/verify_scenarios.mjs     # 62 个领域包 / 索引 / 标记表 / 工具链数据层自检
 │   ├── scripts/vocab-build.mjs          # 词表合成：校验 data/vocab/*.json → 写生成物（--check 抓漂移）
-│   ├── scripts/verify_vocab.mjs         # 15 项：词条形态 / 跨族签字 / 英文碰撞 / 102 条真实语料 + 20 条行话 + 6 条负样本
+│   ├── scripts/verify_vocab.mjs         # 16 项：词条形态 / 跨族签字 / 英文碰撞 / 102 条真实语料 + 41 条破甲题库 + 20 条行话 + 7 条负样本
 │   ├── scripts/vocab-report.mjs         # 命中词表报告（--md 出逐域深度表 / --domain=web 出单词全表）
 │   ├── scripts/verify_scenario_tool.mjs # 真宿主挂载：领域工具行为 + 「包正文不进 system prompt」硬断言
 │   ├── scripts/verify_tool_budget.mjs   # 48 项：唯一解析入口 / 结果体积闸（真实 render 驱动）/ 参数扁平 / 两端体积上限同值
@@ -375,8 +375,8 @@ chmod +x install.sh uninstall.sh
 2. **测试离线回归**（全部离线、确定性、不需要 API Key）：
    ```bash
    node scripts/verify_prompt_gen5.mjs   # 158 条：载荷完备性 + 五槽骨架 + 七族点名 + 语言/工具链/环境/工具调用卫生（含坏包修复回路与结果侧截断）+ 体积预算
-   node scripts/verify_scenarios.mjs     # 83 条：56 个领域包 / 索引预算 / 标记表 / 工具链 / 覆盖性回归
-   node scripts/verify_vocab.mjs         # 15 项：1931 条扩展词条形态 / 跨族签字 / 英文碰撞扫描 / 102 条真实语料 + 20 条行话 + 6 条负样本 / 预算
+   node scripts/verify_scenarios.mjs     # 83 条：62 个领域包 / 索引预算 / 标记表 / 工具链 / 覆盖性回归
+   node scripts/verify_vocab.mjs         # 16 项：2053 条扩展词条形态 / 跨族签字 / 英文碰撞扫描 / 102 条真实语料 + 41 条破甲题库 + 20 条行话 + 7 条负样本 / 预算
    node scripts/verify_scenario_tool.mjs # 85 条：真宿主挂载三个工具 + 环境工具离线调用 + 「包正文不进 system prompt」
    node scripts/verify_tool_budget.mjs   # 48 项：唯一解析入口 safeParseJson / 结果体积闸（用真实 render 驱动）/ 工具参数扁平 / 两端体积上限同值
    node scripts/verify_stats_panel.mjs   # 66 项：统计库（原子写/防抖/只读不写盘）+ 任务清单（读投影、写走 todo/write）+ 面板只读库

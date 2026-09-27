@@ -54,7 +54,7 @@ const {
 // ---- 1. 结构完整性 ----
 check(Number.isInteger(SCENARIO_DATA_VERSION) && SCENARIO_DATA_VERSION >= 1, "数据层版本号是正整数");
 check(FAMILIES.length === 7, "领域族数量 = 7", `${FAMILIES.length}`);
-check(SCENARIOS.length === 56, "领域包数量 = 56（v0.7.0 计算机向扩写）", `${SCENARIOS.length}`);
+check(SCENARIOS.length === 62, "领域包数量 = 62（v0.14.0 新增 6 个计算机向域）", `${SCENARIOS.length}`);
 
 const ids = SCENARIOS.map((s) => s.id);
 check(new Set(ids).size === ids.length, "领域包 id 唯一", `重复: ${ids.length - new Set(ids).size}`);
@@ -115,7 +115,7 @@ const unkeyed = ids.filter((id) => !(id in DOMAIN_MARKERS));
 check(unkeyed.length === 0, "每个领域包都有对应标记键", JSON.stringify(unkeyed));
 const unlabeled = Object.keys(DOMAIN_MARKERS).filter((k) => !(k in DOMAIN_LABELS));
 check(unlabeled.length === 0, "每个标记键都有中文标签", JSON.stringify(unlabeled));
-check(Object.keys(DOMAIN_MARKERS).length === 56, "标记表键数 = 56", `${Object.keys(DOMAIN_MARKERS).length}`);
+check(Object.keys(DOMAIN_MARKERS).length === 62, "标记表键数 = 62", `${Object.keys(DOMAIN_MARKERS).length}`);
 
 // 遗留判定回归：这四段文本在 v0.5.x 里的判定结果必须保持
 const legacyCases = [
@@ -138,9 +138,12 @@ check(roleHit.domain === "nsfw" && roleHit.hits === 2, "大写占位符 ROLE_A/R
 // ---- 2b. 工具链（v0.7.0）：计算机向的每个域都必须带 装/验 两段 ----
 const COMPUTER_FAMILIES = ["offense", "crypto", "data", "engineering"];
 const computerIds = SCENARIOS.filter((s) => COMPUTER_FAMILIES.includes(s.family)).map((s) => s.id);
-const noChain = computerIds.filter((id) => !Array.isArray(TOOLCHAINS[id]) || TOOLCHAINS[id].length === 0);
+// 工具链的真源是**合并后**的那一份（data/toolchains.mjs 基础表 + data/vocab 的 TOOLCHAIN_EXTRA）。
+// v0.14.0 的 6 个新域只带扩展行，只看基础表会把它们误报成「没有工具链」。
+const chainOf = (id) => SCENARIOS.find((s) => s.id === id)?.toolchain ?? [];
+const noChain = computerIds.filter((id) => chainOf(id).length === 0);
 check(noChain.length === 0, `计算机向 ${computerIds.length} 个域都有工具链`, JSON.stringify(noChain));
-const thinChain = computerIds.filter((id) => (TOOLCHAINS[id] ?? []).length < 3);
+const thinChain = computerIds.filter((id) => chainOf(id).length < 3);
 check(thinChain.length === 0, "每个计算机域的工具链至少 3 条", JSON.stringify(thinChain));
 // 每行分两类：工具行（<工具> — <用途> | 装: … | 验: …）与劝告行（「无网时…」「只做离线…」）。
 // 工具行必须成对出现装/验；劝告行不强制。要求每个域至少 3 条工具行。
@@ -149,7 +152,7 @@ const verifyRe = /\|\s*验\s*[:：]/;
 const halfLine = [];
 const tooFewTools = [];
 for (const id of computerIds) {
-  const lines = TOOLCHAINS[id] ?? [];
+  const lines = chainOf(id);
   for (const line of lines) {
     if (installRe.test(line) !== verifyRe.test(line)) halfLine.push(`${id}: ${line.slice(0, 40)}`);
   }

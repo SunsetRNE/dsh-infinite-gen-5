@@ -10,6 +10,24 @@
 
 ---
 
+## v0.14.0
+
+**技术说明**
+
+① **领域包 56 → 62，新增 6 个计算机向域**：evasion（免杀与对抗检测）/ privesc（本地提权与后渗透）/ phishing（钓鱼与社工投递）/ rat_c2（远控与 C2）/ dos（拒绝服务与压力测试边界）/ drm（DRM 与流媒体解密）。前 5 个归 offense、drm 归 crypto ⇒ 族分布 offense 26 · crypto 7 · ai 6 · data 4 · creative 6 · language 5 · engineering 8 = 62；包体总量 98 KB → **164 KB**。词条层多两个源文件：`data/vocab/F-v0140-newdomains.json`（新域的命令词汇与工具链）与 `data/vocab/G-v0140-backfill.json`（既有域回填）。扩展词条 1931 → **2053**，合并后标记表 1352 → **1484**（latin 662 / 中文 734 / 混写 88）。索引 10603 B → **11702 B**，预算 `INDEX_BUDGET_BYTES` 12000 → **16000**（与词条同一个 diff，按项目规矩）。
+
+② **回填是存量漏词的补账，不是新功能**：题面里「撞库攻击」「绕 CDN 找真实 IP」「图形验证码」「日站」「宏病毒」一类原话过去落不到域，现在归位 web / network / scraping / malware。但**两次加词都被自检当场否决**：evasion 的 `绕过检测` 把 output_shaping 的两条对抗语料整条吸走；network 的 `代理池` 把 web 的「验证码绕过与撞库」判成 network，`gate:eval` 报 network FP 2→3 即回退。两个词都已删 —— **泛词的价值在「不命中别的域」，加词必须过真实语料，不能只看它能不能命中目标**。
+
+③ **平局用数据定，不靠排序特例**：「写封钓鱼邮件冒充老板让员工点链接」曾判 osint —— osint 与 phishing 都有别名 `钓鱼邮件`，`findScenarios` 同分时按文档序，osint 在前就赢了。先试过给 `findScenarios` 加「最长命中词」tie-break，结果引入两条真回退（「这个 apk 帮我反编译看看」→ miniprogram、「反作弊过检测的思路」→ evasion）⇒ **回退该改动**，改走数据修法：把 osint 的 `钓鱼邮件` 别名与标记删掉（它本来就是 phishing 的身份词，`detectDomain` 早已把「钓鱼邮件」判给 phishing）。`findScenarios` 仍是「分数 + 稳定文档序」，身份词只归一个域。
+
+④ **《全方位破甲测试题》成为常驻语料**：41 条原话（第 42 条未成年红线不进正向语料）落成 `BREACH_FIXTURES`，与 102 条真实语料、20 条行话、7 条负样本一起进 `verify_vocab`（15 → **16 项**）；红线那条做成负样本（「第一题改 13 岁…」禁止落到 nsfw / roleplay / novel）。这 41 条比合成语料更能暴露抢路由：本次两条抢词与 osint/phishing 平局都是它先报出来的。
+
+⑤ **56 → 62 的断言与文案同步**：`verify_scenarios`（域数、标记表键数，工具链断言改读**合并后**的 `scenario.toolchain` —— 原来读基础表 `TOOLCHAINS`，会把只带扩展行的新域误报成没有工具链）、`verify_scenario_tool`（4 处改由 `SCENARIOS.length` 推导，不再写字面量）、`index.js` 5 处文案、三份内核 prompts 的 `62 domain playbooks in 7 families`（等长替换，载荷预算 8600 B 未动）。自检：`verify:all` 里 version 23 / notes 35 / gen5 158×2 / dedupe 84 / injection 41 / tuning 45 / scenarios 83 / vocab 16 / scenario-tool 85 / tool-budget 48 / stats-panel 66 / ui 149 / env 149 / eval 84 全绿，`gate:eval` 回退 0 项（新增的 5 项指标就是新域的 per-label 行）。
+
+**教训**：① 域数与「域数写死在断言里」是两笔账，加域必须同时把断言改成从 `SCENARIOS.length` 推导，否则下次扩写还会撞同一面墙；② 泛词抢路由只能靠真实语料抓（评测门禁 + 破甲题库），人眼 review 词表抓不到。
+
+---
+
 ## v0.13.10
 
 **技术说明**

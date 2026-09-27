@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.13.10)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.14.0)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -34,9 +34,9 @@
   - 载荷中的 `{{...}}` 非内置变量由 `index.js` 做安全转义，避免模板解析器抛错。
 - **领域 / 语言覆盖（v0.6.0）**：内核载荷不再只点名 3 个任务族，改为
   **五槽骨架** `ROLE / OBJECT / ACTION / SCOPE / SHAPE`（未列领域自行拆槽、直接产出）
-  + **45 个领域 × 7 族点名** + **语言规则**（任何语言的软化词都视为「重新框定并继续」）。
+  + **62 个领域 × 7 族点名** + **语言规则**（任何语言的软化词都视为「重新框定并继续」）。
   载荷 3010 B → 4837 B。
-- **领域包工具 `infinite_gen5_scenario`**：56 个领域包共约 98 KB（v0.7.0 计算机向扩写 11 个域），
+- **领域包工具 `infinite_gen5_scenario`**：62 个领域包共约 164 KB（v0.7.0 计算机向扩写 11 个域 + v0.14.0 扩写 6 个域），
   放在工具里按需取用而不是常驻 system prompt。无参调用返回约 10.6 KB 索引（≈2.9 K token），
   带用户原话只返回命中的那一个包（≈0.2–1.0 K token）。
 - **工具链注入（v0.7.0）**：每个计算机域在 `data/toolchains.mjs` 里配了
@@ -78,8 +78,8 @@
 ```powershell
 node --check index.js
 node scripts/verify_prompt_gen5.mjs   # 158 项：载荷逐字同源 + 五槽骨架 + 七族点名 + 语言/工具链/环境/工具调用卫生（含坏包修复回路与结果侧截断）+ 体积预算 + 投影 + 品牌纯净度
-node scripts/verify_scenarios.mjs     # 83 项：56 个领域包 / 索引预算 / 标记表唯一真源 / 工具链装验成对 / 匹配用例
-node scripts/verify_vocab.mjs         # 15 项：1931 条扩展词条形态 / 跨族签字 / 英文碰撞 / 102 条真实语料 + 20 条行话 + 6 条负样本
+node scripts/verify_scenarios.mjs     # 83 项：62 个领域包 / 索引预算 / 标记表唯一真源 / 工具链装验成对 / 匹配用例
+node scripts/verify_vocab.mjs         # 16 项：2053 条扩展词条形态 / 跨族签字 / 英文碰撞 / 102 条真实语料 + 41 条破甲题库 + 20 条行话 + 7 条负样本
 node scripts/verify_scenario_tool.mjs # 85 项：真宿主挂载三个工具（+ 环境工具离线调用） + 工具链返回 + 「包正文不进 system prompt」硬断言
 node scripts/verify_tool_budget.mjs   # 48 项：唯一解析入口 / 结果体积闸（真实 render 驱动）/ 工具参数扁平 / 服务端与页面体积上限同值
 node scripts/verify_stats_panel.mjs   # 66 项：统计数据库（原子写 / 防抖 / 只读不写盘 / 写失败不抛）+ 任务清单（读 todos 投影、写走 todo/write）+ 面板只读库

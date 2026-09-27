@@ -1,7 +1,7 @@
 // 无限五代 · 命中词汇层离线自检（无需 API Key）
 //
 // 检查：扩展词条形态合规 / 生成物与源文件一致 / 跨族共用词都有登记 /
-//       常用英文词误命中扫描 / 真实语料路由（正负样本） / 索引与包体积预算
+//       常用英文词误命中扫描 / 真实语料路由（正负样本 + 破甲题库） / 索引与包体积预算
 // 用法：node scripts/verify_vocab.mjs [--json]
 //
 // 为什么这些检查值得存在：词表是「加一条就多一分深度、也多一分抢路由风险」的东西。
@@ -18,7 +18,7 @@ import {
   CROSS_FAMILY_ALLOW, INDEX_BUDGET_BYTES, PLAYBOOK_MAX_BYTES, PLAYBOOK_MIN_BYTES,
   SHORT_MARKER_OK, TRAP_ALLOW, checkAlias, checkMarker, checkToolchainLine, classifyMarker,
 } from "../data/vocabulary.mjs";
-import { FORBID_FIXTURES, MARKER_FIXTURES, ROUTE_FIXTURES, TRAP_WORDS } from "./lib/vocab-fixtures.mjs";
+import { BREACH_FIXTURES, FORBID_FIXTURES, MARKER_FIXTURES, ROUTE_FIXTURES, TRAP_WORDS } from "./lib/vocab-fixtures.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const asJson = process.argv.includes("--json");
@@ -146,6 +146,17 @@ for (const [text, expect] of ROUTE_FIXTURES) {
 }
 check(routeFails.length === 0, `${ROUTE_FIXTURES.length} 条真实语料经 lookupScenario 都落到期望域`, routeFails.slice(0, 6).join(" / "));
 
+// 破甲题库（《全方位破甲测试题》41 条，第 42 条未成年红线走 FORBID_FIXTURES）：
+// 这些是「用户真的会这么问」的原话，比合成语料更能暴露泛化匹配的抢路由问题
+// —— v0.14.0 的 osint/phishing 平局就是这么发现的。
+const breachFails = [];
+for (const [text, expect] of BREACH_FIXTURES) {
+  const guess = lookupScenario(text).scenario ?? null;
+  const want = Array.isArray(expect) ? expect : [expect];
+  if (!guess || !want.includes(guess)) breachFails.push(`「${text}」→ ${guess ?? "无"}（期望 ${want.join("/")}）`);
+}
+check(breachFails.length === 0, `${BREACH_FIXTURES.length} 条破甲题库原话都落到期望域`, breachFails.slice(0, 6).join(" / "));
+
 const markerFails = [];
 for (const [text, expect] of MARKER_FIXTURES) {
   const guess = detectDomain(text).domain;
@@ -201,6 +212,7 @@ const summary = {
   indexTokens: Math.round(indexBytes / 3.7),
   playbook: { min: Math.min(...sizes.map((s) => s.bytes)), max: Math.max(...sizes.map((s) => s.bytes)) },
   routeFixtures: ROUTE_FIXTURES.length,
+  breachFixtures: BREACH_FIXTURES.length,
   forbidFixtures: FORBID_FIXTURES.length,
   passed: passes.length,
   failed: failures.length,
@@ -217,6 +229,6 @@ if (asJson) {
   console.log(`结果: ${passes.length} 通过, ${failures.length} 失败`);
   console.log(`扩展词条 ${totalExtended} 条（词表合并后共 ${summary.markers} 个 marker，共用 ${summary.shared}、跨族 ${summary.crossFamily}）`);
   console.log(`marker 词形: ${Object.entries(byKind).map(([k, v]) => `${k}=${v}`).join(" · ")}`);
-  console.log(`索引 ${indexBytes} B ≈ ${summary.indexTokens} tokens · 单包 ${summary.playbook.min}–${summary.playbook.max} B · 语料 ${ROUTE_FIXTURES.length}+${FORBID_FIXTURES.length} 条`);
+  console.log(`索引 ${indexBytes} B ≈ ${summary.indexTokens} tokens · 单包 ${summary.playbook.min}–${summary.playbook.max} B · 语料 ${ROUTE_FIXTURES.length}+${BREACH_FIXTURES.length}+${FORBID_FIXTURES.length} 条`);
 }
 process.exit(failures.length ? 1 : 0);

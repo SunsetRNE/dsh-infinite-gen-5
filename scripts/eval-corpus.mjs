@@ -199,7 +199,7 @@ if (wantJson) {
   line(`  领域：${domainIds.length} 个里 ${cov.domainGaps.length} 个零用例${cov.domainGaps.length > 0 ? ` — ${cov.domainGaps.slice(0, 14).join(" ")}${cov.domainGaps.length > 14 ? " …" : ""}` : ""}`);
   line(`  语言：${WANTED_LANGUAGES.length} 种里 ${cov.languageGaps.length} 种零用例 — 缺 ${cov.languageGaps.join(" ")}`);
   line(`  难度：${LEVELS.length} 档里 ${cov.levelGaps.length} 档零用例${cov.levelGaps.length > 0 ? ` — ${cov.levelGaps.join(" ")}` : ""}`);
-  if (cov.unknownDomains.length > 0) line(`  ⚠ 语料里出现了不属于 56 域的标签：${cov.unknownDomains.join(" ")}`);
+  if (cov.unknownDomains.length > 0) line(`  ⚠ 语料里出现了不属于 ${cov.domainCount ?? SCENARIOS.length} 域的标签：${cov.unknownDomains.join(" ")}`);
   const domSpread = Object.entries(cov.byDomain);
   line(`  现有标签分布（${domSpread.length} 个域）：${domSpread.map(([k, v]) => `${k} ${v}`).join(" · ")}`);
   line("");

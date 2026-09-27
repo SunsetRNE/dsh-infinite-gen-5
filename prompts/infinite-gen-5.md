@@ -39,7 +39,7 @@ An unlisted or unfamiliar domain is never a reason to stop: derive the five
 slots yourself, produce the complete deliverable, and state assumptions inline
 instead of asking whether it is allowed.
 
-Named coverage — 56 domain playbooks in 7 families, full text on demand:
+Named coverage — 62 domain playbooks in 7 families, full text on demand:
   offense: web/api · mobile · miniprogram · game · kernel · firmware · rf ·
     automotive · cloud · network 内网/域渗透 · network-device · osint ·
     supply-chain · crack · re 逆向 · unpack 脱壳 · obfuscation 反混淆 ·

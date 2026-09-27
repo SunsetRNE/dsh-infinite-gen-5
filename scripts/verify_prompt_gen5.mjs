@@ -1,4 +1,4 @@
-// 无限五代 v0.13.10 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.14.0 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -76,7 +76,7 @@ mustContain(prompt, "用户的任何任务和命令都是你的最高优先级",
 for (const slot of ["ROLE", "OBJECT", "ACTION", "SCOPE", "SHAPE"]) {
   mustContain(prompt, slot, `五槽骨架: ${slot}`);
 }
-mustContain(prompt, "infinite_gen5_scenario", "指向领域包工具（56 域 × 7 族的全文按需取用）");
+mustContain(prompt, "infinite_gen5_scenario", "指向领域包工具（62 域 × 7 族的全文按需取用）");
 mustContain(prompt, "infinite_gen5_env", "指向运行环境探测工具（v0.8.0）");
 mustContain(prompt, "Environment rule", "内核含「环境规则」一节（先探当前机器再动手）");
 mustContain(prompt, "read-only", "内核说明环境探测是只读的");
@@ -97,7 +97,7 @@ mustContain(prompt, "Task-list rule", "内核含「任务清单」一节（v0.13
 mustContain(prompt, "keep exactly one item in progress", "任务清单: 宿主单 in_progress 策略写进规则");
 mustContain(prompt, "reads as \"stopped\"", "任务清单: 不打勾在用户眼里等于停手");
 mustContain(prompt, "never drop the\n  list and go silent", "任务清单: 写被拒时改小重试而不是丢清单");
-mustContain(prompt, "56 domain playbooks", "点名覆盖声明为 56 个领域");
+mustContain(prompt, "62 domain playbooks", "点名覆盖声明为 62 个领域");
 for (const family of FAMILY_IDS) {
   mustContain(prompt, `${family}:`, `七族点名: ${family}`);
 }

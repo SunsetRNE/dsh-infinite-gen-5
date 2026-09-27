@@ -8,6 +8,9 @@ import { dirname, join } from "node:path";
 // 预算从 data/vocabulary.mjs 取，别在这里再抄一份：抄一份的下场就是
 // 词表加深之后这里还卡着旧数字（v0.13.6 就撞过一次）。
 import { INDEX_BUDGET_BYTES, PLAYBOOK_MAX_BYTES } from "../data/vocabulary.mjs";
+// 领域数量也从数据层取（v0.14.0：56 → 62 时这里一度还写着 56，正是「别抄一份」的反面教材）。
+import { SCENARIOS } from "../data/scenarios.mjs";
+const SCENARIOS_COUNT = SCENARIOS.length;
 
 // ── 找宿主：插件仓库里没有 node_modules，只能从 dsh 安装目录取真模块 ──────────
 // 找不到（裸机 / CI 容器）时打印 SKIP 并 exit 0：缺宿主是环境限制，不是回归。
@@ -149,7 +152,7 @@ check(badLayers?.ok === false && badLayers.reason === "bad-layers", "环境工�
 const residentBytes = Buffer.byteLength(JSON.stringify({ name: scenarioTool.name, description: scenarioTool.description, parameters: scenarioTool.parameters }), "utf8");
 check(residentBytes < 1200, "常驻定义体积 < 1.2 KB（包正文不在这里）", `${residentBytes} B`);
 check(typeof scenarioTool.description === "string" && scenarioTool.description.length > 80, "描述足够让模型知道何时用");
-check(/56/.test(scenarioTool.description), "描述里写明领域数量");
+check(new RegExp(String(SCENARIOS_COUNT)).test(scenarioTool.description), "描述里写明领域数量", String(SCENARIOS_COUNT));
 check(scenarioTool.parameters?.type === "object", "参数是 object");
 check(scenarioTool.parameters?.additionalProperties === false, "参数不允许额外字段");
 check(
@@ -170,18 +173,18 @@ function render(value) {
 // ---- 无参：返回索引 ----
 const indexCall = call(undefined);
 check(indexCall.ok === true, "无参调用成功");
-check(indexCall.domains === 56, "报告 56 个领域", String(indexCall.domains));
+check(indexCall.domains === SCENARIOS_COUNT, `报告 ${SCENARIOS_COUNT} 个领域`, String(indexCall.domains));
 check(Array.isArray(indexCall.families) && indexCall.families.length === 7, "报告 7 个族");
 check(
-  indexCall.families.reduce((sum, f) => sum + f.count, 0) === 56,
-  "各族计数之和 = 56",
+  indexCall.families.reduce((sum, f) => sum + f.count, 0) === SCENARIOS_COUNT,
+  `各族计数之和 = ${SCENARIOS_COUNT}`,
 );
 const indexText = indexCall.index;
 check(bytes(indexText) <= INDEX_BUDGET_BYTES, `索引体积 ≤ ${INDEX_BUDGET_BYTES} B`, `${bytes(indexText)} B`);
-const { SCENARIOS, FAMILIES, scenarioIndexText } = await import(join(ROOT, "data", "scenarios.mjs"));
+const { FAMILIES, scenarioIndexText } = await import(join(ROOT, "data", "scenarios.mjs"));
 const PKG_VERSION = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).version;
 const missingIds = SCENARIOS.filter((s) => !indexText.includes(s.id)).map((s) => s.id);
-check(missingIds.length === 0, "索引列出全部 56 个 id", JSON.stringify(missingIds));
+check(missingIds.length === 0, `索引列出全部 ${SCENARIOS_COUNT} 个 id`, JSON.stringify(missingIds));
 
 // family 过滤：只出现该族的包
 const offense = call({ family: "offense" });
