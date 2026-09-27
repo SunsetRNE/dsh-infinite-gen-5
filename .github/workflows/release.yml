@@ -37,6 +37,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: 补历史 tag：从 main 借一份打包脚本
+        run: |
+          # tag 推送时脚本就在树里，这里不动；手动补老 tag（打包脚本还没进树的版本）时，
+          # 被打的仍然是该 tag 的树，只是打包器从 main 取一份。
+          if [ ! -f scripts/package-release.mjs ]; then
+            echo "该 tag 树里没有 scripts/package-release.mjs，从 main 取一份"
+            git fetch --depth=1 origin main
+            git checkout FETCH_HEAD -- scripts/package-release.mjs
+          fi
       - name: 护栏 · 自检脚本不得硬导宿主绝对路径
         run: |
           if grep -rnE '^[[:space:]]*(import|export)[^\n]*"(/usr/local|/opt|/home/runner)' scripts/ --include='*.mjs'; then
