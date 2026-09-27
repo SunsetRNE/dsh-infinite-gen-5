@@ -15,8 +15,12 @@
 
 ### 🐛 修复
 
-- verify_scenario_tool 缺宿主时打印 SKIP 并退出 0（原先硬导宿主模块，CI 上必然失败）
+- verify_scenario_tool 缺宿主时打印 SKIP 并退出 0（原先硬导宿主模块，CI 上必然失败）（`0de75e3`）
 - --release-only 时不再被「tag 已存在」前置检查拦住（`cf7b762`）
+
+### 🔁 持续集成
+
+- 护栏拦住自检脚本里的宿主绝对路径 import + 凭据就位到 ~/.local-gh（README 同步）
 
 ## v0.12.0 — 2026-09-27
 

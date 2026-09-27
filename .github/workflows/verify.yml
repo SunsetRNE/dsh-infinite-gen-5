@@ -24,5 +24,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: 护栏 · 自检脚本不得硬导宿主绝对路径
+        run: |
+          # 2026-09-27 的教训：verify_scenario_tool.mjs 曾 `import {...} from "/usr/local/lib/node_modules/
+          # @deepseek-ai/cordis/..."`，本机绿、runner 上必炸（ERR_MODULE_NOT_FOUND），连挂 10 次 CI。
+          # 正确写法：先 locateHost()（--host= / IG5_DSH_ROOT / 常见安装位），找不到就 SKIP + exit 0。
+          if grep -rnE '^[[:space:]]*(import|export)[^\n]*"(/usr/local|/opt|/home/runner)' scripts/ --include='*.mjs'; then
+            echo "::error::自检脚本硬写了宿主绝对路径 import —— runner 上必然 ERR_MODULE_NOT_FOUND"
+            exit 1
+          fi
+          echo "✓ 没有硬写宿主绝对路径的 import"
       - name: 全量自检
         run: npm run verify:all

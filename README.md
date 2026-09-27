@@ -496,9 +496,10 @@ npm run release -- --yes --release          # 打 annotated tag vX.Y.Z + 推送 
   | 2 | `GH_TOKEN_FILE` 指向的文件，或 `--token-file=PATH` |
   | 3 | 约定路径 `~/.local-gh/.token`（通用凭据目录，`chmod 600`） |
 
-  本机的通用凭据现放在 `Branchbase/.local-gh/.token`（尚未挪到公共位置），要用就：
+  本机的凭据已就位到通用路径 `~/.local-gh/.token`（原 `Branchbase/.local-gh/` 里留了同名符号链接，那套脚本照旧可用），所以什么都不用加：
+
   ```bash
-  GH_TOKEN_FILE=/root/Branchbase/.local-gh/.token npm run release -- --release-only --release
+  npm run release -- --release-only --release    # tag 已推过、只补 GitHub Release
   ```
 
   token 只用于这一次 POST、脚本不回显内容；Release 已存在时返回 422 只提示不改动。tag 早已推过、只想补 Release 时用 `--release-only`（跳过打 tag，但要求 tag 已存在）。
