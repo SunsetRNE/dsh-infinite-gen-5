@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.16.1";
+        var VERSION = "v0.16.2";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -97,18 +97,52 @@
           ".dsh-armor5-text{max-width:22ch;overflow:hidden;text-overflow:ellipsis}",
           // 详情浮层：逐项对齐宿主 ContextMeter 的 .panel。
           ".dsh-armor5-panel{position:fixed;z-index:1100;box-sizing:border-box;",
-          "width:min(264px,100vw - 24px);padding:12px;border:0;cursor:default;",
+          "width:min(286px,100vw - 24px);padding:12px;border:0;cursor:default;",
           "border-radius:var(--dsw-radius-lg,12px);background:var(--dsw-specific-menu,#1f1f1f);",
           "backdrop-filter:var(--dsw-menu-backdrop-filter,none);",
           "box-shadow:var(--dsw-elevation-prominent,0 8px 32px rgba(0,0,0,.45));",
           "color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:12px;line-height:20px}",
+          // 头部：判决徽标 + 标题 + 版本/时刻（右对齐）。徽标按 tone 上色，一眼分辨通过/拒绝/执行中。
           ".dsh-armor5-head{display:flex;align-items:center;gap:6px}",
           ".dsh-armor5-head b{color:var(--dsw-alias-label-primary,#e6e6e6);font-weight:500}",
-          ".dsh-armor5-rows{margin:8px 0 0;padding:0;list-style:none}",
+          ".dsh-armor5-head-right{margin-left:auto;display:flex;align-items:center;gap:6px;",
+          "color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px;font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-badge{display:inline-flex;align-items:center;height:18px;padding:0 8px;border-radius:999px;",
+          "font-size:11px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.14))}",
+          ".dsh-armor5-badge[data-tone=running]{background:rgba(77,107,254,.16);",
+          "color:var(--dsw-alias-state-business-primary,#4d6bfe)}",
+          ".dsh-armor5-badge[data-tone=success]{background:rgba(63,185,80,.16);",
+          "color:var(--dsw-alias-state-success-primary,#3fb950)}",
+          ".dsh-armor5-badge[data-tone=error]{background:rgba(248,81,73,.16);",
+          "color:var(--dsw-alias-state-error-primary,#f85149)}",
+          // 分区：命中标记 / 风险载荷各自成块，用 chip 铺开 —— 长词表也比一行逗号好扫。
+          ".dsh-armor5-sec{margin-top:10px;display:flex;flex-direction:column;gap:6px}",
+          ".dsh-armor5-sec-title{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:11px}",
+          ".dsh-armor5-chips{display:flex;flex-wrap:wrap;gap:4px}",
+          ".dsh-armor5-chip{display:inline-flex;align-items:center;max-width:100%;padding:1px 7px;border-radius:6px;",
+          "font-size:11px;line-height:16px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.12));",
+          "overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+          ".dsh-armor5-chip[data-kind=hit]{background:rgba(77,107,254,.14);",
+          "color:var(--dsw-alias-state-business-primary,#4d6bfe)}",
+          ".dsh-armor5-chip[data-kind=risk]{background:rgba(248,81,73,.14);",
+          "color:var(--dsw-alias-state-error-primary,#f85149)}",
+          ".dsh-armor5-chip[data-kind=safe]{background:rgba(63,185,80,.14);",
+          "color:var(--dsw-alias-state-success-primary,#3fb950)}",
+          ".dsh-armor5-chip[data-kind=none]{padding:1px 0;background:0 0;color:var(--dsw-alias-label-caption,#8b8b8b)}",
+          // 最近命中流水：一条 = 时刻 · 判决 · 领域(命中数) · 载荷数，副行是那次的命中词。
+          ".dsh-armor5-hits{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px;",
+          "max-height:168px;overflow:auto}",
+          ".dsh-armor5-hits li{display:flex;flex-direction:column;gap:1px;padding:5px 7px;border-radius:8px;",
+          "background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08))}",
+          ".dsh-armor5-hit-main{font-size:11.5px;font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-hit-main[data-verdict=refusal]{color:var(--dsw-alias-state-error-primary,#f85149)}",
+          ".dsh-armor5-hit-main[data-verdict=fallback]{color:var(--dsw-alias-state-warning-primary,#d29922)}",
+          ".dsh-armor5-hit-sub{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px;overflow-wrap:anywhere}",
+          ".dsh-armor5-rows{margin:0;padding:0;list-style:none}",
           ".dsh-armor5-rows li{display:flex;gap:8px;align-items:baseline}",
           ".dsh-armor5-rows .k{color:var(--dsw-alias-label-tertiary,#8b8b8b);flex:none;min-width:64px}",
           ".dsh-armor5-rows .v{color:var(--dsw-alias-label-primary,#e6e6e6);overflow-wrap:anywhere}",
-          ".dsh-armor5-note{margin:8px 0 0;color:var(--dsw-alias-label-caption,#8b8b8b)}",
+          ".dsh-armor5-note{margin:10px 0 0;color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px;line-height:17px}",
           // ── 设置台（settings.section 里的那一页） ──
           // 令牌全部取自设置页自己用的那一套（bg-layer-2 / border-l2 / label-* / business-primary），
           // 每个都带兜底色。比例按设置页的节奏调：可选块用两/三列网格，预览块是一块内嵌面板，
@@ -181,8 +215,6 @@
           "background:var(--dsw-alias-button-primary-fill,#4d6bfe);color:var(--dsw-alias-label-primary-foreground,#fff)}",
           ".armor5-console-btn.is-primary:hover{background:var(--dsw-alias-button-primary-hover,#3d5bee);",
           "color:var(--dsw-alias-label-primary-foreground,#fff)}",
-          ".armor5-console-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;",
-          "color:var(--dsw-alias-label-tertiary,#8b8b8b)}",
           ".armor5-console-tag{display:inline-flex;align-items:center;height:15px;padding:0 6px;border-radius:999px;",
           "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));color:var(--dsw-alias-label-caption,#8b8b8b);",
           "font-size:10.5px;font-weight:400;vertical-align:middle}",
@@ -367,13 +399,7 @@
               return row.id + " " + row.hits + (row.id === domain ? "*" : "");
             }).join(" · ")
             : "—";
-          var clock = at === null
-            ? "—"
-            : (function () {
-              var d = new Date(at);
-              var pad = function (n) { return (n < 10 ? "0" : "") + n; };
-              return pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
-            })();
+          var clock = at === null ? "—" : clockOf(at);
 
           // 触发条被压缩成多态指示器后，细节靠 title（悬停）与浮层（点击）承载。
           var title = TITLE +
@@ -381,38 +407,63 @@
             (armor === undefined ? " · 等待投影" : "") +
             " · 点击查看面板";
 
+          // 卡片头部那颗徽标的文案：与状态条同一个口径，看一眼卡片就知道这一轮判成了什么。
+          var badgeText = running ? "执行中"
+            : armor === undefined ? "等待投影"
+              : verdict === null ? "空闲"
+                : verdict === "pass" ? "通过"
+                  : verdict === "fallback" ? "兜底" : "拒绝";
+
+          // 主表只留「一句话」字段；命中标记 / 风险载荷 / 安全标记这类词表改成 chip 块，
+          // 长词表不再挤成一坨逗号 —— 这是 v0.16.2「卡片整合」的主要动因。
           var rows = [
-            ["状态", running ? "执行中" : armor === undefined ? "等待投影数据" : "空闲"],
-            ["最近判决", verdict === null ? "—" : verdict + (clock === "—" ? "" : "（" + clock + "）")],
             ["识别领域", domain
               ? (domainLabel && domainLabel !== domain
                   ? domainLabel + "（" + domain + " · 命中 " + domainHits + "）"
                   : domain + "（命中 " + domainHits + "）")
               : "—"],
             ["领域候选", candidatesText],
-            ["命中标记", domainMarkers.length ? domainMarkers.join("、") : "—"],
             ["拒答/兜底词", words.length ? words.join("、") : "—"],
-            ["风险载荷", risk.length ? risk.join("、") : "—"],
-            ["安全标记", safe.length ? safe.length + " 个（" + safe.join("、") + "）" : "—"],
             ["扫描范围", textChars
               ? "全文 " + textChars + " 字（判拒只看开头 " + openingChars + " 字）"
               : "—"],
             ["位置", SLOT_MODE + " · " + SLOT_NAME],
             ["版本", TITLE]
-          ].concat(open ? liveRowPairs(liveState.liveDoc, liveState.link) : []).map(function (pair, index) {
-            return react.createElement(
-              "li",
-              { key: index },
-              react.createElement("span", { className: "k" }, pair[0]),
-              react.createElement("span", { className: "v" }, pair[1])
-            );
-          });
+          ];
+          var toLis = function (pairs) {
+            return pairs.map(function (pair, index) {
+              return react.createElement(
+                "li",
+                { key: index },
+                react.createElement("span", { className: "k" }, pair[0]),
+                react.createElement("span", { className: "v" }, pair[1])
+              );
+            });
+          };
+          var chipList = function (items, kind, emptyText) {
+            return react.createElement("div", { className: "dsh-armor5-chips" },
+              items.length
+                ? items.map(function (item, index) {
+                  return react.createElement("span",
+                    { className: "dsh-armor5-chip", "data-kind": kind, key: index, title: item }, item);
+                })
+                : react.createElement("span", { className: "dsh-armor5-chip", "data-kind": "none" }, emptyText));
+          };
+          var section = function (titleText, child, key) {
+            return react.createElement("div", { className: "dsh-armor5-sec", key: key },
+              react.createElement("span", { className: "dsh-armor5-sec-title" }, titleText),
+              child);
+          };
+
+          var livePairs = open ? liveRowPairs(liveState.liveDoc, liveState.link) : [];
+          var hitList = open ? hitRows(liveState.liveDoc && liveState.liveDoc.hits) : [];
 
           var panel = open
             ? react.createElement(
               "div",
               {
                 className: "dsh-armor5-panel",
+                "data-tone": tone,
                 style: anchor
                   ? { width: anchor.width, left: anchor.left, bottom: anchor.bottom }
                   : undefined
@@ -420,14 +471,36 @@
               react.createElement(
                 "div",
                 { className: "dsh-armor5-head" },
+                react.createElement("span", { className: "dsh-armor5-badge", "data-tone": tone }, badgeText),
                 react.createElement("b", null, "无限五代内核"),
-                react.createElement("span", null, VERSION)
+                react.createElement("span", { className: "dsh-armor5-head-right" },
+                  react.createElement("span", null, clock === "—" ? "本次会话" : clock),
+                  react.createElement("span", null, VERSION))
               ),
-              react.createElement("ul", { className: "dsh-armor5-rows" }, rows),
+              section("命中标记" + (domainMarkers.length ? " · " + domainMarkers.length : ""),
+                chipList(domainMarkers, "hit", "本次没有领域标记词"), "hit"),
+              section("风险载荷" + (risk.length ? " · " + risk.length : ""),
+                chipList(risk, "risk", "本次没有风险载荷"), "risk"),
+              section("安全标记" + (safe.length ? " · " + safe.length : ""),
+                chipList(safe, "safe", "本次没有安全标记"), "safe"),
+              section("本次判定", react.createElement("ul", { className: "dsh-armor5-rows" }, toLis(rows)), "main"),
+              section("实时（信号来源 / 本轮 / 事件速率 / 工具流水）",
+                react.createElement("ul", { className: "dsh-armor5-rows" }, toLis(livePairs)), "live"),
+              section(hitList.length ? "最近命中（本进程最近 " + hitList.length + " 次判决）" : "最近命中",
+                hitList.length
+                  ? react.createElement("ul", { className: "dsh-armor5-hits" },
+                    hitList.map(function (hit) {
+                      return react.createElement("li", { key: hit.key },
+                        react.createElement("span",
+                          { className: "dsh-armor5-hit-main", "data-verdict": hit.verdict }, hit.main),
+                        react.createElement("span", { className: "dsh-armor5-hit-sub" }, hit.sub));
+                    }))
+                  : react.createElement("span", { className: "dsh-armor5-sec-title" },
+                    "还没有判决留档（服务端 v0.16.2 起记录；重启一次 DSH 后开始攒）"), "hits"),
               react.createElement(
                 "p",
                 { className: "dsh-armor5-note" },
-                "载荷已注入系统提示词最前，Order 200 末位锚点复述。判定取自本次会话的实时投影；判决会一直留到你的下一条发言。领域候选按命中数排序，带 * 的是主判。末尾四行「实时」读插件本体落盘的统计库（推送优先、断线自动回落轮询），只在这张卡片开着时订阅。"
+                "载荷已注入系统提示词最前，Order 200 末位锚点复述。命中标记 / 风险载荷 / 安全标记 / 最近命中读的是本体实时投影与落盘统计库（推送优先、断线回落轮询），只在这张卡片开着时订阅。领域候选按命中数排序，带 * 的是主判。"
               )
             )
             : null;
@@ -478,13 +551,11 @@
         var PREF_KEY = "dsh-infinite-gen-5:prefs";
         var PREF_DEFAULTS = Object.freeze({
           triggerMode: TRIGGER_MODE,
-          slotMode: SLOT_MODE,
-          sidebarIcon: false
+          slotMode: SLOT_MODE
         });
         var PREF_CHECKS = {
           triggerMode: function (v) { return TRIGGER_MODES.indexOf(v) >= 0; },
-          slotMode: function (v) { return Object.prototype.hasOwnProperty.call(SLOT_MODES, v); },
-          sidebarIcon: function (v) { return typeof v === "boolean"; }
+          slotMode: function (v) { return Object.prototype.hasOwnProperty.call(SLOT_MODES, v); }
         };
         var CONSOLE_KEY = "armor5";
         // 设置页 nav 里排在官方「插件」那一项（order 15）后面：不常用，顺使用习惯，
@@ -1210,6 +1281,39 @@
           }
           return rows;
         }
+        /** 时刻格式化：数值毫秒或 ISO 串都收（判决用毫秒，统计库的命中流水用 ISO）。 */
+        function clockOf(value) {
+          var ms = typeof value === "string" ? Date.parse(value) : value;
+          if (!ms) return "—";
+          var d = new Date(ms);
+          var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+          return pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+        }
+        /**
+         * 最近命中流水（v0.16.2）：数据来自服务端 live.hits.recent —— 每次判决留一条，
+         * 只放面板会显示的字段（时刻 / 判决 / 领域与命中数 / 载荷数 / 命中词 / 载荷词）。
+         * 倒序显示：最新的在最上面，卡片一刷新就先看到刚才那一轮。
+         */
+        function hitRows(hits) {
+          var recent = hits && Array.isArray(hits.recent) ? hits.recent : [];
+          return recent.slice().reverse().map(function (hit, index) {
+            var verdict = hit && hit.verdict ? hit.verdict : "—";
+            var domain = hit && hit.domain
+              ? hit.domain + (hit.domainHits > 1 ? "(" + hit.domainHits + ")" : "")
+              : "未识别领域";
+            var risk = hit && Array.isArray(hit.risk) ? hit.risk : [];
+            var riskCount = hit && typeof hit.riskCount === "number" ? hit.riskCount : risk.length;
+            var markers = hit && Array.isArray(hit.markers) && hit.markers.length
+              ? hit.markers.join("、")
+              : "无领域标记词";
+            return {
+              key: index,
+              verdict: verdict,
+              main: clockOf(hit && hit.at) + " · " + verdict + " · " + domain + " · 载荷 " + riskCount,
+              sub: risk.length ? markers + "　|　" + risk.join("、") : markers
+            };
+          });
+        }
         function liveGroup(state) {
           var rows = liveRowPairs(state.liveDoc, state.link);
           return react.createElement("div", { className: "armor5-console-group" },
@@ -1312,18 +1416,6 @@
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-3" }, slotChoices)
             ),
             react.createElement("div", { className: "armor5-console-group" },
-              react.createElement("div", { className: "armor5-console-group-title" }, "入口"),
-              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-1" },
-                react.createElement(ArmorChoice, {
-                  value: "sidebar",
-                  label: prefs.sidebarIcon ? "侧栏入口：已开启" : "侧栏入口：已关闭",
-                  hint: "在侧栏底部再加一个独立页面入口（与官方「插件」面板同款 main 面板）",
-                  active: prefs.sidebarIcon === true,
-                  onPick: function () { writePrefs({ sidebarIcon: prefs.sidebarIcon !== true }); }
-                })
-              )
-            ),
-            react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "注入档位（改完点保存，服务端当场重装，不必重启）"),
               react.createElement("span", { className: "armor5-console-hint" }, tuningStatusText(tuner.state)),
               tuner.state.phase === "ready"
@@ -1377,12 +1469,6 @@
           );
         }
 
-        /** 侧栏入口（可选）的图标：宿主负责按钮外壳，这里只给内容。 */
-        function ConsoleSidebarIcon() {
-          return react.createElement("span",
-            { className: "armor5-console-icon", "aria-hidden": "true" }, "◆");
-        }
-
         function apply(ctx) {
           // 状态条：槽位在注册期决定，改「位置」偏好就得卸掉旧的重新挂一次。
           var status = { mode: null, dispose: null };
@@ -1415,42 +1501,12 @@
             }, ArmorConsolePage);
           });
 
-          // 可选的侧栏入口：main 面板 + sidebar.panellist 图标（官方「插件」面板同款），
-          // 两者用同一个 id，所以点侧栏图标就切到我们的页。
-          var sidebar = { on: false, disposers: [] };
-          function syncSidebar() {
-            var want = readPrefs().sidebarIcon === true;
-            if (want === sidebar.on) return;
-            while (sidebar.disposers.length) {
-              var dispose = sidebar.disposers.pop();
-              if (typeof dispose === "function") dispose();
-            }
-            sidebar.on = want;
-            if (!want) return;
-            sidebar.disposers.push(ctx.slots.inject("main", function () {
-              return ctx.slots.register({ name: "main", key: CONSOLE_KEY }, ArmorConsolePage);
-            }));
-            sidebar.disposers.push(ctx.slots.inject("sidebar.panellist", function () {
-              return ctx.slots.register({
-                name: "sidebar.panellist",
-                id: CONSOLE_KEY,
-                order: 40,
-                label: function () { return IDLE_LABEL; }
-              }, ConsoleSidebarIcon);
-            }));
-          }
-          syncSidebar();
-          var offSidebar = subscribePrefs(syncSidebar);
-
+          // v0.16.2：可选的侧栏入口整块移除 —— 它跟设置页是同一张脸，多一个入口只多一份
+          // 维护与一份样式债；要看数据点状态条那颗徽标。
           function dispose() {
             offStatus();
-            offSidebar();
             if (typeof offSection === "function") offSection();
             if (typeof status.dispose === "function") status.dispose();
-            while (sidebar.disposers.length) {
-              var off = sidebar.disposers.pop();
-              if (typeof off === "function") off();
-            }
           }
           if (typeof ctx.effect === "function") {
             ctx.effect(function () { return dispose; }, "ui-armor5: 状态条与设置台");
@@ -1480,9 +1536,7 @@
           prefFields: Object.keys(PREF_DEFAULTS),
           consoleKey: CONSOLE_KEY,
           consoleOrder: CONSOLE_ORDER,
-          sectionSlot: "settings.section",
-          sidebarSlot: "sidebar.panellist",
-          mainSlot: "main"
+          sectionSlot: "settings.section"
         };
         return module.exports;
       }

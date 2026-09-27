@@ -41,7 +41,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.16.1";
+const PLUGIN_VERSION = "0.16.2";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -374,8 +374,13 @@ const TOOL_RING_SIZE = 8;
 const EVENT_RING_SIZE = 60;
 const EVENT_WINDOW_MS = 30000;
 const TURN_IDLE_MS = 5000;
+// 命中环（v0.16.2）：浮层卡片要「实时看命中与风险载荷」，就得把每次判决留一小段流水 ——
+// 只留最近几次（够看清「这一轮比上一轮是变重了还是变轻了」），每条只放面板真会显示的几个字段。
+const HIT_RING_SIZE = 6;
+const HIT_MARKER_KEEP = 4;
 const toolRing = [];
 const eventRing = [];
+const hitRing = [];
 const liveState = { lastEventAt: null, lastKind: null, turnStartedAt: null };
 const utf8Bytes = (text) => Buffer.byteLength(text, "utf8");
 const trimToChars = (text, chars) =>
@@ -959,6 +964,20 @@ function armorProjectionApply(state, event) {
     const text = armorTextOf(event?.data?.message?.content);
     if (!text.trim()) return state;
     const scored = armorScore(text);
+    // 命中环（v0.16.2）：判决一出来就留一条，给浮层卡片的「最近命中」用。
+    // 只放面板真会显示的字段、每个字段都截到固定长度 —— 这一圈会进统计库，体积必须有界。
+    hitRing.push({
+      at: new Date(scored.at).toISOString(),
+      verdict: scored.verdict,
+      domain: scored.domain,
+      domainLabel: scored.domainLabel,
+      domainHits: scored.domainHits,
+      markers: scored.domainMarkers.slice(0, HIT_MARKER_KEEP),
+      riskCount: scored.risk.length,
+      risk: scored.risk.slice(0, HIT_MARKER_KEEP),
+      words: scored.words.slice(0, 2),
+    });
+    if (hitRing.length > HIT_RING_SIZE) hitRing.splice(0, hitRing.length - HIT_RING_SIZE);
     return {
       running: false,
       verdict: scored.verdict,
@@ -1461,6 +1480,8 @@ export function apply(ctx, config) {
         perSecond: Number((eventRing.length / (spanMs / 1000)).toFixed(2)),
       },
       tools: { recent: toolRing.slice(-TOOL_RING_SIZE), lastAt: liveState.lastToolAt ?? null },
+      // 最近几次命中/风险载荷（浮层卡片的「最近命中」）：新判决一进环就换指纹，卡片立刻刷新。
+      hits: { recent: hitRing.slice(-HIT_RING_SIZE) },
     };
   };
   let liveJson = "";
@@ -1479,6 +1500,7 @@ export function apply(ctx, config) {
     count: live.events.count,
     lastToolAt: live.tools.lastAt,
     tools: live.tools.recent.map((t) => `${t.tool}@${t.at}`),
+    hits: live.hits.recent.map((h) => `${h.at}|${h.verdict}|${h.domain}|${h.riskCount}`),
   });
   publishLive = () => {
     const live = liveSnapshot();

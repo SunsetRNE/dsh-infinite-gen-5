@@ -249,15 +249,15 @@ ok("设置页入口 label 是 thunk（宿主每次投影重读，可跟随语言
   typeof sectionReg.options.label === "function" && sectionReg.options.label() === mod.__meta.idleLabel,
   String(sectionReg.options.label));
 ok("设置页那一页是我们自己渲染的组件（不 require 宿主组件包）", typeof sectionReg.Component === "function");
-ok("默认不注册侧栏入口（没开就不污染侧栏）",
+ok("侧栏入口整块移除：不再注册 main / sidebar.panellist",
   !injected.includes("main") && !injected.includes("sidebar.panellist"), JSON.stringify(injected));
-ok("__meta 交代设置台契约",
+ok("__meta 交代设置台契约（且不再暴露侧栏槽位）",
   mod.__meta.prefKey === "dsh-infinite-gen-5:prefs" &&
   Array.isArray(mod.__meta.prefFields) &&
-  mod.__meta.prefFields.slice().sort().join(",") === "sidebarIcon,slotMode,triggerMode" &&
+  mod.__meta.prefFields.slice().sort().join(",") === "slotMode,triggerMode" &&
   mod.__meta.sectionSlot === "settings.section" &&
-  mod.__meta.sidebarSlot === "sidebar.panellist" &&
-  mod.__meta.mainSlot === "main", JSON.stringify(mod.__meta.prefFields));
+  mod.__meta.sidebarSlot === undefined &&
+  mod.__meta.mainSlot === undefined, JSON.stringify(mod.__meta.prefFields));
 ok("apply 返回清理函数（偏好订阅与槽位都要能卸）", typeof applyDispose === "function");
 
 // ── 源码契约：不再有硬编码颜色 / 旧动画 ─────────────────────────────────────
@@ -281,7 +281,9 @@ for (const token of [
 }
 ok("设置台样式与槽位常量都进源码（走宿主真令牌）",
   CLIENT_SRC.includes(".armor5-console") && CLIENT_SRC.includes("settings.section") &&
-  CLIENT_SRC.includes("sidebar.panellist") && CLIENT_SRC.includes("dsh-infinite-gen-5:prefs"));
+  CLIENT_SRC.includes("dsh-infinite-gen-5:prefs"));
+ok("源码里不再有侧栏入口的注册与图标样式（v0.16.2 整块移除）",
+  !CLIENT_SRC.includes("sidebar.panellist") && !CLIENT_SRC.includes("armor5-console-icon"));
 ok("三种位置模式都写进了槽位表",
   ["composer", "header", "zone"].every((m) => CLIENT_SRC.includes(m + ": \"conversation.")));
 ok("版本与 package.json 一致", mod.__meta.version === "v" + VERSION, mod.__meta.version + " vs " + VERSION);
@@ -456,23 +458,41 @@ function mount(projection, docForeign, Component) {
   const panel = findByClass(tree, "dsh-armor5-panel");
   ok("点击后浮层出现", panel !== null);
   ok("浮层是对话框式的原位浮层（不占用输入框那一行）", panel !== null && panel.props.style !== undefined);
-  ok("浮层宽度按宿主 ContextMeter 的面板口径夹取（<=264）",
-    panel.props.style.width <= 264, JSON.stringify(panel.props.style));
+  ok("浮层宽度按宿主 ContextMeter 的面板口径夹取（<=286，v0.16.2 起给 chip 块留了位置）",
+    panel.props.style.width <= 286, JSON.stringify(panel.props.style));
   ok("浮层底部锚定在触发器上方（bottom > 0）", panel.props.style.bottom > 0, JSON.stringify(panel.props.style));
   ok("浮层横向被夹在视口内",
     panel.props.style.left >= 8 && panel.props.style.left + panel.props.style.width <= 1280 - 8,
     JSON.stringify(panel.props.style));
   const panelText = textOf(panel);
-  for (const field of ["状态", "最近判决", "识别领域", "领域候选", "命中标记",
-    "拒答/兜底词", "风险载荷", "安全标记", "扫描范围", "位置", "版本"]) {
+  for (const field of ["识别领域", "领域候选", "命中标记", "拒答/兜底词", "风险载荷",
+    "安全标记", "扫描范围", "位置", "版本"]) {
     ok("浮层含字段「" + field + "」", panelText.includes(field));
   }
-  ok("浮层里能看到真实值", panelText.includes("pass") && panelText.includes("web"));
+  ok("浮层头部用徽标交代判决（不再单占一行「状态 / 最近判决」）",
+    panelText.includes("无限五代内核") && panelText.includes("通过"));
+  ok("浮层里能看到真实值", panelText.includes("通过") && panelText.includes("web"));
   ok("识别领域显示中文标签 + 命中数", panelText.includes("Web 应用与 API") && panelText.includes("命中 3"));
   ok("领域候选按命中数排序且主判带 *", panelText.includes("web 3*") && panelText.includes("network 1"), panelText);
   ok("命中标记列出真正命中的词（不是黑箱）", panelText.includes("渗透") && panelText.includes("sql注入"));
   ok("扫描范围写明全文与判拒窗口", panelText.includes("全文 1288 字") && panelText.includes("160"));
-  ok("最近判决带落笔时刻", /最近判决 pass（\d\d:\d\d:\d\d）/.test(panelText.replace(/\s+/g, " ")) || panelText.includes("pass"), panelText.slice(0, 120));
+  ok("浮层头部带落笔时刻", /\d\d:\d\d:\d\d/.test(panelText), panelText.slice(0, 120));
+  // v0.16.2：命中标记 / 风险载荷改成 chip 块，并新增「最近命中」流水分区。
+  const chips = collectByClass(tree, "dsh-armor5-chip");
+  const hitChips = chips.filter((c) => c.props["data-kind"] === "hit");
+  const riskChips = chips.filter((c) => c.props["data-kind"] === "risk");
+  ok("命中标记铺成 chip（不是一坨逗号）",
+    hitChips.length === 3 && hitChips.map((c) => textOf(c)).join("、") === "渗透、ffuf、sql注入",
+    JSON.stringify(hitChips.map((c) => textOf(c))));
+  ok("风险载荷铺成 chip 并带条数",
+    riskChips.length === 2 && panelText.includes("风险载荷 · 2"),
+    JSON.stringify(riskChips.map((c) => textOf(c))));
+  ok("卡片有「最近命中」分区（服务端还没 data 时给出说明而不是空白）",
+    panelText.includes("最近命中") && panelText.includes("还没有判决留档"),
+    panelText.slice(-200));
+  ok("卡片样式与流水结构都写进源码（chip / 命中流水）",
+    CLIENT_SRC.includes(".dsh-armor5-chip") && CLIENT_SRC.includes(".dsh-armor5-hits") &&
+    CLIENT_SRC.includes("function hitRows"));
   // v0.16.1：浮层卡片自己也订一份统计库（与设置页那组同源），卡片没拿到桥时至少要有「信号 / 本轮」两行。
   ok("浮层卡片带「实时」行（卡片自己订阅统计库）",
     panelText.includes("信号") && panelText.includes("本轮"), panelText.slice(-160));
@@ -566,9 +586,9 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
 {
   const storage = fakeStorage({});
   const inst = loadInstance({ storage });
-  ok("出厂默认 = 源码常量（glyph / composer / 侧栏关闭）",
+  ok("出厂默认 = 源码常量（glyph / composer，且偏好里不再有侧栏入口）",
     inst.meta.prefDefaults.triggerMode === "glyph" && inst.meta.prefDefaults.slotMode === "composer" &&
-    inst.meta.prefDefaults.sidebarIcon === false, JSON.stringify(inst.meta.prefDefaults));
+    inst.meta.prefFields.slice().sort().join(",") === "slotMode,triggerMode", JSON.stringify(inst.meta.prefDefaults));
   ok("只读偏好不写盘（没改就不落 localStorage）", Object.keys(storage.dump()).length === 0, JSON.stringify(storage.dump()));
   ok("设置页组件拿到了（就是 settings.section 那一条）", typeof inst.page === "function");
 
@@ -826,16 +846,18 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
     return inst.log.injected.length === n;
   })());
 
-  // 侧栏入口开关
+  // 侧栏入口（v0.16.2 移除）：旧偏好键被忽略，任何情况下都不再注册侧栏槽位
+  const injectedBefore = inst.log.injected.length;
   inst.exports.setPrefs({ sidebarIcon: true });
-  ok("打开侧栏入口后注册 main 面板 + panellist 图标（同 id）",
-    inst.log.injected.includes("main") && inst.log.injected.includes("sidebar.panellist") &&
-    inst.registrations.some((r) => r.options.name === "main" && r.options.key === "armor5") &&
-    inst.registrations.some((r) => r.options.name === "sidebar.panellist" && r.options.id === "armor5"),
+  ok("侧栏入口已移除：再设 sidebarIcon 也不会注册 main / panellist",
+    !inst.log.injected.includes("main") && !inst.log.injected.includes("sidebar.panellist") &&
+    !inst.registrations.some((r) => r.options.name === "main" || r.options.name === "sidebar.panellist"),
     JSON.stringify(inst.registrations.map((r) => r.options.name)));
-  inst.exports.setPrefs({ sidebarIcon: false });
-  ok("关掉侧栏入口后两者都被卸掉",
-    inst.log.disposed.includes("main") && inst.log.disposed.includes("sidebar.panellist"));
+  ok("未知偏好键不改动槽位（writePrefs 只认 PREF_DEFAULTS 里的键）",
+    inst.log.injected.length === injectedBefore);
+  ok("设置页不再有「侧栏入口」那个开关",
+    collectByClass(mountComponent(inst.page, undefined).tree, "armor5-console-choice")
+      .every((b) => b.props["data-choice"] !== "sidebar"));
 
   // 清理
   inst.dispose();
@@ -850,7 +872,7 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
   const inst = loadInstance({ storage });
   ok("刷新后沿用已保存的偏好：位置直接落在 header 槽",
     inst.injected[0] === "conversation.session.header.utilities", JSON.stringify(inst.injected));
-  ok("刷新后沿用已保存的偏好：侧栏入口自动恢复", inst.injected.includes("sidebar.panellist"));
+  ok("存了旧版 sidebarIcon 偏好也不再恢复侧栏入口", !inst.injected.includes("sidebar.panellist"));
   const badge = mountComponent(inst.badge, { "infinite-gen-5:armor": PASS });
   ok("刷新后形态也是保存过的 full", textOf(badge.tree) === "通过 · web(3) · 载荷 2", JSON.stringify(textOf(badge.tree)));
 
@@ -861,7 +883,7 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
   const wrong = fakeStorage({ [PREF_KEY]: JSON.stringify({ triggerMode: "nope", slotMode: 42, sidebarIcon: "yes" }) });
   const guarded = loadInstance({ storage: wrong });
   ok("每一项非法值逐字段回落（不会整包丢弃）",
-    guarded.injected[0] === "conversation.composer.dock" && !guarded.injected.includes("sidebar.panellist"));
+    guarded.injected[0] === "conversation.composer.dock" && !guarded.injected.includes("main"));
   const noStore = loadInstance({});
   ok("没有 localStorage 时退化成「仅本会话」，照常挂载",
     noStore.injected[0] === "conversation.composer.dock" && typeof noStore.exports.setPrefs === "function");

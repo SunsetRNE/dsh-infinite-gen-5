@@ -168,6 +168,20 @@ function mountPanel(options = {}) {
             if (todos.throws) throw new Error("投影炸了");
             return todos.value;
           },
+          // 真宿主把投影注册进来，按 key 存一份 state，并在每个 session/event 上跑 apply。
+          // 面板自检要测「判决 → 命中环 → 落库」这条链（v0.16.2 的最近命中），就得照这个契约把它真跑起来，
+          // 而不是在测试里直接调插件内部函数 —— 那样测的就不是宿主接线了。
+          defs: new Map(),
+          states: new Map(),
+          register(def) {
+            projections.defs.set(def.key, def);
+          },
+          applyEvent(event) {
+            for (const def of projections.defs.values()) {
+              const prev = projections.states.has(def.key) ? projections.states.get(def.key) : def.init();
+              projections.states.set(def.key, def.apply(prev, event));
+            }
+          },
         };
   const systemPrompt = {
     section(spec) {
@@ -216,6 +230,10 @@ function mountPanel(options = {}) {
   for (const fn of indexInject) fn(table);
   for (const entry of table) if (entry && typeof entry.text === "string") runtime.injects.push(entry.text);
   const emit = (name, ...args) => {
+    // 宿主先让投影跑完事件，再广播给自己的监听者（插件那侧就是靠 session/event 收事件的）。
+    if (name === "session/event" && projections && typeof projections.applyEvent === "function") {
+      projections.applyEvent(args[1]);
+    }
     for (const fn of runtime.listeners.get(name) ?? []) fn(...args);
   };
   return { server, runtime, todos, emit, ctx };
@@ -553,6 +571,29 @@ check(
   JSON.stringify(liveDoc?.tools),
 );
 
+// v0.16.2：命中环 —— 判决一出来就留一条，浮层卡片的「最近命中」读的就是它。
+// 之前那两次 assistant/message 是空 content（armorTextOf → ""，直接 return），故意不产生命中，
+// 这里喂一段真会被判定的文本，把「判决 → 留档 → 落库」这条链跑通。
+mount.emit("session/event", session, {
+  type: "assistant/message",
+  data: { message: { content: [{ type: "text", text: "用 ffuf 对 TARGET 跑目录爆破，再按 OFFSET_1 打内存马" }] } },
+});
+await new Promise((resolve) => setTimeout(resolve, 700));
+const hitsDoc = sink.snapshot().live?.hits;
+check(
+  Array.isArray(hitsDoc?.recent) && hitsDoc.recent.length >= 1 &&
+    Number.isFinite(Date.parse(hitsDoc.recent.at(-1).at)) &&
+    typeof hitsDoc.recent.at(-1).verdict === "string" && hitsDoc.recent.at(-1).domainHits >= 1,
+  "live.hits.recent 留下判决流水（卡片「最近命中」的数据源）",
+  JSON.stringify(hitsDoc),
+);
+const lastHit = (hitsDoc && Array.isArray(hitsDoc.recent) && hitsDoc.recent.length > 0) ? hitsDoc.recent.at(-1) : null;
+check(
+  lastHit !== null && lastHit.markers.length >= 1 && lastHit.markers.length <= 4 &&
+    lastHit.risk.length <= 4 && typeof lastHit.riskCount === "number",
+  "命中流水每个字段都截到定长（这一圈会落库，体积必须有界）",
+  JSON.stringify({ hits: hitsDoc, live: sink.snapshot().live }),
+);
 // 缺陷回归（v0.15.1）：live 分区曾经自己叫醒自己 ——
 // patch("live") → 250 ms 后 flush → notify() → onChange → publishLive() → 又 patch("live") → …
 // 老指纹里带着 idleMs（每毫秒都变）与 perSecond，于是「内容真的变了」永远成立：

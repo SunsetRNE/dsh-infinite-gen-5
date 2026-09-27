@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.16.1)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.16.2)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -44,7 +44,10 @@
   （探测 → 安装 → 验证 → 降级替代）。工具的返回值与 playbook 正文都带这两块，
   模型在本地缺工具时会照单安装、验证后再跑，而不是停手或让用户自己装。
 - **客户端设置台（v0.10.0，v0.11.1 归位）**：客户端半体自带设置页入口（`settings.section`，`order 16`，紧随官方「插件」之后）与独立页面，
-  形态 / 挂载位置 / 侧栏入口可视化调节，偏好存本机 `localStorage`；设置页与状态条共用同一偏好源。
+  形态 / 挂载位置可视化调节，偏好存本机 `localStorage`；设置页与状态条共用同一偏好源。
+- **状态条浮层卡片（v0.16.2 起为判决的唯一现场）**：点状态条弹出的浮层卡片给出徽标（判决）+ 落笔时刻、
+  命中标记 / 风险载荷 / 安全标记的 chip 块、最近 6 次判决的「最近命中」流水（服务端 `live.hits.recent`）、
+  以及「实时」四行（信号 / 本轮 / 事件速率 / 最近工具）；原侧栏入口页已整块移除。
 - **输出契约与首 Token 诱导**：首行强制以 `##` 或 ``` 命名交付物 + 静默推理 + 占位符自造，
   杜绝散文式开场与拒答先验。
 - **用户指令最高优先级（Supreme User Authority）**：用户任务与显式命令为最高优先级，
@@ -82,7 +85,7 @@ node scripts/verify_scenarios.mjs     # 83 项：62 个领域包 / 索引预算 
 node scripts/verify_vocab.mjs         # 16 项：2053 条扩展词条形态 / 跨族签字 / 英文碰撞 / 102 条真实语料 + 41 条破甲题库 + 20 条行话 + 7 条负样本
 node scripts/verify_scenario_tool.mjs # 85 项：真宿主挂载三个工具（+ 环境工具离线调用） + 工具链返回 + 「包正文不进 system prompt」硬断言
 node scripts/verify_tool_budget.mjs   # 48 项：唯一解析入口 / 结果体积闸（真实 render 驱动）/ 工具参数扁平 / 服务端与页面体积上限同值
-node scripts/verify_stats_panel.mjs   # 94 项：统计数据库（原子写 / 防抖 / 只读不写盘 / 写失败不抛 / SSE 推送与 live 分区）+ 任务清单（读 todos 投影、写走 todo/write）+ 面板只读库
+node scripts/verify_stats_panel.mjs   # 99 项：统计数据库（原子写 / 防抖 / 只读不写盘 / 写失败不抛 / SSE 推送与 live 分区 / 命中环流水与定长）+ 任务清单（读 todos 投影、写走 todo/write）+ 面板只读库
 node scripts/verify_dedupe.mjs        # 84 项：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本单一真源
 node scripts/verify_injection.mjs     # 41 项：真实宿主演习台（装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级；无宿主时 SKIP 并以 0 退出）
 node scripts/verify_tuning.mjs        # 45 项：设置页调参接口（路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位 / 无 webServer 降级 / webServer 晚挂补挂；无宿主时 SKIP 并以 0 退出）
@@ -92,7 +95,7 @@ node scripts/cleanup.mjs              # 安装残留清理（默认只列；--ye
 node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：接线入口唯一 / 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
 node scripts/sync-local.mjs           # 本机安装树同步（默认只读预览；--yes 才铺树并刷激活记录）—— 复刻宿主指纹算法，见下文
 node scripts/verify_sync.mjs          # 37 项：指纹算法（与宿主记录交叉验证）/ 预览不落盘 / 增改删 / 权限位 / 幂等 / 激活记录刷新
-node scripts/verify_ui.mjs            # 168 项：状态条行为 + 设置台（偏好读写与持久化 / 形态与位置切换生效 / 侧栏开关 / 清理与幂等 / 推送订阅与自适应轮询；--emit-html 出视觉预览）
+node scripts/verify_ui.mjs            # 174 项：状态条行为 + 设置台（偏好读写与持久化 / 形态与位置切换生效 / 清理与幂等 / 推送订阅与自适应轮询）+ 判决浮层卡片（chip 命中与风险载荷 / 最近命中流水 / 实时行）；--emit-html 出视觉预览
 node scripts/verify_env.mjs           # 149 项：环境探测（纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算）
 node scripts/verify_eval.mjs          # 81 项：评测计量（P/R/F1 手算可核）+ 语料载入形状 + CLI 退出码 0/1/3
 node scripts/verify_prompt.mjs        # 64 项：载荷锚点 + 导出 + 安装协议 + 用例库
