@@ -21,7 +21,7 @@ import { probeEnv, renderEnvSummary, ENV_SCHEMA } from "./data/probe.mjs";
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.13.0";
+const PLUGIN_VERSION = "0.13.1";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -1169,28 +1169,48 @@ export function apply(ctx, config) {
       return sendJson(res, 500, { ok: false, error: String((error && error.message) || error) });
     }
   };
-  const registerTuningEndpoint = () => {
-    const server = typeof ctx.get === "function" ? ctx.get("webServer") : undefined;
+  let mountedServer = null;
+  const mountTuningRoute = (webCtx) => {
+    const server = typeof webCtx.get === "function" ? webCtx.get("webServer") : undefined;
     if (!server || typeof server.register !== "function") {
       runtime.tuningEndpoint = {
         ok: false,
         path: TUNING_PATH,
-        reason: "宿主没有 webServer 服务（非 Web 组合）：设置页只能看当前值，不能改",
+        reason: "webServer 服务就绪了，但它没有 register()（宿主机版本不兼容）",
       };
       return;
     }
+    if (mountedServer === server) return;
+    mountedServer = server;
+    webCtx.effect(() => server.register({ kind: "exact", path: TUNING_PATH, handler: tuningHandler }), "infinite-gen-5: 调参路由");
+    webCtx.on("webserver/index-inject", (table) => {
+      table.push({
+        kind: "script",
+        placement: "body",
+        text: `window.__IG5_TUNING__=${JSON.stringify({ path: TUNING_PATH, token: tuningToken, version: PLUGIN_VERSION })};`,
+      });
+    });
+    runtime.tuningEndpoint = { ok: true, path: TUNING_PATH, tokenInjected: true };
+  };
+  // webServer 是宿主后挂的服务：本插件 apply 时它往往还没就绪，`ctx.get()` 只会拿到 undefined
+  // （get 默认 strict，只返回「提供方 fiber 已激活」的实现），所以先在注入回调里等它就绪。
+  const registerTuningEndpoint = () => {
+    runtime.tuningEndpoint = {
+      ok: false,
+      path: TUNING_PATH,
+      reason: "宿主没有 webServer 服务（非 Web 组合）：设置页只能看当前值，不能改",
+    };
+    const immediate = typeof ctx.get === "function" ? ctx.get("webServer") : undefined;
+    if (immediate && typeof immediate.register === "function") {
+      mountTuningRoute(ctx);
+      return;
+    }
+    if (typeof ctx.inject !== "function") return;
     try {
-      ctx.effect(() => server.register({ kind: "exact", path: TUNING_PATH, handler: tuningHandler }), "infinite-gen-5: 调参路由");
-      if (typeof ctx.on === "function") {
-        ctx.on("webserver/index-inject", (table) => {
-          table.push({
-            kind: "script",
-            placement: "body",
-            text: `window.__IG5_TUNING__=${JSON.stringify({ path: TUNING_PATH, token: tuningToken, version: PLUGIN_VERSION })};`,
-          });
-        });
-      }
-      runtime.tuningEndpoint = { ok: true, path: TUNING_PATH, tokenInjected: typeof ctx.on === "function" };
+      ctx.effect(
+        () => ctx.inject(["webServer"], (webCtx) => mountTuningRoute(webCtx)),
+        "infinite-gen-5: 调参路由接线（等 webServer 就绪）",
+      );
     } catch (error) {
       runtime.tuningEndpoint = { ok: false, path: TUNING_PATH, reason: String((error && error.message) || error) };
       console.warn(`[infinite-gen-5] 无法注册设置页调参路由：${runtime.tuningEndpoint.reason}`);

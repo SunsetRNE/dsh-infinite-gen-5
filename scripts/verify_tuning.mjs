@@ -269,6 +269,39 @@ const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
   check(assembly.sections.some((s) => s.name === KERNEL), "没有 webServer 也照常注入内核", JSON.stringify(assembly.sections.map((s) => s.name)));
 }
 
+// ---- 9. webServer 比插件晚就绪（真实宿主的时序）：靠 ctx.inject 补挂，且期间不假装成功 ----
+// 真宿主上 webServer 是后挂服务，本插件 apply 时 ctx.get("webServer") 只会拿到 undefined
+// （get 默认 strict：只返回「提供方 fiber 已激活」的实现）—— 这一节就是那次线上复发的护栏。
+{
+  clearEnv();
+  rmSync(STORE, { force: true });
+  const app = new Context();
+  await app.plugin(SystemPrompt, {});
+  const tools = [];
+  app.provide("tools", { register: (tool) => tools.push(tool) });
+  restore();
+  plugin.apply(app, {});
+  const profile = () => tools.find((tool) => tool.name === "infinite_gen5_profile")?.execute();
+  check(profile()?.tuning?.endpoint?.ok === false, "webServer 未就绪时先报「不可用」，不假装成功", JSON.stringify(profile()?.tuning?.endpoint));
+  const routes = new Map();
+  app.provide("webServer", {
+    register: (route) => {
+      routes.set(route.path, route);
+      return () => routes.delete(route.path);
+    },
+  });
+  for (let i = 0; i < 40 && !routes.has(PATH_UNDER_TEST); i += 1) await new Promise((resolve) => setTimeout(resolve, 5));
+  check(routes.has(PATH_UNDER_TEST), "webServer 晚到：注入回调把调参路由补挂上", [...routes.keys()].join(","));
+  const injected = [];
+  await app.emit("webserver/index-inject", injected);
+  check(!!tokenOf(injected), "晚挂时 token 注入同样就位", JSON.stringify(injected.map((row) => row.kind)));
+  check(profile()?.tuning?.endpoint?.ok === true, "补挂之后 endpoint 改成 ok", JSON.stringify(profile()?.tuning?.endpoint));
+  const late = await callRoute(routes.get(PATH_UNDER_TEST).handler, { method: "GET", token: tokenOf(injected) });
+  check(late.status === 200 && late.body?.ok === true, "补挂的路由真能应答 GET", `${late.status} ${JSON.stringify(late.body)?.slice(0, 120)}`);
+  const lateBad = await callRoute(routes.get(PATH_UNDER_TEST).handler, { method: "GET", token: "0".repeat(32) });
+  check(lateBad.status === 401, "补挂的路由照样自守（错 token 401）", String(lateBad.status));
+}
+
 // 收尾：把自检期间动过的环境变量还回去，临时目录删掉（用户的 ~/.dsh 全程没被碰过）。
 for (const [key, value] of Object.entries(ENV_BACKUP)) {
   if (value === undefined) delete process.env[key];

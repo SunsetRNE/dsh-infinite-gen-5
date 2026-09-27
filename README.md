@@ -1,4 +1,4 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.13.0
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.13.1
 
 <p align="center">
   <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
@@ -274,6 +274,13 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 - 服务端在宿主 `webServer` 上挂一条精确路由 `/infinite-gen-5/tuning`，并把**一次性的 token**
   随 index.html 注入页面（`window.__IG5_TUNING__`）。路由自守：只收本机回环 + 这个 token
   —— 宿主的路由匹配前没有任何鉴权中间件，所以这一步必须插件自己做。
+- **webServer 是后挂服务，必须等它**（v0.13.1 修的真缺陷）：宿主的 `WebServer` 在
+  `async [Service.init]()` 里才真正 `listen()`，服务 fiber 要等 socket 绑定完才算激活，而
+  `ctx.get("webServer")` 默认只返回「提供方 fiber 已激活」的实现 —— 于是 v0.13.0 在真机上
+  永远拿到 `undefined`，面板一直显示「接口不可用」（演习台上因为假服务先挂好，反而没暴露）。
+  现在改为宿主同款写法 `ctx.inject(["webServer"], (webCtx) => …)`：服务一就绪就补挂路由与
+  index 注入，期间如实汇报「不可用」而不假装成功。自检补了「webServer 晚到」一节，并用真实
+  `dsh-host-webserver`（临时端口）跑过端到端：无 token 401 / 带 token 200 / POST 改档当场重装。
 - 点「保存并生效」= 一条 POST：服务端把档位写进 `$DSH_HOME/infinite-gen-5-tuning.json`，
   然后**卸掉注入部分的 effect、按新档重装一遍**（工具与投影不重挂，重装次数计入 `rebuilds`），
   因此**不用重启进程、不用刷页面**。每行右侧的标记写明这个值是谁给的（设置页 / profile config /
@@ -281,8 +288,9 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 - 「复位到默认」发的是 `{reset:true}`（删掉落盘的覆盖），不是把当前值再发一遍；接口拿不到时
   （非 Web 组合、宿主没给 `webServer`、插件早于 v0.13.0）面板降级成只读提示 + 一段可直接贴进
   `cordis.patch.yml` 的 YAML，既不白屏，也不偷偷把失败当成功。
-- 自检：`scripts/verify_tuning.mjs`（真实宿主演习台 39 条；存储被指到临时目录，全程不碰真实
-  `~/.dsh`）覆盖路由自守 / 改档位后装配真的换了 / 落盘 / 优先级 / 复位 / 无 webServer 降级；
+- 自检：`scripts/verify_tuning.mjs`（真实宿主演习台 **45** 条；存储被指到临时目录，全程不碰真实
+  `~/.dsh`）覆盖路由自守 / 改档位后装配真的换了 / 落盘 / 优先级 / 复位 / 无 webServer 降级 /
+  **webServer 晚挂**（v0.13.1 修的那个坑，见下）；
   客户端那一半（面板渲染、草稿、POST 内容、错误上屏）接在 `verify_ui.mjs` 里。
 
 两条安全边界：**让位就整体让位** —— 内核因同源去重让位时，真末位锚点与运行时锚点也不再单独挂上，
@@ -480,7 +488,7 @@ chmod +x install.sh uninstall.sh
    node scripts/verify_injection.mjs     # 41 条：真实宿主演习台 —— 装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级（无宿主时 SKIP）
    node scripts/verify_version.mjs       # 22 条：版本锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量
    node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：单一接线入口 + 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
-   node scripts/verify_tuning.mjs        # 39 条：设置页调参接口 —— 路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位（无宿主时 SKIP）
+   node scripts/verify_tuning.mjs        # 45 条：设置页调参接口 —— 路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位 / webServer 晚挂补挂（无宿主时 SKIP）
    node scripts/verify_ui.mjs            # 149 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理、注入档位面板）
    node scripts/verify_env.mjs           # 149 条：探测纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算
    node scripts/verify_eval.mjs          # 81 条：评测计量（合成数据手算可核）+ CLI 退出码 0/1/3
