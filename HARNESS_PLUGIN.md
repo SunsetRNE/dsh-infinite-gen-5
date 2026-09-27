@@ -122,6 +122,16 @@ npm run release -- --yes --release          # 默认只预览：前置检查 + C
 
 README / 本文档的版本沿革、`package.json` description、`ENV_PROBE.md` 的历史引用、以及生成物 `CHANGELOG.md` 里的版本号属**历史叙述**，刻意不改写（`verify_version.mjs` 只在 `PROSE_ALLOWED_FILES` 里放行）；发版时改了它们等于篡改历史。
 
+### 开发热链接（dev 期省掉安装 + 重启）
+
+```bash
+npm run dev:link       # ~/.dsh/plugins/dsh-infinite-gen-5 → 本仓库（原副本改名 .bak-*-pre-devlink）
+npm run dev:status     # 只读：现在是复制态还是热链接态
+npm run dev:restore    # 删软链 + 重跑 ./install.sh 回到复制态
+```
+
+热链接态下改 `prompts/**` 或 `index.js` 只需**重启 DSH 进程**，改 `client.js` **刷新页面**即可，不必再跑安装脚本。代价：安装脚本的防呆副本不再自动产生（回滚靠 git）、profile 里 `pnpm install` 会重建 `node_modules` 普通副本从而打断热链接（`verify_install` 会报出，重跑 `npm run dev:link` 修复）。发版前建议先 `dev:restore`。
+
 ## Install in the desktop Harness
 
 两种接线都能装载本插件，`install.sh` / `install.ps1` 用的是**第二种**（patch insert），因为它在 profile 里显式、可回滚：

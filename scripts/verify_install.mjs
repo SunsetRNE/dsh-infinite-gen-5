@@ -15,7 +15,7 @@
  */
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, readlinkSync, readdirSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -58,6 +58,22 @@ const readJson = (p) => {
   }
 };
 const short = (p) => p.replace(homedir(), "~");
+// dev 热链接态：副本位置放的是指向仓库的软链（scripts/dev-link.mjs --link），
+// 此时「副本与仓库内容一致」是恒真的，几条检查要换个说法才不误导。
+const isLink = (p) => {
+  try {
+    return lstatSync(p).isSymbolicLink();
+  } catch {
+    return false;
+  }
+};
+const linkTarget = (p) => {
+  try {
+    return readlinkSync(p);
+  } catch {
+    return null;
+  }
+};
 
 const dshHome = resolve(argOf("--dsh-home", process.env.DSH_HOME || "/root/.dsh"));
 const pidFile = resolve(argOf("--pid-file", join(homedir(), ".dsha-web.pid")));
@@ -89,6 +105,18 @@ const destVersion = destPkg?.version || "?";
 
 if (!destPkg) {
   warn("已安装副本缺失", `${short(dest)} 不存在或没有 package.json —— 跑 ./install.sh 装一份`);
+} else if (isLink(dest)) {
+  const target = linkTarget(dest);
+  check(
+    resolve(target || ".") === REPO,
+    "已装副本是 dev 热链接（指向本仓库）",
+    `${short(dest)} → ${target}${resolve(target || ".") === REPO ? "" : `（期望 → ${REPO}）`}`,
+  );
+  check(
+    destVersion === repoVersion,
+    "热链接态版本 = 仓库版本",
+    `副本 ${destVersion} / 仓库 ${repoVersion}`,
+  );
 } else {
   check(destVersion === repoVersion, "已安装副本版本 = 仓库版本", `副本 ${destVersion} / 仓库 ${repoVersion}`);
   for (const rel of KEY_FILES) {
@@ -116,17 +144,27 @@ for (const prof of profileDirs) {
   const patchPath = join(prof, "cordis.patch.yml");
   const patch = existsSync(patchPath) ? readFileSync(patchPath, "utf8") : "";
   const inserted = new RegExp("^\\s*-\\s*id:\\s*" + NAME + "\\b", "m").test(patch);
-  const resolved = readJson(join(prof, "node_modules", NAME, "package.json"));
-
   check(true, `${label} 依赖声明`, `${spec}`);
   check(inserted || inBundles, `${label} 有接线入口`, inserted ? "cordis.patch.yml insert" : inBundles ? "dsh.profile.bundles" : "两处都没有，插件不会加载");
   if (inserted && inBundles) warn(`${label} 双接线`, "patch insert 与 bundles 同时存在，可能被加载两次");
-  if (resolved) {
+  const nm = join(prof, "node_modules", NAME);
+  const resolved = readJson(join(nm, "package.json"));
+  const nmIsLink = isLink(nm);
+  if (nmIsLink) {
+    const target = linkTarget(nm);
+    check(resolve(target || ".") === REPO, `${label} node_modules 是热链接（指向本仓库）`, `→ ${target}`);
+  } else if (resolved) {
     check(
       !destPkg || resolved.version === destVersion,
       `${label} node_modules 副本版本 = 已安装副本`,
       `node_modules ${resolved.version} / plugins ${destVersion}`,
     );
+    if (isLink(dest)) {
+      warn(
+        `${label} node_modules 是普通副本（破坏了热链接）`,
+        `pnpm install 会把软链重建成副本 —— 重跑 node scripts/dev-link.mjs --link 即可`,
+      );
+    }
   } else {
     warn(`${label} node_modules 里没有副本`, "pnpm install 没跑或还没同步，重启后可能仍加载旧版");
   }

@@ -296,6 +296,7 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   │   ├── bump-version.sh         # 同上的 shell 薄包装：bash scripts/bump-version.sh X.Y.Z
 │   │   ├── changelog.mjs           # CHANGELOG 生成器（按提交标题里的 (vX.Y.Z) 切版本段）
 │   │   ├── release.mjs             # 发版助手：前置检查 + 发布正文 + 打 tag/推送 +（有 gh 时）建 Release
+│   │   ├── dev-link.mjs            # 开发热链接：仓库 ↔ ~/.dsh 软链切换（--link / --restore / 只读状态）
 │   │   ├── verify_prompt_gen4.mjs  # ⚠️ 遗留重定向 → verify_prompt_gen5.mjs
 │   │   └── verify_prompt_gen41.mjs # ⚠️ 遗留重定向 → verify_prompt_gen51.mjs
 │   └── tests/
@@ -455,6 +456,20 @@ npm run verify:install # 3) 体检：盘上三处版本是否一致、接线是�
 ```
 
 `verify:install` 专治两种「看着装了其实没生效」：**装了没重启**（dsh web 进程启动时间早于副本 mtime → 警告）与**接线漂移**（`link:` 旧接线、patch insert 与 `bundles` 双接线、`node_modules` 副本没同步）。缺 `~/.dsh` 时它打印 SKIP 并退出 0，所以 CI 上不会误伤；本地想把它当门禁用就加 `--strict`（警告也算失败）。
+
+### 开发热链接（dev-link）：改一行立刻可见，不必重跑安装
+
+上面那条循环每轮都要 `./install.sh` + 重启，很钝。开发期可以切成**软链**：
+
+```bash
+npm run dev:link       # 切热链接：~/.dsh/plugins/dsh-infinite-gen-5 → 仓库根（原副本改名 .bak-*-pre-devlink 留存）
+npm run dev:status     # 看现在是复制态还是热链接态（只读）
+npm run dev:restore    # 切回去：删软链 + 重跑 ./install.sh 重建复制态
+```
+
+切换后：改 `index.js` / `prompts/**` **重启 DSH 进程**即生效；改 `client.js` **刷新页面**即生效（客户端半体由宿主按需加载）；`prompts` 与 `index.js` 的改动不再需要安装脚本。实证：在仓库根新建一个文件，`~/.dsh/plugins/dsh-infinite-gen-5/<同名文件>` 立刻可见，删掉即消失。
+
+代价说清：① 没有安装脚本产生的防呆副本了，回滚靠 git（仓库本身有版本控制，`.bak-*-pre-devlink` 只留切换前那一份）；② profile 里再跑 `pnpm install` 会把 `node_modules` 的软链重建回普通副本，**重跑 `npm run dev:link` 即可**（`verify:install` 会明确报出这种「热链接被破坏」）；③ 半成品会被真加载 —— 别在热链接态下改一半就重启。发版前建议 `npm run dev:restore` 切回复制态，让基线回到「真实用户装出来的样子」。
 
 ### 发版三步（bump → changelog → release）
 

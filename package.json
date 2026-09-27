@@ -36,6 +36,7 @@
     "scripts/eval-corpus.mjs",
     "scripts/verify_injection.mjs",
     "scripts/verify_install.mjs",
+    "scripts/dev-link.mjs",
     "scripts/verify_eval.mjs",
     "scripts/lib/corpus.mjs",
     "tests/eval-baseline.json"
@@ -45,6 +46,8 @@
     "verify": "node scripts/verify_prompt_gen5.mjs",
     "verify:install": "node scripts/verify_install.mjs",
     "changelog": "node scripts/changelog.mjs",
+    "dev:link": "node scripts/dev-link.mjs --link",
+    "dev:status": "node scripts/dev-link.mjs",
     "release": "node scripts/release.mjs",
     "verify:version": "node scripts/verify_version.mjs",
     "bump:version": "node scripts/bump-version.mjs",
