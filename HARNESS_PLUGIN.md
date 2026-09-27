@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.14.1)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.15.0)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -82,7 +82,7 @@ node scripts/verify_scenarios.mjs     # 83 项：62 个领域包 / 索引预算 
 node scripts/verify_vocab.mjs         # 16 项：2053 条扩展词条形态 / 跨族签字 / 英文碰撞 / 102 条真实语料 + 41 条破甲题库 + 20 条行话 + 7 条负样本
 node scripts/verify_scenario_tool.mjs # 85 项：真宿主挂载三个工具（+ 环境工具离线调用） + 工具链返回 + 「包正文不进 system prompt」硬断言
 node scripts/verify_tool_budget.mjs   # 48 项：唯一解析入口 / 结果体积闸（真实 render 驱动）/ 工具参数扁平 / 服务端与页面体积上限同值
-node scripts/verify_stats_panel.mjs   # 75 项：统计数据库（原子写 / 防抖 / 只读不写盘 / 写失败不抛）+ 任务清单（读 todos 投影、写走 todo/write）+ 面板只读库
+node scripts/verify_stats_panel.mjs   # 94 项：统计数据库（原子写 / 防抖 / 只读不写盘 / 写失败不抛 / SSE 推送与 live 分区）+ 任务清单（读 todos 投影、写走 todo/write）+ 面板只读库
 node scripts/verify_dedupe.mjs        # 84 项：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本单一真源
 node scripts/verify_injection.mjs     # 41 项：真实宿主演习台（装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级；无宿主时 SKIP 并以 0 退出）
 node scripts/verify_tuning.mjs        # 45 项：设置页调参接口（路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位 / 无 webServer 降级 / webServer 晚挂补挂；无宿主时 SKIP 并以 0 退出）
@@ -92,7 +92,7 @@ node scripts/cleanup.mjs              # 安装残留清理（默认只列；--ye
 node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：接线入口唯一 / 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
 node scripts/sync-local.mjs           # 本机安装树同步（默认只读预览；--yes 才铺树并刷激活记录）—— 复刻宿主指纹算法，见下文
 node scripts/verify_sync.mjs          # 37 项：指纹算法（与宿主记录交叉验证）/ 预览不落盘 / 增改删 / 权限位 / 幂等 / 激活记录刷新
-node scripts/verify_ui.mjs            # 157 项：状态条行为 + 设置台（偏好读写与持久化 / 形态与位置切换生效 / 侧栏开关 / 清理与幂等；--emit-html 出视觉预览）
+node scripts/verify_ui.mjs            # 168 项：状态条行为 + 设置台（偏好读写与持久化 / 形态与位置切换生效 / 侧栏开关 / 清理与幂等 / 推送订阅与自适应轮询；--emit-html 出视觉预览）
 node scripts/verify_env.mjs           # 149 项：环境探测（纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算）
 node scripts/verify_eval.mjs          # 81 项：评测计量（P/R/F1 手算可核）+ 语料载入形状 + CLI 退出码 0/1/3
 node scripts/verify_prompt.mjs        # 64 项：载荷锚点 + 导出 + 安装协议 + 用例库

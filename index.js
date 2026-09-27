@@ -41,7 +41,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.14.1";
+const PLUGIN_VERSION = "0.15.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -361,6 +361,22 @@ const safeParseJson = (text, fallback = null) => {
 // 字段（toolProtocol / alternatives / toolchain），再把最长的正文字段截断，并写明降级了什么。
 const RESULT_BUDGET_BYTES = 14000;
 const RESULT_DROP_FIRST = ["toolProtocol", "alternatives", "toolchain"];
+
+// ── 面板实时化（v0.15.0）────────────────────────────────────────────────────
+// 统计库落盘节流：750ms 的合流窗口对「变更即达」太钝（一次工具调用往往连触发 3–5 次改动，
+// 250ms 一样能合流），压到 250ms 后观测延迟从「轮询 + 落盘」两段降成落盘这一段。
+const STATS_FLUSH_MS = 250;
+// SSE 推送：面板订阅 /events，库一变就被叫醒；断线自动回落到轮询，所以这里只是加速项。
+const SSE_MAX_CLIENTS = 4;
+const SSE_HEARTBEAT_MS = 15000;
+// live 分区（面板的「本轮进行中」）只读这两圈：最近工具调用、最近会话事件时间戳。
+const TOOL_RING_SIZE = 8;
+const EVENT_RING_SIZE = 60;
+const EVENT_WINDOW_MS = 30000;
+const TURN_IDLE_MS = 5000;
+const toolRing = [];
+const eventRing = [];
+const liveState = { lastEventAt: null, lastKind: null, turnStartedAt: null };
 const utf8Bytes = (text) => Buffer.byteLength(text, "utf8");
 const trimToChars = (text, chars) =>
   text.length <= chars ? text : `${text.slice(0, Math.max(0, chars))}\n…（结果超预算，已截断）`;
@@ -420,6 +436,8 @@ const recordToolResult = (toolName, capped, raw) => {
   const name = toolName ?? "unknown";
   const text = JSON.stringify(capped);
   const degraded = capped !== raw;
+  const at = new Date().toISOString();
+  const bytes = utf8Bytes(text);
   statsSink.bump("tools.total");
   statsSink.bump(["tools", "calls", name]);
   if (degraded) statsSink.bump("tools.capped");
@@ -427,12 +445,16 @@ const recordToolResult = (toolName, capped, raw) => {
   statsSink.patch("tools", {
     lastCall: {
       tool: name,
-      at: new Date().toISOString(),
-      bytes: utf8Bytes(text),
+      at,
+      bytes,
       capped: degraded,
       truncated: capped?.truncated === true,
     },
   });
+  // v0.15.0：留一圈最近调用，面板的「进行中」状态行靠它显示流水，而不是只看最后一次。
+  toolRing.push({ tool: name, at, bytes, capped: degraded, truncated: capped?.truncated === true });
+  if (toolRing.length > TOOL_RING_SIZE) toolRing.splice(0, toolRing.length - TOOL_RING_SIZE);
+  liveState.lastToolAt = at;
 };
 
 /** 领域工具取用了哪个包：面板据此显示「模型实际读了哪些域」（v0.14.1）。 */
@@ -1051,7 +1073,7 @@ export function apply(ctx, config) {
   // ── 统计数据库（v0.13.9）：插件本体单写，前端面板单读 ────────────────────────
   // 面板过去拿的是「点一下现算一份 state」，等于间接依赖插件内部形态；现在核心把要说的话
   // 写进这份 JSON，面板只读它。读侧不触发任何计算，写侧失败也不抛（统计是旁路信息）。
-  const stats = createStatsStore({ version: PLUGIN_VERSION, autoLoad: true });
+  const stats = createStatsStore({ version: PLUGIN_VERSION, autoLoad: true, flushMs: STATS_FLUSH_MS });
   attachStatsSink(stats);
   stats.set("boot", { at: new Date().toISOString(), pid: process.pid, version: PLUGIN_VERSION, schema: STATS_SCHEMA, file: stats.file, statsFile: statsFile() });
   // 领域覆盖分区（v0.14.1）：面板的「领域 / 词表 / 预算」显示组只读这一份。
@@ -1137,12 +1159,23 @@ export function apply(ctx, config) {
       if (!session || !event) return;
       rememberSession(session);
       stats.bump("sessions.events");
+      // v0.15.0：live 分区的时间戳与类型 —— 面板的「本轮进行中」只读这一圈，不自己推算。
+      const nowMs = Date.now();
+      const lastMs = liveState.lastEventAt === null ? null : Date.parse(liveState.lastEventAt);
+      if (lastMs === null || nowMs - lastMs > TURN_IDLE_MS) liveState.turnStartedAt = new Date(nowMs).toISOString();
+      liveState.lastEventAt = new Date(nowMs).toISOString();
+      liveState.lastKind = typeof event.type === "string" ? event.type : "unknown";
+      if (liveState.firstEventMs === undefined) liveState.firstEventMs = nowMs;
+      eventRing.push({ ms: nowMs, kind: liveState.lastKind });
+      if (eventRing.length > EVENT_RING_SIZE) eventRing.splice(0, eventRing.length - EVENT_RING_SIZE);
       // 只在清单真的变了（或换会话）时才重读投影，别在每个事件上白折一遍。
       if (event.type === TODOS_EVENT) mirrorTasks(session, TODOS_EVENT);
     });
   }
   // runtime / tuning 两个分区由 publishStats() 统一发布（定义在 tuningState 之后）。
   let publishStats = () => {};
+  // live 分区（v0.15.0）：同样先占位，等 liveSnapshot 定义好之后再赋值，避免时序问题。
+  let publishLive = () => {};
 
   const recordPlacement = (row) => {
     runtime.placements.push(row);
@@ -1394,6 +1427,45 @@ export function apply(ctx, config) {
     return stats;
   };
 
+  // ── live 分区（v0.15.0）────────────────────────────────────────────────────
+  // 面板的「本轮进行中」不再是「最后一行日志」，而是从两圈环形缓冲算出来的当下：
+  // 事件速率、空闲时长、最近几次工具调用。只在内容真的变了才写库，空闲时零写入。
+  const liveSnapshot = () => {
+    const nowMs = Date.now();
+    const cutoff = nowMs - EVENT_WINDOW_MS;
+    while (eventRing.length > 0 && eventRing[0].ms < cutoff) eventRing.shift();
+    const spanMs = Math.max(1000, nowMs - (liveState.firstEventMs ?? nowMs));
+    const lastMs = liveState.lastEventAt === null ? null : Date.parse(liveState.lastEventAt);
+    const idleMs = lastMs === null ? null : nowMs - lastMs;
+    const active = idleMs !== null && idleMs < TURN_IDLE_MS;
+    return {
+      at: new Date().toISOString(),
+      turn: {
+        active,
+        startedAt: active ? liveState.turnStartedAt : null,
+        lastEventAt: liveState.lastEventAt,
+        lastKind: liveState.lastKind,
+        idleMs,
+      },
+      events: {
+        windowMs: EVENT_WINDOW_MS,
+        count: eventRing.length,
+        perSecond: Number((eventRing.length / (spanMs / 1000)).toFixed(2)),
+      },
+      tools: { recent: toolRing.slice(-TOOL_RING_SIZE), lastAt: liveState.lastToolAt ?? null },
+    };
+  };
+  let liveJson = "";
+  publishLive = () => {
+    const live = liveSnapshot();
+    // 时间戳每次都变，不该算作「内容变化」，否则每秒都在白写一次库。
+    const json = JSON.stringify({ ...live, at: null });
+    if (json === liveJson) return false;
+    liveJson = json;
+    stats.patch("live", live);
+    return true;
+  };
+
   /**
    * 面板的写侧：把一份清单写进 DSH 自己的任务清单。
    * 走的是官方工具同一条事件（`todo/write` → 宿主 `todos` 投影），所以模型下一轮就能看见
@@ -1476,6 +1548,8 @@ export function apply(ctx, config) {
   // 面板的读侧与写侧各一条路由：读的是统计数据库，写的是「把改动交给插件本体」。
   const STATS_PATH = "/infinite-gen-5/stats";
   const TASKS_PATH = "/infinite-gen-5/tasks";
+  // v0.15.0：统计库变更推送（SSE）。面板订阅它，库一落盘就被叫醒，不必再靠 2s 轮询撞运气。
+  const EVENTS_PATH = "/infinite-gen-5/events";
   const tuningToken = randomBytes(16).toString("hex");
   const isLoopback = (req) => {
     const addr = (req.socket && (req.socket.remoteAddress || "")) || "";
@@ -1504,12 +1578,23 @@ export function apply(ctx, config) {
       req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
       req.on("error", reject);
     });
-  const guardPanelRequest = (req, res) => {
+  const guardPanelRequest = (req, res, opts = {}) => {
     if (!isLoopback(req)) {
       sendJson(res, 403, { ok: false, error: "只接受本机回环请求" });
       return false;
     }
-    if ((req.headers["x-ig5-token"] || "") !== tuningToken) {
+    // SSE 走 EventSource：浏览器不允许给它设自定义头，所以推送路由额外认 ?token=。
+    // 只在 opts.allowQueryToken 的调用点上开这个口子（GET/POST 那几条仍只认请求头），
+    // 回环校验照旧在前面挡着，不因此放宽来源。
+    let presented = req.headers["x-ig5-token"] || "";
+    if (presented !== tuningToken && opts.allowQueryToken === true) {
+      try {
+        presented = new URL(req.url, "http://127.0.0.1").searchParams.get("token") || "";
+      } catch {
+        presented = "";
+      }
+    }
+    if (presented !== tuningToken) {
       sendJson(res, 401, { ok: false, error: "缺少或错误的 x-ig5-token（刷新页面重新注入）" });
       return false;
     }
@@ -1579,6 +1664,53 @@ export function apply(ctx, config) {
       return sendJson(res, 500, { ok: false, error: String((error && error.message) || error) });
     }
   };
+  // ── SSE 推送（v0.15.0）────────────────────────────────────────────────────
+  // 只把「库变了」这一个信号推给面板，正文仍旧由面板走 /stats 读：读侧永远只有一条路径，
+  // 帧只有几十字节，也不会因为推送把整库正文重复搬进流里。
+  const sseClients = new Set();
+  const sseWrite = (res, payload) => {
+    try {
+      res.write(`data: ${JSON.stringify(payload)}\n\n`);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const sseCounts = () => {
+    const doc = stats.snapshot() ?? {};
+    const counts = (doc.tasks ?? {}).counts ?? {};
+    return {
+      tools: (doc.tools ?? {}).total ?? 0,
+      events: (doc.sessions ?? {}).events ?? 0,
+      tasks: { completed: counts.completed ?? 0, total: counts.total ?? 0 },
+      anchors: (doc.runtime ?? {}).anchorEmissions ?? 0,
+    };
+  };
+  const dropSseClient = (client) => {
+    if (!sseClients.delete(client)) return;
+    try { client.res.end(); } catch { /* 对端已经走了 */ }
+  };
+  const closeSseClients = () => { for (const client of [...sseClients]) dropSseClient(client); };
+  const eventsHandler = (req, res) => {
+    if (!guardPanelRequest(req, res, { allowQueryToken: true })) return;
+    if (sseClients.size >= SSE_MAX_CLIENTS) {
+      return sendJson(res, 503, { ok: false, error: `推送连接已达上限（${SSE_MAX_CLIENTS}），面板会回落到轮询` });
+    }
+    res.writeHead(200, {
+      "content-type": "text/event-stream; charset=utf-8",
+      "cache-control": "no-store",
+      connection: "keep-alive",
+      "x-accel-buffering": "no",
+    });
+    res.write("retry: 2000\n\n"); // 断线后浏览器 2s 重连；查询串里的 token 会被原样复用
+    const client = { res };
+    sseClients.add(client);
+    sseWrite(res, { type: "hello", seq: stats.seq, at: new Date().toISOString(), counts: sseCounts() });
+    req.on("close", () => dropSseClient(client));
+    req.on("error", () => dropSseClient(client));
+    res.on("close", () => dropSseClient(client));
+    res.on("error", () => dropSseClient(client));
+  };
   let mountedServer = null;
   const mountTuningRoute = (webCtx) => {
     const server = typeof webCtx.get === "function" ? webCtx.get("webServer") : undefined;
@@ -1595,15 +1727,23 @@ export function apply(ctx, config) {
     webCtx.effect(() => server.register({ kind: "exact", path: TUNING_PATH, handler: tuningHandler }), "infinite-gen-5: 调参路由");
     webCtx.effect(() => server.register({ kind: "exact", path: STATS_PATH, handler: statsHandler }), "infinite-gen-5: 统计库只读路由");
     webCtx.effect(() => server.register({ kind: "exact", path: TASKS_PATH, handler: tasksHandler }), "infinite-gen-5: 任务清单路由");
+    webCtx.effect(() => server.register({ kind: "exact", path: EVENTS_PATH, handler: eventsHandler }), "infinite-gen-5: 统计库变更推送（SSE）");
     webCtx.on("webserver/index-inject", (table) => {
       table.push({
         kind: "script",
         placement: "body",
         text: `window.__IG5_TUNING__=${JSON.stringify({ path: TUNING_PATH, token: tuningToken, version: PLUGIN_VERSION })};` +
-          `window.__IG5_STATS__=${JSON.stringify({ path: STATS_PATH, tasksPath: TASKS_PATH, tuningPath: TUNING_PATH, token: tuningToken, version: PLUGIN_VERSION })};`,
+          `window.__IG5_STATS__=${JSON.stringify({ path: STATS_PATH, tasksPath: TASKS_PATH, tuningPath: TUNING_PATH, eventsPath: EVENTS_PATH, token: tuningToken, version: PLUGIN_VERSION })};`,
       });
     });
-    runtime.tuningEndpoint = { ok: true, path: TUNING_PATH, statsPath: STATS_PATH, tasksPath: TASKS_PATH, tokenInjected: true };
+    runtime.tuningEndpoint = {
+      ok: true,
+      path: TUNING_PATH,
+      statsPath: STATS_PATH,
+      tasksPath: TASKS_PATH,
+      eventsPath: EVENTS_PATH,
+      tokenInjected: true,
+    };
   };
   // webServer 是宿主后挂的服务：本插件 apply 时它往往还没就绪，`ctx.get()` 只会拿到 undefined
   // （get 默认 strict，只返回「提供方 fiber 已激活」的实现），所以先在注入回调里等它就绪。
@@ -1664,7 +1804,44 @@ export function apply(ctx, config) {
   // 首次发布 + 立刻落盘：apply 一结束盘上就有一份完整统计库，
   // 面板第一次 GET /stats 就能读到真数据，不必等第一次工具调用把它喂热。
   publishStats();
+  // live 也先发布一次：面板首帧就该看到「空闲」而不是「没有实时分区」。
+  publishLive();
   stats.flush(true);
+
+  // ── 实时化接线（v0.15.0）──────────────────────────────────────────────────
+  // live 节拍：1s 算一次快照，只有内容真的变了才写库（空闲时零写入）。
+  const liveTimer = setInterval(() => { publishLive(); }, 1000);
+  if (typeof liveTimer.unref === "function") liveTimer.unref();
+  // 心跳：别让闲置的长连接被中间层（反代 / 浏览器）按超时掐掉。
+  const sseHeartbeat = setInterval(() => {
+    for (const client of [...sseClients]) {
+      try { client.res.write(": ping\n\n"); } catch { sseClients.delete(client); }
+    }
+  }, SSE_HEARTBEAT_MS);
+  if (typeof sseHeartbeat.unref === "function") sseHeartbeat.unref();
+  // 库一落盘就广播：帧里只有序号与几个计数，正文由面板回读 /stats（读路径永远只有一条）。
+  ctx.effect(
+    () => stats.onChange((info) => {
+      publishLive();
+      for (const client of [...sseClients]) {
+        if (!sseWrite(client.res, {
+          type: "stats",
+          seq: info.seq,
+          at: info.at,
+          generatedAt: info.generatedAt,
+          counts: sseCounts(),
+        })) sseClients.delete(client);
+      }
+    }),
+    "infinite-gen-5: 统计库变更广播（SSE）",
+  );
+  ctx.effect(() => () => {
+    // 卸载（插件停用 / 进程退出）：先断流、再清定时器，最后把库落盘。
+    closeSseClients();
+    clearInterval(liveTimer);
+    clearInterval(sseHeartbeat);
+    stats.flush(true);
+  }, "infinite-gen-5: 实时化资源回收");
 
   registerTuningEndpoint();
 

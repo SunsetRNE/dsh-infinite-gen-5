@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.14.1";
+        var VERSION = "v0.15.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -151,10 +151,10 @@
           ".armor5-console-badge{display:inline-flex;align-items:center;gap:6px;color:var(--dsw-alias-label-tertiary,#8b8b8b);",
           "font-size:12px}",
           ".armor5-console-badge[data-kind=pass]{color:var(--dsw-alias-state-success-primary,#3fb950)}",
-          ".armor5-console-rows,.armor5-task-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}",
-          ".armor5-console-rows li,.armor5-task-list li{display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;align-items:baseline}",
-          ".armor5-console-rows .k,.armor5-task-list .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:12px}",
-          ".armor5-console-rows .v,.armor5-task-list .v{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:12px;overflow-wrap:anywhere}",
+          ".armor5-console-rows,.armor5-task-list,.armor5-live-rows{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}",
+          ".armor5-console-rows li,.armor5-task-list li,.armor5-live-rows li{display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;align-items:baseline}",
+          ".armor5-console-rows .k,.armor5-task-list .k,.armor5-live-rows .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:12px}",
+          ".armor5-console-rows .v,.armor5-task-list .v,.armor5-live-rows .v{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:12px;overflow-wrap:anywhere}",
           // 任务清单进度：一条进度条 + 状态字形 + 内容。字形列窄，内容可折行。
           ".armor5-task-bar{height:6px;border-radius:999px;background:var(--dsw-alias-fill-l2,rgba(127,127,127,.22));overflow:hidden}",
           ".armor5-task-bar-fill{height:100%;border-radius:999px;background:var(--dsw-alias-state-success-primary,#3fb950);transition:width .25s ease}",
@@ -656,7 +656,10 @@
             statsPath: (stats && stats.path) || null,
             tasksPath: (stats && stats.tasksPath) || null,
             tuningPath: tuning,
-            database: Boolean(stats && stats.path)
+            database: Boolean(stats && stats.path),
+            // v0.15.0：核心多给了一条推送路径（SSE），面板收到「库变了」的信号就立刻回读 /stats。
+            // 没有这条路径的老宿主一切照旧，仍走轮询，不会因为一次升级把面板打死。
+            eventsPath: (stats && stats.eventsPath) || null
           };
         }
 
@@ -693,16 +696,26 @@
         }
 
         // 统计库 → 面板。同一份 state 供面板与状态行读，避免两处各持一份。
-        // 面板每 2 秒静默轮询一次：读的是核心落盘的库，不触发任何计算，也不打断手上的草稿。
-        var PANEL_POLL_MS = 2000;
+        // v0.15.0 起改「推送优先、轮询兜底」：核心在统计库落盘后推一帧 SSE，面板收到就回读
+        // /stats（推送只当闹钟，正文一律回读，前端不解析任何 HTTP 负载）；推送不可用或断线时
+        // 自动回落到轮询：活跃期追得紧、空闲期放得松，页面切到后台时干脆停，省电也省日志。
+        var PANEL_POLL_ACTIVE_MS = 400;
+        var PANEL_POLL_IDLE_MS = 3000;
+        // 「刚才还在动」的判据：这段时间内数据变过，就按活跃频率追。
+        var PANEL_ACTIVE_WINDOW_MS = 6000;
+        var PANEL_POLL_MS = PANEL_POLL_IDLE_MS;
         function useTuning() {
           var pair = react.useState({
             phase: "loading", data: null, database: null, source: null, draft: null,
-            error: null, note: null, busy: false, taskBusy: false, taskNote: null
+            error: null, note: null, busy: false, taskBusy: false, taskNote: null,
+            link: null, liveDoc: null
           });
           var update = function (part) {
             pair[1](function (prev) { return Object.assign({}, prev, part); });
           };
+          // 数据变化的时间线：stamp 是库里那份的 generatedAt，changedAt 是本地最后一次看到它变。
+          // 自适应轮询靠 changedAt 判断「现在忙不忙」，不靠猜。
+          var flow = { stamp: null, changedAt: 0 };
           var read = function (quiet) {
             var bridge = statsBridge();
             if (!bridge) {
@@ -719,15 +732,23 @@
               if (r.status !== 200 || !r.doc || r.doc.ok !== true) throw new Error((r.doc && r.doc.error) || ("HTTP " + r.status));
               var doc = bridge.database ? r.doc.tuning : r.doc;
               if (!doc || !doc.effective) throw new Error("统计库里还没有档位分区（重启一次 DSH 让核心发布第一版）");
+              // 数据有没有变的唯一判据是核心给的 generatedAt：推送与轮询都可能连着叫醒很多次，
+              // 内容没变就不再 setState，免得面板自己抖成幻灯片（老核心没有 generatedAt 时按「变了」处理）。
+              var stamp = r.doc.generatedAt || null;
+              var changed = stamp === null || stamp !== flow.stamp;
+              if (changed) { flow.stamp = stamp; flow.changedAt = Date.now(); }
               var part = {
                 phase: "ready",
                 database: bridge.database ? r.doc : null,
                 source: bridge.database ? r.doc.source : null,
                 data: doc,
-                error: null
+                error: null,
+                liveDoc: bridge.database ? (r.doc.live || null) : null
               };
               // 静默轮询不动 draft：用户可能正在挑档位，别把它冲掉。
               if (quiet !== true) part.draft = Object.assign({}, doc.effective);
+              // 内容没变的静默回读就到此为止（推送叫醒的绝大多数帧都属于这种）。
+              if (quiet === true && !changed) return;
               update(part);
             }).catch(function (error) {
               if (quiet === true) return; // 轮询失败不打扰正在用的面板，下一次自己会好
@@ -781,19 +802,104 @@
             });
           };
           // 轮询用 setTimeout 自续（前端拿到的就是这两个注入进来的定时器，别去碰全局 setInterval）。
-          var poll = { stopped: false, timer: null };
+          // transport：sse = 推送活着（根本不轮询）；polling = 兜底。link 是给面板看的一句话，同一句不重复 setState。
+          var poll = { stopped: false, timer: null, transport: "polling", es: null, link: null, fellBack: false };
+          var link = function (mode, text) {
+            if (poll.link === text) return;
+            poll.link = text;
+            update({ link: { mode: mode, text: text } });
+          };
+          var clearTimer = function () {
+            if (poll.timer && typeof clearTimeout === "function") clearTimeout(poll.timer);
+            poll.timer = null;
+          };
+          var pageHidden = function () {
+            return typeof document !== "undefined" && document.hidden === true;
+          };
+          // 自适应间隔：最近 PANEL_ACTIVE_WINDOW_MS 内数据变过就按活跃频率追，否则放松。
+          var nextDelay = function () {
+            if (pageHidden()) return null; // 页面在后台：停轮询，等 visibilitychange 再续
+            return (Date.now() - flow.changedAt) < PANEL_ACTIVE_WINDOW_MS ? PANEL_POLL_ACTIVE_MS : PANEL_POLL_IDLE_MS;
+          };
           var tick = function () {
             if (poll.stopped) return;
+            poll.timer = null;
+            if (poll.transport === "sse") return; // 推送活着就不用轮询
             read(true);
-            if (typeof setTimeout === "function") poll.timer = setTimeout(tick, PANEL_POLL_MS);
+            schedule();
+          };
+          var schedule = function () {
+            if (poll.stopped || poll.transport === "sse") return;
+            clearTimer();
+            var delay = nextDelay();
+            if (delay === null) {
+              link("paused", "页面在后台，已暂停轮询（切回来立刻补一次）");
+              return;
+            }
+            link("polling", (poll.fellBack ? "推送断线，已回落到轮询（重开面板会自动再试）；" : "未接推送，") +
+              "按" + (delay === PANEL_POLL_ACTIVE_MS ? "活跃" : "空闲") + "节奏轮询（" + delay + " ms）");
+            if (typeof setTimeout === "function") poll.timer = setTimeout(tick, delay);
+          };
+          // 接推送：EventSource 带不了自定义请求头，所以 token 走查询串（服务端只对这条路由放行）。
+          // 推送帧只当闹钟用，正文一律回读 /stats —— 前端不解析任何 HTTP 负载，这条界线不为实时化松动。
+          var connect = function () {
+            var bridge = statsBridge();
+            if (!bridge || !bridge.eventsPath || typeof EventSource !== "function") { schedule(); return; }
+            var stream;
+            try {
+              stream = new EventSource(bridge.eventsPath + "?token=" + encodeURIComponent(bridge.token));
+            } catch (error) {
+              schedule();
+              return;
+            }
+            poll.es = stream;
+            stream.onopen = function () {
+              if (poll.stopped) return;
+              poll.transport = "sse";
+              poll.fellBack = false;
+              clearTimer();
+              link("sse", "推送已连接：统计库一落盘就刷新");
+            };
+            stream.onmessage = function () {
+              if (poll.stopped) return;
+              read(true);
+            };
+            stream.onerror = function () {
+              if (poll.es) {
+                try { poll.es.close(); } catch (error) { /* 已经断了 */ }
+                poll.es = null;
+              }
+              if (poll.stopped) return;
+              poll.transport = "polling";
+              poll.fellBack = true;
+              link("polling", "推送断线，已回落到轮询（重开面板会自动再试）");
+              schedule();
+            };
+          };
+          var onVisible = function () {
+            if (poll.stopped) return;
+            schedule();
+            read(true);
           };
           react.useEffect(function () {
             read();
             poll.stopped = false;
-            if (typeof setTimeout === "function") poll.timer = setTimeout(tick, PANEL_POLL_MS);
+            poll.transport = "polling";
+            if (typeof document !== "undefined" && typeof document.addEventListener === "function") {
+              document.addEventListener("visibilitychange", onVisible);
+            }
+            connect();
+            schedule();
             return function () {
               poll.stopped = true;
-              if (poll.timer && typeof clearTimeout === "function") clearTimeout(poll.timer);
+              clearTimer();
+              if (poll.es) {
+                try { poll.es.close(); } catch (error) { /* 已经断了 */ }
+                poll.es = null;
+              }
+              if (typeof document !== "undefined" && typeof document.removeEventListener === "function") {
+                document.removeEventListener("visibilitychange", onVisible);
+              }
             };
           }, []);
           return { state: pair[0], stage: stage, save: save, read: read, writeTasks: writeTasks };
@@ -889,7 +995,7 @@
               }, "刷新统计库")
             ),
             react.createElement("span", { className: "armor5-console-hint" },
-              "面板只读插件本体落盘的统计库（每 2 秒刷新一次）；写清单是唯一的上行动作，由本体按宿主策略写进会话。")
+              "面板只读插件本体落盘的统计库（推送驱动，断线自动回落轮询）；写清单是唯一的上行动作，由本体按宿主策略写进会话。")
           );
         }
 
@@ -984,6 +1090,62 @@
             ),
             react.createElement("span", { className: "armor5-console-hint" },
               "全部读插件本体落盘的统计库：域数 / 族分布 / 词表 / 预算 / 取用次数都由核心算好，面板只负责画。")
+          );
+        }
+
+        // ── 实时（信号来源 / 本轮忙不忙 / 最近工具流水）（v0.15.0） ──────────────
+        // 数据来自本体的 live 分区加上前端自己的传输状态：面板既不猜时间也不自己计时，
+        // 只把「信号从哪来、现在在不在跑、最近调了什么工具」画出来。
+        var LIVE_MODE_LABEL = { sse: "推送中", polling: "轮询中", paused: "已暂停" };
+        function fmtAgo(value) {
+          if (!value) return "从未";
+          var ms = Date.parse(value);
+          if (!Number.isFinite(ms)) return "未知";
+          var seconds = Math.max(0, Math.round((Date.now() - ms) / 1000));
+          return seconds < 60 ? seconds + " 秒前" : Math.round(seconds / 60) + " 分钟前";
+        }
+        function fmtSpan(ms) {
+          var seconds = Number(ms);
+          if (!Number.isFinite(seconds)) return "未知时长";
+          seconds = Math.max(0, Math.round(seconds / 1000));
+          return seconds < 60 ? seconds + " 秒" : Math.round(seconds / 60) + " 分钟";
+        }
+        function liveGroup(state) {
+          var live = state.liveDoc;
+          var link = state.link;
+          var rows = [];
+          rows.push(["信号", (link ? (LIVE_MODE_LABEL[link.mode] || link.mode) + " · " + link.text : "等第一条信号…") +
+            (live && live.at ? "　·　库 " + fmtAgo(live.at) : "")]);
+          var turn = live && live.turn ? live.turn : null;
+          var events = live && live.events ? live.events : null;
+          var tools = live && live.tools ? live.tools : null;
+          if (!live) {
+            rows.push(["本轮", "统计库里还没有实时分区（需要 v0.15.0 的服务端；重启一次 DSH 后由本体落盘）"]);
+          } else {
+            var started = turn && turn.startedAt ? Date.parse(turn.startedAt) : NaN;
+            rows.push(["本轮", turn && turn.active
+              ? "进行中 · 已 " + fmtSpan(Date.now() - started) + "（最后事件 " + fmtAgo(turn.lastEventAt) + "）"
+              : "空闲 · 最后事件 " + fmtAgo(turn ? turn.lastEventAt : null)]);
+            rows.push(["事件速率", events
+              ? events.count + " 次 / " + Math.round((events.windowMs || 0) / 1000) + " 秒（" + (events.perSecond || 0) + " 次/秒）"
+              : "—"]);
+            var recent = (tools && tools.recent) || [];
+            rows.push(["最近工具", recent.length
+              ? recent.slice(-4).map(function (item) { return item.tool + "(" + fmtBytes(item.bytes) + ")"; }).join(" → ")
+              : "本进程还没调过工具"]);
+          }
+          return react.createElement("div", { className: "armor5-console-group" },
+            react.createElement("div", { className: "armor5-console-group-title" }, "实时（信号来源 / 本轮 / 工具流水）"),
+            react.createElement("ul", { className: "armor5-live-rows" },
+              rows.map(function (row) {
+                return react.createElement("li", { key: row[0] },
+                  react.createElement("span", { className: "k" }, row[0]),
+                  react.createElement("span", { className: "v" }, row[1]));
+              })
+            ),
+            react.createElement("span", { className: "armor5-console-hint" },
+              "推送只当闹钟：统计库一落盘就推一帧，面板收到立刻回读 /stats；推送不可用时自动回落到自适应轮询" +
+              "（活跃 400 ms / 空闲 3 s），页面切到后台就停。")
           );
         }
 
@@ -1109,6 +1271,7 @@
               )
             ),
             taskProgress(tuner.state, tuner),
+            liveGroup(tuner.state),
             coverageGroup(tuner.state),
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "只读"),

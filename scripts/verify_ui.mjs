@@ -523,9 +523,13 @@ function loadInstance(options) {
   // v0.14.1：注入统计库桥（token + path），用于真渲染「领域覆盖 · 词表 · 预算」显示组。
   if (opts.stats !== undefined) win.__IG5_STATS__ = opts.stats;
   const fetchFn = typeof opts.fetch === "function" ? opts.fetch : (...args) => fetchImpl(...args);
+  // v0.15.0：自适应轮询的间隔要能被量出来（活跃 400 ms / 空闲 3 s），所以允许测试侧记账。
+  const timerFn = typeof opts.onTimer === "function"
+    ? (fn, ms) => { opts.onTimer(ms); return setTimeout(fn, ms); }
+    : setTimeout;
   // eslint-disable-next-line no-new-func
   new Function("window", "document", "MutationObserver", "setTimeout", "clearTimeout", "console", "fetch", src)(
-    win, doc, FakeMutationObserver, setTimeout, clearTimeout, console, fetchFn);
+    win, doc, FakeMutationObserver, timerFn, clearTimeout, console, fetchFn);
   const m = loaded.factory(fakeRequire);
   const log = { injected: [], registrations: [], disposed: [] };
   const dispose = m.apply(makeCtx(log));
@@ -665,6 +669,111 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
   const bareText = textOf(bareView.rerender());
   ok("没有覆盖分区时给可读原因、域数留占位（不谎报）",
     bareText.includes("统计库里还没有覆盖分区") && bareText.includes("— 域 × 7 族"), JSON.stringify(bareText.slice(0, 160)));
+
+  // ── 实时化（v0.15.0）：推送优先、断线回落自适应轮询、后台暂停、live 行 ─────────
+  {
+    // 假 EventSource：记住 URL、手动开/推/断、记录自己被关掉。推送帧内容一律不看，
+    // 因为客户端约定「帧只当闹钟，正文回读 /stats」——推的 data 故意是没意义的字符串。
+    const streams = [];
+    let seenES = null;
+    class FakeEventSource {
+      constructor(url) { this.url = url; this.closed = false; seenES = this; streams.push(this); }
+      close() { this.closed = true; }
+      open() { if (this.onopen) this.onopen({}); }
+      push() { if (this.onmessage) this.onmessage({ data: "wake" }); }
+      fail() { if (this.onerror) this.onerror({}); }
+    }
+    class BoomEventSource { constructor() { throw new Error("EventSource 起不来"); } }
+    const prevES = globalThis.EventSource;
+    const delays = [];
+    const liveDocFor = (count, startedAt) => {
+      const doc0 = coverageDoc(73.1);
+      doc0.live = {
+        at: new Date().toISOString(),
+        turn: { active: true, startedAt, lastEventAt: new Date(Date.now() - 1000).toISOString(), lastKind: "assistant/message", idleMs: 1000 },
+        events: { windowMs: 30000, count, perSecond: 0.4 },
+        tools: { recent: [{ tool: "infinite_gen5_scenario", at: new Date().toISOString(), bytes: 4540, capped: false, truncated: false }], lastAt: new Date().toISOString() }
+      };
+      return doc0;
+    };
+    const liveStats = {
+      path: "/infinite-gen-5/stats", tasksPath: "/infinite-gen-5/tasks",
+      tuningPath: "/infinite-gen-5/tuning", eventsPath: "/infinite-gen-5/events", token: "tok live/+"
+    };
+    try {
+      globalThis.EventSource = FakeEventSource;
+      const docs = [liveDocFor(12, new Date(Date.now() - 42000).toISOString())];
+      const liveInst = loadInstance({
+        storage: fakeStorage({}),
+        stats: liveStats,
+        onTimer: (ms) => delays.push(ms),
+        fetch: () => Promise.resolve({ status: 200, json: () => Promise.resolve(docs[docs.length - 1]) })
+      });
+      const liveView = mountComponent(liveInst.page, undefined, { hooks: [] });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      ok("面板按查询串 token 订阅推送（EventSource 带不了自定义请求头）",
+        streams.length === 1 && streams[0].url === "/infinite-gen-5/events?token=" + encodeURIComponent("tok live/+"),
+        JSON.stringify(streams.map((s) => s.url)));
+      const early = textOf(liveView.rerender());
+      ok("live 行来自库里的 live 分区（本轮 / 事件速率 / 最近工具）",
+        early.includes("进行中 · 已 42 秒") && early.includes("12 次 / 30 秒") &&
+        early.includes("infinite_gen5_scenario(4.4 KB)"), JSON.stringify(early.slice(0, 240)));
+      ok("推送还没连上时按轮询算（面板不假装自己在推送）",
+        early.includes("轮询中") && early.includes("推送已连接") === false, JSON.stringify(early.slice(0, 240)));
+      seenES.open();
+      const opened = textOf(liveView.rerender());
+      ok("推送连上后状态行改「推送中」并停掉轮询",
+        opened.includes("推送中 · 推送已连接：统计库一落盘就刷新"), JSON.stringify(opened.slice(0, 240)));
+      docs.push(liveDocFor(13, new Date(Date.now() - 43000).toISOString()));
+      seenES.push();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      ok("收到推送就回读统计库、把新数字画出来（帧只当闹钟，不解析正文）",
+        textOf(liveView.rerender()).includes("13 次 / 30 秒"));
+      seenES.fail();
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const fell = textOf(liveView.rerender());
+      ok("推送断线立刻回落轮询，并说明白自己怎么了",
+        fell.includes("推送断线，已回落到轮询"),
+        JSON.stringify(fell.slice(Math.max(0, fell.indexOf("信号")), fell.indexOf("信号") + 160)));
+      ok("回落之后重新排上轮询定时器（活跃 400 ms / 空闲 3 s 二选一）",
+        delays.includes(400) || delays.includes(3000), JSON.stringify(delays.slice(-4)));
+      // 后台暂停：document.hidden 时不排新定时器，只留一句人话
+      const beforeHidden = delays.length;
+      doc.hidden = true;
+      doc.__listeners.filter((pair) => pair[0] === "visibilitychange").forEach((pair) => pair[1]());
+      const paused = textOf(liveView.rerender());
+      ok("页面切到后台就停轮询（切回来会补一次）",
+        paused.includes("页面在后台，已暂停轮询") && delays.length === beforeHidden,
+        JSON.stringify(paused.slice(0, 240)));
+      delete doc.hidden;
+      doc.__listeners.filter((pair) => pair[0] === "visibilitychange").forEach((pair) => pair[1]());
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      ok("切回前台立刻补读一次并重排定时器",
+        delays.length > beforeHidden && textOf(liveView.rerender()).includes("轮询中"),
+        JSON.stringify(delays.slice(-2)));
+      liveInst.dispose();
+      ok("卸载时把推送连接关掉（不留下悬挂的长连接）", seenES.closed === true);
+    } finally {
+      if (prevES === undefined) delete globalThis.EventSource; else globalThis.EventSource = prevES;
+    }
+    // 老宿主：没有 eventsPath 时不许碰 EventSource，直接走轮询；EventSource 构造失败也要能活
+    globalThis.EventSource = BoomEventSource;
+    const oldInst = loadInstance({
+      storage: fakeStorage({}),
+      stats: { path: "/infinite-gen-5/stats", tuningPath: "/infinite-gen-5/tuning", token: "tok-old" },
+      fetch: covFetch(coverageDoc(73.1))
+    });
+    try {
+      const oldView = mountComponent(oldInst.page, undefined, { hooks: [] });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      const oldText = textOf(oldView.rerender());
+      ok("宿主没给推送路径时老实轮询（不臆造 /events）",
+        oldText.includes("轮询中 · 未接推送") && oldText.includes("统计库里还没有实时分区"),
+        JSON.stringify(oldText.slice(0, 200)));
+    } finally {
+      delete globalThis.EventSource;
+    }
+  }
 
   // 点选 -> 落盘 -> 页面与状态条同步
   modeBtns.find((b) => b.props["data-choice"] === "compact").props.onClick();

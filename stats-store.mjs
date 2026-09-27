@@ -47,6 +47,9 @@ export const emptyStats = (version, at = null) => ({
   // v0.14.1：启动时由 index.js 用 coverageSnapshot() 填满（域数 / 族分布 / 词表 / 预算）。
   // 骨架里先摆 null，是为了「读侧键永远齐全」这条不变量 —— 面板不必判 undefined。
   coverage: null,
+  // v0.15.0：live 分区（本轮是否进行中 / 事件速率 / 最近工具流水），由 index.js 每秒算一次，
+  // 同样先摆 null 守住「读侧键永远齐全」。
+  live: null,
   tools: { calls: {}, total: 0, capped: 0, truncated: 0, lastCall: null },
   tasks: {
     available: false,
@@ -119,6 +122,25 @@ export const createStatsStore = (options = {}) => {
   let timer = null;
   let lastError = null;
   let writes = 0;
+  // v0.15.0：落盘序号 + 变更订阅。
+  // 面板要「变更即达」，就必须有人告诉它「库变了」——这件事由写侧广播，读侧只负责读。
+  // 订阅回调在**落盘成功之后**触发（面板读的是盘上那份文件，写失败时通知它没有意义），
+  // 因此天然就是合流的：防抖窗口内的多次改动只会产生一次通知。
+  let seq = 0;
+  const listeners = new Set();
+
+  const notify = () => {
+    if (listeners.size === 0) return;
+    const info = { seq, at: now(), generatedAt: doc.generatedAt, writes, file };
+    for (const listener of [...listeners]) {
+      // 订阅者（SSE  broadcaster）绝不能因为自己的异常把写侧带崩。
+      try {
+        listener(info);
+      } catch (error) {
+        lastError = String((error && error.message) || error);
+      }
+    }
+  };
 
   const flush = () => {
     if (timer !== null) {
@@ -133,12 +155,15 @@ export const createStatsStore = (options = {}) => {
       writeFileSync(tmp, `${JSON.stringify(doc, null, 2)}\n`, "utf8");
       renameSync(tmp, file);
       writes += 1;
+      seq += 1;
       lastError = null;
     } catch (error) {
       lastError = String((error && error.message) || error);
       dirty = true;
       return false;
     }
+    // 盘上已经是新内容了，这时候再喊人来看。
+    notify();
     return true;
   };
 
@@ -196,6 +221,10 @@ export const createStatsStore = (options = {}) => {
     get writes() {
       return writes;
     },
+    /** 落盘序号：每成功写盘 +1，供推送侧「有没有新东西」判定与幂等去重。 */
+    get seq() {
+      return seq;
+    },
     get lastError() {
       return lastError;
     },
@@ -231,6 +260,15 @@ export const createStatsStore = (options = {}) => {
     /** 读内存里的当前库（深拷贝，调用方改不动内部状态）。 */
     snapshot() {
       return cloneJson(doc) ?? doc;
+    },
+    /**
+     * 订阅落盘变更（v0.15.0）：每次成功写盘、且防抖窗口内的改动已合流完成后回调一次。
+     * 返回退订函数；回调里出错只会被记进 lastError，不会影响写入流程。
+     */
+    onChange(listener) {
+      if (typeof listener !== "function") return () => {};
+      listeners.add(listener);
+      return () => listeners.delete(listener);
     },
     /** 读盘上的库 —— 面板读侧走这里，不触发任何计算。 */
     read() {

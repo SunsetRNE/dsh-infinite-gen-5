@@ -10,6 +10,24 @@
 
 ---
 
+## v0.15.0
+
+**技术说明**
+
+① **面板实时化：推开那条延迟链**。v0.14.x 的「控制台」要等一轮输出完才动，但事件引擎其实在中途一直涨（`ctx.on("session/event")` 全程在跑）。真正卡住观测的是别处：统计库落盘有 750 ms 防抖，面板每 2 s 固定轮询 ⇒ 每次改数的观测延迟 = 落盘(0–750 ms) + 轮询(0–2 s)。本版把四段一起动手：**A 自适应轮询**（活跃 400 ms / 空闲 3 s，`document.hidden` 时暂停）、**B SSE 推送**（新增 `/infinite-gen-5/events`，落盘即推一帧信号）、**C 快落盘**（750 → 250 ms）、**D `live` 分区**（每秒一版运行态）。
+
+② **推送帧只当闹钟，不带正文**。`stats-store.mjs` 新增落盘序号与变更订阅：`flush()` 在 `rename` 成功、`writes += 1` 之后 `seq += 1` 并 `notify()`（写失败不通知；防抖窗口内多次改动只通知一次），对外新开 `get seq()` 与 `onChange(listener)`（返回退订函数）。`index.js` 订阅它，把 `{type:"stats", seq, at, generatedAt, counts}` 推给面板，实测 < 400 B；面板收到**只回读** `/stats`，正文永远走那条只读路由，前端也因此不需要解析任何 HTTP 负载（`client.js` 里 `JSON.parse(` 仍然只有一处，读的是 localStorage 偏好）——这是本次刻意守住的既有边界。
+
+③ **`EventSource` 带不了请求头**：路由自守原来是 `x-ig5-token`（`guardPanelRequest`），而 `EventSource` 无法自定义头，所以只给推送这一条路由加了 `opts.allowQueryToken`（先认头、再认 `?token=`），其余读/写路由仍只认头，且全都仍旧只收回环。客户端侧 `connect()` 用 `eventsPath + "?token=" + encodeURIComponent(token)`；`onerror` 时主动关连接并回落到轮询（`poll.fellBack` 让回落原因显示在面板上），重开面板会重新试推送。
+
+④ **`live` 分区与「实时」显示组**：`index.js` 维护 `toolRing`（最近 8 次工具调用：名 / 时间 / 字节 / 是否被截断）、`eventRing`（30 s 窗口内的事件时间戳与类型）与 `liveState`（本轮起点、最后事件、类型、空闲毫秒），1 s 的 `unref` 定时器算 `liveSnapshot()`，**只有内容真的变了才 `stats.patch("live", …)`**，空转不产流量。面板新增「实时（信号来源 / 本轮 / 工具流水）」组：当前是推送中还是轮询中、回落原因、本轮已跑多久、事件速率、最近调了什么工具 —— 全是库里的数字与前端自己的传输状态，面板一个都不猜。连接状态还多一层兜底：老宿主没有 `eventsPath`、或宿主没有 `EventSource`，都只显示可读原因并按轮询走。
+
+⑤ **自检 75 → 94 项 + 渲染 157 → 168 条**：`verify_stats_panel` 的假宿主补了 `fakeRes.write/on/emit`、`fakeReq.url/emit`、`openStream()` 与 `sseFrames()`，新增断言覆盖握手头（`text/event-stream` / `no-store` / `x-accel-buffering: no`）、首帧 `retry: 2000`、`hello` 帧、`bump + flush` 后确实推了一帧且载荷 < 400 B、`?token=` 可达而 `/stats?token=` 仍 401、同端口连满 4 条后第 5 条 503、断开后能重连、`live` 分区（`turn.active` / `events.windowMs` / `tools.recent` 末条是刚调的工具）以及三条源码级边界（事件流头、`stats.onChange`、`stats.patch("live"`）。`verify_ui` 加了 `EventSource` 桩（`open/push/fail`）与 `loadInstance` 的 `onTimer` 钩子，断言订阅 URL、推送到达即回读、断线回落文案、400 ms 与 3 s 两种间隔、后台暂停且不排定时器、卸载时关连接、老宿主降级提示。**94/0 与 168/0 均实测通过。**
+
+**教训**：① 想缩短「看到数据」的延迟，先量链子而不是猜引擎 —— 本次实测事件中途一直在涨，瓶颈全在防抖落盘与固定轮询上；② 推送**只发信号不回传正文**，读路径保持唯一，否则立刻多出一条要同步维护的序列化面；③ 状态机里两处都写同一句 UI 文案，后写的会覆盖先写的 —— `schedule()` 的通用轮询文案吃掉 `onerror` 的回落文案就是这么红的，最后靠 `poll.fellBack` 让 schedule 自己带上原因（自检里那次「假 React 没刷新状态」的误判也记一笔：`setState` 是立即改 `h.value` 的，看不到就是自己覆盖了）；④ 新增显示组要用独立类名（`armor5-live-rows`），别蹭 `armor5-console-rows` —— 后者的「只读信息 ≥ 6 行」断言取的是第一个匹配节点。
+
+---
+
 ## v0.14.1
 
 **技术说明**

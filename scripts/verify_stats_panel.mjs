@@ -40,7 +40,7 @@ const { createStatsStore, emptyStats, statsFile, STATS_SCHEMA, STATS_PLUGIN } = 
 check(statsFile() === STATS_A, "IG5_STATS_FILE 覆盖数据库路径（自检不碰用户真实库）", statsFile());
 
 const skeleton = emptyStats("0.0.0");
-const skeletonKeys = ["schema", "plugin", "version", "generatedAt", "boot", "runtime", "tuning", "coverage", "tools", "tasks", "sessions", "counters"];
+const skeletonKeys = ["schema", "plugin", "version", "generatedAt", "boot", "runtime", "tuning", "coverage", "live", "tools", "tasks", "sessions", "counters"];
 check(
   skeletonKeys.every((key) => key in skeleton) && skeleton.schema === STATS_SCHEMA && skeleton.plugin === STATS_PLUGIN,
   "空库骨架键齐全且带 schema/plugin 标识",
@@ -232,10 +232,12 @@ function fakeSession(id) {
   return session;
 }
 
-function fakeReq(method, body, token) {
+function fakeReq(method, body, token, url) {
   const handlers = new Map();
   const req = {
     method,
+    // SSE 的鉴权走查询串（EventSource 带不了请求头），所以 url 必须能带上 token 被解析。
+    url: url ?? "/",
     headers: token ? { "x-ig5-token": token } : {},
     socket: { remoteAddress: "127.0.0.1" },
     destroyed: false,
@@ -243,6 +245,11 @@ function fakeReq(method, body, token) {
       const list = handlers.get(name) ?? [];
       list.push(fn);
       handlers.set(name, list);
+      return req;
+    },
+    /** 测试里手动触发 close/error，模拟浏览器关标签页或断线。 */
+    emit(name, ...args) {
+      for (const fn of handlers.get(name) ?? []) fn(...args);
       return req;
     },
     destroy() {
@@ -259,24 +266,48 @@ function fakeReq(method, body, token) {
 }
 
 function fakeRes() {
-  const out = { status: null, headers: null, body: null };
-  return {
+  const out = { status: null, headers: null, body: null, chunks: [], closed: false };
+  const handlers = new Map();
+  const res = {
     out,
     writeHead(status, headers) {
       out.status = status;
       out.headers = headers;
     },
+    /** SSE 长连接：每次 write 就是流里的一段（首帧 retry、data 帧、注释心跳都记下来）。 */
+    write(chunk) {
+      out.chunks.push(String(chunk));
+      return true;
+    },
     end(body) {
-      out.body = body;
+      if (body !== undefined) out.body = body;
+      out.closed = true;
+    },
+    on(name, fn) {
+      const list = handlers.get(name) ?? [];
+      list.push(fn);
+      handlers.set(name, list);
+      return res;
+    },
+    emit(name, ...args) {
+      for (const fn of handlers.get(name) ?? []) fn(...args);
+      return res;
     },
   };
+  return res;
 }
 
-const call = async (server, path, method, body, token) => {
+/** 从流里挑出 data 帧并解析（注释心跳 `: ping` 与首帧 retry 都会被跳过）。 */
+const sseFrames = (res) =>
+  res.out.chunks
+    .filter((chunk) => chunk.startsWith("data: "))
+    .map((chunk) => JSON.parse(chunk.slice(6).trim()));
+
+const call = async (server, path, method, body, token, url) => {
   const route = server.routes.get(path);
   if (!route) throw new Error(`没有注册路由 ${path}`);
   const res = fakeRes();
-  await route.handler(fakeReq(method, body, token), res);
+  await route.handler(fakeReq(method, body, token, url), res);
   let doc = null;
   try {
     doc = JSON.parse(res.out.body);
@@ -284,6 +315,16 @@ const call = async (server, path, method, body, token) => {
     doc = null;
   }
   return { status: res.out.status, doc, raw: res.out.body };
+};
+
+/** 打开一条 SSE 长连接：返回 {req,res}，测试里可以继续写库看它收到什么、再手动 close。 */
+const openStream = async (server, path, token, url) => {
+  const route = server.routes.get(path);
+  if (!route) throw new Error(`没有注册路由 ${path}`);
+  const res = fakeRes();
+  const req = fakeReq("GET", undefined, token, url ?? path);
+  await route.handler(req, res);
+  return { req, res };
 };
 
 const mount = mountPanel({ todos: null });
@@ -328,11 +369,12 @@ check(hitResult.ok === true && afterHit.coverage.hits?.web >= 1,
 check(missResult.ok === false && afterHit.coverage.misses >= 1,
   "未命中也记账（面板能显示 miss 次数）", String(afterHit.coverage.misses));
 
-// 三条路由 + 注入脚本
+// 四条路由 + 注入脚本
 check(mount.server.routes.has("/infinite-gen-5/tuning"), "注册了调参路由");
 check(mount.server.routes.has("/infinite-gen-5/stats"), "注册了统计库只读路由");
 check(mount.server.routes.has("/infinite-gen-5/tasks"), "注册了任务清单路由");
-check([...mount.server.routes.values()].every((route) => route.kind === "exact"), "三条路由都是精确匹配（不吞宿主的其它路径）");
+check(mount.server.routes.has("/infinite-gen-5/events"), "注册了统计库变更推送路由（SSE）");
+check([...mount.server.routes.values()].every((route) => route.kind === "exact"), "四条路由都是精确匹配（不吞宿主的其它路径）");
 const injected = mount.runtime.injects.join("\n");
 const win = {};
 new Function("window", injected)(win);
@@ -358,7 +400,9 @@ check(noToken.status === 401, "没带 token 读库 → 401", String(noToken.stat
 const badToken = await call(mount.server, "/infinite-gen-5/stats", "GET", undefined, "x".repeat(32));
 check(badToken.status === 401, "token 不对 → 401", String(badToken.status));
 
-// 读侧：GET /stats 是纯读
+// 读侧：GET /stats 是纯读。先把防抖窗口里攒着的改动冲干净，
+// 否则「读盘」与「后台 live 节拍恰好落盘」会在时间上撞车，把断言变成偶发。
+sink.flush(true);
 const beforeReadWrites = sink.writes;
 const beforeReadFile = readFileSync(STATS_A, "utf8");
 const readA = await call(mount.server, "/infinite-gen-5/stats", "GET", undefined, bridge.token);
@@ -369,6 +413,64 @@ const statsPost = await call(mount.server, "/infinite-gen-5/stats", "POST", { an
 check(statsPost.status === 405, "POST /stats → 405（读侧不接受写，写入口在别处）", String(statsPost.status));
 const tuningGet = await call(mount.server, "/infinite-gen-5/tuning", "GET", undefined, bridge.token);
 check(tuningGet.status === 200 && typeof tuningGet.doc.effective === "object", "老路径 GET /tuning 也读库（不现算）");
+
+// ── 推送（v0.15.0）：握手、鉴权口子、广播、上限、断开释放 ──
+check(bridge.eventsPath === "/infinite-gen-5/events", "注入的 __IG5_STATS__ 带上推送路径", String(bridge.eventsPath));
+const stream = await openStream(mount.server, "/infinite-gen-5/events", bridge.token);
+check(
+  stream.res.out.status === 200 &&
+    String(stream.res.out.headers["content-type"]).startsWith("text/event-stream") &&
+    stream.res.out.headers["cache-control"] === "no-store" &&
+    stream.res.out.headers["x-accel-buffering"] === "no",
+  "SSE 握手：200 + text/event-stream + no-store（顺手关掉中间层缓冲）",
+  JSON.stringify(stream.res.out.headers),
+);
+check(stream.res.out.chunks[0] === "retry: 2000\n\n", "首帧是 retry 指令（断线后浏览器 2s 自己回来）", JSON.stringify(stream.res.out.chunks[0]));
+const hello = sseFrames(stream.res)[0];
+check(
+  hello !== undefined && hello.type === "hello" && typeof hello.seq === "number" && hello.counts && typeof hello.counts.tools === "number",
+  "连上就发 hello 帧（带落盘序号与几个计数）",
+  JSON.stringify(hello),
+);
+// EventSource 不能带自定义请求头 → 推送路由必须认 ?token=，否则浏览器根本连不上
+const viaQuery = await openStream(mount.server, "/infinite-gen-5/events", undefined, `/infinite-gen-5/events?token=${bridge.token}`);
+check(viaQuery.res.out.status === 200, "推送路由接受 ?token=（EventSource 带不了请求头）", String(viaQuery.res.out.status));
+const badQuery = await openStream(mount.server, "/infinite-gen-5/events", undefined, "/infinite-gen-5/events?token=deadbeef");
+check(
+  badQuery.res.out.status === 401 && !String(badQuery.res.out.headers["content-type"] || "").includes("text/event-stream"),
+  "query token 不对 → 401（不放行、也不开流）",
+  String(badQuery.res.out.status),
+);
+// 口子只开在推送路由上：读侧仍旧只认请求头
+const statsViaQuery = await call(mount.server, "/infinite-gen-5/stats", "GET", undefined, undefined, `/infinite-gen-5/stats?token=${bridge.token}`);
+check(statsViaQuery.status === 401, "读侧不接受 ?token=（这个口子只开给推送路由）", String(statsViaQuery.status));
+
+// 库一变就广播：帧里只有信号，正文由面板回读 /stats（读路径永远只有一条）
+const framesBefore = sseFrames(stream.res).length;
+sink.bump("tools.total");
+sink.flush(true);
+const pushed = sseFrames(stream.res).at(-1);
+check(
+  sseFrames(stream.res).length > framesBefore && pushed !== undefined && pushed.type === "stats" &&
+    typeof pushed.seq === "number" && pushed.counts && typeof pushed.counts.tools === "number",
+  "落盘成功即广播 stats 帧（面板据此立刻回读，不必等 2s 轮询）",
+  JSON.stringify(pushed),
+);
+check(
+  pushed !== undefined && pushed.doc === undefined && JSON.stringify(pushed).length < 400,
+  "帧里只有序号与计数、没有整库正文（不然推送就变成了第二条读路径）",
+  String(pushed === undefined ? "" : JSON.stringify(pushed).length),
+);
+
+// 上限与释放：超了回 503 让面板回落轮询，断开后名额要还回来
+const extra = [];
+for (let i = 0; i < 3; i += 1) extra.push(await openStream(mount.server, "/infinite-gen-5/events", bridge.token));
+const overflow = await openStream(mount.server, "/infinite-gen-5/events", bridge.token);
+check(overflow.res.out.status === 503, "连接数到上限（4）→ 503（面板据此回落到轮询，不会傻等）", String(overflow.res.out.status));
+for (const { req } of [stream, ...extra]) req.emit("close");
+const afterClose = await openStream(mount.server, "/infinite-gen-5/events", bridge.token);
+check(afterClose.res.out.status === 200, "客户端断开后释放名额（刷新页面重连不会被上限挡在门外）", String(afterClose.res.out.status));
+afterClose.req.emit("close");
 
 // 工具调用计数：驱动真实 render
 const toolByName = (name) => mount.runtime.tools.find((tool) => tool.name === name);
@@ -407,6 +509,33 @@ check(sink.snapshot().sessions.events >= 2, "所有会话事件都计数（面�
 const mirroredAt = sink.snapshot().tasks.at;
 mount.emit("session/event", session, { type: "assistant/message", data: {} });
 check(sink.snapshot().tasks.at === mirroredAt, "非 todo 事件不重读投影（省掉每个事件白折一遍）");
+
+// live 分区（v0.15.0）：把「本轮还在不在跑」变成库里的字段，而不是让面板去猜最后一行日志。
+// live 由 1s 节拍 + 落盘回调发布，所以这里等一小会儿再看（否则测的是 apply 时的那一版快照）。
+await new Promise((resolve) => setTimeout(resolve, 700));
+const liveDoc = sink.snapshot().live;
+check(
+  liveDoc !== null && typeof liveDoc === "object" && liveDoc.turn && liveDoc.events && liveDoc.tools,
+  "库里已经有 live 分区（本轮状态 / 事件速率 / 最近工具）",
+  liveDoc === null ? "live=null" : "",
+);
+check(
+  liveDoc?.turn?.active === true && liveDoc?.turn?.lastKind === "assistant/message" &&
+    Number.isFinite(Date.parse(liveDoc?.turn?.startedAt ?? "")),
+  "刚来过事件 → live.turn.active 为真，并记下本轮起点与最后一个事件类型",
+  JSON.stringify(liveDoc?.turn),
+);
+check(
+  liveDoc?.events?.count >= 1 && liveDoc?.events?.perSecond >= 0 && liveDoc?.events?.windowMs === 30000,
+  "live.events = 最近 30s 窗口里的条数与速率",
+  JSON.stringify(liveDoc?.events),
+);
+check(
+  Array.isArray(liveDoc?.tools?.recent) && liveDoc.tools.recent.length >= 1 &&
+    liveDoc.tools.recent.at(-1).tool === "infinite_gen5_scenario",
+  "live.tools.recent 留下最近几次工具调用（面板的流水行）",
+  JSON.stringify(liveDoc?.tools),
+);
 
 // sessions.lastAt 的语义：是「这个会话最近一次被处理的时间」，而不是「最近一次换会话」（v0.13.10 修）
 await new Promise((resolve) => setTimeout(resolve, 5));
@@ -488,6 +617,12 @@ check(clientSrc.includes("__IG5_STATS__") && clientSrc.includes("statsBridge") &
   "面板读的是注入的统计库桥（不是插件内部结构）");
 check(clientSrc.includes("coverageGroup") && clientSrc.includes("db.coverage") && clientSrc.includes("armor5-cov-bar"),
   "面板新增「领域覆盖 · 词表 · 预算」显示组，画的都是库里 coverage 分区的数字");
+check(clientSrc.includes("EventSource") && clientSrc.includes("eventsPath") && clientSrc.includes("encodeURIComponent"),
+  "面板订阅统计库推送（EventSource + 查询串 token：EventSource 带不了自定义请求头）");
+check(indexSrc.includes("text/event-stream") && indexSrc.includes("stats.onChange") && indexSrc.includes('stats.patch("live"'),
+  "推送与 live 分区都由本体发布（面板不自己造数据）");
+check(indexSrc.includes("allowQueryToken") && /guardPanelRequest\(req, res, \{ allowQueryToken: true \}\)/.test(indexSrc),
+  "?token= 这个口子只开在推送路由上（其余读/写路由仍旧只认请求头）");
 check(!clientSrc.includes("56 域 × 7 族"),
   "面板不再硬编码领域数（改读统计库，域数 56 → 62 时面板自动跟上）");
 check(!/setInterval\s*\(/.test(clientSrc) && clientSrc.includes("setTimeout(tick"), "面板轮询用注入的定时器（自续 setTimeout），不碰全局 setInterval");
@@ -510,6 +645,6 @@ if (process.argv.includes("--json")) {
 } else {
   console.log(`无限五代 统计库与面板自检： ${passes.length} 通过 / ${failures.length} 失败`);
   for (const item of failures) console.log(`  ✗ ${item}`);
-  if (failures.length === 0) console.log(`  数据库 schema=${STATS_SCHEMA} · 路由 3 条 · 面板只读`);
+  if (failures.length === 0) console.log(`  数据库 schema=${STATS_SCHEMA} · 路由 4 条（其中 1 条 SSE 推送）· 面板只读`);
 }
 process.exit(failures.length === 0 ? 0 : 1);
