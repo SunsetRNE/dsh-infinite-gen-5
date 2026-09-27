@@ -523,6 +523,50 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
   ok("田字格样式写进源码（grid / tile / 跨列选择器）",
     CLIENT_SRC.includes(".dsh-armor5-grid") && CLIENT_SRC.includes(".dsh-armor5-tile") &&
     CLIENT_SRC.includes("[data-span='2']"));
+  // v0.17.2：样式表括号必须配平。一条漏了闭合的规则（v0.17.0 的 warning 徽标只写了
+  // background、没写 color 和右花括号）会让后面所有规则被浏览器当成 CSS 嵌套规则 ——
+  // chip / tile / 发丝线整块静默失效，卡片退化成灰字墙，而 DOM 断言与源码断言全都是绿的。
+  // 这条断言的是「样式表能被完整解析」本身，不依赖任何具体选择器。
+  const cssText = doc.__styles["dsh-armor5-css"] ? doc.__styles["dsh-armor5-css"].textContent : "";
+  const cssOpens = (cssText.match(/\{/g) || []).length;
+  const cssCloses = (cssText.match(/\}/g) || []).length;
+  ok("样式表括号配平（未闭合的规则会把后续规则静默变成嵌套规则）",
+    cssOpens > 20 && cssOpens === cssCloses, "{=" + cssOpens + " }=" + cssCloses);
+  // 配平还不够：**选择器规则里不能再套规则**。上面那条 bug 在浏览器里是合法 CSS
+  // （CSS Nesting），所以「能解析」不是判据；一旦某条选择器规则没闭合，后面的规则就会
+  // 变成它的嵌套子规则，只对最外层选择器的元素生效。@media / @supports 里套规则是正当的，
+  // 所以栈里只记「当前块是不是 at-rule」—— 父块不是 at-rule 还出现 `{`，就是错。
+  const cssStack = [];
+  let cssNested = 0;
+  let cssChunk = "";
+  for (const part of cssText.match(/[{}]|[^{}]+/g) || []) {
+    if (part === "{") {
+      const isAtRule = cssChunk.trim().startsWith("@");
+      if (cssStack.length > 0 && !cssStack[cssStack.length - 1]) cssNested += 1;
+      cssStack.push(isAtRule);
+      cssChunk = "";
+    } else if (part === "}") {
+      cssStack.pop();
+      cssChunk = "";
+    } else {
+      cssChunk = part;
+    }
+  }
+  ok("样式表没有「选择器规则套规则」（未闭合规则的典型症状）", cssNested === 0, "nested=" + cssNested);
+  ok("每档徽标规则都自带 color 与右花括号（warning 档曾漏写闭合）",
+    /\.dsh-armor5-badge\[data-tone=warning\]\{[^}]*color:[^}]*\}/.test(cssText) &&
+    /\.dsh-armor5-badge\[data-tone=error\]\{[^}]*color:[^}]*\}/.test(cssText) &&
+    /\.dsh-armor5-badge\[data-tone=success\]\{[^}]*color:[^}]*\}/.test(cssText),
+    cssText.slice(cssText.indexOf("[data-tone=warning]"), cssText.indexOf("[data-tone=warning]") + 130));
+  // v0.16.4 的版式锚点（分区发丝线 / 值列定宽）与 v0.16.5 的田字格必须同时在样式表里：
+  // 光有选择器不够，底色 / 圆角 / 留白缺一个，卡片就退回灰字墙。
+  ok("版式锚点齐全（田字格底色留白 / 两列栅格 / 分区发丝线 / chip 圆角）",
+    /\.dsh-armor5-tile\{[^}]*padding:7px 8px[^}]*border-radius:9px/.test(cssText) &&
+    cssText.includes(".dsh-armor5-grid{display:grid;grid-template-columns:1fr 1fr") &&
+    cssText.includes(".dsh-armor5-sec + .dsh-armor5-sec{") &&
+    cssText.includes("border-top:1px solid") &&
+    /\.dsh-armor5-chip\{[^}]*border-radius:6px/.test(cssText),
+    cssText.length + " 字符");
   // v0.16.1：浮层卡片自己也订一份统计库（与设置页那组同源），卡片没拿到桥时至少要有「信号 / 本轮」两行。
   ok("浮层卡片带「实时」行（卡片自己订阅统计库）",
     panelText.includes("信号") && panelText.includes("本轮"), panelText.slice(-160));

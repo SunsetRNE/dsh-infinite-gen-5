@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.17.1";
+        var VERSION = "v0.17.2";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -114,6 +114,10 @@
           ".dsh-armor5-badge[data-tone=success]{background:rgba(63,185,80,.16);",
           "color:var(--dsw-alias-state-success-primary,#3fb950)}",
           ".dsh-armor5-badge[data-tone=warning]{background:rgba(210,153,34,.16);",
+          // v0.17.2：这里原本漏了一行闭合（只写了 background、没写 color 与右花括号），
+          // 于是样式表从这条规则起「规则里套规则」—— 后面的 chip / tile / grid 全部变成
+          // 只有 warning 徽标才生效的嵌套规则，卡片整块排版静默失效。自检加括号配平断言。
+          "color:var(--dsw-alias-state-warning-primary,#d29922)}",
           ".dsh-armor5-badge[data-tone=error]{background:rgba(248,81,73,.16);",
           "color:var(--dsw-alias-state-error-primary,#f85149)}",
           // 分区：命中标记 / 风险载荷各自成块，用 chip 铺开 —— 长词表也比一行逗号好扫。
