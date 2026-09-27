@@ -1,4 +1,4 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.13.4
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.13.5
 
 <p align="center">
   <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
@@ -641,7 +641,10 @@ npm run release:pack -- --out=dist
 
 给历史 tag 补产物：Actions → release → Run workflow（填 tag），或 `gh workflow run release.yml -f tag=vX.Y.Z`。
 
-> 补产物的前提是**那个 tag 的树自己能在 runner 上跑过 `verify:all`**（v0.12.1 起都满足；更早的 tag 会卡在自检 —— 比如 v0.12.0 落在「自检脚本硬导宿主绝对路径」修好之前）。这种情况就在本地按该 tag 的树打包再传：`git worktree add --detach /tmp/wt vX.Y.Z` → 把 `scripts/package-release.mjs` 拷进去 → `node scripts/package-release.mjs --out=dist` → 用 REST `POST https://uploads.github.com/repos/<slug>/releases/<id>/assets?name=<文件名>` 传附件（v0.12.0 就是这么补的）。
+> 补产物的前提是**那个 tag 的树自己能在 runner 上跑过 `verify:all`**（v0.12.1 起都满足）。卡住的情况有两类，各有一条出路：
+>
+> - **树里还没有打包脚本**（更早的 tag）：dispatch 时 runner 自动从 `main` 借一份 `scripts/package-release.mjs`，被打的仍是该 tag 的树（v0.12.0 就是这么补的）。
+> - **树的自检夹具早于「确定性修复」**：夹具依赖 umask，同一棵树本地绿、runner 上必然红，直接 dispatch 会卡在自检那一步。两条出路：① 本地按该 tag 的树打包再传 —— `git worktree add --detach /tmp/wt vX.Y.Z` → 把 `scripts/package-release.mjs` 拷进去 → `node scripts/package-release.mjs --out=dist` → 用 REST `POST https://uploads.github.com/repos/<slug>/releases/<id>/assets?name=<文件名>` 传附件；② 仍走远端 —— dispatch 时勾上 **`skip_selfcheck`**，只跳那条已知为红的自检（打包器的解包复检照跑），Release 正文会自动挂一条「事后补发 · 自检为红」的标注，不让读者误以为这棵树在 CI 上是绿的。
 
 `scripts/version-targets.mjs` 是「当前版本锚点」的唯一真源（`index.js` 的 `PLUGIN_VERSION`、`client.js` 的 `VERSION`、`cordis.patch.yml` 头注释、README / HARNESS_PLUGIN 标题、两个 verify 脚本头注释），改写器与自检共用它。README 版本沿革、`package.json` description、`ENV_PROBE.md` 里「随插件 v0.8.0 引入」、以及生成物 `CHANGELOG.md` 这类**记录当时**的版本号刻意不改、只在 `PROSE_ALLOWED_FILES` 里登记放行 —— 发版改写它们等于篡改历史。`verify_version.mjs` 另外断言：文档里不出现比当前更新的版本号、全仓没有未登记的版本号字面量（新增文件里硬写版本号会被抓出来）。
 

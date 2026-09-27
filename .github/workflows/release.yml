@@ -3,6 +3,9 @@
 # 触发：① push 形如 v* 的 tag（日常发版走这条）；② 手动 workflow_dispatch 补某个已存在 tag 的产物。
 # 动作：先在 runner 上把 verify:all 跑一遍（不带病发布），再打包成可直接安装的归档 +
 #       SHA256SUMS + RELEASE-NOTES，然后上传到该 tag 的 GitHub Release（没有就先建）。
+# 老 tag 例外：树的夹具早于「确定性修复」时，自检在 runner 上必然红（本地却绿）。
+#       这种树补产物就勾 workflow_dispatch 的 skip_selfcheck —— 只跳那条红自检，
+#       打包器的解包复检照跑，Release 正文会挂一条「事后补发 · 自检为红」的标注。
 #
 # 产物说明（scripts/package-release.mjs，零依赖，本地同命令可复现：npm run release:pack）：
 #   dsh-infinite-gen-5-v<版本>.tar.gz   顶层目录 dsh-infinite-gen-5/，解开就能 ./install.sh
@@ -21,6 +24,11 @@ on:
         description: "要补产物的 tag（例如 vX.Y.Z）"
         required: true
         type: string
+      skip_selfcheck:
+        description: "补历史 tag 时跳过「全量自检」（仅当该 tag 树的夹具早于确定性修复、在 runner 上必然红时勾；打包内的解包复检仍会跑，Release 正文会挂补发标注）"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -54,9 +62,26 @@ jobs:
           fi
           echo "✓ 没有硬写宿主绝对路径的 import"
       - name: 全量自检（不带病发布）
+        if: ${{ !inputs.skip_selfcheck }}
         run: npm run verify:all
+      - name: 全量自检（历史 tag · 已知确定性缺陷，跳过但如实记录）
+        if: ${{ inputs.skip_selfcheck }}
+        run: |
+          set -euo pipefail
+          echo "::warning::skip_selfcheck=true —— 跳过全量自检：被打的是 ${{ github.event.inputs.tag }} 的树，其夹具早于确定性修复（runner 上必然红，与本轮改动无关）。"
+          npm run verify:all || echo "（自检为红，属该 tag 树的已知历史缺陷；打包器内置的解包复检仍会拦住漏打文件）"
       - name: 打包产物
         run: node scripts/package-release.mjs --out dist
+      - name: 补发时把「自检为红」写进发布正文
+        if: ${{ inputs.skip_selfcheck }}
+        run: |
+          set -euo pipefail
+          {
+            echo
+            echo "> ⚠️ **本版产物为事后补发**：该 tag 树的全量自检在 runner 上为红（夹具早于确定性修复，与代码本身无关），"
+            echo "> 因此这里只跑了打包器内置的**解包复检**（在包内执行 \`scripts/verify_version.mjs\`）。"
+            echo "> 产物内容 = 该 tag 的 git 跟踪文件原样，见 [${{ github.event.inputs.tag }} 补发流水线](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})。"
+          } >> dist/RELEASE-NOTES.md
       - name: 上传到 GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -65,7 +90,7 @@ jobs:
           set -euo pipefail
           gh release view "$TAG" >/dev/null 2>&1 || \
             gh release create "$TAG" --title "无限五代 $TAG" --notes-file dist/RELEASE-NOTES.md
-          files="dist/*.tar.gz dist/SHA256SUMS"
+          files="dist/*.tar.gz dist/SHA256SUMS dist/RELEASE-NOTES.md"
           for z in dist/*.zip; do [ -e "$z" ] && files="$files $z"; done
           gh release upload "$TAG" $files --clobber
           gh release view "$TAG" --json assets --jq '.assets[] | "\(.name)\t\(.size) B"'
