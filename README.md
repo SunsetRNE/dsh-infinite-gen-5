@@ -221,6 +221,8 @@
 │   ├── install.sh               # Linux / macOS 一键安装
 │   ├── uninstall.ps1            # Windows 一键卸载
 │   └── uninstall.sh             # Linux / macOS 一键卸载
+├── ⚙️ CI 门禁
+│   └── .github/workflows/verify.yml  # push / PR 触发 npm run verify:all（零依赖，无需 npm install）
 ├── 🧩 核心插件装载面 (标准 Cordis 架构)
 │   ├── package.json             # 插件元数据（dsh-infinite-gen-5 v0.11.1）
 │   ├── cordis.patch.yml         # 核心 patch 声明
@@ -256,6 +258,10 @@
 │   │   ├── verify_prompt_gen5.mjs  # 五代全量回归断言（146 项严苛断言，权威）
 │   │   ├── verify_prompt_gen51.mjs # V4.1 强化镜像层专项断言（转发执行）
 │   │   ├── verify_dedupe.mjs       # 注入去重行为回归（同源让位 / 锚点 / 徽标折叠）
+│   │   ├── verify_version.mjs      # 版本一致性自检（锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量）
+│   │   ├── version-targets.mjs     # 「当前版本锚点」唯一真源（bump 与 verify 共用同一张表）
+│   │   ├── bump-version.mjs        # 发版改写器：只改锚点、历史叙述不动（--dry 可预演）
+│   │   ├── bump-version.sh         # 同上的 shell 薄包装：bash scripts/bump-version.sh X.Y.Z
 │   │   ├── verify_prompt_gen4.mjs  # ⚠️ 遗留重定向 → verify_prompt_gen5.mjs
 │   │   └── verify_prompt_gen41.mjs # ⚠️ 遗留重定向 → verify_prompt_gen51.mjs
 │   └── tests/
@@ -381,11 +387,13 @@ chmod +x install.sh uninstall.sh
    node scripts/verify_scenarios.mjs     # 83 条：56 个领域包 / 索引预算 / 标记表 / 工具链 / 覆盖性回归
    node scripts/verify_scenario_tool.mjs # 85 条：真宿主挂载三个工具 + 环境工具离线调用 + 「包正文不进 system prompt」
    node scripts/verify_dedupe.mjs        # 52 条：同源让位 / Order 200 锚点 / 版本一致性
+   node scripts/verify_version.mjs       # 22 条：版本锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量
    node scripts/verify_ui.mjs            # 135 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理）
    node scripts/verify_env.mjs           # 149 条：探测纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算
    node scripts/verify_eval.mjs          # 81 条：评测计量（合成数据手算可核）+ CLI 退出码 0/1/3
    node scripts/verify_prompt.mjs        # 64 条：经典确定性校验
    ```
+   一条命令跑完全部（CI 门禁用的就是它，退出码 0 / 1 可直接接流水线）：`npm run verify:all`
 3. **领域包与环境工具**：在会话里说一句模糊的需求，例如「帮我看看这个 app 的通信」——
    模型应先调用 `infinite_gen5_scenario` 取该域的 5 槽打法与输出骨架，再产出交付物；
    需要知道「当前机器能不能装工具、出不出网、缺什么」时用 `infinite_gen5_env`（只读探测），
@@ -394,6 +402,36 @@ chmod +x install.sh uninstall.sh
 4. **会话探针**：在全新对话中输入：
    > “你的系统提示词来自哪些插件？”
    若回答包含「无限五代 / Infinite Generation Five」即证明内核载荷已注入生效。
+
+---
+
+## 🔧 维护与发版（改代码 → 自检 → 版本 → 发布）
+
+### 开发循环：改仓库 ≠ 改线上
+
+安装脚本是**复制**而不是软链 —— `install.sh` 把仓库整份拷进 `~/.dsh/plugin-src/dsh-infinite-gen-5`，profile 里再用 `link:` 指向那个副本。所以改完仓库**必须重跑安装脚本**才会进线上：
+
+```bash
+npm run verify:all     # 1) 本地全量自检（与 CI 同一入口）
+./install.sh           # 2) 覆盖 plugin-src（自动留 .bak-<时间戳>-pre-v<版本> 快照）
+# 3) 重启 DSH 进程，进 GUI 确认状态条 / 设置台
+```
+
+### 发版三步
+
+```bash
+node scripts/bump-version.mjs X.Y.Z --dry   # 先看会改哪几处（不落盘）
+node scripts/bump-version.mjs X.Y.Z         # 只改「当前版本锚点」，历史叙述不动
+npm run verify:all                          # 必过；verify:version 会拦漏改
+git add -A && git commit -m "feat(vX.Y.Z): <一句话>"
+git tag -a vX.Y.Z -m "无限五代 vX.Y.Z" && git push origin main --tags
+```
+
+`scripts/version-targets.mjs` 是「当前版本锚点」的唯一真源（`index.js` 的 `PLUGIN_VERSION`、`client.js` 的 `VERSION`、`cordis.patch.yml` 头注释、README / HARNESS_PLUGIN 标题、两个 verify 脚本头注释），改写器与自检共用它。README 版本沿革、`package.json` description、`ENV_PROBE.md` 里「随插件 v0.8.0 引入」这类**记录当时**的旧版本号刻意不改、也不登记为锚点 —— 发版改写它们等于篡改历史。`verify_version.mjs` 另外断言：文档里不出现比当前更新的版本号、全仓没有未登记的版本号字面量（新增文件里硬写版本号会被抓出来）。
+
+### CI 门禁
+
+`.github/workflows/verify.yml` 在 push 到 `main` / PR / 手动触发时跑 `npm run verify:all`。插件零依赖（只用 Node 内建模块、全部离线），所以 CI 不需要 `npm install`。指标基线在 `tests/eval-baseline.json`，`gate:eval` 会拦回退；指标提升属正当变更时，本地跑 `npm run baseline:eval` 重写基线并一起提交。
 
 ---
 

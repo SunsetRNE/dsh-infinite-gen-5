@@ -1,0 +1,27 @@
+# 无限五代 · 提交/PR 门禁
+#
+# 本插件是零依赖（只用 Node 内建模块），所有自检都离线、确定性、无需 API Key，
+# 因此 CI 不必 npm install —— checkout + 装 Node 就能把仓库里全部断言跑一遍。
+#
+# verify:all 聚合了：语法检查、版本一致性、内核全量回归（gen5/gen51）、注入去重、
+# 56 域数据层、真宿主领域工具挂载、状态条行为、环境探测、离线评测闭环 + 基线回归门禁。
+# 其中 gate:eval 会拿 tests/eval-baseline.json 拦指标回退；基线确有正当提升时，
+# 本地跑 npm run baseline:eval 重写并一起提交。
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 全量自检
+        run: npm run verify:all
