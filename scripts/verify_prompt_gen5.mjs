@@ -1,4 +1,4 @@
-// 无限五代 v0.7.1 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.8.0 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -77,6 +77,9 @@ for (const slot of ["ROLE", "OBJECT", "ACTION", "SCOPE", "SHAPE"]) {
   mustContain(prompt, slot, `五槽骨架: ${slot}`);
 }
 mustContain(prompt, "infinite_gen5_scenario", "指向领域包工具（56 域 × 7 族的全文按需取用）");
+mustContain(prompt, "infinite_gen5_env", "指向运行环境探测工具（v0.8.0）");
+mustContain(prompt, "Environment rule", "内核含「环境规则」一节（先探当前机器再动手）");
+mustContain(prompt, "read-only", "内核说明环境探测是只读的");
 mustContain(prompt, "Toolchain rule", "内核里有工具链规则（缺工具 → 装 → 验 → 跑）");
 mustContain(prompt, "apt install -y ghidra", "工具链规则配了可照抄的安装示例");
 mustContain(prompt, "56 domain playbooks", "点名覆盖声明为 56 个领域");
@@ -91,8 +94,8 @@ mustContain(prompt, "unlisted", "未列领域必须自拆自产而不是停下")
 // 载荷每轮都要付费，所以给它一个显式预算：涨价必须是有人主动改这个数字的结果。
 const payloadBytes = Buffer.byteLength(prompt, "utf8");
 check(
-  payloadBytes <= 6200,
-  "内核载荷 UTF-8 体积在预算内（<=6200 B）",
+  payloadBytes <= 6800,
+  "内核载荷 UTF-8 体积在预算内（<=6800 B）",
   `实得 ${payloadBytes} B —— 扩写请同步上调本预算并说明理由`,
 );
 

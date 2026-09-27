@@ -69,7 +69,8 @@ check(host.assembled.length > 1000, "system prompt 装配出内容", `${host.ass
 const toolNames = host.registeredTools.map((t) => t.name);
 check(toolNames.includes("infinite_gen5_profile"), "元数据工具已注册");
 check(toolNames.includes("infinite_gen5_scenario"), "领域打法工具已注册");
-check(host.registeredTools.length === 2, "只注册两个工具（不引入额外决策噪音）", JSON.stringify(toolNames));
+check(host.registeredTools.length === 3, "只注册三个工具（不引入额外决策噪音）", JSON.stringify(toolNames));
+check(toolNames.includes("infinite_gen5_env"), "环境探测工具已注册");
 
 const scenarioTool = host.registeredTools.find((t) => t.name === "infinite_gen5_scenario");
 const profileTool = host.registeredTools.find((t) => t.name === "infinite_gen5_profile");
@@ -91,6 +92,22 @@ check(profileTool?.deferLoading !== true, "元数据工具也不延迟加载");
 const immediate = host.registeredTools.filter((t) => t.deferLoading !== true).map((t) => t.name);
 check(immediate.includes("infinite_gen5_scenario"), "领域工具在模型的常规工具表里", JSON.stringify(immediate));
 check(immediate.includes("infinite_gen5_profile"), "元数据工具在模型的常规工具表里");
+check(immediate.includes("infinite_gen5_env"), "环境工具也在常规工具表里（延迟加载会让它变成死指针）");
+// 环境工具：常驻定义也要小，正文/探测全部按需产出。
+const envTool = host.registeredTools.find((t) => t.name === "infinite_gen5_env");
+check(envTool !== undefined, "取到环境工具定义");
+const envResidentBytes = Buffer.byteLength(JSON.stringify({ name: envTool?.name, description: envTool?.description, parameters: envTool?.parameters }), "utf8");
+check(envResidentBytes < 1500, "环境工具常驻定义 < 1.5 KB", `${envResidentBytes} B`);
+check(envTool?.parameters?.additionalProperties === false, "环境工具参数不允许额外字段");
+check(envTool?.parameters?.properties?.layers !== undefined, "环境工具接受 layers 参数");
+// 环境工具真的能跑：离线模式返回结构化报告（不做出网请求）。
+const envResult = await envTool.execute({ layers: "shape,resources", net: false, versions: false });
+check(envResult?.ok === true, "环境工具离线调用成功", JSON.stringify(envResult).slice(0, 120));
+check(typeof envResult?.summary === "string" && envResult.summary.length > 20, "环境工具返回可读摘要");
+check(typeof envResult?.shape?.platform === "string", "环境工具返回形态信息");
+check(Array.isArray(envResult?.notes), "环境工具返回备注数组");
+const badLayers = await envTool.execute({ layers: "nope" });
+check(badLayers?.ok === false && badLayers.reason === "bad-layers", "环境工具拒绝未知层并给出可用层", JSON.stringify(badLayers).slice(0, 120));
 // 常驻成本必须仍然很小：34 KB 包正文在 data/ 里，不在定义里。
 const residentBytes = Buffer.byteLength(JSON.stringify({ name: scenarioTool.name, description: scenarioTool.description, parameters: scenarioTool.parameters }), "utf8");
 check(residentBytes < 1200, "常驻定义体积 < 1.2 KB（包正文不在这里）", `${residentBytes} B`);

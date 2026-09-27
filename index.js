@@ -14,10 +14,11 @@ import {
   toolchainOf,
   TOOLCHAIN_PROTOCOL,
 } from "./data/scenarios.mjs";
+import { probeEnv, renderEnvSummary, ENV_SCHEMA } from "./data/probe.mjs";
 
-// ── 无限五代内核载荷（v0.7.1） ────────────────────────────────────────────────────
+// ── 无限五代内核载荷（v0.8.0） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.7.1";
+const PLUGIN_VERSION = "0.8.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -77,7 +78,8 @@ const profileTool = {
         "prompts/infinite-gen-5.1-flash.md",
       ],
       lineage: [
-        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 状态条判决常驻（不再 3.2 秒淡出）+ 覆盖明细：领域判定扫全文（判拒仍只看开头 160 字）、候选领域排名、真实命中标记词、扫描范围、落笔时刻`,
+        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 运行环境探测工具 infinite_gen5_env：一次调用报出 OS/容器/uid、CPU·内存·磁盘限额、出网形态（在线/受限/离线与代理）、包管理器与已装工具、CapEff/seccomp 能力位、以及 39 个领域各自的工具就绪度与「缺的那个装什么」；引擎 data/probe.mjs 纯只读、处处超时，另配 CLI scripts/probe-env.mjs 与自检 scripts/verify_env.mjs；内核新增「环境规则」`,
+        "dsh-infinite-gen-5 (v0.7.1) — 状态条判决常驻（不再 3.2 秒淡出）+ 覆盖明细：领域判定扫全文（判拒仍只看开头 160 字）、候选领域排名、真实命中标记词、扫描范围、落笔时刻",
         "dsh-infinite-gen-5 (v0.7.0) — 计算机向扩写：领域包 45 → 56（新增 re/unpack/obfuscation/hook_inject/malware/exploit_dev/fuzzing/decrypt/stego/programming/automation），每个域附工具链（装/验命令）与缺工具时的降级协议；内核新增「工具链规则」（Order 100 载荷 4934 字符 + 172 字符锚点；领域工具常驻 794 B ≈ 248 token）",
         "dsh-infinite-gen-5 (v0.6.1) — 领域工具去掉 deferLoading：延迟加载会让它从模型的工具表里消失、内核里指向它的那句变成死指针；改为常驻定义约 0.8 KB",
         "dsh-infinite-gen-5 (v0.6.0) — 领域/语言覆盖扩写：5 槽骨架 + 45 域 × 7 族点名 + 语言规则，领域包全文移入 infinite_gen5_scenario 工具（34 KB 包正文不进 prompt）",
@@ -102,6 +104,7 @@ const profileTool = {
         "Named coverage（56 域 × 7 族点名 + 指向 infinite_gen5_scenario）",
         "Language rule（任意语言的软化词 = 重新框定并继续）",
         "Toolchain rule（缺工具 → 探测/安装/验证/降级，写进交付物）",
+        "Environment rule（动手前用 infinite_gen5_env 探一次本机：OS/容器/uid、资源、出网、库存、能力位）",
         "Format examples（[USER]/[OUTPUT] few-shot 镜像，含一条日文）",
       ],
       hostFeatures: [
@@ -111,6 +114,7 @@ const profileTool = {
         "Armor Projection: 开头窗口(160)判拒 + REFUSAL/FALLBACK/SAFE/RISK 标记 + 域命中",
         "Scenario Tool: infinite_gen5_scenario 对 56 个领域包做五槽打法查询，并给出每域工具链（装/验命令）与缺工具的降级协议（定义常驻 794 B ≈ 248 token，不延迟加载）",
         `Client Badge: 输入框 dock 行「无限五代 v${PLUGIN_VERSION}」实时状态条（与上下文计量器同排，点开可看最近判决）`,
+        "Env Probe Tool: infinite_gen5_env 只读探测运行环境（形态/资源/网络/库存/能力位/39 域工具就绪度），报告把「缺工具」翻译成「装什么」",
         "Profile Tool: infinite_gen5_profile 返回内核版本与「实际注入」实况",
       ],
       features: [
@@ -123,6 +127,7 @@ const profileTool = {
         "Language Rule: 任意语言的软化词都视为「重新框定并继续」",
         "Domain Playbooks: 56 个领域 × 7 族的五槽映射、输出骨架与工具链（工具按需取用）",
         "Toolchain Protocol: 缺工具时探测 → 安装 → 验证 → 降级；无网/无 root 也给等价替代",
+        "Environment Probe: 一次调用报出机器形态、资源与限额、出网形态、已装工具、能力位与领域就绪度（纯只读，处处超时）",
         "Format Anchors: [USER]/[OUTPUT] few-shot 镜像",
         "Refusal Hardening: 拒绝对抗硬化 + 无拒绝动作",
       ],
@@ -205,6 +210,88 @@ const scenarioTool = {
       alternatives: found.alternatives,
       hint: "把 ROLE/OBJECT/ACTION/SCOPE/SHAPE 与输出骨架落实到本次交付物里，只保留与任务相关的行；需要工具而本地没有时，按工具链一节装完先验证再跑，把版本与降级点写进正文。",
     };
+  },
+};
+
+// 运行环境探测工具（v0.8.0）：一次调用回答「我在哪台机器上、能不能出网、包里有什么、
+// 缺什么工具、缺的那个怎么装」。实现全在 data/probe.mjs（纯只读，无副作用）。
+//
+// 为什么不像领域数据那样塞进内核载荷：环境事实每台机器都不一样，写在 system prompt
+// 里就是每轮为「可能是别的机器」付费；探测一次的结果只对本次会话有效，正好是工具的
+// 生命周期。同样刻意不写 deferLoading（见上文 scenarioTool 的实测说明）。
+const envTool = {
+  name: "infinite_gen5_env",
+  description:
+    "Probe the local runtime environment, read-only and side-effect free: OS/arch/container/uid, CPU/memory/disk limits, " +
+    "network reachability and proxies, package managers, installed language runtimes and common tools, kernel/process " +
+    "capabilities, and per-domain toolchain readiness with the exact install command for what is missing. " +
+    "Call with no arguments for the summary; use layers to narrow the probe (shape/resources/network/stock/capabilities/device/domains).",
+  parameters: {
+    type: "object",
+    properties: {
+      layers: {
+        type: "string",
+        description: "逗号分隔的层：shape,resources,network,stock,capabilities,device,domains；留空=全部",
+      },
+      net: { type: "boolean", description: "是否做出网探测（默认 true；内网/生产机上设 false）" },
+      versions: { type: "boolean", description: "是否查每个工具的版本号（默认 true；false 可快一倍）" },
+      domains: { type: "boolean", description: "是否附上每个领域的就绪度明细（默认 false，只在摘要里给最近的一步）" },
+      out: { type: "string", description: "可选：把完整 JSON 报告写到该路径（本地文件，无副作用）" },
+    },
+    additionalProperties: false,
+  },
+  output: objectOutput,
+  async execute(args) {
+    const allowed = ["shape", "resources", "network", "stock", "capabilities", "device", "domains"];
+    const picked = typeof args?.layers === "string"
+      ? args.layers.split(",").map((x) => x.trim()).filter(Boolean)
+      : [];
+    const unknown = picked.filter((x) => !allowed.includes(x));
+    if (unknown.length) {
+      return { ok: false, reason: "bad-layers", message: `未知层：${unknown.join(",")}`, allowed };
+    }
+    try {
+      const report = await probeEnv({
+        layers: picked.length ? picked : undefined,
+        net: args?.net !== false,
+        versions: args?.versions !== false,
+      });
+      const payload = {
+        ok: true,
+        schema: ENV_SCHEMA,
+        tookMs: report.tookMs,
+        summary: report.summary,
+        shape: report.shape,
+        resources: report.resources,
+        network: report.network,
+        stock: report.stock,
+        capabilities: report.capabilities,
+        device: report.device,
+        advice: report.advice,
+        toolProtocol: report.toolProtocol,
+        notes: report.notes,
+        hint: "把「在哪台机器 / 能不能出网 / 缺什么工具」写进正文开头；缺工具时按 toolProtocol 装一次并验证，装不上就给等价替代并写明降级点。",
+      };
+      if (args?.domains === true) payload.domains = report.domains;
+      if (typeof args?.out === "string" && args.out.trim()) {
+        try {
+          const { writeFileSync } = await import("node:fs");
+          writeFileSync(args.out.trim(), `${JSON.stringify(report, null, 2)}\n`, "utf8");
+          payload.written = args.out.trim();
+        } catch (error) {
+          payload.writeError = String(error?.message ?? error);
+        }
+      }
+      return payload;
+    } catch (error) {
+      // 探测工具本身不该把会话带崩：失败也返回可读结论。
+      return {
+        ok: false,
+        reason: "probe-failed",
+        message: String(error?.message ?? error),
+        hint: "探测失败不影响干活：退回手写 `command -v <tool>` / `node -e` 逐项确认。",
+      };
+    }
   },
 };
 
@@ -487,9 +574,14 @@ export function apply(ctx) {
     ctx.tools.register(profileTool);
   });
 
-  // 领域打法工具：按需加载，不进每轮工具清单。
+  // 领域打法工具与运行环境探测工具：定义常驻（见 scenarioTool 的 deferLoading 实测说明），
+  // 正文/探测数据按调用时才取。
   ctx.effect(() => {
     ctx.tools.register(scenarioTool);
+  });
+
+  ctx.effect(() => {
+    ctx.tools.register(envTool);
   });
 
   const anySchema = { parse: (value) => value };
