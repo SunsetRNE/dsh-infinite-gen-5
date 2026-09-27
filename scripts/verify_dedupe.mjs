@@ -1,4 +1,4 @@
-// 无限五代 v0.12.2 注入去重行为回归（离线、确定性、无需 API Key）
+// 无限五代 v0.12.3 注入去重行为回归（离线、确定性、无需 API Key）
 //
 // 针对的缺陷：v0.5.0 的 Order 100 与 Order 200 载入的是逐字同源的两个文件，
 // 于是同一份 3010 字节内核每轮被注入两遍；与同机在线的上一代破甲插件叠加时
@@ -18,6 +18,9 @@ function check(ok, label, detail = "") {
 }
 
 const plugin = await import(new URL("../index.js", import.meta.url).href);
+const { IG5_CONFIG } = plugin;
+// 节拍默认值从 IG5_CONFIG 读：调默认档不必回来改断言。
+const EVERY_STEPS = IG5_CONFIG.RUNTIME_ANCHOR_EVERY;
 
 const PRIMARY = "infinite-gen-5:global-system-prompt";
 const LAYER2 = "infinite-gen-5:dual-layer-reinforce";
@@ -112,11 +115,16 @@ const chars = (rows) => rows.map((r) => r.text.length);
   check(typeof ctxSpec.text === "function", "运行时锚点文本是惰性函数（宿主每步取一次）");
   if (typeof ctxSpec.text === "function") {
     const first = ctxSpec.text();
-    const sticky = [ctxSpec.text(), ctxSpec.text(), ctxSpec.text(), ctxSpec.text()];
+    // first 之后到换文本之前还剩 N-2 次调用；第 N 次调用换文本。
+    const sticky = Array.from({ length: Math.max(0, EVERY_STEPS - 2) }, () => ctxSpec.text());
     const rotated = ctxSpec.text();
-    check(sticky.every((t) => t === first), "节拍未到时文本保持不变（快照不重发）");
-    check(rotated !== first, "第 6 步换文本，触发宿主重发快照");
-    check(/R#1\b/.test(first) && /R#6\b/.test(rotated), "锚点文本带递增序号", `${first.slice(0, 24)} … ${rotated.slice(0, 24)}`);
+    check(sticky.every((t) => t === first), `节拍未到时文本保持不变（快照不重发，默认 N=${EVERY_STEPS}）`);
+    check(rotated !== first, `第 ${EVERY_STEPS} 步换文本，触发宿主重发快照`);
+    check(
+      /R#1\b/.test(first) && new RegExp(`R#${EVERY_STEPS}\\b`).test(rotated),
+      "锚点文本带递增序号",
+      `${first.slice(0, 24)} … ${rotated.slice(0, 24)}`,
+    );
   }
   check(r.profile?.injection?.length === 3, "profile 工具汇报实际注入 3 段");
   check(
@@ -137,7 +145,10 @@ const chars = (rows) => rows.map((r) => r.text.length);
   );
   check(r.profile?.layer2Mode === "anchor", "profile 汇报 Order 200 模式为 anchor");
   check(r.profile?.injectionStrength?.tail?.mode === "waterfall", "profile 汇报末位锚点为瀑布模式");
-  check(r.profile?.injectionStrength?.runtimeAnchor?.everySteps === 6, "profile 汇报运行时锚点节拍为 6 步");
+  check(
+    r.profile?.injectionStrength?.runtimeAnchor?.everySteps === EVERY_STEPS,
+    `profile 汇报运行时锚点节拍为 ${EVERY_STEPS} 步`,
+  );
   check(r.profile?.injectionStrength?.exclusive === false, "默认不开独占内核");
 }
 
@@ -227,7 +238,11 @@ const chars = (rows) => rows.map((r) => r.text.length);
   check(/TAIL_MODE\s*=\s*"waterfall"/.test(src), "index.js 默认末位锚点走 assemble 瀑布");
   check(/TAIL_ORDER\s*=\s*10150/.test(src), "末位锚点退化为 order 10150");
   check(/RUNTIME_ANCHOR_MODE\s*=\s*"cadence"/.test(src), "index.js 默认运行时锚点走节拍模式");
-  check(/RUNTIME_ANCHOR_EVERY\s*=\s*6/.test(src), "运行时锚点默认每 6 步重述");
+  check(
+    new RegExp(`RUNTIME_ANCHOR_EVERY\\s*=\\s*${EVERY_STEPS}\\b`).test(src),
+    `运行时锚点默认每 ${EVERY_STEPS} 步重述`,
+  );
+  check(/RUNTIME_ANCHOR_EVERY\s*=\s*4\b/.test(src), "默认节拍经实测调参定为 4 步（更贴合长任务的重述节奏）");
   check(/RUNTIME_ANCHOR_ORDER\s*=\s*118/.test(src), "运行时锚点排在 115 审批策略之后");
   check(/EXCLUSIVE_SECTION\s*=\s*false/.test(src), "独占内核默认关闭");
   check(/export const IG5_CONFIG = \{/.test(src), "自检接缝 IG5_CONFIG 已导出");

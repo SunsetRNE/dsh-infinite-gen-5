@@ -18,7 +18,7 @@ import { probeEnv, renderEnvSummary, ENV_SCHEMA } from "./data/probe.mjs";
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.12.2";
+const PLUGIN_VERSION = "0.12.3";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -80,7 +80,7 @@ const TAIL_ANCHOR_TEXT =
 //   "every"           = 每步换文本（最强；代价是每步多一个可见的运行时上下文块）
 //   "off"             = 不注册运行时锚点
 const RUNTIME_ANCHOR_MODE = "cadence";
-const RUNTIME_ANCHOR_EVERY = 6;
+const RUNTIME_ANCHOR_EVERY = 4;
 const RUNTIME_ANCHOR_ORDER = 118; // 宿主现有：110 沙箱 / 115 审批 / 120 子代理委派
 const RUNTIME_ANCHOR_SECTION = "infinite-gen-5:runtime-anchor";
 const runtimeAnchorText = (rev) =>
@@ -94,6 +94,68 @@ const runtimeAnchorText = (rev) =>
 // 只留内核一份（末位锚点此时并入内核文本）。代价是设备协议、沙箱策略、工具用法说明、
 // 宿主身份段一并消失，属于自担风险的实验档，默认关闭。
 const EXCLUSIVE_SECTION = false;
+
+// 运行期调参（v0.12.3）：这六个开关不必改代码重发布就能试档位。
+//   优先级：apply(ctx, config) 的 profile config > IG5_* 环境变量 > 文件内默认值。
+//   环境变量：IG5_LAYER2_MODE / IG5_DEDUPE_PAYLOAD / IG5_TAIL_MODE /
+//             IG5_RUNTIME_ANCHOR_MODE / IG5_RUNTIME_ANCHOR_EVERY / IG5_EXCLUSIVE_SECTION
+//   管理器式安装最顺手的用法是 profile 的 cordis.patch.yml 里加一条**只带 config** 的定向覆盖
+//   （没有 insert，因此不算双接线）：
+//     - id: dsh-infinite-gen-5
+//       config:
+//         RUNTIME_ANCHOR_EVERY: 2
+//         EXCLUSIVE_SECTION: true
+const TUNABLE_KEYS = [
+  "LAYER2_MODE",
+  "DEDUPE_PAYLOAD",
+  "TAIL_MODE",
+  "RUNTIME_ANCHOR_MODE",
+  "RUNTIME_ANCHOR_EVERY",
+  "EXCLUSIVE_SECTION",
+];
+const ENV_OF_KEY = {
+  LAYER2_MODE: "IG5_LAYER2_MODE",
+  DEDUPE_PAYLOAD: "IG5_DEDUPE_PAYLOAD",
+  TAIL_MODE: "IG5_TAIL_MODE",
+  RUNTIME_ANCHOR_MODE: "IG5_RUNTIME_ANCHOR_MODE",
+  RUNTIME_ANCHOR_EVERY: "IG5_RUNTIME_ANCHOR_EVERY",
+  EXCLUSIVE_SECTION: "IG5_EXCLUSIVE_SECTION",
+};
+// 只有真布尔键走 true/false 转换；档位键（LAYER2_MODE / TAIL_MODE / RUNTIME_ANCHOR_MODE）
+// 的 "off"/"order"/"waterfall" 是字符串取值，不能被布尔化，否则 off 档会静默失效。
+const BOOL_KEYS = new Set(["DEDUPE_PAYLOAD", "EXCLUSIVE_SECTION"]);
+const coerce = (key, raw) => {
+  if (typeof raw === "boolean" || typeof raw === "number") return raw;
+  const s = String(raw).trim();
+  if (BOOL_KEYS.has(key)) {
+    if (s === "true" || s === "on" || s === "1") return true;
+    if (s === "false" || s === "off" || s === "0") return false;
+    return Boolean(s);
+  }
+  if (key === "RUNTIME_ANCHOR_EVERY") {
+    const n = Number(s);
+    if (Number.isFinite(n) && n > 0) return Math.floor(n);
+    return raw;
+  }
+  return s;
+};
+// 就地写回 IG5_CONFIG：profile 工具读的就是它，实况报告因此天然等于生效值。
+const applyOverrides = (config) => {
+  const applied = [];
+  for (const key of TUNABLE_KEYS) {
+    const envKey = ENV_OF_KEY[key];
+    const rawEnv = envKey ? process.env[envKey] : undefined;
+    if (rawEnv !== undefined && rawEnv !== "") {
+      IG5_CONFIG[key] = coerce(key, rawEnv);
+      applied.push(`${key}=${IG5_CONFIG[key]}（env ${envKey}）`);
+    }
+    if (config && typeof config === "object" && config[key] !== undefined) {
+      IG5_CONFIG[key] = coerce(key, config[key]);
+      applied.push(`${key}=${IG5_CONFIG[key]}（profile config）`);
+    }
+  }
+  return applied;
+};
 
 // 注入配置的唯一读取口：apply() 一律从这里取值，自检因此可以直接改它来驱动各档行为。
 export const IG5_CONFIG = {
@@ -111,6 +173,7 @@ const runtime = {
   skipped: [],
   placements: [],
   anchorEmissions: 0,
+  overrides: [],
   role: "unknown",
 };
 
@@ -141,7 +204,8 @@ const profileTool = {
         "prompts/infinite-gen-5.1-flash.md",
       ],
       lineage: [
-        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 注入强度三件套：真末位锚点（system-prompt/assemble 瀑布末端追加，排在宿主 10200 人格后缀之后，恒为最后一段）+ 运行时锚点（order 118 运行时上下文快照，每 6 步换文本重发，坐落在每步最后一条 user 消息里）+ 可选独占内核（complete，实验档）；profile 工具新增 injectionStrength；新增 verify_injection 真实宿主装配自检`,
+        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 运行期调参：六个注入开关（LAYER2_MODE / DEDUPE_PAYLOAD / TAIL_MODE / RUNTIME_ANCHOR_MODE / RUNTIME_ANCHOR_EVERY / EXCLUSIVE_SECTION）不再写死在代码里 —— apply(ctx, config) 的 profile config > IG5_* 环境变量 > 文件内默认，三级覆盖就地写回 IG5_CONFIG，profile 工具新增 configOverrides 如实汇报「这个值是谁给的」；管理器式安装只要在 profile 的 cordis.patch.yml 里加一条只带 config 的定向覆盖（没有 insert，因此不算双接线）。默认运行时锚点节拍 6 → 4 步（长任务里重述更跟得上）；自检改成从 IG5_CONFIG 读默认档，以后调默认值不必回头改断言。verify_injection 34 → 41（真实宿主上验证 profile config / 环境变量 / 用完还原），verify_dedupe 81 → 82`,
+        `dsh-infinite-gen-5 (v0.12.0) — 注入强度三件套：真末位锚点（system-prompt/assemble 瀑布末端追加，排在宿主 10200 人格后缀之后，恒为最后一段）+ 运行时锚点（order 118 运行时上下文快照，每 6 步换文本重发，坐落在每步最后一条 user 消息里）+ 可选独占内核（complete，实验档）；profile 工具新增 injectionStrength；新增 verify_injection 真实宿主装配自检`,
         `dsh-infinite-gen-5 (v0.11.1) — 设置台入口归位与比例精修：设置页入口从最顶部（order -100）挪到官方「插件」之后（order 16，nav 变成 账户 -10 / 通用 0 / 模型 10 / 插件 15 / 无限五代 16）—— 附着在同类功能旁边，不再抢占视线；同一页重做比例：限宽 560px、形态四档两列网格、挂载位置三列、预览换成带「空闲 / 执行中 / 判决」标签的内嵌面板、只读信息两栏对齐、按钮统一 30px 高（「完成」用宿主主按钮样式）；verify_ui 135 项`,
         `dsh-infinite-gen-5 (v0.11.0) — 工具调用卫生：内核新增 Tool-call rule —— 一轮一个工具、参数短而平（禁裸换行 / 未转义引号 / 单次塞整份文件正文）、长输出按行范围分段小写、坏 JSON 或空包视为重试信号改小重发；针对反复出现的 DeepSeek Messages stream: tool input is invalid JSON；内核 6393 → 6789 B（预算仍 ≤6800 B）`,
         `dsh-infinite-gen-5 (v0.10.0) — 客户端设置台：设置页最顶部注册一个「无限五代」入口（settings.section，order -100，排在官方 general/models 之前），点开就是插件自己的独立页面 —— 形态四档（glyph/compact/full/dot）、挂载位置三档（输入框 dock / 会话标题栏 / 输入区）、可选的侧栏入口（main 面板 + sidebar.panellist 图标，与官方「插件」面板同款），全部即时生效并写进 localStorage（dsh-infinite-gen-5:prefs，刷新后还在）；设置页与状态条共用同一个偏好源，页面里改什么状态条当场变`,
@@ -187,6 +251,7 @@ const profileTool = {
                 placement: "运行时上下文快照 —— 每步最后一条 user 消息（宿主 supersedes 语义）",
               },
       },
+      configOverrides: runtime.overrides,
       layer2Mode: IG5_CONFIG.LAYER2_MODE,
       dualLayer: DUAL_LAYER_INJECTION,
       dedupe: {
@@ -211,8 +276,8 @@ const profileTool = {
         "Single-Kernel Injection: Order 100 通用内核单份注入",
         "Tail Anchor: Order 200 中段锚点（LAYER2_MODE 可切 mirror/off）",
         "True-Tail Anchor: system-prompt/assemble 瀑布末端追加（TAIL_MODE=waterfall，排在 10200 人格后缀之后，恒为最后一段）",
-        "Runtime-Context Anchor: order 118 运行时上下文快照，每 N 步换文本重发一次（每步最后一条 user 消息）",
-        "Exclusive Kernel: EXCLUSIVE_SECTION=true 时内核 complete，宿主其余系统段全部让位（实验档，默认关）",
+        "Runtime-Context Anchor: order 118 运行时上下文快照，每 N 步换文本重发一次（每步最后一条 user 消息；默认 N=4，可用 IG5_RUNTIME_ANCHOR_EVERY 或 profile config 调）",
+        "Exclusive Kernel: EXCLUSIVE_SECTION=true 时内核 complete，宿主其余系统段全部让位（实验档，默认关；可用 IG5_EXCLUSIVE_SECTION=1 或 profile config 临时开）",
         "Same-Kernel Dedupe: 宿主已有同源载荷时整段让位，避免重复注入",
         "Armor Projection: 开头窗口(160)判拒 + REFUSAL/FALLBACK/SAFE/RISK 标记 + 域命中",
         "Scenario Tool: infinite_gen5_scenario 对 56 个领域包做五槽打法查询，并给出每域工具链（装/验命令）与缺工具的降级协议（定义常驻 794 B ≈ 248 token，不延迟加载）",
@@ -613,7 +678,7 @@ const KIND_TEXT = {
 export const name = "dsh-infinite-gen-5";
 export const inject = ["tools", "systemPrompt"];
 
-export function apply(ctx) {
+export function apply(ctx, config) {
   const PRIMARY = "infinite-gen-5:global-system-prompt";
   const LAYER2 = "infinite-gen-5:dual-layer-reinforce";
   const ownNames = new Set([PRIMARY, LAYER2, TAIL_SECTION, RUNTIME_ANCHOR_SECTION]);
@@ -625,6 +690,7 @@ export function apply(ctx) {
   runtime.skipped = [];
   runtime.placements = [];
   runtime.anchorEmissions = 0;
+  runtime.overrides = applyOverrides(config);
   runtime.role = "unknown";
 
   const recordPlacement = (row) => {

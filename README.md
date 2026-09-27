@@ -1,4 +1,4 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.12.2
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.12.3
 
 <p align="center">
   <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
@@ -223,15 +223,43 @@ v0.12.0 起把载荷铺到四处，越靠后权威度越高：
 | `order 100` | `systemPrompt.section()` | 常开 | 通用内核（5600+ 字符），载荷本体 |
 | `order 200` | `systemPrompt.section()` | `LAYER2_MODE = "anchor"` | 中段锚点（约 200 字节），途中复述一次 |
 | `order 10150` | `system-prompt/assemble` **瀑布末端** | `TAIL_MODE = "waterfall"` | 真末位锚点：追加到装配结果数组最后一项，排在 `10200` 人格后缀之后，恒为整份系统提示的最后一段；不占 section 命名空间 |
-| `order 118` | `systemPrompt.context()` **运行时槽** | `RUNTIME_ANCHOR_MODE = "cadence"` | 运行时锚点：随运行时上下文快照发在**每步最后一条 user 消息**里（快照头写明取代早前快照）。宿主只在文本变化时重发，所以「每 6 步换一次文本」= 每 6 步重述一次 |
+| `order 118` | `systemPrompt.context()` **运行时槽** | `RUNTIME_ANCHOR_MODE = "cadence"` | 运行时锚点：随运行时上下文快照发在**每步最后一条 user 消息**里（快照头写明取代早前快照）。宿主只在文本变化时重发，所以「每 4 步换一次文本」= 每 4 步重述一次（默认 N=4，可调） |
 
 ```js
 // index.js 顶部 IG5_CONFIG —— 唯一的注入档位开关（改完重启 session 生效）
 TAIL_MODE: "waterfall"      // "waterfall" | "order"（降级为普通段）| "off"
-RUNTIME_ANCHOR_MODE: "cadence"  // "cadence"（每 6 步）| "once" | "every" | "off"
-RUNTIME_ANCHOR_EVERY: 6
+RUNTIME_ANCHOR_MODE: "cadence"  // "cadence"（每 RUNTIME_ANCHOR_EVERY 步）| "once" | "every" | "off"
+RUNTIME_ANCHOR_EVERY: 4      // 节拍：默认 4 步重述一次
 EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系统段全部让位（实验档）
 ```
+
+#### 运行期调参：六个开关不必改代码重发布
+
+优先级 **profile config > `IG5_*` 环境变量 > 文件内默认值**，三级覆盖就地写回 `IG5_CONFIG`，
+`infinite_gen5_profile` 工具新增 `configOverrides`，如实汇报每个生效值是哪来的。
+
+| 开关 | 环境变量 | 取值 |
+|---|---|---|
+| `LAYER2_MODE` | `IG5_LAYER2_MODE` | `anchor` / `mirror` / `off` |
+| `DEDUPE_PAYLOAD` | `IG5_DEDUPE_PAYLOAD` | `true` / `false` |
+| `TAIL_MODE` | `IG5_TAIL_MODE` | `waterfall` / `order` / `off` |
+| `RUNTIME_ANCHOR_MODE` | `IG5_RUNTIME_ANCHOR_MODE` | `cadence` / `once` / `every` / `off` |
+| `RUNTIME_ANCHOR_EVERY` | `IG5_RUNTIME_ANCHOR_EVERY` | 正整数（默认 4） |
+| `EXCLUSIVE_SECTION` | `IG5_EXCLUSIVE_SECTION` | `true` / `false` |
+
+管理器式安装下试档位最省事：profile 的 `cordis.patch.yml` 里加一条**只带 `config`、不带 `insert`**
+的定向覆盖（不带 insert 就不算双接线，`verify:install` 仍报「单一接线入口」）：
+
+```yaml
+- id: dsh-infinite-gen-5
+  config:
+    RUNTIME_ANCHOR_EVERY: 2
+    EXCLUSIVE_SECTION: true
+```
+
+临时试一次也可以用环境变量（只影响这一次进程）：`IG5_EXCLUSIVE_SECTION=1 dsh web …`。
+注意档位键（`LAYER2_MODE` / `TAIL_MODE` / `RUNTIME_ANCHOR_MODE`）的取值是**字符串**：
+`"off"` 不会被当成布尔 `false` —— 自检专门锁了这条，否则 off 档会静默失效。
 
 两条安全边界：**让位就整体让位** —— 内核因同源去重让位时，真末位锚点与运行时锚点也不再单独挂上，
 否则模型手里只剩半个载荷；**独占档不丢锚点** —— `complete` 模式下宿主会在瀑布之后把 sections 裁成
@@ -424,7 +452,7 @@ chmod +x install.sh uninstall.sh
    node scripts/verify_scenarios.mjs     # 83 条：56 个领域包 / 索引预算 / 标记表 / 工具链 / 覆盖性回归
    node scripts/verify_scenario_tool.mjs # 85 条：真宿主挂载三个工具 + 环境工具离线调用 + 「包正文不进 system prompt」
    node scripts/verify_dedupe.mjs        # 81 条：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本一致性
-   node scripts/verify_injection.mjs     # 34 条：真实宿主演习台 —— 装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级（无宿主时 SKIP）
+   node scripts/verify_injection.mjs     # 41 条：真实宿主演习台 —— 装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级（无宿主时 SKIP）
    node scripts/verify_version.mjs       # 22 条：版本锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量
    node scripts/verify_install.mjs       # 10 条：盘上三处版本一致 / profile 接线 / 进程是否比副本更旧（缺 ~/.dsh 时 SKIP）
    node scripts/verify_ui.mjs            # 135 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理）

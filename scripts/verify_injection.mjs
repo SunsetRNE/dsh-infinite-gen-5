@@ -98,7 +98,7 @@ async function rig({ config = {}, hostSections = null } = {}) {
   }
   restore();
   Object.assign(IG5_CONFIG, config);
-  plugin.apply(app);
+  plugin.apply(app, config);
   const assemble = () => sp.assemble({ agent: {}, scope: {} });
   // profile 是运行期快照：必须等装配完再读，否则拿到的是注册那一瞬间的实况。
   const profile = () => tools.find((tool) => tool.name === "infinite_gen5_profile")?.execute();
@@ -162,17 +162,26 @@ const last = (arr) => arr[arr.length - 1];
   check(profile?.injectionStrength?.runtimeAnchor?.emissions === 1, "首轮装配发出 1 个运行时锚点版本", String(profile?.injectionStrength?.runtimeAnchor?.emissions));
 }
 
-// ---- 2. 节拍：文本不变则快照不重发，第 6 步换文本 ----
+// ---- 2. 节拍：文本不变则快照不重发，第 N 步换文本（N 从默认档读出，调默认值不必改断言）----
 {
+  const every = IG5_CONFIG.RUNTIME_ANCHOR_EVERY;
   const r = await rig();
   const texts = [];
-  for (let step = 1; step <= 6; step += 1) {
+  for (let step = 1; step <= every; step += 1) {
     const assembly = await r.assemble();
     texts.push(assembly.contexts.find((c) => c.name === RUNTIME)?.text ?? "");
   }
-  check(texts.slice(0, 5).every((t) => t === texts[0]), "前 5 步上下文文本保持不变（不会每步刷屏）");
-  check(texts[5] !== texts[0], "第 6 步换文本，触发宿主重发快照");
-  check(/R#1\b/.test(texts[0]) && /R#6\b/.test(texts[5]), "序号随节拍递增", `${texts[0].slice(0, 20)} … ${texts[5].slice(0, 20)}`);
+  check(
+    texts.slice(0, every - 1).every((t) => t === texts[0]),
+    `前 ${every - 1} 步上下文文本保持不变（不会每步刷屏）`,
+    `N=${every}`,
+  );
+  check(texts[every - 1] !== texts[0], `第 ${every} 步换文本，触发宿主重发快照`);
+  check(
+    /R#1\b/.test(texts[0]) && new RegExp(`R#${every}\\b`).test(texts[every - 1]),
+    "序号随节拍递增",
+    `${texts[0].slice(0, 20)} … ${texts[every - 1].slice(0, 20)}`,
+  );
   check(r.profile()?.injectionStrength?.runtimeAnchor?.emissions === 2, "profile 汇报本轮共发出 2 个版本", String(r.profile()?.injectionStrength?.runtimeAnchor?.emissions));
 }
 
@@ -231,6 +240,46 @@ const last = (arr) => arr[arr.length - 1];
     "降级路径上工具照常注册",
     JSON.stringify(tools.map((t) => t.name)),
   );
+}
+
+// ---- 7. 运行期调参：profile config 与 IG5_* 环境变量都能改生效档位（不必改代码重发布）----
+{
+  const r = await rig({ config: { RUNTIME_ANCHOR_EVERY: 2 } });
+  check(
+    r.profile()?.injectionStrength?.runtimeAnchor?.everySteps === 2,
+    "profile config 改了运行时锚点节拍",
+    String(r.profile()?.injectionStrength?.runtimeAnchor?.everySteps),
+  );
+  check(
+    (r.profile()?.configOverrides ?? []).some((s) => s.startsWith("RUNTIME_ANCHOR_EVERY=2")),
+    "profile 汇报覆盖来源（profile config）",
+    JSON.stringify(r.profile()?.configOverrides),
+  );
+  const texts = [];
+  for (let step = 1; step <= 3; step += 1) {
+    const assembly = await r.assemble();
+    texts.push(assembly.contexts.find((c) => c.name === RUNTIME)?.text ?? "");
+  }
+  const firstChange = texts.findIndex((t, i) => i > 0 && t !== texts[i - 1]);
+  check(firstChange > 0 && firstChange <= 2, "节拍确实按 N=2 生效（默认 N=6 时前 5 步不变）", `首次换文本发生在第 ${firstChange + 1} 步`);
+
+  process.env.IG5_RUNTIME_ANCHOR_MODE = "off";
+  try {
+    const r2 = await rig();
+    const a2 = await r2.assemble();
+    check(!a2.contexts.some((c) => c.name === RUNTIME), "环境变量 IG5_RUNTIME_ANCHOR_MODE=off 生效");
+    check(
+      (r2.profile()?.configOverrides ?? []).some((s) => s.includes("env IG5_RUNTIME_ANCHOR_MODE")),
+      "profile 汇报覆盖来源（环境变量）",
+      JSON.stringify(r2.profile()?.configOverrides),
+    );
+  } finally {
+    delete process.env.IG5_RUNTIME_ANCHOR_MODE;
+  }
+  restore();
+  const r3 = await rig();
+  check(r3.profile()?.injectionStrength?.runtimeAnchor?.mode === "cadence", "去掉覆盖后回到默认档");
+  check((r3.profile()?.configOverrides ?? []).length === 0, "没有覆盖时不虚报来源", JSON.stringify(r3.profile()?.configOverrides));
 }
 
 const total = passes.length + failures.length;
