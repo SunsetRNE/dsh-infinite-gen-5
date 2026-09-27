@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 无限五代 · 客户端半体行为自检（v0.5.2）
+ * 无限五代 · 客户端半体行为自检（v0.6.0）
  *
  * 不依赖 react / jsdom / 浏览器：自己实现一套最小 hook 运行时 + 最小 DOM，
  * 把 client.js 真正挂起来跑，然后对渲染出的元素树做断言。
@@ -475,7 +475,7 @@ function previewPage({ theme, pluginCss, stateRows, panelHtml, dark }) {
   <div class="card">
     <div class="stage"><span class="stage-tag">v0.5.1 旧</span><span class="old-armor">⚫ 无限五代 v0.5.1</span></div>
     <div class="stage"><span class="stage-tag">宿主原生</span><button class="native-meter" type="button"><span class="native-meter-gauge"></span>上下文 12%</button></div>
-    <div class="stage"><span class="stage-tag">v0.5.2 新</span>${stateRows[2].html}</div>
+    <div class="stage"><span class="stage-tag">v${VERSION.slice(1)} 新</span>${stateRows[2].html}</div>
   </div>
   <p class="note">旧方案是写死的 <code>#10b981</code> 实心胶囊 + 发光 + 呼吸，跟外壳的令牌体系无关；新方案复用原生 chip 的圆角、字号、行高、内边距和 hover 底色。</p>
 </body></html>`;

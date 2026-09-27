@@ -118,7 +118,10 @@ mustContain(indexSrc, '"./prompts/infinite-gen-5.1-flash.md"', "index.js 载入 
 mustContain(indexSrc, "infinite-gen-5:global-system-prompt", "注入槽位 Order 100");
 mustContain(indexSrc, "infinite-gen-5:dual-layer-reinforce", "注入槽位 Order 200");
 mustContain(indexSrc, "DUAL_LAYER_INJECTION", "双段注入开关");
-mustContain(indexSrc, `pluginVersion: "${VERSION}"`, `内核版本 ${VERSION}`);
+// 版本只允许有一处字面量：index.js 的 PLUGIN_VERSION。断言「字面量 == package.json」
+// 而不是「代码里出现了这个字符串」，这样重构掉字面量不会假失败，真漂移一定被抓到。
+mustContain(indexSrc, `const PLUGIN_VERSION = "${VERSION}"`, `内核版本字面量 ${VERSION}`);
+mustContain(indexSrc, "pluginVersion: PLUGIN_VERSION", "profile 工具引用 PLUGIN_VERSION");
 mustContain(indexSrc, "stateVersion: 3", "投影 stateVersion 3");
 mustContain(indexSrc, "OPENING_WINDOW", "开头窗口评分");
 mustContain(indexSrc, "RISK_MARKERS", "风险标记");
@@ -131,9 +134,12 @@ const sh = existsSync(SH_PATH) ? readFileSync(SH_PATH, "utf8") : "";
 mustContain(ps1, "Software\\Classes\\dsh", "install.ps1: dsh:// 协议注册");
 mustContain(ps1, "DSH_PROFILE", "install.ps1: DSH_PROFILE 探测");
 mustContain(ps1, "dsh-infinite-gen-5", "install.ps1: 插件名");
-mustContain(ps1, `无限五代 v${VERSION}`, "install.ps1: 状态条版本提示");
+// 状态条文案随 v0.5.2 改到输入框 dock 行后不再带版本号，所以断言改为'告诉用户去哪看'
+mustContain(ps1, "状态条", "install.ps1: 指引用户看状态条");
+mustContain(ps1, "计量器", "install.ps1: 指出状态条与原生计量器同排");
 mustContain(sh, "DSH_PROFILE", "install.sh: DSH_PROFILE 探测");
-mustContain(sh, `无限五代 v${VERSION}`, "install.sh: 状态条版本提示");
+mustContain(sh, "状态条", "install.sh: 指引用户看状态条");
+mustContain(sh, "计量器", "install.sh: 指出状态条与原生计量器同排");
 mustContain(readFileSync(join(ROOT, "README.md"), "utf8"), "dsh-infinite-gen-5", "README: 五代插件 id");
 
 // ---- 7. 汇总 ----

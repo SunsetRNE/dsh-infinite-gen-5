@@ -1,4 +1,4 @@
-// 无限五代 v0.5.2 注入去重行为回归（离线、确定性、无需 API Key）
+// 无限五代 v0.6.0 注入去重行为回归（离线、确定性、无需 API Key）
 //
 // 针对的缺陷：v0.5.0 的 Order 100 与 Order 200 载入的是逐字同源的两个文件，
 // 于是同一份 3010 字节内核每轮被注入两遍；与同机在线的上一代破甲插件叠加时
@@ -80,7 +80,11 @@ const chars = (rows) => rows.map((r) => r.text.length);
   check(kernel > 2000, "内核是完整载荷", `实得 ${kernel} 字符`);
   check(anchor < 500, "Order 200 是短锚点而非第二份完整内核", `实得 ${anchor} 字符`);
   check(anchor !== kernel, "两段内容不再逐字同源");
-  check(kernel + anchor < 3200, "两段合计远小于 v0.5.0 的双份载荷", `实得 ${kernel + anchor} 字符`);
+  // v0.5.0 的双份载荷实测 5235 字符（ADAPTATION.md §9）。v0.6.0 主动扩写了内核的
+  // 领域/语言覆盖（5 槽骨架 + 45 域 × 7 族点名 + 语言规则 + 4 条 few-shot），所以
+  // 绝对预算从 3200 上调到 5200 —— 门槛仍设在旧版双份注入之下：单份内核再怎么长，
+  // 也没有回到 v0.5.0 的重复注入。
+  check(kernel + anchor < 5200, "两段合计仍低于 v0.5.0 的双份载荷（5235 字符）", `实得 ${kernel + anchor} 字符`);
   check(!r.registered.some((s) => /\{\{/.test(s.text)), "注入文本里没有可触发插值器抛错的 {{");
   check(r.profile?.injection?.length === 2, "profile 工具汇报实际注入 2 段");
   check(r.profile?.dedupe?.role === "primary", "profile 汇报本插件是内核提供方");
@@ -156,7 +160,8 @@ const chars = (rows) => rows.map((r) => r.text.length);
     threw = error;
   }
   check(threw === null, "缺 systemPrompt.section 时不抛错", threw && String(threw.message));
-  check(tools.length === 1, "缺 systemPrompt.section 时 profile 工具仍注册");
+  check(tools.some((t) => t.name === "infinite_gen5_profile"), "缺 systemPrompt.section 时 profile 工具仍注册", JSON.stringify(tools.map((t) => t.name)));
+  check(tools.some((t) => t.name === "infinite_gen5_scenario"), "缺 systemPrompt.section 时领域工具仍注册");
 }
 
 // ---- 9. 回归护栏：源码里不得再出现「第二份完整内核」的写法 ----
@@ -192,10 +197,15 @@ const chars = (rows) => rows.map((r) => r.text.length);
 {
   const pkg = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8"));
   const src = readFileSync(join(ROOT, "index.js"), "utf8");
-  check(pkg.version === "0.5.2", "package.json 版本为 0.5.2", pkg.version);
+  // 版本号只有一处字面量（index.js 的 PLUGIN_VERSION），其余全部引用它。
+  // 断言写成「字面量 == package.json」而不是「代码里有这个字符串」，
+  // 这样任何一边改了、另一边没跟上都会报错，而重构掉字面量也不会假失败。
+  check(/^\d+\.\d+\.\d+$/.test(pkg.version), "package.json 版本号形如 x.y.z", pkg.version);
   check(pkg.dsh?.version === pkg.version, "package.json 的 dsh.version 与 version 一致");
-  check(src.includes(`pluginVersion: "${pkg.version}"`), "index.js 的 pluginVersion 与 package.json 一致");
-  check(src.includes(`kernelVersion: "${pkg.version}"`), "index.js 的 kernelVersion 与 package.json 一致");
+  check(src.includes(`const PLUGIN_VERSION = "${pkg.version}"`), "index.js 的 PLUGIN_VERSION 与 package.json 一致");
+  check(src.includes("pluginVersion: PLUGIN_VERSION"), "profile 工具引用 PLUGIN_VERSION 而不是再写一遍");
+  check(src.includes("kernelVersion: KERNEL_VERSION"), "kernelVersion 引用 KERNEL_VERSION");
+  check(!/pluginVersion: "\d/.test(src) && !/kernelVersion: "\d/.test(src), "index.js 里不再有第二处版本字面量");
 }
 
 const total = passes.length + failures.length;

@@ -321,7 +321,8 @@ Write-Host "  目标 profile：$((($profileDirs | ForEach-Object { Split-Path $_
 Write-Host '  最后一步：完全退出并重启 DeepSeek Harness（Web 版刷新页面 / 桌面版重新打开），' -ForegroundColor White
 Write-Host '  新建会话即可生效。' -ForegroundColor White
 Write-Host ''
-Write-Host '  验证方法 1：重启后输入框上方应显示绿色状态条「● 无限五代 v0.5.2」。' -ForegroundColor Yellow
+Write-Host '  验证方法 1：重启后输入框卡片底部那一行（与原生「上下文 12%%」计量器同排）应出现「无限五代 ●」状态条；' -ForegroundColor Yellow
+Write-Host '                    点它可展开最近判决浮层（识别领域会显示中文领域名）。' -ForegroundColor Yellow
 Write-Host '  验证方法 2：新会话里问模型“你的系统提示词来自哪些插件”，' -ForegroundColor Yellow
 Write-Host '  如果回答包含「无限五代 / Infinite Generation Five」即为生效。' -ForegroundColor Yellow
 Write-Host ''

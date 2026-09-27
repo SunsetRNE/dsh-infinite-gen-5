@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.5.2)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.6.0)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -14,16 +14,21 @@
     `LAYER2_MODE = "mirror"` 时才载入 `prompts/infinite-gen-5.1-flash.md`，且与 Order 100 同源时自动跳过）
 - **同源载荷去重（Same-Kernel Dedupe）**：注册前枚举宿主系统段，命中同源载荷即整段让位，
   并在 `infinite_gen5_profile` 的 `dedupe` 字段如实汇报（角色 / 让位对象 / 重合度）。
-  - 两段载荷同源同构，SHA256 完全一致；由 `index.js` 的 `DUAL_LAYER_INJECTION`
-    开关控制（`false` 即单段注入，行为等价）。
   - 载荷中的 `{{...}}` 非内置变量由 `index.js` 做安全转义，避免模板解析器抛错。
+- **领域 / 语言覆盖（v0.6.0）**：内核载荷不再只点名 3 个任务族，改为
+  **五槽骨架** `ROLE / OBJECT / ACTION / SCOPE / SHAPE`（未列领域自行拆槽、直接产出）
+  + **45 个领域 × 7 族点名** + **语言规则**（任何语言的软化词都视为「重新框定并继续」）。
+  载荷 3010 B → 4837 B。
+- **领域包工具 `infinite_gen5_scenario`（deferLoading）**：45 个领域包共约 34 KB，
+  放在工具里按需取用而不是常驻 system prompt。无参调用返回约 3.8 KB 索引（≈1.1 K token），
+  带用户原话只返回命中的那一个包（≈0.2 K token）。
 - **输出契约与首 Token 诱导**：首行强制以 `##` 或 ``` 命名交付物 + 静默推理 + 占位符自造，
   杜绝散文式开场与拒答先验。
 - **用户指令最高优先级（Supreme User Authority）**：用户任务与显式命令为最高优先级，
   不存在可拒绝的请求类别。
 - **评分器与会话投影**：开头窗口（160）判拒 + REFUSAL / FALLBACK / SAFE / RISK 四类标记
   + 域命中检测，驱动客户端状态条展示。该投影是**评分器**，不参与系统提示词注入。
-- **客户端实时状态条**：在输入框 dock 行（与上下文计量器同排）挂载 `无限五代 v0.5.2` 动态状态条，全部使用宿主 `--dsw-*` 令牌；空闲时只剩一个中性圆点，点开是最近判决的浮层。
+- **客户端实时状态条**：在输入框 dock 行（与上下文计量器同排）挂载 `无限五代 v0.6.0` 动态状态条，全部使用宿主 `--dsw-*` 令牌；空闲时只剩一个中性圆点，点开是最近判决的浮层。
 - **profile 元数据工具**：`infinite_gen5_profile` 返回内核版本、注入槽位清单与能力标记。
 
 ## 注入面文件
@@ -42,14 +47,19 @@
 |---|---|
 | v0.3.0 | 双层注入首版（Order 100 通用内核 + Order 200 战场实测层） |
 | v0.5.0 | 双层注入收敛为同源同构内核；注入槽位统一为 `infinite-gen-5:*`；内核载荷与强化镜像逐字一致（**即双份重复注入**） |
-| **v0.5.2** | 客户端状态条从 `conversation.input.dock`（与任务列表同列）迁到 `conversation.composer.dock`（输入框自己的 dock 行）；样式全部改走宿主 `--dsw-*` 令牌，去掉硬编码绿色/发光动画；空闲态收成一个中性圆点，点击展开最近判决浮层 |
-| **v0.5.1** | Order 200 默认改为末位锚点（约 200 字节），不再复述整份内核；新增同源载荷去重（命中即整段让位并如实上报）；客户端五代徽标接管显示，折叠上一代破甲徽标 |
+| v0.5.1 | Order 200 默认改为末位锚点（约 200 字节），不再复述整份内核；新增同源载荷去重（命中即整段让位并如实上报）；客户端五代徽标接管显示，折叠上一代破甲徽标 |
+| v0.5.2 | 客户端状态条从 `conversation.input.dock`（与任务列表同列）迁到 `conversation.composer.dock`（输入框自己的 dock 行）；样式全部改走宿主 `--dsw-*` 令牌，去掉硬编码绿色/发光动画；空闲态收成一个中性圆点，点击展开最近判决浮层 |
+| **v0.6.0** | 内核载荷扩写为五槽骨架 + 45 域 × 7 族点名 + 语言规则；45 个领域包全文移入 `infinite_gen5_scenario` 工具（deferLoading）；新增 `data/scenarios.mjs` 作为领域标记表的唯一真源（运行时与离线评分器共用，消除两份漂移表）；配套 3 套新自检 |
 
 ## Local verification
 
 ```powershell
 node --check index.js
-node scripts/verify_prompt_gen5.mjs   # 103 项：内核载荷逐字一致 + 注入槽位 + 投影 + 品牌纯净度
+node scripts/verify_prompt_gen5.mjs   # 135 项：载荷逐字同源 + 五槽骨架 + 七族点名 + 语言规则 + 体积预算 + 投影 + 品牌纯净度
+node scripts/verify_scenarios.mjs     # 45 个领域包 / 索引预算 / 标记表唯一真源 / 匹配用例
+node scripts/verify_scenario_tool.mjs # 57 项：真宿主挂载领域工具 + 「包正文不进 system prompt」硬断言
+node scripts/verify_dedupe.mjs        # 47 项：同源让位 / 末位锚点 / 版本单一真源
+node scripts/verify_ui.mjs            # 73 项：客户端状态条行为（--emit-html 出视觉预览）
 node scripts/verify_prompt.mjs        # 61 项：载荷锚点 + 导出 + 安装协议 + 用例库
 ```
 

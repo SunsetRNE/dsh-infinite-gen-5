@@ -1,6 +1,6 @@
 (() => {
   try {
-    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 v0.5.2 */
+    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 v0.6.0 */
     window.__ModuleLoader__.load({
       id: "dsh-infinite-gen-5",
       factory: (require) => {
@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.5.2";
+        var VERSION = "v0.6.0";
         var TITLE = "无限五代 " + VERSION;
         var FLASH_MS = 3200;
 
@@ -231,6 +231,7 @@
           var risk = armor && Array.isArray(armor.risk) ? armor.risk : [];
           var safe = armor && Array.isArray(armor.safe) ? armor.safe : [];
           var domain = armor && armor.domain ? armor.domain : null;
+          var domainLabel = armor && armor.domainLabel ? armor.domainLabel : null;
           var domainHits = armor && typeof armor.domainHits === "number" ? armor.domainHits : 0;
           var flashing = !running && verdict !== null &&
             lastVerdictRef.current !== null && Date.now() < flashUntilRef.current;
@@ -262,7 +263,11 @@
           var rows = [
             ["状态", running ? "执行中" : armor === undefined ? "等待投影数据" : "空闲"],
             ["最近判决", verdict === null ? "—" : verdict],
-            ["识别领域", domain ? domain + (domainHits ? "（命中 " + domainHits + "）" : "") : "—"],
+            ["识别领域", domain
+              ? (domainLabel && domainLabel !== domain
+                  ? domainLabel + "（" + domain + (domainHits ? " · 命中 " + domainHits : "") + "）"
+                  : domain + (domainHits ? "（命中 " + domainHits + "）" : ""))
+              : "—"],
             ["命中词", words.length ? words.join("、") : "—"],
             ["风险载荷", risk.length ? risk.join("、") : "—"],
             ["安全标记", safe.length ? String(safe.length) : "—"],

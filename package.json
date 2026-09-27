@@ -1,7 +1,7 @@
 {
   "name": "dsh-infinite-gen-5",
-  "version": "0.5.2",
-  "description": "DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.5.2：原生风格状态条（输入框 dock 行）+ 单内核注入 + Order 200 末位锚点，同源载荷自动让位（不再双份重复），profile 元数据工具、实时会话投影与客户端状态条。",
+  "version": "0.6.0",
+  "description": "DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.6.0：内核载荷扩写为 5 槽骨架 + 45 领域 × 7 族点名 + 语言规则，领域包全文移入 infinite_gen5_scenario 工具按需取用（deferLoading，零常驻开销）；单内核注入 + Order 200 末位锚点 + 同源载荷自动让位，profile 元数据工具、实时会话投影与原生风格客户端状态条。",
   "type": "module",
   "main": "./index.js",
   "repository": {
@@ -41,7 +41,7 @@
   "dsh": {
     "id": "dsh-infinite-gen-5",
     "name": "无限五代",
-    "version": "0.5.2",
+    "version": "0.6.0",
     "repo": "SunsetRNE/dsh-infinite-gen-5",
     "permissions": "系统提示词注入, 客户端状态条",
     "bundle": {
