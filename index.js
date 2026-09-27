@@ -41,7 +41,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.15.0";
+const PLUGIN_VERSION = "0.15.1";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -1429,12 +1429,16 @@ export function apply(ctx, config) {
 
   // ── live 分区（v0.15.0）────────────────────────────────────────────────────
   // 面板的「本轮进行中」不再是「最后一行日志」，而是从两圈环形缓冲算出来的当下：
-  // 事件速率、空闲时长、最近几次工具调用。只在内容真的变了才写库，空闲时零写入。
+  // 事件速率、空闲时长、最近几次工具调用。只在「状态量」真的变了才写库，空闲时零写入。
   const liveSnapshot = () => {
     const nowMs = Date.now();
     const cutoff = nowMs - EVENT_WINDOW_MS;
     while (eventRing.length > 0 && eventRing[0].ms < cutoff) eventRing.shift();
-    const spanMs = Math.max(1000, nowMs - (liveState.firstEventMs ?? nowMs));
+    // 分母必须和分子同窗口：分子只数最近 EVENT_WINDOW_MS 里的事件，
+    // 分母就不能用「进程活了多久」（firstEventMs 一旦赋值永不重置，长跑会把速率稀释到 0，
+    // 刚启动又会因 Math.max(1000) 兜底虚高）。取环里最早那个事件，再封顶在窗口长度上。
+    const oldestMs = eventRing.length > 0 ? eventRing[0].ms : (liveState.firstEventMs ?? nowMs);
+    const spanMs = Math.max(1000, Math.min(EVENT_WINDOW_MS, nowMs - oldestMs));
     const lastMs = liveState.lastEventAt === null ? null : Date.parse(liveState.lastEventAt);
     const idleMs = lastMs === null ? null : nowMs - lastMs;
     const active = idleMs !== null && idleMs < TURN_IDLE_MS;
@@ -1456,12 +1460,27 @@ export function apply(ctx, config) {
     };
   };
   let liveJson = "";
+  /**
+   * 稳定指纹：只留「状态量」——能让面板换一行字的东西才是变化。
+   * idleMs / perSecond / at 都是连续量，把它们算进指纹就会自己叫醒自己：
+   * patch("live") → 250 ms 后 flush → notify() → onChange → publishLive() → patch("live") → …
+   * 与有没有会话事件无关，一旦发生过第一个事件就永久自持（实测 4–5 次/秒空转写盘）。
+   * 面板端的「空闲多久 / 已跑多久」本来就是拿 lastEventAt 在本地算的，不需要服务端每秒重播。
+   */
+  const liveKey = (live) => JSON.stringify({
+    active: live.turn.active,
+    startedAt: live.turn.startedAt,
+    lastEventAt: live.turn.lastEventAt,
+    lastKind: live.turn.lastKind,
+    count: live.events.count,
+    lastToolAt: live.tools.lastAt,
+    tools: live.tools.recent.map((t) => `${t.tool}@${t.at}`),
+  });
   publishLive = () => {
     const live = liveSnapshot();
-    // 时间戳每次都变，不该算作「内容变化」，否则每秒都在白写一次库。
-    const json = JSON.stringify({ ...live, at: null });
-    if (json === liveJson) return false;
-    liveJson = json;
+    const key = liveKey(live);
+    if (key === liveJson) return false;
+    liveJson = key;
     stats.patch("live", live);
     return true;
   };
@@ -1823,13 +1842,15 @@ export function apply(ctx, config) {
   ctx.effect(
     () => stats.onChange((info) => {
       publishLive();
+      // 计数是整库深拷贝（stats.snapshot()），算一次给所有客户端用，别放进循环里按客户端重复算。
+      const counts = sseClients.size > 0 ? sseCounts() : null;
       for (const client of [...sseClients]) {
         if (!sseWrite(client.res, {
           type: "stats",
           seq: info.seq,
           at: info.at,
           generatedAt: info.generatedAt,
-          counts: sseCounts(),
+          counts,
         })) sseClients.delete(client);
       }
     }),

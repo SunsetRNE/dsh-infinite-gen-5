@@ -10,6 +10,22 @@
 
 ---
 
+## v0.15.1
+
+**技术说明**
+
+① **修 `live` 分区自激写入（严重）**。v0.15.0 的「只有内容真的变了才写库」用的是指纹 `JSON.stringify({ ...live, at: null })`，可它只抹掉了 `at`，`live.turn.idleMs`（`nowMs - lastEventAt`，每毫秒都变）与 `live.events.perSecond` 都还在里面 —— 判据恒真。于是形成自持闭环：`publishLive()` → `patch("live")` → 250 ms 后 `flush()` 落盘 → `seq += 1; notify()` → `stats.onChange` 回调 → 又 `publishLive()` → 又 patch → …**与有没有会话事件完全无关**，只要启动后发生过一个 `session/event`（`liveState.firstEventMs` 被赋值）就永久空转。实测：离线复现（真 `index.js` + 假宿主 + 假 SSE 客户端，单事件后彻底空闲 4 s）写盘 15 次（3.7 次/秒）、`data:` 帧 15 帧，且库中 `live.turn.active` 已是 `false`（明明空闲）仍在写；真机上观测统计库 mtime，4 s 内被重写 21 次（≈5.2 次/秒）。因为面板的 `stream.onmessage = () => read(true)` 是**每帧回读一次整库**（~8 KB），这条自激还顺带变成「浏览器每 250 ms 一次 HTTP GET」。修法是给 `publishLive` 换**稳定指纹 `liveKey(live)`**：只留离散状态量（`active / startedAt / lastEventAt / lastKind / count / lastToolAt / 工具名@时间`），剔掉 `idleMs / perSecond / at`。面板的「本轮跑了多久 / 空闲多久」本来就是拿 `lastEventAt` 在前端算的，不需要服务端每秒重播；本轮由「进行中」翻成「空闲」的那次状态变化仍在指纹里，所以该写的那一次一次不少。
+
+② **修 `live.events.perSecond` 的分母（中危）**。`spanMs` 原来等于 `nowMs - liveState.firstEventMs`，而 `firstEventMs` 一旦赋值**永不重置**；分子 `eventRing.length` 却只数最近 30 s（`EVENT_RING_SIZE` 截断并 shift 掉窗口外的）。两个窗口不一致 → 面板上出现「9 次 / 30 秒（0.05 次/秒）」这种自相矛盾，长跑越久越趋 0（几小时后恒为 `0.00`），而刚启动 0.2 s 内来一个事件又会因 `Math.max(1000, …)` 兜底虚高成 `1.00 次/秒`。改成取环里最早那个事件（`eventRing[0].ms`，空环时才回落到 `firstEventMs`），再用 `Math.max(1000, Math.min(EVENT_WINDOW_MS, …))` 封顶 —— 分母与分子同窗口。
+
+③ **`sseCounts()` 提出客户端循环**。它在落盘广播里被逐客户端调用，内部却是 `stats.snapshot()` 整库深拷贝，`SSE_MAX_CLIENTS = 4` 时一次广播最多深拷贝 4 遍。现在只在确有客户端时算一次（`sseClients.size > 0 ? sseCounts() : null`），帧内容不变。
+
+④ **补上能挡住这两条缺陷的回归断言（自检 94 → 96）**。`verify_stats_panel.mjs` 新增两条：**「空闲 2.2 s 内写盘与推帧都 ≤ 1（live 指纹稳定，不再自激空转）」**（老代码在同一窗口里写 9 次）与**「`perSecond` 与 30 s 窗口同分母：窗口里有事件就不可能算出 0」**。**负控实测**：把 `index.js` 临时换回 v0.15.0 原版跑同一份自检 → `95 通过 / 1 失败 · ✗ 空闲 2.2s 内写盘与推帧都 ≤ 1 —— 写盘 +9 次 / 推帧 +0 帧`；换回修复版 → `96 通过 / 0 失败`。
+
+**教训**：① 「内容变了才写」的指纹里**绝不能放连续量**（时间差、速率、时间戳）—— 它们让判据恒真，而写库本身又会回调回发布者，于是升级成自激循环；判据只该含离散状态。② 速率字段的分母必须与分子同一个窗口，否则冷启动与长跑会朝两个相反方向同时出错。③ 这两条都是**自检全绿**下漏出去的：老断言只查了结构与 `perSecond >= 0`，没有任何一条量化「空闲时不该写盘」。能证明「静态正确」的断言挡不住「动态空转」—— 凡涉及节拍 / 定时器 / 回流的改动，回归断言必须量「一段时间里发生了几次」。
+
+---
+
 ## v0.15.0
 
 **技术说明**

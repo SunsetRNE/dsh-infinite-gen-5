@@ -530,12 +530,37 @@ check(
   "live.events = 最近 30s 窗口里的条数与速率",
   JSON.stringify(liveDoc?.events),
 );
+// v0.15.1 修：perSecond 曾经拿「进程生命周期」当分母（firstEventMs 永不重置），
+// 而分子只数最近 30s —— 于是面板出现「9 次 / 30 秒（0.05 次/秒）」这种自相矛盾，长跑必归零。
+check(
+  liveDoc?.events?.count >= 1 && liveDoc?.events?.perSecond > 0,
+  "perSecond 与 30s 窗口同分母：窗口里有事件就不可能算出 0",
+  JSON.stringify(liveDoc?.events),
+);
 check(
   Array.isArray(liveDoc?.tools?.recent) && liveDoc.tools.recent.length >= 1 &&
     liveDoc.tools.recent.at(-1).tool === "infinite_gen5_scenario",
   "live.tools.recent 留下最近几次工具调用（面板的流水行）",
   JSON.stringify(liveDoc?.tools),
 );
+
+// 缺陷回归（v0.15.1）：live 分区曾经自己叫醒自己 ——
+// patch("live") → 250 ms 后 flush → notify() → onChange → publishLive() → 又 patch("live") → …
+// 老指纹里带着 idleMs（每毫秒都变）与 perSecond，于是「内容真的变了」永远成立：
+// 只要发生过一个会话事件，此后哪怕彻底空闲也会 4–5 次/秒写盘，并同频推 SSE 帧（面板每帧回读一次全文库）。
+// 这里量「稳定指纹是否真的稳定」：空闲窗口内最多容忍一次写盘/一帧 —— 那是本轮 active→idle 的翻转。
+{
+  const idleWritesFrom = sink.writes;
+  const idleFramesFrom = sseFrames(stream.res).filter((f) => f.type === "stats").length;
+  await new Promise((resolve) => setTimeout(resolve, 2200));
+  const idleWrites = sink.writes - idleWritesFrom;
+  const idleFrames = sseFrames(stream.res).filter((f) => f.type === "stats").length - idleFramesFrom;
+  check(
+    idleWrites <= 1 && idleFrames <= 1,
+    "空闲 2.2s 内写盘与推帧都 ≤ 1（live 指纹稳定，不再自激空转）",
+    `写盘 +${idleWrites} 次 / 推帧 +${idleFrames} 帧`,
+  );
+}
 
 // sessions.lastAt 的语义：是「这个会话最近一次被处理的时间」，而不是「最近一次换会话」（v0.13.10 修）
 await new Promise((resolve) => setTimeout(resolve, 5));
