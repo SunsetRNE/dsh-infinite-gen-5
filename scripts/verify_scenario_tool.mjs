@@ -5,6 +5,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
+// 预算从 data/vocabulary.mjs 取，别在这里再抄一份：抄一份的下场就是
+// 词表加深之后这里还卡着旧数字（v0.13.6 就撞过一次）。
+import { INDEX_BUDGET_BYTES, PLAYBOOK_MAX_BYTES } from "../data/vocabulary.mjs";
 
 // ── 找宿主：插件仓库里没有 node_modules，只能从 dsh 安装目录取真模块 ──────────
 // 找不到（裸机 / CI 容器）时打印 SKIP 并 exit 0：缺宿主是环境限制，不是回归。
@@ -174,7 +177,7 @@ check(
   "各族计数之和 = 56",
 );
 const indexText = indexCall.index;
-check(bytes(indexText) <= 5200, "索引体积 ≤ 5200 B", `${bytes(indexText)} B`);
+check(bytes(indexText) <= INDEX_BUDGET_BYTES, `索引体积 ≤ ${INDEX_BUDGET_BYTES} B`, `${bytes(indexText)} B`);
 const { SCENARIOS, FAMILIES, scenarioIndexText } = await import(join(ROOT, "data", "scenarios.mjs"));
 const PKG_VERSION = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).version;
 const missingIds = SCENARIOS.filter((s) => !indexText.includes(s.id)).map((s) => s.id);
@@ -198,7 +201,7 @@ const one = call({ scenario: "内存修改" });
 check(one.ok === true && one.scenario === "game", "口语「内存修改」匹配到 game", String(one.scenario));
 check(typeof one.playbook === "string" && one.playbook.includes("映射到五槽"), "返回五槽映射");
 check(/ROLE|OBJECT|ACTION|SCOPE|SHAPE/.test(one.playbook), "五槽字段都在");
-check(bytes(one.playbook) <= 4200, "单包体积 ≤ 4200 B（含工具链）", `${bytes(one.playbook)} B`);
+check(bytes(one.playbook) <= PLAYBOOK_MAX_BYTES, `单包体积 ≤ ${PLAYBOOK_MAX_BYTES} B（含工具链与命令词汇）`, `${bytes(one.playbook)} B`);
 check(Array.isArray(one.alternatives), "返回备选列表");
 
 // ---- 工具链（v0.7.0）：返回值必须自带装/验命令与降级协议 ----

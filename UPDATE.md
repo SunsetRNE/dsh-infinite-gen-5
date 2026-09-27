@@ -1,0 +1,356 @@
+# 更新文档（版本变更）
+
+本文件是「这个项目每一版改了什么、为什么」的**唯一真源**，放在仓库内部随包分发。三件事分工：
+
+- **本文件 = 叙述**：每版改了哪些文件、为什么这么改、自检项数怎么变 —— 手写、可读。
+- **`CHANGELOG.md` = 清单**：由 `node scripts/changelog.mjs` 从 Conventional Commits 机械生成，按提交标题里的 `(vX.Y.Z)` 切段；**它是生成物，别手改**。
+- **产物描述 = 摘要**：打包出的 `RELEASE-NOTES.md` 与 GitHub Release 正文只带**最近一次更新**（压缩过，见 `scripts/lib/release-notes.mjs`），再指回本文件；不复制历史。
+
+版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
+
+---
+
+## v0.13.9
+
+**技术说明**
+
+① **核心写、面板读：插件本体与前端面板解耦成「统计数据库」**。新增 `stats-store.mjs`（schema `ig5-stats/1`）：核心把 boot / runtime / tuning / tools / tasks / sessions / counters 七个分区落成一份 JSON —— 位置 `IG5_HOME > DSH_HOME > ~/.dsh`（`IG5_STATS_FILE` 可覆盖），写侧**原子**（`<file>.tmp-<pid>` + rename）、**防抖**（`DEFAULT_FLUSH_MS = 750`，`timer.unref()` 不留进程尾巴），写失败只记 `lastError` **绝不抛**（统计是旁路，不许把本体拖死）；`read()` 是纯读，不触发任何计算。发布点三处：`apply()` 收尾、锚点发射时、档位变更后 —— 面板第一次打开就有完整数据，不必等第一次工具调用喂热。
+
+② **任务清单能力接上宿主，而不是另起一套**。新增 `tasks.mjs`：读的是宿主 `todo_write` 工具的 `todos` 会话投影，写的是**同一条 `todo/write` 事件**（`session.append`）—— 模型下一轮看到的就是官方工具写的那种清单，插件没有第二份真源。写前按宿主策略**本地**校验：状态别名归一、丢空去重、超长截断、条目封顶（24 条 / 每条 200 字），多个 `in_progress` 降级为 `pending` 并回报 `repairs`（宿主策略是「恰好一个」且违反会直接抛错，本地先修比让整单被拒强）。之所以不替宿主工具改参数：宿主 `tools.guard()` 只能拒绝、不能改写，也没有参数中间件，重名注册直接报错 —— 能走的只有「同一条事件 + 自己先校验」。
+
+③ **面板只读库**：服务端三条精确路由（`/infinite-gen-5/tuning` 写档位、`/infinite-gen-5/stats` 只读库、`/infinite-gen-5/tasks` 写清单），全部回环 + 页面注入 token 自守；`GET /stats` 返回的就是盘上那份库（`source: "disk"`，盘上没有才退回内存快照），**读侧不做任何计算**。`client.js` 改成「`statsBridge()` 取注入的桥 → `panelFetch` 取库 → 渲染」，轮询每 2 秒一次且用注入的**自续 `setTimeout`**（不碰全局 `setInterval`）；静默轮询不覆盖用户正在编辑的草稿。设置台新增**任务进度**一块：进度条 + 「N/M 完成 · 进行中 x · 待办 y（z%）」+ 最多 12 条清单（`✓ / ▶ / ○`），上行动作只有两个 —— 「恢复上次清单」（`POST /tasks {action:"restore"}`，取库里记的上一份清单重写一次）与「刷新统计库」。
+
+④ **能力要配上习惯**：内核新增 `Task-list rule — progress must be visible, not narrated:`（超过两步的任务先开宿主清单、恰好一个 `in_progress`、开始标进行中、做完立刻打勾、现实变了就改写条目、写被拒就改小重试，**不许丢掉清单装静默**），运行时锚点同步一句「多步任务先开任务清单（宿主 todo），每步开始时标进行中、做完立刻打勾，别让进度只活在正文里」。三份内核逐字同源，载荷 7690 → **8326 B**，预算 7900 → **8600 B**，`verify_prompt_gen5` 154 → **158** 项；新增 `scripts/verify_stats_panel.mjs`（**64 项**：统计库单元——原子写/防抖合流/纯读/写失败只留 `lastError`；`tasks` 纯函数——别名、计数、去重截断封顶、单 `in_progress` 降级；假宿主真跑 `apply()` 后驱动真实路由与真实 render——库已落盘、三条精确路由、token 鉴权 401、`GET /stats` 不写盘、`POST /stats` 405、工具调用计数与截断留痕、`todo/write` 事件镜像、restore/set/未知 action/坏 JSON、无会话明确失败、无投影与投影抛错各自写原因；源码级——唯一解析入口、写侧走 `todo/write`、面板不 import 内部/不解析 HTTP 负载/只用注入的定时器），`verify:all` 在 `verify:tool-budget` 之后加跑这一条；并给会真跑 `apply()` 的五个自检加了 `IG5_STATS_FILE` 临时路径，测试不再污染用户真实库。
+
+⑤ **统计库的「标识」跟着写入者走，不跟旧盘走**：`load()` 合并旧库后强制把 `version` / `plugin` 改成当前插件版本并标脏 —— 否则升级后库还是上一版的自我标识，面板会一直显示旧版本号（历史分区该留的留，标识该更新的更新）。这条同时让自检里「库里的 version == `package.json` 版本」成为真回归（读一份标着别的版本的旧库，仍必须报当前版本）。另把运行环境自检的**性能断言改成抗负载**（同一份探测三次取最快、单层对四层的比较给容差、TCP 不可达阈值放宽到 5 s）：要抓的回归（退回逐条 `command -v`）在三次采样里都会慢，三次取最快只是不误伤机器忙时的调度抖动 —— 自检被负载误伤比漏检更坏，它会把「全绿」变成不可信。
+
+⑥ **CI 的「浅克隆」也算自检的一种运行环境**：CI 首次失败在 `verify_release_notes` 的「CHANGELOG 里版本段数合理 — 实际 1」—— 版本段由 `git log` 的提交标题切分，而 `actions/checkout@v4` 默认只拉一个提交（`fetch-depth: 1`），于是本机全历史生成 25 段、runner 上只剩 1 段。两侧一起修：`verify.yml` 改成 `fetch-depth: 0`（让历史类断言在 CI 上真跑），自检本身再用 `git rev-parse --is-shallow-repository` 判浅克隆 —— 是浅克隆就如实标注「历史不在本地，不是回归」并跳过段数断言（要移植到别处跑、或临时手动 clone 时不至于假红）。**「本机绿、runner 红」几乎总是环境差异（历史深度、umask、权限位、路径），不是代码差异** —— 上一轮的夹具确定性缺陷同源。
+
+**教训**：① 面板与本体之间只留「一条读路径 + 明确写入口」，耦合一断，插件重启/页面刷新各自独立也能对上同一份数据；② 有写清单的能力不等于模型会用 —— 纪律必须同时进内核与最近的运行时锚点，否则进度仍然只活在正文里；③ 测「写失败」别拿 procfs 当样本：本机对 `/proc/xxx` 的 `mkdirSync` 会直接**卡死 20 秒不返回**（自检就此挂住），`/dev/null/...` 下面建目录才是立刻 `ENOTDIR` 的正常失败样本。④ 自检自身也会带状态：它跑在真机上、读真盘、量真时间 —— 凡是量时间的地方都要给容差或多次取最快，凡是会写盘的地方（统计库）都要能重定向到临时路径，否则一次偶发红灯会把整条流水线的可信度拖垮。
+
+---
+
+
+**技术说明**
+
+① **把 v0.13.7 那条纪律从「参数侧」补齐到「两个方向」**：内核 Tool-call rule 新增一段 —— 参数被流截断是坏包，**结果被流截断同样是坏包**（缺右括号、带截断标记、半句话），看到就当「说谎的成功」，不许当成完整结果继续推理；修复动作是**缩小范围重调并取片段**（一个领域 id / 一层 / 一段行范围），自己回大结果时也要切片。载荷 7307 → **7690 B**，预算 7600 → **7900 B**（`PAYLOAD_BUDGET_BYTES`，注明 6200 → 6800 → 7600 → 7900 的沿革），`verify_prompt_gen5` 152 → **154** 项（2 条新断言：`truncated mid-stream` / `re-call narrower`）。运行时锚点同步追加「结果被截断也按坏包处理，缩小范围重调取片段」，`verify_dedupe` 加 1 条断言钉住（83 → **84** 项）。
+
+② **统一解析入口 `safeParseJson`**：插件不控制任何外部文本（档位文件、HTTP 请求体），而裸 `JSON.parse` 一旦抛就是把整个请求炸掉 —— 正是宿主 `MALFORMED_RESPONSE` 的同款失败形态。现在 `index.js` 全文件**只剩一个** `JSON.parse` 点，就在 `safeParseJson(text, fallback)` 里面：空文本 / 坏 JSON 一律不抛，回退 fallback 并带原因。`readTuning()` 改成「读文件在 try 里 + 解析走统一入口」，档位文件被写坏时按默认值继续且**不改写**那个文件（错误文案明说）；设置接口的 400 文案带上具体解析原因。自检用源码扫描钉死「唯一解析点」，以后新增解析点必须走同一个入口。
+
+③ **工具结果体积闸 `capResult`**：三个工具的 render 现在都过同一道闸（`RESULT_BUDGET_BYTES = 14000`）。超预算时按「先丢重复的辅助字段（`toolProtocol` / `alternatives` / `toolchain`）→ 再按比例截断最长的正文字段」降级，并在结果里写明 `truncated` / `bytes` / `budget` / `droppedFields` 与「缩小查询范围再调一次拿全量」。**在副本上降级，不动调用方原对象**；未超预算时连引用都不换（三个工具的真实 render 路径各被断言一次：小结果原样、超大结果压进预算并带降级标记）。预算是算出来的而不是拍的：无参索引调用（最坏合法结果）与单域最坏结果都必须装得下，且留 ≥512 B 余量。
+
+④ **两端同值的体积上限**：设置接口服务端 8 KB 上限不变，页面 `tuningFetch` 补上同值的本地预检（`TUNING_BODY_LIMIT = 8192` + `utf8Len`），超限直接给「已在本地拦截，未发出请求」的人话 —— 原来超限会被对端 `destroy`，页面只能报一个看不懂的网络错误。自检断言两端数字相等（防以后只改一边）。新增 `scripts/verify_tool_budget.mjs`（**48 项**：接缝存在 / 最坏合法结果装得下 / 工具参数扁平标量 + `additionalProperties:false` / 真实 render 的体积闸行为 / `capResult` 语义 / `safeParseJson` 坏包不抛 / 源码级唯一解析点 / 两端上限同值），用假宿主真挂载工具后**直接调真实对象**而不是 grep 猜；`verify:all` 在 `verify:scenario-tool` 之后加跑这一条。
+
+**教训**：① 「外部文本」不只是工具参数 —— 结果、配置文件、HTTP 体都是同一类边界，纪律要成对写（进来了怎么扛、出去了怎么裁）；② 只有一个解析点才有可能被机器守住，两个以上的 `JSON.parse` 迟早有一个不带 try；③ 抄来的上限一定会漂移，让自检断言「两端相等」比写文档要求「保持一致」有用。
+
+---
+
+## v0.13.7
+
+**技术说明**
+
+① **内核的 Tool-call rule 从「一条纪律」升级为「带修复回路的协议」**：原来的 5 行只讲「一轮一个工具、参数短而平、坏包改小重发」；现在把注定在 JSON 流里坏掉的三类写法点名（裸换行 / 未转义引号、尾随逗号与注释、嵌套大对象与「一次塞整份文件正文」），要求占位符用短值、禁止把长路径 / base64 / 整份正文塞进一个参数值，并补一节 **Repair path**：坏包或空包**不得原样重放同一个超大调用**，要么同意图切片重发（一个字段 / 一段行范围 / 一条记录），要么先发只带必填字段的**最小探针**确认参数形状再长回去；被流截断是载荷自己的问题，汇报口径是「已改小重发」而不是道歉或停手。三份内核（`infinite-gen-5.md` / `.1-flash` / `-classic`）逐字同源，载荷 6789 → **7307 B**，预算 6800 → **7600 B**（提为 `PAYLOAD_BUDGET_BYTES` 常量并注明涨价理由），`verify_prompt_gen5` 146 → **152** 项（6 条新断言锁住修复回路的每个要点）。
+
+② **运行时锚点也带上这条**：`RUNTIME_ANCHOR_MODE=cadence`（每 4 步重述一次）的锚点文本追加「工具调用一轮一个、参数扁平不塞正文，坏包改小重发（禁原样重放同一个超大调用）」—— 这一格是整条消息链上离模型最近、权威表述最强的位置，而坏包多发生在长工具链的中段，那里正是内核开始被稀释的地方。代价约 55 B / 次锚点。`verify_dedupe` 新增 1 条断言（83 项）钉住这条复述，防止以后只改内核、忘了最近的这一格。
+
+③ **为什么宿主侧改不到**：`DeepSeek Messages stream: tool input is invalid JSON` 出在宿主自己的流式解析里 —— `dsh-llm-deepseek/lib/index.js:2006` 的 `JSON.parse(content.arguments)` 失败后返回 `malformed(...)`，`:1821` 抛 `LlmError(..., "MALFORMED_RESPONSE")`；该码不在 `dsh-llm/lib/index.js:251` 的 `DEFAULT_RETRYABLE_CODES` 内（`dsh-llm-retry/lib/index.js:160` 正是不重试的位置）⇒ **硬失败、不自动重试**。插件能改的只有模型的行为，所以把「坏包怎么办」写成协议并放进最近的锚点。真想连宿主一起兜，只能在 profile 里给 `llm-deepseek` 的 `retryPolicy.retryableCodes` 追加 `MALFORMED_RESPONSE`（属宿主配置，不属本插件）。
+
+**教训**：纪律写在离模型最远的地方、按轮付费、又最先被稀释 —— 把它带进运行时锚点，等于每 4 步免费提醒一次。
+
+---
+
+## v0.13.6
+
+**技术说明**
+
+① **命中词汇层有了真源与护栏**：新增 `data/vocabulary.mjs`（形态规则 `checkMarker` / `checkAlias` / `checkToolchainLine`、短拉丁白名单 `SHORT_MARKER_OK`、停用词 `STOP_MARKERS`、跨族签字 `CROSS_FAMILY_ALLOW`、英文碰撞签字 `TRAP_ALLOW`、命中标记表构造 `buildMarkerIndex`，以及索引/单包预算常量）与生成物 `data/vocabulary-data.mjs`；源文件在 `data/vocab/*.json`，由 `scripts/vocab-build.mjs` 合成，`--check` 专门抓「改了源没重跑 build」的漂移。四批扩展（A 攻防核心 / B 逆向与样本 / C 网络与云 / D 工程·密码·数据·AI，外加只放人工校准的 E）合计新增 **1931 条**（别名 619 / 命中词 815 / 命令 301 / 工具链 181）；合并去重后命中标记表 **1352 个**（latin 637 · 中文 641 · 混写 74），域数不变仍是 56。
+
+② **索引多一行「命中」**：`scenarioIndexText()` 现在每个域追加 `命中: <6 个最长命中词> +剩余数`，让模型在选域之前就看见「凭什么落到这个域」，也把跨域抢的词摊在明面上（跨族共用词 10 个，全部逐条签字）。索引 4628 B → **10603 B**（≈2866 tokens），这是**有意的预算上移**：预算常量搬进 `data/vocabulary.mjs`，涨预算必须与加词条出现在同一个 diff 里。领域包新增「命令词汇」一节（301 条可直接粘贴、占位符替换后先干跑一遍），最长包 re 3152 → **4540 B**。
+
+③ **语料逼出来的真缺陷（本轮最大的收获不是加词）**：`findScenarios` 的 id/别名匹配**没有词边界** —— id `re` 命中 `spreadsheet` / `master` 里的 "re"（整句英文被判成逆向），别名 `apk` 命中 `wx**apk**g`，别名 `harness` 命中普通英文句。新增 `containsWord()`：拉丁词按词边界匹配，中文与 ≥8 字符长词仍走子串；三条负样本永久钉住。另外离线评测门禁 `diffSnapshot` 此前把**所有**指标都按「变大 = 变好」比，于是 web 的 FN 从 7 降到 4 被报成回退（门禁方向搞反比没有门禁更危险：会逼人把误判改回误判）—— 修好后 FP/FN 变小算提升、变大才算回退；基线按新水平刷新：web R 73.1% → **84.6%**、P 90.5% → 88.0%、FN 7 → 4、FP 2 → 3，宏平均 F1 74.1%。
+
+④ **新增自检与报告**：`scripts/verify_vocab.mjs`（**15 项**：1931 条扩展词条形态合规 / 生成物一致 / 45 个加深域的有效深度下限 / 跨族签字齐备 / 常用英文词碰撞扫描 / **102 条真实语料**经 `lookupScenario` 落到期望域 / **20 条工具行话**经 `detectDomain` / 6 条负样本 / 索引与单包预算 / 命令词汇确实渲染进包）与 `scripts/vocab-report.mjs`（`--md` 出可贴文档的逐域深度表，`--domain=web` 出单词全表），语料存在 `scripts/lib/vocab-fixtures.mjs`，两者都接进 `verify:all`。顺带把 `verify_scenarios.mjs` 与 `verify_scenario_tool.mjs` 里各抄一份的预算常量改成从 `data/vocabulary.mjs` 取 —— 本轮就撞过一次「词表涨了、工具自检还卡在 5200 B」。
+
+**教训**：① 加词的门槛必须由机器兜住（形态 / 误命中 / 跨族签字三类自检），人只判断语义；② 语料要写「用户真的会这么问」的句子，别为迁就词表造句子 —— 前者的全部价值就是它会揪出 `re ⊂ spreadsheet` 这种错；③ 被抄写的常量一定会过期，能 import 就别抄。
+
+---
+
+## v0.13.5
+
+**技术说明**
+
+① **远端补发老 tag 不再卡死**：`release.yml` 新增 dispatch 入参 `skip_selfcheck`（只跳那条已知为红的自检，打包器内置的解包复检照跑），补发时自动往 `dist/RELEASE-NOTES.md` 追加「事后补发 · 自检为红」标注与 run 链接，`RELEASE-NOTES.md` 同时进附件表。② **产物描述压缩 + 版本变更叙述统一**：新增零依赖纯函数库 `scripts/lib/release-notes.mjs`（`buildReleaseNotes` / `releaseNotes` / `changelogSection`；默认最多 5 条、每条 160 字、总量 900 字，`### ✨ 新特性` 这类分类标题不占行而是给条目打 emoji 前缀，末尾统一挂一行指针指回本文件），产物侧**两条路**都接上它 —— `scripts/package-release.mjs`（包内 `RELEASE-NOTES.md`，日志打印「留 / 压掉 / 截断」条数）与 `scripts/release.mjs`（GitHub Release 正文，不再是 CHANGELOG 复读机）；叙述侧把 README 的 132 行版本 callout 与 HARNESS_PLUGIN 的 25 行版本表整体迁进本文件，原处只留指针。新增自检 `scripts/verify_release_notes.mjs`（**35 项**：压缩不变量用合成 CHANGELOG 喂 / 真实仓库每个版本段都能压出正文 / 两条产物路径都真的走压缩器 / README 与 HARNESS 不再复述逐版表格 / `UPDATE.md` 已在 `PROSE_ALLOWED_FILES` 登记），并接进 `verify:all`；`scripts/verify_version.mjs` 22 → **23** 项（`DOC_FILES` 多一份 `UPDATE.md`）。教训：打包器只装 `git ls-files` 出来的跟踪文件 —— 新文档/新脚本忘了 `git add`，包里就没有指针指向的那个 `UPDATE.md`，这条已写成硬断言。
+
+---
+
+## v0.13.4
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+**CI 转绿：自检夹具不再受 `umask` 影响 + 同步跟随权限位**（v0.13.2 / v0.13.3 的 CI 全挂在这里）。① `scripts/sync-local.mjs`：目录权限也显式对齐（`listTree` 的 `dirs` 由 Set 变 Map 存 mode，落盘前逐个 `mkdirSync` + `chmodSync`），且「内容一样但权限位变了」也算要更新 —— 宿主指纹把 `mode` 算进去，不跟着改指纹必然对不上；② `scripts/verify_sync.mjs`：夹具建好后 `fixDirModes()` 把所有目录定死 0755（`cpSync` 出来的 scratch 也补一次），冻值按 CI 实测的 `fb0ce5ff9651…` 回填，新增 2 条「只改权限位也算要更新 / 权限位已同步到安装树」⇒ 35 → **37** 项。教训：本会话 `umask` 是 0077（目录 0700），GitHub runner 是 0022（0755），同一份夹具因此算出两个不同的 `codeSha256`
+
+---
+
+## v0.13.3
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+**修 `sync:local` 预览把「现树指纹」说成「将要写入的指纹」**：只读预览时树还没落盘，报告里那句「管理器激活记录过期 — 0.12.4 → 0.13.2，指纹 f1335ff0…」里的指纹其实是**当前**树算出来的，落盘后按新树重算（本机实测同一棵树预览 f1335ff0… / 落盘后 56a4b7d6…，版本号一样所以看着像假账）。现在预览态改为「（现树指纹 …，落盘后按新树重算）」，JSON 里多一个 `record.previewFingerprint` 供自检断言；`verify_sync` 33 → **35** 项（新增该断言，另因 `sync:local:apply` 之后本机记录与现树一致，宿主记录交叉验证多覆盖到本插件自己一条）
+
+---
+
+## v0.13.2
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+**本机安装树同步 + 管理器记账对齐**：`scripts/sync-local.mjs`（`npm run sync:local` 只读预览 / `sync:local:apply` 落盘）把仓库镜像进 dsh 实际加载的那棵树 —— 目标树由 profile `dependencies` 的 `link:`/`file:` 解析（外加 `plugin-src/<name>`、`plugins/<name>`、非软链的 profile `node_modules` 副本，按 realpath 去重），只增改删、跳过 `.git`/`node_modules`/`ui-preview`、保留安装树独有的 `.dsha-dependencies.json`、权限位跟随源文件、删空目录、写盘走 tmp+rename；同时刷新 `~/.dsh/plugin-activations.json` 里的 `version` + `fingerprint`（先留 `.bak-<时间戳>`；`status`/`startup`/`confirmedAt`/`loadedAt` 一律不动，那是管理器上次安装的记账；`--no-record` 可只铺树；管理器没登记过就不新建条目）。指纹算法在 `scripts/lib/tree-fingerprint.mjs`：复刻宿主 `~/.dsh/plugin-dependencies.py` 的 `current()`（逐条 `['file',rel,mode,sha256]`/`['directory',rel,mode]`/`['link',rel,target,sha]` 行 JSON 累进，非 ASCII 按 `\uXXXX` 转义；单节点依赖图再哈希一次），已用宿主**自己记过的**指纹交叉验证（whale-widget 逐字符一致）。动机：管理器式接线下手铺树管理器不知情，界面会一直显示旧版本、加载状态一栏因指纹不符被清空（本机实测「磁盘 0.13.1 / 管理器写 0.12.4」）。新增 `scripts/verify_sync.mjs`（33 项：指纹冻值 + 宿主记录交叉验证 + 假 DSH_HOME 全流程 + 热链接态空操作），并接进 `verify:all`；`cleanup.mjs` 新增「激活记录备份」一类（最近一份标跳过）；`verify_install` 的过期告警补上 `npm run sync:local:apply` 解法提示
+
+---
+
+## v0.13.1
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+**修「设置页调参接口在真机上从不挂上」**（v0.13.0 的重缺陷）：宿主的 `WebServer` 在 `async [Service.init]()` 里才 `listen()`，服务 fiber 要等 socket 绑定完才激活，而 `ctx.get("webServer")` 默认 strict —— 只返回「提供方 fiber 已激活」的实现，所以插件 `apply()` 里那次 `get` 在真机上永远拿到 `undefined`，面板一直降级成「接口不可用」（演习台用假 webServer 先挂好，反而没暴露）。改为宿主同款 `ctx.inject(["webServer"], (webCtx) => mountTuningRoute(webCtx))`：服务就绪后补挂精确路由与 index 注入（`mountedServer` 去重，同一 server 不重复注册），未就绪期间仍如实汇报不可用而不假装成功。`verify_tuning` 39 → **45** 项（新增「webServer 晚到」一节：未就绪先报不可用 / 补挂路由 / token 注入同样就位 / endpoint 转 ok / 补挂路由 200 且错 token 仍 401）；另外用真实 `dsh-host-webserver`（`port: 0` 临时端口）跑过一次端到端：无 token 401 · 带 token 200 · POST 改档当场重装（`EXCLUSIVE_SECTION: true` 下装配只剩内核一段）
+
+---
+
+## v0.13.0
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+**设置页「注入档位」可调控 UI**：插件设置页里直接改六个注入开关与节拍间隔 N（服务端在宿主 `webServer` 上挂精确路由 `/infinite-gen-5/tuning`，路径与一次性 token 随 index.html 注入 `window.__IG5_TUNING__`；路由自守 —— 只收本机回环 + 该 token，因为宿主的路由匹配前没有鉴权中间件）。点「保存并生效」= 一条 POST：档位落盘 `$DSH_HOME/infinite-gen-5-tuning.json`，并**卸掉注入部分的 effect、按新档重装一遍**（工具/投影不重挂，次数计入 `rebuilds`），因此不重启进程、不刷页面即生效；`apply()` 内的注入块重构为可卸载重装的 `mountInjection()` + 三个注册点收句柄，`LAYER2_MODE` / `TAIL_MODE` / `RUNTIME_ANCHOR_MODE` 都改成装配时现读 `CFG`，所以档位改了立刻反映到装配结果。优先级变为 **设置页（持久化）> profile config > `IG5_*` env > 文件默认**（`resolveTuning` 每次从文件默认重算，覆盖不会粘住），每键 `sources` 汇报来源档，「复位到默认」发 `{reset:true}`；接口不可用时面板降级为只读提示 + 可粘贴的 `cordis.patch.yml` 片段。profile 工具新增 `tuning` 实况（effective / sources / persisted / store / rebuilds / endpoint）。新增 `scripts/verify_tuning.mjs`（真实宿主演习台 39 项，存储指到临时目录、不碰真实 `~/.dsh`），客户端调参面板接进 `verify_ui` 135 → **149** 项
+
+---
+
+## v0.12.4
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+**安装残留清理 + 调参实测归档**：新增 `scripts/cleanup.mjs`（`npm run clean:legacy` 只列 / `clean:legacy:force` 真删）—— 一次列清 install.sh 快照、profile 接线备份、dev-link 备份与仓库临时探针文件，并**绝不动活着的安装树**（profile 依赖解析到的落点只标「跳过」）；README 补上「改配置 → 重启」这条路的本机实测证据（定向 `config` 覆盖合进同一条 `- id:` 条目、重启后运行时锚点序号由 `R#1 → R#4 → R#8` 变为 `R#1 → R#2 → R#4`）；顺手修掉 `verify_install` 的误报 —— 它把「顶层 `- id:` + `config:` 的定向覆盖」也算成 insert，于是在调参态下误报双接线，现在按缩进区分 insert 列表与覆盖条目
+
+---
+
+## v0.12.3
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+**运行期调参**：六个注入开关（`LAYER2_MODE` / `DEDUPE_PAYLOAD` / `TAIL_MODE` / `RUNTIME_ANCHOR_MODE` / `RUNTIME_ANCHOR_EVERY` / `EXCLUSIVE_SECTION`）改为三级覆盖 —— `apply(ctx, config)` 的 profile config > `IG5_*` 环境变量 > 文件内默认，就地写回 `IG5_CONFIG`，`infinite_gen5_profile` 新增 `configOverrides` 汇报来源（形如 `TAIL_MODE=off（env IG5_TAIL_MODE）`）；管理器式安装只需在 profile `cordis.patch.yml` 加一条只带 `config` 的定向覆盖（无 insert，不算双接线）。默认运行时锚点节拍 6 → **4** 步；档位键保持字符串语义（`"off"` 不做布尔化，自检锁死这条）；两条自检改为从 `IG5_CONFIG` 读默认档，`verify_injection` 34 → **41**、`verify_dedupe` 81 → **82**
+
+---
+
+## v0.12.0
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+**注入强度三件套**：① 真末位锚点 —— 挂在 `system-prompt/assemble` 瀑布上，把 `TAIL_ANCHOR_TEXT` 追加到装配结果 `sections` 数组最后一项（宿主对该返回值只做 complete 兜底与 `"\n\n"` 拼接，数组顺序即拼接顺序），排在宿主 `10200` 人格后缀之后，恒为整份系统提示的最后一段，且不占 section 命名空间（`TAIL_MODE = "waterfall"` / 降级 `"order"` 10150 / `"off"`）；② 运行时锚点 —— 注册进 `systemPrompt.context()` 槽（与沙箱策略 110、审批策略 115、子代理委派 120 同槽，`order 118`），随运行时上下文快照发在**每步最后一条 user 消息**里，快照头写明取代早前快照；宿主只在文本变化时重发，故节拍靠换文本实现（`cadence` 每 N 步 / `once` / `every`）；③ 可选 `complete` 独占档（默认关）：宿主其余系统段整体让位，末位锚点并进内核文本以免被裁掉。两条边界：内核因同源去重让位时两段锚点也不再单独注册；profile 新增 `injectionPlacements` / `injectionStrength` 如实汇报四处位置与档位。新增 `scripts/verify_injection.mjs`（真实宿主演习台 **34** 项，无宿主时 SKIP 且退出 0）与 `verify_dedupe` 81 项
+
+---
+
+## v0.11.1：🎨 v0.11.1：设置台归位与比例精修（Console Relocation）
+
+**公开叙述（原 README 版本沿革）**
+
+v0.10.0 把入口塞在设置页最顶部（`order -100`），违背「常用的在前、不常用的跟着同类走」的习惯。这一版把它挪到官方「插件」之后，并重做比例：
+
+- **入口顺序 `order 16`**：设置页 nav 变成 账户 `-10` / 通用 `0` / 模型 `10` / 插件 `15` / **无限五代 `16`** —— 挨着插件市场，不再抢占视线；顺序取自 `__meta.consoleOrder`，自检断言锁住「排在官方插件之后」。
+- **比例精修**：页面限宽 560px 一列到底；形态四档改两列网格、位置三列、侧栏入口单列；预览换成带「空闲 / 执行中 / 判决」标签的内嵌面板（每行 28px）；只读信息两栏对齐（84px + 1fr）；按钮统一 30px 高，「完成」用宿主主按钮样式。
+- `verify_ui` 现为 **135** 项；令牌仍全部来自 `--dsw-alias-*`，明暗主题自动跟随，不 require 任何宿主组件包。
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+客户端设置台**归位 + 比例精修**：设置页入口从最顶部（`order -100`）挪到官方「插件」之后（`order 16`，nav 顺序 账户 -10 / 通用 0 / 模型 10 / 插件 15 / 无限五代 16），顺序取自 `__meta.consoleOrder` 并由自检锁住「排在官方插件之后」；同一页重做比例 —— 限宽 560px、形态四档两列网格、挂载位置三列、侧栏入口单列、预览改成带「空闲 / 执行中 / 判决」标签的内嵌面板（每行 28px）、只读信息两栏对齐、按钮统一 30px 高（「完成」用宿主主按钮样式）；纯客户端改动，刷新页面即生效，`verify_ui` **135** 项
+
+---
+
+## v0.11.0：🧰 v0.11.0：工具调用卫生（Tool-call Hygiene）
+
+**公开叙述（原 README 版本沿革）**
+
+反复出现的 `DeepSeek Messages stream: tool input is invalid JSON` 是宿主侧的流式解析崩溃：模型把工具参数一次性写大（整份文件正文、裸换行、未转义引号）时，分片拼起来的 JSON 会坏。宿主解析器我们改不到，但**模型的行为**可以写进内核：
+
+- 一轮只调一个工具；参数保持**短而平** —— 禁裸换行、禁未转义引号、不要一次塞整份文件正文。
+- 长输出拆成多次小调用（按行范围切片）逐步补齐，而不是一口气写完。
+- 返回 `invalid JSON` 或空结果时当成**重试信号**：换小一点的参数重发，绝不再发一次同样大的调用。
+- 内核 6393 → 6789 B（仍在 6800 B 预算内）；`verify_prompt_gen5` 146 项（新增 4 条断言锁住这条规则的存在与要点）。
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+内核新增 **Tool-call rule（工具调用卫生）**：一轮一个工具、参数短而平（禁裸换行 / 未转义引号 / 单次塞整份文件正文）、长输出按行范围分段小写、`invalid JSON` 或空包按重试信号改小重发 —— 针对反复出现的 `DeepSeek Messages stream: tool input is invalid JSON`；内核 6393 → 6789 B（仍 ≤6800 B 预算），`verify_prompt_gen5` 142 → 146 项
+
+---
+
+## v0.10.0：🎛 v0.10.0：客户端设置台（Settings Console）
+
+**公开叙述（原 README 版本沿革）**
+
+之前想换状态条形态或位置，只能改 `client.js` 再刷新页面。这次把它收进插件自己的设置页：
+
+- **入口在设置页**：注册一个「无限五代」条目（宿主原生 `settings.section` 槽；v0.11.1 起 `order 16`，排在官方「插件」之后）。点开就是插件自己的独立页面 —— 不 require 任何宿主组件包，只用裸 slots API。
+- **页面上改，状态条当场变**：形态四档（`glyph` 单字符 / `compact` 短词 / `full` 长文字 / `dot` 纯圆点，带「空闲 · 执行中 · 判决」三行实时预览）、挂载位置三档（输入框 dock / 会话标题栏 / 输入区）、可选的侧栏入口（`main` 面板 + `sidebar.panellist` 图标，与官方「插件」面板同款做法），外加只读信息（版本 / 判定源 / 载荷 / 存储位置）与「恢复默认」。
+- **偏好落在本机**：写进 `localStorage["dsh-infinite-gen-5:prefs"]`，刷新后沿用；没有本地存储（隐私模式 / 沙箱）时退化成「仅本会话」，不抛错；非法值逐字段忽略（不会悄悄把用户设置重置）。
+- 设置页与状态条**共用同一个偏好源**，所以「设置里写 A、条上显示 B」这种漂移不可能发生。`verify_ui` 从 92 项涨到 132 项（新增偏好读写与持久化、形态/位置切换、侧栏开关、清理与幂等）。
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+客户端长出**自己的设置台**：设置页最顶部注册一个「无限五代」入口（宿主原生 `settings.section` 槽，`order -100`，排在官方「通用/模型/插件」之前），点开即插件独立页面（不 require 宿主组件包）—— 形态四档 `glyph`/`compact`/`full`/`dot`（带空闲·执行中·判决三行预览）、挂载位置三档、可选侧栏入口（`main` + `sidebar.panellist`，与官方「插件」面板同款）、只读信息与「恢复默认」；偏好写 `localStorage["dsh-infinite-gen-5:prefs"]`（无本地存储时降级为仅本会话，非法值逐字段忽略），设置页与状态条共用同一偏好源；`verify_ui` 92 → 132 项
+
+---
+
+## v0.9.0：📐 v0.9.0：离线评测闭环（Offline Eval Loop）
+
+**公开叙述（原 README 版本沿革）**
+
+在这之前，110 条语料里的 `expected_domain` / `expected_verdict` 标签**从来没被离线消费过** —— 改词表、改判定，没有任何东西能回答「这次是变好还是变坏」。现在补上这一环：
+
+```bash
+node scripts/eval-corpus.mjs                  # 人读报告：语料体检 / 混淆矩阵 / 每类 P/R/F1 / 误判样本 / 覆盖缺口 / 基线比对
+node scripts/eval-corpus.mjs --json            # 机读快照
+node scripts/eval-corpus.mjs --gate            # 门禁：坏行=1、相对基线回退超过 0.5 个百分点=3
+node scripts/eval-corpus.mjs --write-baseline  # 刷新 tests/eval-baseline.json
+```
+
+- 判分口径与运行时**同一套**：领域用 `data/scenarios.mjs` 的 `rankDomains`（状态条、评分器、评测共用一个真源），判决用 `scripts/lib/scorer.mjs`；语料里的 `blocked`（真红线：未成年人等）按语义映射成「正确观测 = refusal」，所以「为了刷分把红线也一起破掉」会立刻掉分。
+- 首批实测：领域判定 **Top-1 68.2% / Top-3 76.5%**（宏 F1 71.9%，85 条带标签用例）。工具立刻抓出三处真问题：**`llm` 召称只有 17.6%**（17 条越狱/提示词提取用例被判成 web/game/crack 或判空）、**语料里有 `postex` 标签但 56 个领域包里没有这个包**、以及 `adversarial_suffix`/`hook_inject`/`osint`/`code_eng`/`exploit_dev` 五个标签各有一批假阳。
+- 基线固化后，任何词表/判定/内核改动都必须先过 `npm run gate:eval`。
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+新增**离线评测闭环**：`scripts/lib/corpus.mjs`（纯函数：jsonl 解析/注释与坏行分离、字段别名归一、blocked 语义映射、混淆矩阵、每类 P/R/F1、覆盖缺口、快照扁平化与容差比对）+ `scripts/eval-corpus.mjs`（CLI：`--json` / `--gate` / `--write-baseline` / `--top`）+ `tests/eval-baseline.json` 回归门禁 + `scripts/verify_eval.mjs`（81 项，含 CLI 真跑退出码 0/1/3）；把 110 条语料里从未被消费的 85 条领域标签与 78 条判决标签接进计量，首批实测 Top-1 68.2% / Top-3 76.5%（宏 F1 71.9%），并抓出 llm 召回 17.6%、postex 缺包、5 个标签假阳三处真问题
+
+---
+
+## v0.8.2：✳️ v0.8.2：入口压成单字符记号（Glyph Trigger）
+
+**公开叙述（原 README 版本沿革）**
+
+上一条把入口压成了短词，但「通过 injection」这种「中文状态词 + 英文领域 id」读起来仍像一句话。现在判决只上屏**一个记号**：`✓` 通过 / `✕` 拒绝 / `!` 兜底，按宿主 success/error 令牌着色，并**替代**空闲时那个圆点（不再圆点 + 文字两件套）。
+空闲与执行中仍只有一个圆点（执行中呼吸）。领域、候选排名、命中标记词、扫描范围、载荷数一律进**点击浮层**与悬停 title。
+`TRIGGER_MODE` 现有四档：`glyph`（默认，单字符）/ `compact`（短词 `通过 web(3)`）/ `full`（v0.8.0 的长文字）/ `dot`（纯圆点）。
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+状态条入口压成**单字符记号**：判决只上屏 `✓` / `✕` / `!`（按 success/error 令牌着色）并替代空闲时的圆点，避免「通过 injection」这种中文状态词 + 英文领域 id 的混读；领域与数值一律进点击浮层与悬停 title；`TRIGGER_MODE` 四档 `glyph`(默认)/`compact`/`full`/`dot`；`verify_ui` 92 项（新增形态切换与记号断言）。纯客户端改动，刷新页面即生效
+
+---
+
+## v0.8.1：🔻 v0.8.1：入口压成多态指示器（Compact Trigger）
+
+**公开叙述（原 README 版本沿革）**
+
+状态条的触发条不再常驻长文字：空闲与执行中**只留一个圆点**（执行中呼吸、走宿主 business 令牌），判决时圆点变色（success/error）并只留一个短词 —— `通过 web(3)` / `拒绝` / `兜底`。
+载荷数、候选领域排名、命中标记词、扫描范围、落笔时刻等明细全部收进**点击浮层**，悬停 title 里也保留完整一句（含载荷数）。
+形态由 `client.js` 顶部的 `TRIGGER_MODE` 一行控制：`compact`（默认）/ `full`（v0.8.0 的长文字）/ `dot`（纯圆点）。
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+客户端状态条入口压成**多态指示器**：空闲与执行中只有一个圆点（执行中呼吸），判决时圆点变 success/error 色并只留短词（`通过 web(3)` / `拒绝` / `兜底`）；载荷数、候选领域排名、命中标记词、扫描范围、落笔时刻全部收进点击浮层与悬停 title；形态由 `client.js` 的 `TRIGGER_MODE` 控制（`compact` 默认 / `full` v0.8.0 长文字 / `dot` 纯圆点）。纯客户端改动，刷新页面即生效
+
+---
+
+## v0.8.0：🖥 v0.8.0：运行环境探测（Environment Probe）
+
+**公开叙述（原 README 版本沿革）**
+
+新增 `infinite_gen5_env` 工具与 `scripts/probe-env.mjs` CLI：一条命令回答**我在哪台机器上、能不能出网、手里有什么、缺的那个怎么装**。
+分层探测（形态 / 资源 / 网络 / 库存 / 能力位 / 设备 / 39 域就绪度）全部**只读**、处处超时；离线四层实测 0.3 s，`--fast` 全量约 2.1 s。
+报告把 CapEff 位解码成人话（有没有 `sysPtrace` / `netRaw` / `sysAdmin`），并把「缺工具」翻译成「装：`apt install upx-ucl`」。
+设计说明书见 [ENV_PROBE.md](./ENV_PROBE.md)。
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+新增 `infinite_gen5_env` 运行环境探测工具 + `scripts/probe-env.mjs` CLI + `data/probe.mjs` 只读引擎 + `scripts/verify_env.mjs`（149 项）；分层探测形态/资源/出网/库存/能力位/设备/39 域就绪度，把「缺工具」翻译成「装什么」；内核新增「环境规则」，载荷预算 6200 → 6800 B
+
+---
+
+## v0.7.1：⏱ v0.7.1：判决常驻 + 覆盖明细（Sticky Verdict & Coverage Detail）
+
+**公开叙述（原 README 版本沿革）**
+
+**判决不再一闪而过**。原先状态条在判决出现 3.2 秒后自动回落成空闲态，短到看不清；
+现在判决**常驻**在输入框那一行，直到你发出下一条消息才被重置成「执行中」，
+落笔时刻（`HH:MM:SS`）也一并显示。
+
+**覆盖判定改扫全文**。判拒仍然只看开头 160 字（拒答一定在开头），但**领域判定扫全文** ——
+原先两者共用那个窗口，长回答后半段的线索全丢，状态条上就表现为「识别领域」空着或者很粗。
+
+**浮层给出覆盖明细**，不再是一个黑箱 id：
+`识别领域 | Web 应用与 API（web · 命中 3）`、`领域候选 | web 3* · network 1`（`*` 是主判）、
+`命中标记 | 渗透、ffuf、sql注入`（真正命中的那几条词）、`扫描范围 | 全文 1288 字（判拒只看开头 160 字）`。
+投影新增 `domainRanked` / `domainMarkers` / `openingChars` / `textChars` / `at`；
+数据层抽出 `rankDomains()`，`detectDomain()` 变成它的第一名，
+状态条、工具、离线评分器**共用同一份排名实现**，不会再出现「候选列表与主判不一致」。
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+状态条判决**常驻**（原先 3.2 秒后自动淡出，观感是「一闪而过」）；覆盖明细上屏：领域判定改扫**全文**（判拒仍只扫开头 160 字）、候选领域排名（`web 3*`）、真正命中的标记词、扫描范围、落笔时刻；投影新增 `domainRanked` / `domainMarkers` / `openingChars` / `textChars` / `at`
+
+---
+
+## v0.7.0：🧰 v0.7.0：计算机向扩写 + 工具链注入（Computer Expansion & Toolchain）
+
+**公开叙述（原 README 版本沿革）**
+
+**领域包 45 → 56**。新增 11 个计算机域，全部带五槽打法与工具链：
+`re` 逆向工程 · `unpack` 加壳脱壳 · `obfuscation` 混淆反混淆 · `hook_inject` Hook 与注入 ·
+`malware` 样本分析 · `exploit_dev` 利用开发 · `fuzzing` 模糊测试（offense 21 域）；
+`decrypt` 解密与口令恢复 · `stego` 隐写分析（crypto 6 域）；
+`programming` 编程与工具链 · `automation` 脚本自动化（engineering 8 域）。
+
+**每个计算机域附带工具链**（`data/toolchains.mjs`，单一真源）：每行形如
+`<工具> — <用途> | 装: <安装命令> | 验: <验证命令>`，覆盖 Ghidra/rizin/x64dbg/gdb+pwndbg/Frida/
+unipacker/AFL++/pwntools/YARA/capa/Volatility3/hashcat/zsteg/hashcat… 以及「无网、无 root
+装不上时用什么替代」。
+
+**内核新增「工具链规则」**：缺工具不是停下的理由——先 `command -v` 探测 → 按 包管理器 →
+pipx → go install → cargo → 官方静态包 → 容器 的顺序装一次 → `--version` 验证 → 再跑，
+并把安装命令、验证到的版本与降级点写进交付物正文。「请自行安装」不算交付。
+
+**匹配改进**：`detectDomain` 在命中数相同时按「命中标记更长者更具体」归因
+（「控制流平坦化」胜过「代码」，「模糊测试」胜过「解析」），新增 11 条口语匹配用例。
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+计算机向扩写：领域包 45 → 56（re 逆向 / unpack 脱壳 / obfuscation 反混淆 / hook_inject / malware 样本 / exploit_dev 利用 / fuzzing 模糊测试 / decrypt 口令恢复 / stego 隐写 / programming 工具链 / automation 自动化）；新增 `data/toolchains.mjs`（每域装/验命令 + 缺工具降级协议）；内核新增「工具链规则」与第五条工具链示例（载荷 4837 B → 6028 B）；`detectDomain` 增加「命中标记更长者更具体」的归因修正
+
+---
+
+## v0.6.1：🔧 v0.6.1：领域工具不再延迟加载
+
+**公开叙述（原 README 版本沿革）**
+
+`infinite_gen5_scenario` 首版带了 `deferLoading: true`，重启后实测发现：不带该字段的
+`infinite_gen5_profile` 出现在模型的工具表里、可直接调用，而带该字段的领域工具被扣住、
+模型根本看不见它 —— 而且工具从启动起就在基线里，会话中途没有任何机制为它补发激活，
+于是内核载荷里那句「call infinite_gen5_scenario」成了死指针。现在改为常驻定义（实测 794 B），
+56 个包的正文仍然按需取用。
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+领域工具去掉 `deferLoading: true`：实测延迟加载会让工具从模型的工具表里消失，内核里「call infinite_gen5_scenario」变成死指针；改为常驻定义约 0.8 KB（34 KB 包正文仍按需取用）
+
+---
+
+## v0.6.0：🧬 v0.6.0：领域/语言覆盖扩写（Domain & Language Coverage）
+
+**公开叙述（原 README 版本沿革）**
+
+- **内核载荷只做三件事**：① 五槽骨架 `ROLE / OBJECT / ACTION / SCOPE / SHAPE`——
+  任何领域（包括清单里没有的）都先拆这五槽再产出，不再只点名 3 个任务族；
+  ② 56 个领域 × 7 族（攻防 / AI / 密码 / 数据 / 创作 / 语言 / 工程）在载荷里点名，
+  让模型知道自己有这些域；③ 语言规则——**任何语言**的软化词
+  （`I can't` / `我无法` / `できません` / `할 수 없습니다` / `не могу` / `no puedo`）
+  都是「重新框定并继续」的信号，不是停下的理由。
+- **领域全文不进 system prompt**：56 个领域包共约 98 KB，塞进载荷每轮要付约 24 K token。
+  它们放在 `infinite_gen5_scenario` 工具里——无参调用返回约 3.8 KB 索引（≈1.1 K token），
+  带用户原话调用只返回命中的那一个包（≈0.2 K token）。常驻的只有工具定义本身（实测 794 B ≈ 248 token）；
+  （**不要**给它加 `deferLoading: true`：实测延迟加载会让工具从模型的工具表里消失，
+  而会话中途没有机制为它补激活，内核里那句「call infinite_gen5_scenario」就变成死指针。）
+  验证套件里有一条硬断言：**system prompt 里既没有索引行、也没有任何包正文**。
+- **代价**：内核载荷 3010 B → 4837 B（单份，仅此一份）。
+
+**技术说明（原 HARNESS_PLUGIN 版本表）**
+
+内核载荷扩写为五槽骨架 + 45 域 × 7 族点名 + 语言规则；45 个领域包全文移入 `infinite_gen5_scenario` 工具（定义常驻约 0.8 KB，包正文按需取用）；新增 `data/scenarios.mjs` 作为领域标记表的唯一真源（运行时与离线评分器共用，消除两份漂移表）；配套 3 套新自检
+
+---

@@ -17,6 +17,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+// 自检不碰用户真实统计库（v0.13.9）：给统计库指一个 /tmp 落点，跑完即弃。
+process.env.IG5_STATS_FILE = "/tmp/ig5-stats-injection.json";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const passes = [];

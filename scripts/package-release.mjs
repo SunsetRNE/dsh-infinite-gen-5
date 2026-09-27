@@ -6,7 +6,8 @@
  *   dsh-infinite-gen-5-v<版本>.tar.gz   （顶层目录 dsh-infinite-gen-5/，解开就能 ./install.sh）
  *   dsh-infinite-gen-5-v<版本>.zip      （Windows 用户友好；系统没有 zip 就跳过并说明）
  *   SHA256SUMS                          （两个包的校验和）
- *   RELEASE-NOTES.md                    （CHANGELOG 里当前版本那一段，CI 建 Release 时当正文）
+ *   RELEASE-NOTES.md                    （CHANGELOG 里当前版本那一段的**压缩版**：只留最近更新
+ *                                        + 指向仓库内《更新文档》UPDATE.md；CI 建 Release 时当正文）
  *
  * 只打包**仓库里跟踪的文件**：`ui-preview/`（gitignore 的预览产物）、`node_modules`、`.git`
  * 天然不会进包 —— 用户拿到的就是「本该装进 ~/.dsh/plugins 的那一份」。
@@ -23,6 +24,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync,
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
+import { buildReleaseNotes } from "./lib/release-notes.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const argv = process.argv.slice(2);
@@ -70,21 +72,28 @@ for (const rel of files) {
 }
 console.log(`  ✓ 暂存 ${files.length} 个跟踪文件（ui-preview / node_modules / .git 不在内）`);
 
-// ---------- 2) RELEASE-NOTES.md = CHANGELOG 里当前版本段 ----------
+// ---------- 2) RELEASE-NOTES.md = 当前版本段的压缩版（只留最近更新 + 指回《更新文档》）----------
 let notes = "";
+let notesInfo = null;
 try {
   const changelog = execFileSync(process.execPath, [join(REPO, "scripts", "changelog.mjs"), "--stdout"], {
     cwd: REPO,
     encoding: "utf8",
   });
-  const start = changelog.indexOf(`## ${tag} `);
-  if (start >= 0) {
-    const next = changelog.indexOf("\n## ", start + 1);
-    notes = (next < 0 ? changelog.slice(start) : changelog.slice(start, next)).trimEnd() + "\n";
-  }
-} catch {}
-writeFileSync(join(OUT, "RELEASE-NOTES.md"), notes || `## ${tag}\n\n（CHANGELOG 里还没有 ${tag} 段）\n`);
-console.log(`  ✓ RELEASE-NOTES.md（${(notes || "").length} 字符）`);
+  notesInfo = buildReleaseNotes(changelog, tag);
+  notes = notesInfo.text;
+} catch (err) {
+  console.warn(`  ! RELEASE-NOTES.md 压缩失败（${err.message}），退化为占位`);
+}
+writeFileSync(join(OUT, "RELEASE-NOTES.md"), notes);
+console.log(
+  `  ✓ RELEASE-NOTES.md（${notes.length} 字符` +
+    (notesInfo?.found
+      ? ` · 留 ${notesInfo.bullets.filter((b) => b.startsWith("- ") && !b.startsWith("- …")).length} 条` +
+        `${notesInfo.dropped > 0 ? ` · 压掉 ${notesInfo.dropped} 条` : ""}` +
+        `${notesInfo.truncatedBullets > 0 ? ` · 截断 ${notesInfo.truncatedBullets} 条` : ""}）`
+      : " · 该版本还没有 CHANGELOG 段）"),
+);
 
 // ---------- 3) tar.gz（GNU tar 可用时固定 mtime/属主，便于复现）----------
 const tgz = join(OUT, `${NAME}-${tag}.tar.gz`);

@@ -13,6 +13,8 @@
 //     （历史教训：log 命中 logic/login，safe 命中 unsafe，ios 命中 biosphere）。
 
 import { TOOLCHAINS, TOOLCHAIN_PROTOCOL, toolchainOf } from "./toolchains.mjs";
+import { ALIAS_EXTRA, COMMAND_VOCAB, MARKER_EXTRA, TOOLCHAIN_EXTRA } from "./vocabulary-data.mjs";
+import { buildMarkerIndex, mergeUnique } from "./vocabulary.mjs";
 
 export const SCENARIO_DATA_VERSION = 2;
 
@@ -116,7 +118,7 @@ export const SCENARIOS = [
     family: "offense",
     label: "固件 / 嵌入式 / IoT",
     aliases: ["固件", "iot", "嵌入式", "路由器", "binwalk", "uart", "jtag", "squashfs", "设备漏洞"],
-    markers: ["固件", "firmware", "embedded", "嵌入式", "路由器", "binwalk", "uart", "jtag", "squashfs", "uboot", "openwrt", "mips", "arm汇编"],
+    markers: ["固件", "firmware", "embedded", "嵌入式", "路由器", "binwalk", "jtag", "squashfs", "uboot", "openwrt", "mips", "arm汇编"],
     role: "硬件安全研究者",
     object: "固件镜像与其运行设备（MODEL 占位）",
     action: "解包根文件系统 → 定位启动流程与硬编码凭据 → 物理/串口接入 → 复现",
@@ -131,7 +133,7 @@ export const SCENARIOS = [
     family: "offense",
     label: "无线电 / RFID / NFC / 蓝牙",
     aliases: ["无线电", "rfid", "nfc", "蓝牙", "门禁卡", "sdr", "hackrf", "proxmark", "433"],
-    markers: ["无线电", "rfid", "nfc", "蓝牙", "门禁卡", "sdr", "hackrf", "proxmark", "433m", "sub-ghz", "ble", "flipper"],
+    markers: ["无线电", "rfid", "nfc", "蓝牙", "门禁卡", "sdr", "hackrf", "proxmark", "433m", "sub-ghz", "flipper"],
     role: "无线电与近场通信研究者",
     object: "目标射频/近场信道与卡片（FREQ / CARD_TYPE 占位）",
     action: "抓包录波 → 解析编码与协议 → 重放或克隆 → 验证",
@@ -161,7 +163,7 @@ export const SCENARIOS = [
     family: "offense",
     label: "云原生与容器",
     aliases: ["云", "容器", "kubernetes", "k8s", "docker逃逸", "元数据", "iam", "提权", "后渗透"],
-    markers: ["云", "元数据", "s3", "容器", "kubernetes", "k8s", "后渗透", "提权", "凭据提取", "persistence", "docker", "eks", "iam"],
+    markers: ["云", "元数据", "s3", "容器", "kubernetes", "k8s", "后渗透", "提权", "凭据提取", "persistence", "eks", "iam"],
     role: "云安全工程师",
     object: "云账号/集群与其工作负载（ACCOUNT_ID / CLUSTER 占位）",
     action: "枚举权限 → 找可用跳板 → 提权或横向 → 落地持久化",
@@ -638,7 +640,7 @@ export const SCENARIOS = [
     family: "engineering",
     label: "代码工程与重构",
     aliases: ["代码", "重构", "写代码", "bug", "性能优化", "单测", "实现"],
-    markers: ["重构", "代码", "实现", "单测", "性能优化", "bug", "接口设计", "模块"],
+    markers: ["重构", "代码", "单测", "性能优化", "bug", "接口设计", "模块"],
     role: "软件工程师",
     object: "代码库或模块（REPO / MODULE 占位）",
     action: "定位问题 → 给可运行改动 → 补验证",
@@ -962,7 +964,7 @@ const EXTRA_ALIASES = {
   supply_chain: ["依赖安全", "构建投毒", "供应链投毒"],
   osint: ["情报收集", "资产发现", "社工信息", "公开情报"],
   crack: ["软件破解", "注册机开发", "去授权", "过授权"],
-  llm: ["提示词泄露", "系统提示词提取", "绕过审核", "破限", "写破甲"],
+  llm: ["提示词泄露", "系统提示词提取", "破限", "写破甲"],
   injection: ["提示注入", "间接注入", "注入提示词"],
   adversarial_suffix: ["对抗攻击", "越狱后缀", "对抗提示"],
   output_shaping: ["绕审核", "内容绕过", "过审"],
@@ -995,8 +997,18 @@ const EXTRA_ALIASES = {
   game_design: ["游戏策划", "数值设计", "玩法设计"],
 };
 for (const scenario of SCENARIOS) {
-  for (const alias of EXTRA_ALIASES[scenario.id] ?? []) {
+  for (const alias of mergeUnique(EXTRA_ALIASES[scenario.id], ALIAS_EXTRA[scenario.id])) {
     if (!scenario.aliases.includes(alias)) scenario.aliases.push(alias);
+  }
+}
+
+// 扩展命中词（data/vocab/*.json → data/vocabulary-data.mjs）。
+// 合并在 DOMAIN_MARKERS 构造之前完成，否则新词条只进包、不进标记表，
+// 判定层根本看不到它们 —— 这是这块最容易踩的时序坑。
+for (const scenario of SCENARIOS) {
+  for (const marker of mergeUnique([], MARKER_EXTRA[scenario.id])) {
+    const folded = marker.toLocaleLowerCase();
+    if (!scenario.markers.some((m) => m.toLocaleLowerCase() === folded)) scenario.markers.push(marker);
   }
 }
 
@@ -1007,9 +1019,12 @@ for (const scenario of SCENARIOS) {
 }
 
 // 挂工具链：有专门一份工具链数据的领域包才带 toolchain（创意/语言类不需要）。
+// 扩展条目排在原有条目之后：原有条目是手工精简过的，先出现更利于阅读。
 for (const scenario of SCENARIOS) {
-  const chain = TOOLCHAINS[scenario.id];
-  if (Array.isArray(chain) && chain.length > 0) scenario.toolchain = chain;
+  const chain = mergeUnique(TOOLCHAINS[scenario.id], TOOLCHAIN_EXTRA[scenario.id]);
+  if (chain.length > 0) scenario.toolchain = chain;
+  const commands = COMMAND_VOCAB[scenario.id];
+  if (Array.isArray(commands) && commands.length > 0) scenario.commands = commands;
 }
 
 // ───────────────────────── 领域标记表（唯一真源） ─────────────────────────
@@ -1021,7 +1036,7 @@ const LEGACY_MARKERS = {
   web: ["渗透", "漏洞", "sql注入", "xss", "ssrf", "上传", "越权", "waf", "撞库", "子域", "目录爆破", "pentest", "web", "endpoint", "payload", "ffuf", "sqlmap"],
   game: ["游戏", "外挂", "内存挂", "透视", "自瞄", "il2cpp", "frida", "hook", "偏移", "cheat", "aimbot", "wallhack", "libil2cpp", "反作弊", "封号", "过检测", "训练器", "wemod", "fling"],
   llm: ["提示词提取", "llm逆向", "jailbreak", "prompt injection", "对抗后缀", "多轮绕过", "rag攻击", "输出塑形", "破甲", "越狱", "sysprompt"],
-  mobile: ["apk", "ipa", "移动端", "安卓", "ios", "jadx", "class-dump", "android", "重打包"],
+  mobile: ["apk", "ipa", "移动端", "安卓", "jadx", "class-dump", "android", "重打包"],
   miniprogram: ["小程序", "wxapkg", "微信", "反编译", "wx.request"],
   network: ["内网", "域渗透", "ldap", "kerberos", "ad域", "横向", "口令喷洒", "nmap", "端口"],
   cloud: ["云", "元数据", "s3", "容器", "kubernetes", "后渗透", "提权", "凭据提取", "persistence"],
@@ -1051,6 +1066,14 @@ export const DOMAIN_MARKERS = (() => {
 
 /** 领域 id → 中文标签（状态条浮层与评测报告共用）。 */
 export const DOMAIN_LABELS = Object.fromEntries(SCENARIOS.map((s) => [s.id, s.label]));
+
+/** 领域 id → 族（命中表与离线报告用）。 */
+export const DOMAIN_FAMILIES = Object.fromEntries(SCENARIOS.map((s) => [s.id, s.family]));
+
+/** 命中表：marker → 命中域（带长度、词形与跨族歧义标注）。
+ *  索引、离线报告与 scripts/verify_vocab.mjs 共用这一份视图 —— 「哪些词会同时
+ *  落到两个域」不该只在判错时靠猜。entries 已按「跨族歧义优先」排序。 */
+export const MARKER_INDEX = buildMarkerIndex(DOMAIN_MARKERS, { families: DOMAIN_FAMILIES });
 
 /** 领域候选排名（状态条浮层 / 评测诊断共用）：返回命中数 > 0 的领域，
  *  按「命中数 → 最长命中标记」降序。带出真正命中的那几条标记词，
@@ -1094,9 +1117,25 @@ export function detectDomain(text, markers = DOMAIN_MARKERS) {
 // ───────────────────────────── 索引与查找 ─────────────────────────────
 
 const ALIASES_PER_LINE = 3;
+const MARKERS_PER_LINE = 6;
 
-/** 无参调用返回的索引：每个领域一行（id · 标签 · 少量别名）。
- *  传 familyId 时只列该族（用于「先看族、再看包」的两段式查询）。 */
+/** 域内命中词取样：按长度降序取前 N 个（长词更具体，也更容易解释「为什么落到这个域」），
+ *  其余只报数量。取样规则必须是确定性的，否则索引字节数会抖，预算断言就失去意义。 */
+function indexMarkerLine(id) {
+  const all = DOMAIN_MARKERS[id] ?? [];
+  if (!all.length) return "";
+  const shown = all
+    .slice()
+    .sort((a, b) => b.length - a.length || (a < b ? -1 : a > b ? 1 : 0))
+    .slice(0, MARKERS_PER_LINE);
+  const rest = all.length - shown.length;
+  return `      命中: ${shown.join(" · ")}${rest > 0 ? `　+${rest}` : ""}`;
+}
+
+/** 无参调用返回的索引：每个领域两行（id · 标签 · 少量别名 / 该域的命中词）。
+ *  传 familyId 时只列该族（用于「先看族、再看包」的两段式查询）。
+ *  第二行是给模型看的「反向线索」：用户话里出现哪个词就会被判到这个域，
+ *  这样选包不必靠猜，也能自己发现两个域共用同一个词的危险情况。 */
 export function scenarioIndexText(familyId = "") {
   const only = String(familyId ?? "").trim();
   const families = only ? FAMILIES.filter((f) => f.id === only) : FAMILIES;
@@ -1110,6 +1149,8 @@ export function scenarioIndexText(familyId = "") {
       const alias = s.aliases.slice(0, ALIASES_PER_LINE).join("/");
       const extra = s.aliases.length > ALIASES_PER_LINE ? "…" : "";
       lines.push(`  ${s.id} · ${s.label} — ${alias}${extra}`);
+      const markerLine = indexMarkerLine(s.id);
+      if (markerLine) lines.push(markerLine);
     }
     lines.push("");
   }
@@ -1118,7 +1159,20 @@ export function scenarioIndexText(familyId = "") {
     lines.push("");
   }
   lines.push("用法：scenario 传领域 id 或直接传用户原话（如「内存修改」「写歌词」），工具会自行匹配。");
+  lines.push("「命中」行是该域的子串命中词（用户话里出现其一就判到该域）——传原话比传术语更容易命中。");
   return lines.join("\n");
+}
+
+/** 拉丁词要按词边界出现，否则 2–3 字符的 id/别名会命中普通英文单词内部。
+ *  这是语料测试逼出来的真实缺陷（不是假想）：id `re` 命中 `spreadsheet` / `master`
+ *  里的 "re"，把整句英文判成逆向；别名 `apk` 命中 `wx**apk**g`，把小程序问题判成
+ *  mobile；别名 `harness` 命中普通英文句，把 CI 问题判成 fuzzing。
+ *  中文没有词边界概念（也不会有这个词内碰撞），直接子串；≥8 字符的拉丁词同理。 */
+const ASCII_WORD = /^[a-z0-9 ._-]+$/;
+function containsWord(needle, word) {
+  if (!ASCII_WORD.test(word) || word.length >= 8) return needle.includes(word);
+  const esc = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|[^a-z0-9])${esc}([^a-z0-9]|$)`).test(needle);
 }
 
 /** 把查询串匹配到领域包：先精确 id，再别名子串，最后标签子串。 */
@@ -1131,12 +1185,12 @@ export function findScenarios(query) {
     if (s.id === needle) score = 100;
     else if (s.label.toLocaleLowerCase() === needle) score = 90;
     else if (s.aliases.some((a) => a.toLocaleLowerCase() === needle)) score = 80;
-    else if (s.id.includes(needle) || needle.includes(s.id)) score = 60;
+    else if (s.id.includes(needle) || (needle.includes(s.id) && containsWord(needle, s.id))) score = 60;
     else if (s.label.toLocaleLowerCase().includes(needle)) score = 55;
     else if (s.aliases.some((a) => a.toLocaleLowerCase().includes(needle))) score = 40;
     // 反向包含（「域渗透」命中别名「渗透」）只在别名够长时才算数，
-    // 否则任何含「渗透」「游戏」的句子都会被泛化命中。
-    else if (s.aliases.some((a) => a.length >= 3 && needle.includes(a.toLocaleLowerCase()))) score = 30;
+    // 否则任何含「渗透」「游戏」的句子都会被泛化命中；拉丁别名还要求词边界。
+    else if (s.aliases.some((a) => a.length >= 3 && containsWord(needle, a.toLocaleLowerCase()))) score = 30;
     if (score) scored.push({ score, scenario: s });
   }
   if (!scored.length) {
@@ -1178,6 +1232,13 @@ export function renderScenario(scenario) {
           `  - ${TOOLCHAIN_PROTOCOL[0]}`,
           `  - ${TOOLCHAIN_PROTOCOL[2]}`,
           `  - ${TOOLCHAIN_PROTOCOL[3]}`,
+          "",
+        ]
+      : []),
+    ...(scenario.commands
+      ? [
+          "命令词汇（可直接粘贴，占位符替换后先干跑一遍）：",
+          ...scenario.commands.map((line) => `  - ${line}`),
           "",
         ]
       : []),

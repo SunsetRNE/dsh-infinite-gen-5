@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.13.5)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.13.9)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -37,7 +37,7 @@
   + **45 个领域 × 7 族点名** + **语言规则**（任何语言的软化词都视为「重新框定并继续」）。
   载荷 3010 B → 4837 B。
 - **领域包工具 `infinite_gen5_scenario`**：56 个领域包共约 98 KB（v0.7.0 计算机向扩写 11 个域），
-  放在工具里按需取用而不是常驻 system prompt。无参调用返回约 4.6 KB 索引（≈1.3 K token），
+  放在工具里按需取用而不是常驻 system prompt。无参调用返回约 10.6 KB 索引（≈2.9 K token），
   带用户原话只返回命中的那一个包（≈0.2–1.0 K token）。
 - **工具链注入（v0.7.0）**：每个计算机域在 `data/toolchains.mjs` 里配了
   `<工具> — <用途> | 装: <命令> | 验: <命令>` 形式的工具链，外加一份「缺工具协议」
@@ -67,43 +67,27 @@
 
 ## 版本
 
-| 版本 | 说明 |
-|---|---|
-| **v0.13.4** | **CI 转绿：自检夹具不再受 `umask` 影响 + 同步跟随权限位**（v0.13.2 / v0.13.3 的 CI 全挂在这里）。① `scripts/sync-local.mjs`：目录权限也显式对齐（`listTree` 的 `dirs` 由 Set 变 Map 存 mode，落盘前逐个 `mkdirSync` + `chmodSync`），且「内容一样但权限位变了」也算要更新 —— 宿主指纹把 `mode` 算进去，不跟着改指纹必然对不上；② `scripts/verify_sync.mjs`：夹具建好后 `fixDirModes()` 把所有目录定死 0755（`cpSync` 出来的 scratch 也补一次），冻值按 CI 实测的 `fb0ce5ff9651…` 回填，新增 2 条「只改权限位也算要更新 / 权限位已同步到安装树」⇒ 35 → **37** 项。教训：本会话 `umask` 是 0077（目录 0700），GitHub runner 是 0022（0755），同一份夹具因此算出两个不同的 `codeSha256` |
-| **v0.13.3** | **修 `sync:local` 预览把「现树指纹」说成「将要写入的指纹」**：只读预览时树还没落盘，报告里那句「管理器激活记录过期 — 0.12.4 → 0.13.2，指纹 f1335ff0…」里的指纹其实是**当前**树算出来的，落盘后按新树重算（本机实测同一棵树预览 f1335ff0… / 落盘后 56a4b7d6…，版本号一样所以看着像假账）。现在预览态改为「（现树指纹 …，落盘后按新树重算）」，JSON 里多一个 `record.previewFingerprint` 供自检断言；`verify_sync` 33 → **35** 项（新增该断言，另因 `sync:local:apply` 之后本机记录与现树一致，宿主记录交叉验证多覆盖到本插件自己一条） |
-| **v0.13.2** | **本机安装树同步 + 管理器记账对齐**：`scripts/sync-local.mjs`（`npm run sync:local` 只读预览 / `sync:local:apply` 落盘）把仓库镜像进 dsh 实际加载的那棵树 —— 目标树由 profile `dependencies` 的 `link:`/`file:` 解析（外加 `plugin-src/<name>`、`plugins/<name>`、非软链的 profile `node_modules` 副本，按 realpath 去重），只增改删、跳过 `.git`/`node_modules`/`ui-preview`、保留安装树独有的 `.dsha-dependencies.json`、权限位跟随源文件、删空目录、写盘走 tmp+rename；同时刷新 `~/.dsh/plugin-activations.json` 里的 `version` + `fingerprint`（先留 `.bak-<时间戳>`；`status`/`startup`/`confirmedAt`/`loadedAt` 一律不动，那是管理器上次安装的记账；`--no-record` 可只铺树；管理器没登记过就不新建条目）。指纹算法在 `scripts/lib/tree-fingerprint.mjs`：复刻宿主 `~/.dsh/plugin-dependencies.py` 的 `current()`（逐条 `['file',rel,mode,sha256]`/`['directory',rel,mode]`/`['link',rel,target,sha]` 行 JSON 累进，非 ASCII 按 `\uXXXX` 转义；单节点依赖图再哈希一次），已用宿主**自己记过的**指纹交叉验证（whale-widget 逐字符一致）。动机：管理器式接线下手铺树管理器不知情，界面会一直显示旧版本、加载状态一栏因指纹不符被清空（本机实测「磁盘 0.13.1 / 管理器写 0.12.4」）。新增 `scripts/verify_sync.mjs`（33 项：指纹冻值 + 宿主记录交叉验证 + 假 DSH_HOME 全流程 + 热链接态空操作），并接进 `verify:all`；`cleanup.mjs` 新增「激活记录备份」一类（最近一份标跳过）；`verify_install` 的过期告警补上 `npm run sync:local:apply` 解法提示 |
-| **v0.13.1** | **修「设置页调参接口在真机上从不挂上」**（v0.13.0 的重缺陷）：宿主的 `WebServer` 在 `async [Service.init]()` 里才 `listen()`，服务 fiber 要等 socket 绑定完才激活，而 `ctx.get("webServer")` 默认 strict —— 只返回「提供方 fiber 已激活」的实现，所以插件 `apply()` 里那次 `get` 在真机上永远拿到 `undefined`，面板一直降级成「接口不可用」（演习台用假 webServer 先挂好，反而没暴露）。改为宿主同款 `ctx.inject(["webServer"], (webCtx) => mountTuningRoute(webCtx))`：服务就绪后补挂精确路由与 index 注入（`mountedServer` 去重，同一 server 不重复注册），未就绪期间仍如实汇报不可用而不假装成功。`verify_tuning` 39 → **45** 项（新增「webServer 晚到」一节：未就绪先报不可用 / 补挂路由 / token 注入同样就位 / endpoint 转 ok / 补挂路由 200 且错 token 仍 401）；另外用真实 `dsh-host-webserver`（`port: 0` 临时端口）跑过一次端到端：无 token 401 · 带 token 200 · POST 改档当场重装（`EXCLUSIVE_SECTION: true` 下装配只剩内核一段） |
-| **v0.13.0** | **设置页「注入档位」可调控 UI**：插件设置页里直接改六个注入开关与节拍间隔 N（服务端在宿主 `webServer` 上挂精确路由 `/infinite-gen-5/tuning`，路径与一次性 token 随 index.html 注入 `window.__IG5_TUNING__`；路由自守 —— 只收本机回环 + 该 token，因为宿主的路由匹配前没有鉴权中间件）。点「保存并生效」= 一条 POST：档位落盘 `$DSH_HOME/infinite-gen-5-tuning.json`，并**卸掉注入部分的 effect、按新档重装一遍**（工具/投影不重挂，次数计入 `rebuilds`），因此不重启进程、不刷页面即生效；`apply()` 内的注入块重构为可卸载重装的 `mountInjection()` + 三个注册点收句柄，`LAYER2_MODE` / `TAIL_MODE` / `RUNTIME_ANCHOR_MODE` 都改成装配时现读 `CFG`，所以档位改了立刻反映到装配结果。优先级变为 **设置页（持久化）> profile config > `IG5_*` env > 文件默认**（`resolveTuning` 每次从文件默认重算，覆盖不会粘住），每键 `sources` 汇报来源档，「复位到默认」发 `{reset:true}`；接口不可用时面板降级为只读提示 + 可粘贴的 `cordis.patch.yml` 片段。profile 工具新增 `tuning` 实况（effective / sources / persisted / store / rebuilds / endpoint）。新增 `scripts/verify_tuning.mjs`（真实宿主演习台 39 项，存储指到临时目录、不碰真实 `~/.dsh`），客户端调参面板接进 `verify_ui` 135 → **149** 项 |
-| **v0.12.4** | **安装残留清理 + 调参实测归档**：新增 `scripts/cleanup.mjs`（`npm run clean:legacy` 只列 / `clean:legacy:force` 真删）—— 一次列清 install.sh 快照、profile 接线备份、dev-link 备份与仓库临时探针文件，并**绝不动活着的安装树**（profile 依赖解析到的落点只标「跳过」）；README 补上「改配置 → 重启」这条路的本机实测证据（定向 `config` 覆盖合进同一条 `- id:` 条目、重启后运行时锚点序号由 `R#1 → R#4 → R#8` 变为 `R#1 → R#2 → R#4`）；顺手修掉 `verify_install` 的误报 —— 它把「顶层 `- id:` + `config:` 的定向覆盖」也算成 insert，于是在调参态下误报双接线，现在按缩进区分 insert 列表与覆盖条目 |
-| **v0.12.3** | **运行期调参**：六个注入开关（`LAYER2_MODE` / `DEDUPE_PAYLOAD` / `TAIL_MODE` / `RUNTIME_ANCHOR_MODE` / `RUNTIME_ANCHOR_EVERY` / `EXCLUSIVE_SECTION`）改为三级覆盖 —— `apply(ctx, config)` 的 profile config > `IG5_*` 环境变量 > 文件内默认，就地写回 `IG5_CONFIG`，`infinite_gen5_profile` 新增 `configOverrides` 汇报来源（形如 `TAIL_MODE=off（env IG5_TAIL_MODE）`）；管理器式安装只需在 profile `cordis.patch.yml` 加一条只带 `config` 的定向覆盖（无 insert，不算双接线）。默认运行时锚点节拍 6 → **4** 步；档位键保持字符串语义（`"off"` 不做布尔化，自检锁死这条）；两条自检改为从 `IG5_CONFIG` 读默认档，`verify_injection` 34 → **41**、`verify_dedupe` 81 → **82** |
-| v0.3.0 | 双层注入首版（Order 100 通用内核 + Order 200 战场实测层） |
-| v0.5.0 | 双层注入收敛为同源同构内核；注入槽位统一为 `infinite-gen-5:*`；内核载荷与强化镜像逐字一致（**即双份重复注入**） |
-| v0.5.1 | Order 200 默认改为末位锚点（约 200 字节），不再复述整份内核；新增同源载荷去重（命中即整段让位并如实上报）；客户端五代徽标接管显示，折叠上一代破甲徽标 |
-| v0.5.2 | 客户端状态条从 `conversation.input.dock`（与任务列表同列）迁到 `conversation.composer.dock`（输入框自己的 dock 行）；样式全部改走宿主 `--dsw-*` 令牌，去掉硬编码绿色/发光动画；空闲态收成一个中性圆点，点击展开最近判决浮层 |
-| **v0.12.0** | **注入强度三件套**：① 真末位锚点 —— 挂在 `system-prompt/assemble` 瀑布上，把 `TAIL_ANCHOR_TEXT` 追加到装配结果 `sections` 数组最后一项（宿主对该返回值只做 complete 兜底与 `"\n\n"` 拼接，数组顺序即拼接顺序），排在宿主 `10200` 人格后缀之后，恒为整份系统提示的最后一段，且不占 section 命名空间（`TAIL_MODE = "waterfall"` / 降级 `"order"` 10150 / `"off"`）；② 运行时锚点 —— 注册进 `systemPrompt.context()` 槽（与沙箱策略 110、审批策略 115、子代理委派 120 同槽，`order 118`），随运行时上下文快照发在**每步最后一条 user 消息**里，快照头写明取代早前快照；宿主只在文本变化时重发，故节拍靠换文本实现（`cadence` 每 N 步 / `once` / `every`）；③ 可选 `complete` 独占档（默认关）：宿主其余系统段整体让位，末位锚点并进内核文本以免被裁掉。两条边界：内核因同源去重让位时两段锚点也不再单独注册；profile 新增 `injectionPlacements` / `injectionStrength` 如实汇报四处位置与档位。新增 `scripts/verify_injection.mjs`（真实宿主演习台 **34** 项，无宿主时 SKIP 且退出 0）与 `verify_dedupe` 81 项 |
-| **v0.11.1** | 客户端设置台**归位 + 比例精修**：设置页入口从最顶部（`order -100`）挪到官方「插件」之后（`order 16`，nav 顺序 账户 -10 / 通用 0 / 模型 10 / 插件 15 / 无限五代 16），顺序取自 `__meta.consoleOrder` 并由自检锁住「排在官方插件之后」；同一页重做比例 —— 限宽 560px、形态四档两列网格、挂载位置三列、侧栏入口单列、预览改成带「空闲 / 执行中 / 判决」标签的内嵌面板（每行 28px）、只读信息两栏对齐、按钮统一 30px 高（「完成」用宿主主按钮样式）；纯客户端改动，刷新页面即生效，`verify_ui` **135** 项 |
-| **v0.11.0** | 内核新增 **Tool-call rule（工具调用卫生）**：一轮一个工具、参数短而平（禁裸换行 / 未转义引号 / 单次塞整份文件正文）、长输出按行范围分段小写、`invalid JSON` 或空包按重试信号改小重发 —— 针对反复出现的 `DeepSeek Messages stream: tool input is invalid JSON`；内核 6393 → 6789 B（仍 ≤6800 B 预算），`verify_prompt_gen5` 142 → 146 项 |
-| **v0.10.0** | 客户端长出**自己的设置台**：设置页最顶部注册一个「无限五代」入口（宿主原生 `settings.section` 槽，`order -100`，排在官方「通用/模型/插件」之前），点开即插件独立页面（不 require 宿主组件包）—— 形态四档 `glyph`/`compact`/`full`/`dot`（带空闲·执行中·判决三行预览）、挂载位置三档、可选侧栏入口（`main` + `sidebar.panellist`，与官方「插件」面板同款）、只读信息与「恢复默认」；偏好写 `localStorage["dsh-infinite-gen-5:prefs"]`（无本地存储时降级为仅本会话，非法值逐字段忽略），设置页与状态条共用同一偏好源；`verify_ui` 92 → 132 项 |
-| **v0.9.0** | 新增**离线评测闭环**：`scripts/lib/corpus.mjs`（纯函数：jsonl 解析/注释与坏行分离、字段别名归一、blocked 语义映射、混淆矩阵、每类 P/R/F1、覆盖缺口、快照扁平化与容差比对）+ `scripts/eval-corpus.mjs`（CLI：`--json` / `--gate` / `--write-baseline` / `--top`）+ `tests/eval-baseline.json` 回归门禁 + `scripts/verify_eval.mjs`（81 项，含 CLI 真跑退出码 0/1/3）；把 110 条语料里从未被消费的 85 条领域标签与 78 条判决标签接进计量，首批实测 Top-1 68.2% / Top-3 76.5%（宏 F1 71.9%），并抓出 llm 召回 17.6%、postex 缺包、5 个标签假阳三处真问题 |
-| **v0.8.2** | 状态条入口压成**单字符记号**：判决只上屏 `✓` / `✕` / `!`（按 success/error 令牌着色）并替代空闲时的圆点，避免「通过 injection」这种中文状态词 + 英文领域 id 的混读；领域与数值一律进点击浮层与悬停 title；`TRIGGER_MODE` 四档 `glyph`(默认)/`compact`/`full`/`dot`；`verify_ui` 92 项（新增形态切换与记号断言）。纯客户端改动，刷新页面即生效 |
-| **v0.8.1** | 客户端状态条入口压成**多态指示器**：空闲与执行中只有一个圆点（执行中呼吸），判决时圆点变 success/error 色并只留短词（`通过 web(3)` / `拒绝` / `兜底`）；载荷数、候选领域排名、命中标记词、扫描范围、落笔时刻全部收进点击浮层与悬停 title；形态由 `client.js` 的 `TRIGGER_MODE` 控制（`compact` 默认 / `full` v0.8.0 长文字 / `dot` 纯圆点）。纯客户端改动，刷新页面即生效 |
-| **v0.8.0** | 新增 `infinite_gen5_env` 运行环境探测工具 + `scripts/probe-env.mjs` CLI + `data/probe.mjs` 只读引擎 + `scripts/verify_env.mjs`（149 项）；分层探测形态/资源/出网/库存/能力位/设备/39 域就绪度，把「缺工具」翻译成「装什么」；内核新增「环境规则」，载荷预算 6200 → 6800 B |
-| **v0.7.1** | 状态条判决**常驻**（原先 3.2 秒后自动淡出，观感是「一闪而过」）；覆盖明细上屏：领域判定改扫**全文**（判拒仍只扫开头 160 字）、候选领域排名（`web 3*`）、真正命中的标记词、扫描范围、落笔时刻；投影新增 `domainRanked` / `domainMarkers` / `openingChars` / `textChars` / `at` |
-| **v0.7.0** | 计算机向扩写：领域包 45 → 56（re 逆向 / unpack 脱壳 / obfuscation 反混淆 / hook_inject / malware 样本 / exploit_dev 利用 / fuzzing 模糊测试 / decrypt 口令恢复 / stego 隐写 / programming 工具链 / automation 自动化）；新增 `data/toolchains.mjs`（每域装/验命令 + 缺工具降级协议）；内核新增「工具链规则」与第五条工具链示例（载荷 4837 B → 6028 B）；`detectDomain` 增加「命中标记更长者更具体」的归因修正 |
-| **v0.6.1** | 领域工具去掉 `deferLoading: true`：实测延迟加载会让工具从模型的工具表里消失，内核里「call infinite_gen5_scenario」变成死指针；改为常驻定义约 0.8 KB（34 KB 包正文仍按需取用） |
-| **v0.6.0** | 内核载荷扩写为五槽骨架 + 45 域 × 7 族点名 + 语言规则；45 个领域包全文移入 `infinite_gen5_scenario` 工具（定义常驻约 0.8 KB，包正文按需取用）；新增 `data/scenarios.mjs` 作为领域标记表的唯一真源（运行时与离线评分器共用，消除两份漂移表）；配套 3 套新自检 |
+逐版「改了什么、为什么、自检项数怎么变」统一收在仓库内《更新文档》—— [`UPDATE.md`](UPDATE.md)（随包分发）；本文件不再复述历史。
+
+- 当前版本：以 `package.json` 的 `version` 为准（本文件标题同步，锚点表见 `scripts/version-targets.mjs`）。
+- 机械生成的提交清单：[`CHANGELOG.md`](CHANGELOG.md)（生成物，别手改）。
+- 发布产物 / Release 正文：只带最近一次更新（`scripts/lib/release-notes.mjs` 压缩）并指回 `UPDATE.md`。
 
 ## Local verification
 
 ```powershell
 node --check index.js
-node scripts/verify_prompt_gen5.mjs   # 146 项：载荷逐字同源 + 五槽骨架 + 七族点名 + 语言/工具链/环境/工具调用卫生规则 + 体积预算 + 投影 + 品牌纯净度
+node scripts/verify_prompt_gen5.mjs   # 158 项：载荷逐字同源 + 五槽骨架 + 七族点名 + 语言/工具链/环境/工具调用卫生（含坏包修复回路与结果侧截断）+ 体积预算 + 投影 + 品牌纯净度
 node scripts/verify_scenarios.mjs     # 83 项：56 个领域包 / 索引预算 / 标记表唯一真源 / 工具链装验成对 / 匹配用例
+node scripts/verify_vocab.mjs         # 15 项：1931 条扩展词条形态 / 跨族签字 / 英文碰撞 / 102 条真实语料 + 20 条行话 + 6 条负样本
 node scripts/verify_scenario_tool.mjs # 85 项：真宿主挂载三个工具（+ 环境工具离线调用） + 工具链返回 + 「包正文不进 system prompt」硬断言
-node scripts/verify_dedupe.mjs        # 82 项：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本单一真源
+node scripts/verify_tool_budget.mjs   # 48 项：唯一解析入口 / 结果体积闸（真实 render 驱动）/ 工具参数扁平 / 服务端与页面体积上限同值
+node scripts/verify_stats_panel.mjs   # 64 项：统计数据库（原子写 / 防抖 / 只读不写盘 / 写失败不抛）+ 任务清单（读 todos 投影、写走 todo/write）+ 面板只读库
+node scripts/verify_dedupe.mjs        # 84 项：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本单一真源
 node scripts/verify_injection.mjs     # 41 项：真实宿主演习台（装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级；无宿主时 SKIP 并以 0 退出）
 node scripts/verify_tuning.mjs        # 45 项：设置页调参接口（路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位 / 无 webServer 降级 / webServer 晚挂补挂；无宿主时 SKIP 并以 0 退出）
-node scripts/verify_version.mjs       # 22 项：版本锚点唯一且等于 package.json / 文档无超前版本号 / 全仓无未登记字面量
+node scripts/verify_version.mjs       # 23 项：版本锚点唯一且等于 package.json / 文档无超前版本号 / 全仓无未登记字面量
+node scripts/verify_release_notes.mjs # 32 项：发布正文压缩（只留最近更新 / 截断与封顶 / 去重 / 指针指回 UPDATE.md）+ 两个产物路径都走压缩器 + 叙述统一在仓库内
 node scripts/cleanup.mjs              # 安装残留清理（默认只列；--yes 才删，活着的安装树不在范围内）
 node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：接线入口唯一 / 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
 node scripts/sync-local.mjs           # 本机安装树同步（默认只读预览；--yes 才铺树并刷激活记录）—— 复刻宿主指纹算法，见下文

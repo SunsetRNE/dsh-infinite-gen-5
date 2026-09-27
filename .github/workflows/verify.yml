@@ -20,7 +20,12 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
+      # 必须拉全历史：CHANGELOG 生成器按提交标题切版本段（verify_release_notes 会现场生成一遍
+      # 并断言「版本段数合理」）。默认的 fetch-depth: 1 只有一个提交 —— 生成结果只剩 1 段，
+      # 历史类断言在 CI 上必假红（本机全历史绿、runner 红）。
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22

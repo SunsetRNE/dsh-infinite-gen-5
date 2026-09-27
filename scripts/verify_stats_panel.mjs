@@ -1,0 +1,461 @@
+// 无限五代自检（统计数据库 + 任务清单 + 面板只读解耦）：统计数据库 + 任务清单 + 面板只读解耦
+//
+// 这一版把「插件本体 ↔ 前端面板」的关系翻过来：
+//   核心（index.js） --写--> 统计数据库（infinite-gen-5-stats.json） --读--> 面板（client.js）
+// 于是要守住三件事，缺一条这套解耦就是假的：
+//   1) 库本身靠得住：原子写、防抖、读侧纯读、写失败不抛（统计是旁路，不许拖垮本体）；
+//   2) 任务清单能力真接上了宿主：读 `todos` 投影，写走与官方工具同一条 `todo/write` 事件，
+//      并且写前按宿主策略（恰好一个 in_progress）本地校验；
+//   3) 面板**只**读库：不 import 插件内部、不自己算档位、不上行改档位以外的任何东西。
+//
+// 用假宿主把 apply() 真跑一遍，再直接驱动真实对象（工具 / 三条路由 / 会话事件），
+// 而不是 grep 源码猜。用法：node scripts/verify_stats_panel.mjs [--json]
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+const STATS_A = "/tmp/ig5-stats-panel-a.json";
+const STATS_B = "/tmp/ig5-stats-panel-b.json";
+for (const file of [STATS_A, STATS_B, `${STATS_A}.tmp-${process.pid}`, `${STATS_B}.tmp-${process.pid}`]) {
+  rmSync(file, { force: true });
+}
+process.env.IG5_STATS_FILE = STATS_A;
+
+const passes = [];
+const failures = [];
+function check(ok, label, detail = "") {
+  (ok ? passes : failures).push(`${label}${!ok && detail ? " — " + detail : ""}`);
+}
+const bytes = (value) => Buffer.byteLength(typeof value === "string" ? value : JSON.stringify(value), "utf8");
+
+// 自检自己用的库版本：别写当前版本号（verify_version 会把它当未登记锚点），也别写超前版本号。
+const TEST_VERSION = "0.1.0-test";
+const plugin = await import(new URL("../index.js", import.meta.url).href);
+const store = await import(new URL("../stats-store.mjs", import.meta.url).href);
+const tasks = await import(new URL("../tasks.mjs", import.meta.url).href);
+const { createStatsStore, emptyStats, statsFile, STATS_SCHEMA, STATS_PLUGIN } = store;
+
+// ───────────────────────── 一、统计库本身 ─────────────────────────
+check(statsFile() === STATS_A, "IG5_STATS_FILE 覆盖数据库路径（自检不碰用户真实库）", statsFile());
+
+const skeleton = emptyStats("0.0.0");
+const skeletonKeys = ["schema", "plugin", "version", "generatedAt", "boot", "runtime", "tuning", "tools", "tasks", "sessions", "counters"];
+check(
+  skeletonKeys.every((key) => key in skeleton) && skeleton.schema === STATS_SCHEMA && skeleton.plugin === STATS_PLUGIN,
+  "空库骨架键齐全且带 schema/plugin 标识",
+  Object.keys(skeleton).join(","),
+);
+
+const storeA = createStatsStore({ file: STATS_A, version: TEST_VERSION, flushMs: 0 });
+storeA.set("counters", { a: 1 });
+storeA.patch("counters", { b: 2 });
+storeA.bump("tools.total");
+storeA.bump("tools.total", 4);
+storeA.bump(["tools", "calls", "infinite_gen5_scenario"]);
+check(storeA.snapshot().counters.a === 1 && storeA.snapshot().counters.b === 2, "set 覆盖分区、patch 合并分区");
+check(storeA.snapshot().tools.total === 5, "bump 累加（数字键与数组路径两种写法）", String(storeA.snapshot().tools.total));
+for (let i = 0; i < 25; i += 1) storeA.push("tasks.writes", { at: String(i) }, 20);
+check(storeA.snapshot().tasks.writes.length === 20, "push 只留最近 N 条", String(storeA.snapshot().tasks.writes.length));
+check(existsSync(STATS_A), "flushMs=0 时改动立即落盘", STATS_A);
+check(!existsSync(`${STATS_A}.tmp-${process.pid}`), "原子写不留下 tmp 残骸");
+const onDisk = JSON.parse(readFileSync(STATS_A, "utf8"));
+check(onDisk.schema === STATS_SCHEMA && onDisk.tools.total === 5, "盘上的库可解析且内容与内存一致");
+
+// 防抖：多次改动只落一次盘
+const debounced = createStatsStore({ file: STATS_B, version: TEST_VERSION, flushMs: 40 });
+debounced.set("counters", { x: 1 });
+debounced.bump("tools.total");
+debounced.bump("tools.total");
+const writesBeforeWait = debounced.writes;
+await new Promise((resolve) => setTimeout(resolve, 120));
+check(
+  writesBeforeWait === 0 && debounced.writes === 1,
+  "防抖合流：等待窗口内的多次改动只写一次盘",
+  `before=${writesBeforeWait} after=${debounced.writes}`,
+);
+
+// 读侧纯读：读盘不改内存、不写盘
+const writesBeforeRead = debounced.writes;
+const readBack = debounced.read();
+check(readBack !== null && readBack.schema === STATS_SCHEMA, "read() 读得到盘上的库");
+check(debounced.writes === writesBeforeRead && debounced.dirty === false, "read() 纯读：不写盘、不置脏");
+rmSync(STATS_B, { force: true });
+check(debounced.read() === null, "盘上没有库时 read() 返回 null（不编一个假库出来）");
+
+// 写失败只记录不抛（统计是旁路信息，绝不能把本体搞坏）
+// 注意：别拿 /proc/... 当「不可写」样本 —— 本机对 procfs 的 mkdir 会直接卡死（实测 20s 无返回），
+// /dev/null 下面建目录才是立刻 ENOTDIR 的正常失败样本。
+const broken = createStatsStore({ file: "/dev/null/ig5-stats/stats.json", version: TEST_VERSION, flushMs: 0 });
+let threw = null;
+try {
+  broken.set("counters", { nope: true });
+} catch (error) {
+  threw = error;
+}
+check(threw === null && broken.flush() === false && typeof broken.lastError === "string" && broken.lastError.length > 0,
+  "写盘失败不抛异常，只在 lastError 留痕", String(broken.lastError).slice(0, 60));
+
+// ───────────────────────── 二、任务清单规则（纯函数） ─────────────────────────
+const { normalizeStatus, countStatuses, readTaskList, normalizeTodoPatch, TASK_MAX_ITEMS, TASK_MAX_CONTENT, TODOS_EVENT, TODOS_PROJECTION_KEY } =
+  tasks;
+check(TODOS_EVENT === "todo/write" && TODOS_PROJECTION_KEY === "todos", "写的是与官方工具同一条事件、读的是同一个投影键");
+check(
+  normalizeStatus("DONE") === "completed" && normalizeStatus("in-progress") === "in_progress" && normalizeStatus("什么鬼") === "pending",
+  "状态别名归一：认不出来的当 pending（保守，不卡住模型）",
+);
+const counted = countStatuses([{ status: "completed" }, { status: "in_progress" }, { status: "pending" }, { status: "x" }]);
+check(
+  counted.completed === 1 && counted.inProgress === 1 && counted.pending === 2,
+  "进度计数（completed / inProgress / pending）",
+  JSON.stringify(counted),
+);
+const mirrored = readTaskList([{ content: "  挖洞  ", status: "doing" }, { content: "", status: "pending" }, "x"], { session: "s-1" });
+check(
+  mirrored.available === true && mirrored.items.length === 1 && mirrored.items[0].content === "挖洞" && mirrored.items[0].status === "in_progress",
+  "读侧规范：去空白、丢空条目、状态归一",
+  JSON.stringify(mirrored.items),
+);
+const emptyMirror = readTaskList(null);
+check(emptyMirror.available === false && typeof emptyMirror.reason === "string", "投影为 null 时给出可读原因（而不是空列表装成功）");
+
+const cleaned = normalizeTodoPatch([
+  { content: "a", status: "pending" },
+  { content: "a", status: "pending" },
+  { content: "   ", status: "pending" },
+  { content: "b".repeat(TASK_MAX_CONTENT + 30), status: "done" },
+]);
+check(cleaned.ok === true && cleaned.todos.length === 2 && cleaned.todos[1].content.length === TASK_MAX_CONTENT,
+  "写侧规范：去重、丢空、超长截断", JSON.stringify(cleaned.repairs));
+const capped = normalizeTodoPatch(Array.from({ length: TASK_MAX_ITEMS + 5 }, (_, i) => ({ content: `t${i}`, status: "pending" })));
+check(capped.todos.length === TASK_MAX_ITEMS && capped.repairs.some((r) => r.includes("上限")), "写侧规范：条目数封顶");
+const parallel = normalizeTodoPatch([{ content: "a", status: "in_progress" }, { content: "b", status: "in_progress" }]);
+check(
+  parallel.ok === true && parallel.todos.filter((t) => t.status === "in_progress").length === 1 &&
+    parallel.todos[1].status === "pending" && parallel.repairs.some((r) => r.includes("降级")),
+  "宿主策略「恰好一个 in_progress」：多出来的本地降级而不是整单被拒",
+  JSON.stringify(parallel.todos),
+);
+check(normalizeTodoPatch([]).ok === false && normalizeTodoPatch("nope").ok === false, "没有可用条目 / 非数组 → 明确失败（不静默写空清单）");
+
+// ───────────────────────── 三、真挂载：核心写库、路由只在读侧 ─────────────────────────
+function fakeServer() {
+  const routes = new Map();
+  return {
+    routes,
+    register(spec) {
+      routes.set(spec.path, spec);
+      return () => routes.delete(spec.path);
+    },
+  };
+}
+
+function mountPanel(options = {}) {
+  const server = options.server ?? fakeServer();
+  const runtime = {
+    tools: [],
+    injects: [],
+    listeners: new Map(),
+    sections: new Map(),
+    appends: [],
+  };
+  const todos = { value: options.todos ?? null, throws: options.throws === true };
+  const projections =
+    options.withProjections === false
+      ? undefined
+      : {
+          stateOf() {
+            if (todos.throws) throw new Error("投影炸了");
+            return todos.value;
+          },
+        };
+  const systemPrompt = {
+    section(spec) {
+      runtime.sections.set(spec.name, spec);
+      return () => runtime.sections.delete(spec.name);
+    },
+    context() {
+      return () => {};
+    },
+    layers: { merge: () => new Map(runtime.sections), global: { sections: { entries: () => runtime.sections.entries() } } },
+  };
+  // webServer / sessionProjections 都是宿主后挂的服务：真宿主里插件要 ctx.inject 等它就绪，
+  // 所以这里也走 inject 路径（而不是让 ctx.get 直接返回），否则测不到真实接线方式。
+  const indexInject = [];
+  const ctx = {
+    systemPrompt,
+    tools: { register: (tool) => runtime.tools.push(tool) },
+    effect: (fn) => {
+      const dispose = fn();
+      if (typeof dispose === "function") runtime.disposer = dispose;
+    },
+    get: (key) => (key === "sessionProjections" ? projections : undefined),
+    inject: (keys, cb) => {
+      const list = Array.isArray(keys) ? keys : [keys];
+      if (list.includes("webServer")) {
+        cb({
+          get: (key) => (key === "webServer" ? server : undefined),
+          effect: (fn) => fn(),
+          on: (name, fn) => {
+            if (name === "webserver/index-inject") indexInject.push(fn);
+          },
+        });
+      } else if (list.includes("sessionProjections")) {
+        cb({ get: () => projections, effect: (fn) => fn(), on: () => {} });
+      }
+    },
+    on: (name, fn) => {
+      const list = runtime.listeners.get(name) ?? [];
+      list.push(fn);
+      runtime.listeners.set(name, list);
+    },
+  };
+  plugin.apply(ctx);
+  // 宿主拼 index.html 时会拿一个 table 来收注入项，这里替它收一次。
+  const table = [];
+  for (const fn of indexInject) fn(table);
+  for (const entry of table) if (entry && typeof entry.text === "string") runtime.injects.push(entry.text);
+  const emit = (name, ...args) => {
+    for (const fn of runtime.listeners.get(name) ?? []) fn(...args);
+  };
+  return { server, runtime, todos, emit, ctx };
+}
+
+function fakeSession(id) {
+  const session = {
+    header: { id },
+    appends: [],
+    append(type, data) {
+      session.appends.push({ type, data });
+    },
+  };
+  return session;
+}
+
+function fakeReq(method, body, token) {
+  const handlers = new Map();
+  const req = {
+    method,
+    headers: token ? { "x-ig5-token": token } : {},
+    socket: { remoteAddress: "127.0.0.1" },
+    destroyed: false,
+    on(name, fn) {
+      const list = handlers.get(name) ?? [];
+      list.push(fn);
+      handlers.set(name, list);
+      return req;
+    },
+    destroy() {
+      req.destroyed = true;
+    },
+  };
+  if (body !== undefined) {
+    setTimeout(() => {
+      for (const fn of handlers.get("data") ?? []) fn(Buffer.from(typeof body === "string" ? body : JSON.stringify(body), "utf8"));
+      for (const fn of handlers.get("end") ?? []) fn();
+    }, 0);
+  }
+  return req;
+}
+
+function fakeRes() {
+  const out = { status: null, headers: null, body: null };
+  return {
+    out,
+    writeHead(status, headers) {
+      out.status = status;
+      out.headers = headers;
+    },
+    end(body) {
+      out.body = body;
+    },
+  };
+}
+
+const call = async (server, path, method, body, token) => {
+  const route = server.routes.get(path);
+  if (!route) throw new Error(`没有注册路由 ${path}`);
+  const res = fakeRes();
+  await route.handler(fakeReq(method, body, token), res);
+  let doc = null;
+  try {
+    doc = JSON.parse(res.out.body);
+  } catch {
+    doc = null;
+  }
+  return { status: res.out.status, doc, raw: res.out.body };
+};
+
+const mount = mountPanel({ todos: null });
+const sink = plugin.statsSinkOf();
+check(sink !== null && typeof sink.set === "function", "apply 后核心拿到了统计库写句柄（attachStatsSink 生效）");
+check(existsSync(STATS_A), "apply 一结束盘上就有一份库（面板第一次读就有数据）");
+const bootDoc = JSON.parse(readFileSync(STATS_A, "utf8"));
+const pkgVersion = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).version;
+check(bootDoc.version === pkgVersion, "库里的 version 是当前插件版本（读旧库也会刷新标识，面板能显示「我装的是哪一版」）", `${bootDoc.version} vs ${pkgVersion}`);
+check(bootDoc.tuning !== null && typeof bootDoc.tuning.effective === "object",
+  "库里已经有档位分区（面板不必再让服务端现算）", bootDoc.tuning === null ? "tuning=null" : "");
+
+// 三条路由 + 注入脚本
+check(mount.server.routes.has("/infinite-gen-5/tuning"), "注册了调参路由");
+check(mount.server.routes.has("/infinite-gen-5/stats"), "注册了统计库只读路由");
+check(mount.server.routes.has("/infinite-gen-5/tasks"), "注册了任务清单路由");
+check([...mount.server.routes.values()].every((route) => route.kind === "exact"), "三条路由都是精确匹配（不吞宿主的其它路径）");
+const injected = mount.runtime.injects.join("\n");
+const win = {};
+new Function("window", injected)(win);
+const bridge = win.__IG5_STATS__;
+// 每次 apply 都会新起一个统计库与一枚 token，所以按挂载实例取桥（不能复用上一个的 token）。
+const bridgeOf = (m) => {
+  const w = {};
+  new Function("window", m.runtime.injects.join("\n"))(w);
+  return w.__IG5_STATS__;
+};
+const sinkOf = () => plugin.statsSinkOf();
+check(
+  bridge && bridge.path === "/infinite-gen-5/stats" && bridge.tasksPath === "/infinite-gen-5/tasks" &&
+    bridge.tuningPath === "/infinite-gen-5/tuning" && typeof bridge.token === "string" && bridge.token.length === 32,
+  "注入的 __IG5_STATS__ 带三条路径与一次性 token",
+  JSON.stringify(bridge),
+);
+check(win.__IG5_TUNING__ && win.__IG5_TUNING__.path === "/infinite-gen-5/tuning", "老面板要的 __IG5_TUNING__ 仍然注入（兼容不破）");
+
+// 鉴权：无 token / 非回环一律拒绝
+const noToken = await call(mount.server, "/infinite-gen-5/stats", "GET", undefined, undefined);
+check(noToken.status === 401, "没带 token 读库 → 401", String(noToken.status));
+const badToken = await call(mount.server, "/infinite-gen-5/stats", "GET", undefined, "x".repeat(32));
+check(badToken.status === 401, "token 不对 → 401", String(badToken.status));
+
+// 读侧：GET /stats 是纯读
+const beforeReadWrites = sink.writes;
+const beforeReadFile = readFileSync(STATS_A, "utf8");
+const readA = await call(mount.server, "/infinite-gen-5/stats", "GET", undefined, bridge.token);
+check(readA.status === 200 && readA.doc.ok === true && readA.doc.source === "disk", "GET /stats 返回盘上那份库（source=disk）", String(readA.doc && readA.doc.source));
+check(readA.doc.schema === STATS_SCHEMA && readA.doc.plugin === STATS_PLUGIN, "返回的确实是这份库（schema/plugin 对得上）");
+check(sink.writes === beforeReadWrites && readFileSync(STATS_A, "utf8") === beforeReadFile, "GET /stats 不写盘、不改库（读侧纯读）");
+const statsPost = await call(mount.server, "/infinite-gen-5/stats", "POST", { any: 1 }, bridge.token);
+check(statsPost.status === 405, "POST /stats → 405（读侧不接受写，写入口在别处）", String(statsPost.status));
+const tuningGet = await call(mount.server, "/infinite-gen-5/tuning", "GET", undefined, bridge.token);
+check(tuningGet.status === 200 && typeof tuningGet.doc.effective === "object", "老路径 GET /tuning 也读库（不现算）");
+
+// 工具调用计数：驱动真实 render
+const toolByName = (name) => mount.runtime.tools.find((tool) => tool.name === name);
+const scenarioTool = toolByName("infinite_gen5_scenario");
+check(scenarioTool !== undefined, "三个工具挂在假宿主上", mount.runtime.tools.map((t) => t.name).join(","));
+const toolsBefore = sink.snapshot().tools.total;
+scenarioTool.output.render({ query: "web" }, { ok: true, index: "x".repeat(200) });
+const afterSmall = sink.snapshot();
+check(afterSmall.tools.total === toolsBefore + 1 && afterSmall.tools.calls.infinite_gen5_scenario >= 1,
+  "工具调用进库：总数 + 按工具名计数", JSON.stringify(afterSmall.tools.calls));
+scenarioTool.output.render({ query: "web" }, { ok: true, blob: "y".repeat(60000) });
+const afterBig = sink.snapshot();
+check(afterBig.tools.truncated >= 1 && afterBig.tools.total === afterSmall.tools.total + 1,
+  "超预算结果被闸降级并在库里留痕（truncated 计数）", JSON.stringify({ truncated: afterBig.tools.truncated }));
+check(typeof afterBig.tools.lastCall === "object" && afterBig.tools.lastCall !== null, "库里记得最后一次调用（面板可以显示「刚跑过什么」）");
+
+// 会话事件：镜像宿主清单
+const session = fakeSession("sess-1");
+mount.emit("session/created", session);
+check(sink.snapshot().sessions.seen >= 1 && sink.snapshot().sessions.lastId === "sess-1", "会话创建进库：会话数与 lastId");
+mount.todos.value = [
+  { content: "勘察", status: "completed" },
+  { content: "接线", status: "in_progress" },
+  { content: "自检", status: "pending" },
+];
+mount.emit("session/event", session, { type: TODOS_EVENT, data: { todos: mount.todos.value } });
+const mirroredDoc = sink.snapshot();
+check(
+  mirroredDoc.tasks.available === true && mirroredDoc.tasks.items.length === 3 &&
+    mirroredDoc.tasks.counts.completed === 1 && mirroredDoc.tasks.counts.inProgress === 1 && mirroredDoc.tasks.session === "sess-1",
+  "todo/write 事件 → 清单镜像进库（面板进度条要吃的那三个数）",
+  JSON.stringify(mirroredDoc.tasks.counts),
+);
+mount.emit("session/event", session, { type: "user/message", data: {} });
+check(sink.snapshot().sessions.events >= 2, "所有会话事件都计数（面板能看出「活着」）");
+const mirroredAt = sink.snapshot().tasks.at;
+mount.emit("session/event", session, { type: "assistant/message", data: {} });
+check(sink.snapshot().tasks.at === mirroredAt, "非 todo 事件不重读投影（省掉每个事件白折一遍）");
+
+// 面板写侧：restore 走与官方工具同一条事件
+const restore = await call(mount.server, "/infinite-gen-5/tasks", "POST", { action: "restore" }, bridge.token);
+const restoreAppend = session.appends.at(-1);
+check(
+  restore.status === 200 && restore.doc.ok === true && restoreAppend && restoreAppend.type === TODOS_EVENT &&
+    restoreAppend.data.todos.length === 3 && restoreAppend.data.todos.filter((t) => t.status === "in_progress").length === 1,
+  "「恢复上次清单」写的是 todo/write 事件（模型下一轮就能看见）",
+  JSON.stringify(restoreAppend && restoreAppend.data),
+);
+check(sink.snapshot().tasks.writes_total >= 1 && sink.snapshot().tasks.writes.length >= 1, "清单写入进库留痕（写了几次、写了什么）");
+const setBad = await call(mount.server, "/infinite-gen-5/tasks", "POST", { action: "nonsense" }, bridge.token);
+check(setBad.status === 400, "未知 action → 400（不猜用户想干什么）", String(setBad.status));
+const setGood = await call(mount.server, "/infinite-gen-5/tasks", "POST", {
+  action: "set",
+  todos: [{ content: "a", status: "in_progress" }, { content: "b", status: "in_progress" }, { content: "c", status: "pending" }],
+}, bridge.token);
+const setAppend = session.appends.at(-1);
+check(
+  setGood.status === 200 && setAppend.data.todos.filter((t) => t.status === "in_progress").length === 1 &&
+    setGood.doc.repairs.length >= 1,
+  "面板直接写入也过宿主策略（多 in_progress 本地降级并回报 repairs）",
+  JSON.stringify(setGood.doc.repairs),
+);
+const badJson = await call(mount.server, "/infinite-gen-5/tasks", "POST", "{坏 json", bridge.token);
+check(badJson.status === 400 && String(badJson.doc.error).includes("不是合法 JSON"), "坏 JSON 进写入口 → 400 且不抛（统一解析入口）", JSON.stringify(badJson.doc));
+
+// 只读库的边界：没有可写会话时不假装成功
+const mountB = (() => {
+  process.env.IG5_STATS_FILE = STATS_B;
+  return mountPanel({ todos: null });
+})();
+const bridgeB = bridgeOf(mountB);
+const noSession = await call(mountB.server, "/infinite-gen-5/tasks", "POST", { action: "restore" }, bridgeB.token);
+check(noSession.status === 400 && String(noSession.doc.error).includes("没有可写的会话"), "没有会话时明确失败（不静默成功）", JSON.stringify(noSession.doc));
+const mountC = (() => {
+  process.env.IG5_STATS_FILE = STATS_A;
+  return mountPanel({ todos: null, withProjections: false });
+})();
+mountC.emit("session/created", fakeSession("sess-2"));
+const noProjection = sinkOf().snapshot();
+check(
+  noProjection.tasks.available === false && String(noProjection.tasks.reason).includes("sessionProjections"),
+  "宿主没有投影服务时，库里写明原因（面板照原话显示，不装作没清单）",
+  String(noProjection.tasks.reason),
+);
+const throwing = (() => {
+  process.env.IG5_STATS_FILE = STATS_A;
+  return mountPanel({ todos: null, throws: true });
+})();
+throwing.emit("session/created", fakeSession("sess-3"));
+check(String(sinkOf().snapshot().tasks.reason).includes("读 todos 投影失败"), "投影抛错被接住并写进库里（本体不因清单读失败而炸）", String(sinkOf().snapshot().tasks.reason));
+
+// ───────────────────────── 四、面板只读库（源码级边界） ─────────────────────────
+const indexSrc = readFileSync(join(ROOT, "index.js"), "utf8");
+const clientSrc = readFileSync(join(ROOT, "client.js"), "utf8");
+check((indexSrc.match(/JSON\.parse\(/g) || []).length === 1, "index.js 仍然只有一个 JSON.parse（唯一解析入口没被破坏）");
+check(indexSrc.includes("session.append(TODOS_EVENT"), "index.js 的写侧走的是 todo/write 事件");
+check(indexSrc.includes('stats.set("tuning"') && indexSrc.includes("publishStats"), "档位状态由核心发布进库（面板不再让服务端现算）");
+check(clientSrc.includes("__IG5_STATS__") && clientSrc.includes("statsBridge") && clientSrc.includes("panelFetch"),
+  "面板读的是注入的统计库桥（不是插件内部结构）");
+check(!/setInterval\s*\(/.test(clientSrc) && clientSrc.includes("setTimeout(tick"), "面板轮询用注入的定时器（自续 setTimeout），不碰全局 setInterval");
+check(
+  (clientSrc.match(/JSON\.parse\(/g) || []).length === 1 && /JSON\.parse\(store\.getItem\(PREF_KEY\)/.test(clientSrc),
+  "面板只解析自己写在 localStorage 的偏好，不解析任何 HTTP 负载（读到的就是库）",
+);
+check(!/require\(["']node:/.test(clientSrc) && !clientSrc.includes("import "), "面板不 import 插件内部（耦合只留在 HTTP 契约上）");
+check(clientSrc.includes("已在本地拦截") && clientSrc.includes("TUNING_BODY_LIMIT = 8192"),
+  "面板保留了 v0.13.8 的请求体预检（解耦不等于丢掉护栏）");
+check(readFileSync(join(ROOT, "prompts/infinite-gen-5.md"), "utf8").includes("Task-list rule"),
+  "内核里写进了任务清单纪律（能力要配上习惯）");
+
+// ───────────────────────── 汇总 ─────────────────────────
+for (const file of [STATS_A, STATS_B, `${STATS_A}.tmp-${process.pid}`, `${STATS_B}.tmp-${process.pid}`]) {
+  rmSync(file, { force: true });
+}
+if (process.argv.includes("--json")) {
+  console.log(JSON.stringify({ passes: passes.length, failures, ok: failures.length === 0 }, null, 2));
+} else {
+  console.log(`无限五代 统计库与面板自检： ${passes.length} 通过 / ${failures.length} 失败`);
+  for (const item of failures) console.log(`  ✗ ${item}`);
+  if (failures.length === 0) console.log(`  数据库 schema=${STATS_SCHEMA} · 路由 3 条 · 面板只读`);
+}
+process.exit(failures.length === 0 ? 0 : 1);

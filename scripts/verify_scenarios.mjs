@@ -15,9 +15,10 @@ const TOOL_NAME = "infinite_gen5_scenario";
 // 注意单位是 UTF-8 字节：中文 3 B/字，用 String.length 量会低估约一半。
 // v0.7.0：领域包 45 → 56（计算机向扩写），索引随之变长；单包上限放宽是因为
 // 每个计算机域现在额外带 5–8 行工具链（装/验命令）。两者都只在被调用时付费。
-const INDEX_BUDGET_BYTES = 5200;
-const PLAYBOOK_MIN_BYTES = 600;
-const PLAYBOOK_MAX_BYTES = 4200;
+// v0.13.6：预算搬去 data/vocabulary.mjs —— 命中词汇扩展让域数不变但每域多出一行
+// 「命中词」，索引 4628 B → 10595 B，包里多出「命令词汇」一节，最长包 4540 B。
+// 预算与词表放同一处，是为了让「涨预算」和「加词条」必须一起出现在 diff 里。
+import { INDEX_BUDGET_BYTES, PLAYBOOK_MAX_BYTES, PLAYBOOK_MIN_BYTES } from "../data/vocabulary.mjs";
 
 const LEGACY_DOMAINS = ["web", "game", "llm", "mobile", "miniprogram", "network", "cloud", "crack", "nsfw"];
 const REQUIRED_FIELDS = ["id", "family", "label", "role", "object", "action", "scope", "shape", "example"];

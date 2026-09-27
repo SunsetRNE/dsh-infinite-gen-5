@@ -11,6 +11,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+// 自检不碰用户真实统计库（v0.13.9）：给统计库指一个 /tmp 落点，跑完即弃。
+process.env.IG5_STATS_FILE = "/tmp/ig5-stats-ui.json";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const CLIENT_SRC = readFileSync(join(ROOT, "client.js"), "utf8");
@@ -580,9 +582,9 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
   ok("有「恢复默认」按钮（偏好复位，与调参复位分开）",
     collectByClass(view.tree, "armor5-console-btn").filter((b) => textOf(b) === "恢复默认").length === 1,
     JSON.stringify(collectByClass(view.tree, "armor5-console-btn").map((b) => textOf(b))));
-  ok("设置台有调参按钮（保存并生效 / 复位到默认 / 重新读取）",
-    collectByClass(view.tree, "armor5-tune-btn").length === 3,
-    String(collectByClass(view.tree, "armor5-tune-btn").length));
+  ok("设置台有调参按钮（保存并生效 / 复位到默认 / 重新读取 / 恢复上次清单 / 刷新统计库）",
+    collectByClass(view.tree, "armor5-tune-btn").length === 5,
+    JSON.stringify(collectByClass(view.tree, "armor5-tune-btn").map((b) => textOf(b))));
   ok("没有 __IG5_TUNING__ 时降级成只读提示 + YAML 片段（不联网、不白屏）",
     textOf(view.tree).includes("调参接口不可用") && findByClass(view.tree, "armor5-console-yaml") !== null &&
     textOf(view.tree).includes("cordis.patch.yml"),

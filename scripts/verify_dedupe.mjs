@@ -1,4 +1,4 @@
-// 无限五代 v0.13.5 注入去重行为回归（离线、确定性、无需 API Key）
+// 无限五代 v0.13.9 注入去重行为回归（离线、确定性、无需 API Key）
 //
 // 针对的缺陷：v0.5.0 的 Order 100 与 Order 200 载入的是逐字同源的两个文件，
 // 于是同一份 3010 字节内核每轮被注入两遍；与同机在线的上一代破甲插件叠加时
@@ -9,6 +9,8 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+// 自检不碰用户真实统计库（v0.13.9）：给统计库指一个 /tmp 落点，跑完即弃。
+process.env.IG5_STATS_FILE = "/tmp/ig5-stats-dedupe.json";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const passes = [];
@@ -244,6 +246,14 @@ const chars = (rows) => rows.map((r) => r.text.length);
   );
   check(/RUNTIME_ANCHOR_EVERY\s*=\s*4\b/.test(src), "默认节拍经实测调参定为 4 步（更贴合长任务的重述节奏）");
   check(/RUNTIME_ANCHOR_ORDER\s*=\s*118/.test(src), "运行时锚点排在 115 审批策略之后");
+  check(
+    /工具调用一轮一个、参数扁平不塞正文，坏包改小重发/.test(src),
+    "运行时锚点（离模型最近的一格）也复述工具调用卫生 —— 坏包修复回路不只躺在内核里（v0.13.7）",
+  );
+  check(
+    /结果被截断也按坏包处理/.test(src),
+    "运行时锚点把结果侧截断也纳入坏包纪律（v0.13.8：两个方向都管）",
+  );
   check(/EXCLUSIVE_SECTION\s*=\s*false/.test(src), "独占内核默认关闭");
   check(/export const IG5_CONFIG = \{/.test(src), "自检接缝 IG5_CONFIG 已导出");
   check(/\bconst CFG = IG5_CONFIG\b/.test(src), "apply() 经 IG5_CONFIG 取值（自检可改档位驱动）");

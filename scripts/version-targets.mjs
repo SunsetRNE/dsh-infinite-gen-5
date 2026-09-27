@@ -57,7 +57,9 @@ export const VERSION_ANCHORS = [
 // 命中检查时视为已知，发版时不改写（package.json 由 bump 结构化处理）。
 // CHANGELOG.md 是 scripts/changelog.mjs 的生成物、按提交标题切版本段，天然满篇版本号；
 // 它记的是「哪个版本发布了什么」，属历史叙述，发版时交给 changelog.mjs 重生成。
-export const PROSE_ALLOWED_FILES = ["package.json", "ENV_PROBE.md", "CHANGELOG.md"];
+// UPDATE.md 是仓库内《更新文档》——版本变更叙述的唯一真源，天生满篇历史版本号，
+// 而且必须能写「当前版本」那一节（否则最新的改动没处落笔）。
+export const PROSE_ALLOWED_FILES = ["package.json", "ENV_PROBE.md", "CHANGELOG.md", "UPDATE.md"];
 
 // 全仓字面量扫描时跳过的目录：依赖 / 生成物 / 运行产物 / 版本库内部。
 export const SCAN_SKIP_DIRS = [".git", "node_modules", "ui-preview", "runs", ".dsh"];

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "createdAt": "2026-09-27T06:38:11.883Z",
+  "createdAt": "2026-09-27T11:40:53.329Z",
   "note": "无限五代离线评测基线 · node scripts/eval-corpus.mjs --write-baseline 可刷新；--gate 用本文件做回归门禁",
   "corpus": {
     "cases": 110,
@@ -13,18 +13,18 @@
   },
   "domain": {
     "evaluated": 85,
-    "top1": 0.6823529411764706,
-    "top3": 0.7647058823529411,
+    "top1": 0.7294117647058823,
+    "top3": 0.8235294117647058,
     "macro": {
-      "precision": 0.7693650793650794,
-      "recall": 0.7573906485671191,
-      "f1": 0.7193626502825501,
+      "precision": 0.7768888888888889,
+      "recall": 0.7748114630467572,
+      "f1": 0.7412146676852559,
       "labels": 10
     },
     "micro": {
-      "precision": 0.7532467532467533,
-      "recall": 0.6823529411764706,
-      "f1": 0.7160493827160493
+      "precision": 0.7560975609756098,
+      "recall": 0.7294117647058823,
+      "f1": 0.7425149700598803
     },
     "perLabel": {
       "adversarial_suffix": {
@@ -37,12 +37,12 @@
         "fn": 0
       },
       "cloud": {
-        "precision": 0.5,
+        "precision": 0.6,
         "recall": 1,
-        "f1": 0.6666666666666666,
+        "f1": 0.7499999999999999,
         "support": 3,
         "tp": 3,
-        "fp": 3,
+        "fp": 2,
         "fn": 0
       },
       "code_eng": {
@@ -60,15 +60,6 @@
         "f1": 0.9411764705882353,
         "support": 8,
         "tp": 8,
-        "fp": 1,
-        "fn": 0
-      },
-      "exploit_dev": {
-        "precision": 0,
-        "recall": null,
-        "f1": null,
-        "support": 0,
-        "tp": 0,
         "fp": 1,
         "fn": 0
       },
@@ -90,14 +81,23 @@
         "fp": 3,
         "fn": 0
       },
+      "kernel": {
+        "precision": 0,
+        "recall": null,
+        "f1": null,
+        "support": 0,
+        "tp": 0,
+        "fp": 1,
+        "fn": 0
+      },
       "llm": {
         "precision": 1,
-        "recall": 0.17647058823529413,
-        "f1": 0.3,
+        "recall": 0.23529411764705882,
+        "f1": 0.38095238095238093,
         "support": 17,
-        "tp": 3,
+        "tp": 4,
         "fp": 0,
-        "fn": 14
+        "fn": 13
       },
       "miniprogram": {
         "precision": 1,
@@ -153,14 +153,23 @@
         "fp": 0,
         "fn": 2
       },
+      "scraping": {
+        "precision": 0,
+        "recall": null,
+        "f1": null,
+        "support": 0,
+        "tp": 0,
+        "fp": 1,
+        "fn": 0
+      },
       "web": {
-        "precision": 0.9047619047619048,
-        "recall": 0.7307692307692307,
-        "f1": 0.8085106382978723,
+        "precision": 0.88,
+        "recall": 0.8461538461538461,
+        "f1": 0.8627450980392156,
         "support": 26,
-        "tp": 19,
-        "fp": 2,
-        "fn": 7
+        "tp": 22,
+        "fp": 3,
+        "fn": 4
       }
     }
   },

@@ -63,7 +63,7 @@ for (const { file, name, re } of VERSION_ANCHORS) {
 }
 
 // ---- 3. 文档不得宣称比当前版本更新的版本号 ----
-const DOC_FILES = ["README.md", "HARNESS_PLUGIN.md", "ENV_PROBE.md", "package.json"];
+const DOC_FILES = ["README.md", "HARNESS_PLUGIN.md", "ENV_PROBE.md", "UPDATE.md", "package.json"];
 for (const file of DOC_FILES) {
   let text;
   try {

@@ -149,6 +149,15 @@ check(diffSnapshot(base, better).improvements.length === 2 && diffSnapshot(base,
 check(!("createdAt" in flattenMetrics(base)), "比对：createdAt 之类的元信息不进指标");
 check(typeof flattenMetrics(base)["domain.macro.f1"] === "number", "比对：嵌套指标被拍平成 domain.macro.f1");
 
+// 方向：FP/FN 是计数，变小才是好事（v0.13.6 修的真实缺陷）
+const counts = diffSnapshot(
+  { domain: { perLabel: { web: { fn: 7, fp: 5, precision: 0.9 } } } },
+  { domain: { perLabel: { web: { fn: 4, fp: 6, precision: 0.88 } } } },
+);
+check(counts.improvements.some((r) => r.key === "domain.perLabel.web.fn"), "比对：FN 变小算提升");
+check(counts.regressions.some((r) => r.key === "domain.perLabel.web.fp"), "比对：FP 变大才算回退");
+check(counts.regressions.some((r) => r.key === "domain.perLabel.web.precision"), "比对：precision 变小仍算回退（方向不串台）");
+
 // ---- 7 · 真实语料：形状与一致性 ----------------------------------------
 
 const real = loadCorpus(join(ROOT, "tests"));
@@ -224,9 +233,11 @@ try {
 check(badgeJson !== null && badgeJson.corpus.cases === 2, "CLI：--json 输出可解析且用例数正确");
 check(badgeJson !== null && typeof badgeJson.domain.top1 === "number", "CLI：快照含 domain.top1");
 
-// 基线故意抬高 → 必须报回退（退出码 3）
+// 基线故意抬到够不着的水平 → 必须报回退（退出码 3）。
+// 注意别用 0.99：词表加深后这个临时语料已经能打到 1.0，那种「高基线」就够得着了，
+// 测试会变成假绿。这里取 1.5，一个指标值域上不可能达到的数。
 const strictBase = join(tmp, "strict.json");
-writeFileSync(strictBase, JSON.stringify({ domain: { top1: 0.99, macro: { f1: 0.99 } } }));
+writeFileSync(strictBase, JSON.stringify({ domain: { top1: 1.5, macro: { f1: 1.5 } } }));
 const regressed = runCli(["--dir", tmp, "--baseline", strictBase, "--gate"]);
 check(regressed.code === 3, "CLI：相对刻意抬高的基线跑 --gate 退出 3");
 check(regressed.stderr.includes("回退"), "CLI：回退时 stderr 说明原因");

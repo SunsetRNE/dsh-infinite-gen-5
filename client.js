@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.13.5";
+        var VERSION = "v0.13.9";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -151,10 +151,16 @@
           ".armor5-console-badge{display:inline-flex;align-items:center;gap:6px;color:var(--dsw-alias-label-tertiary,#8b8b8b);",
           "font-size:12px}",
           ".armor5-console-badge[data-kind=pass]{color:var(--dsw-alias-state-success-primary,#3fb950)}",
-          ".armor5-console-rows{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}",
-          ".armor5-console-rows li{display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;align-items:baseline}",
-          ".armor5-console-rows .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:12px}",
-          ".armor5-console-rows .v{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:12px;overflow-wrap:anywhere}",
+          ".armor5-console-rows,.armor5-task-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}",
+          ".armor5-console-rows li,.armor5-task-list li{display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;align-items:baseline}",
+          ".armor5-console-rows .k,.armor5-task-list .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:12px}",
+          ".armor5-console-rows .v,.armor5-task-list .v{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:12px;overflow-wrap:anywhere}",
+          // 任务清单进度：一条进度条 + 状态字形 + 内容。字形列窄，内容可折行。
+          ".armor5-task-bar{height:6px;border-radius:999px;background:var(--dsw-alias-fill-l2,rgba(127,127,127,.22));overflow:hidden}",
+          ".armor5-task-bar-fill{height:100%;border-radius:999px;background:var(--dsw-alias-state-success-primary,#3fb950);transition:width .25s ease}",
+          ".armor5-task-list li{grid-template-columns:18px minmax(0,1fr)}",
+          ".armor5-task-list li[data-status=inProgress] .k{color:var(--dsw-alias-state-warning-primary,#d29922)}",
+          ".armor5-task-list li[data-status=completed] .v{color:var(--dsw-alias-label-caption,#8b8b8b);text-decoration:line-through}",
           ".armor5-console-foot{display:flex;gap:8px;padding-top:2px}",
           ".armor5-console-btn{height:30px;padding:0 13px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
           "border-radius:var(--dsw-radius-sm,6px);background:0 0;color:var(--dsw-alias-label-secondary,#b4b4b4);",
@@ -624,19 +630,51 @@
             { value: true, label: "开", hint: "内核 complete" }] }
         ];
 
-        function tuningBridge() {
+        // ── 面板的唯一数据来源：插件本体写好的统计数据库（v0.13.9） ──────────────
+        // 服务端在 /infinite-gen-5/stats 上只读地交出数据库快照；面板不再自己拼接口、
+        // 不再问插件内部结构，读到什么就画什么。老宿主（没有 __IG5_STATS__）退回
+        // __IG5_TUNING__，行为与 v0.13.8 一致，不会因为一次升级把面板打死。
+        function statsBridge() {
           var w = typeof window !== "undefined" ? window : null;
-          var bridge = w && w.__IG5_TUNING__;
-          return bridge && bridge.path ? bridge : null;
+          var stats = w && w.__IG5_STATS__;
+          var legacy = w && w.__IG5_TUNING__;
+          var token = (stats && stats.token) || (legacy && legacy.token);
+          if (!token) return null;
+          var tuning = (stats && stats.tuningPath) || (legacy && legacy.path) || TUNING_PATH_FALLBACK;
+          return {
+            token: token,
+            statsPath: (stats && stats.path) || null,
+            tasksPath: (stats && stats.tasksPath) || null,
+            tuningPath: tuning,
+            database: Boolean(stats && stats.path)
+          };
         }
 
-        function tuningFetch(bridge, method, body) {
+        // 与服务端同一道体积闸（v0.13.8）：超限的请求体在对端会被 destroy，
+        // 页面只能看到一个看不懂的网络错误；本地先挡并给出人话，比让对端静默掐断好。
+        var TUNING_BODY_LIMIT = 8192;
+        function utf8Len(text) {
+          if (typeof TextEncoder !== "undefined") return new TextEncoder().encode(text).length;
+          return encodeURIComponent(text).replace(/%[0-9A-F]{2}/g, "x").length;
+        }
+
+        function panelFetch(bridge, url, method, body) {
           var init = { method: method, credentials: "same-origin", headers: { "x-ig5-token": bridge.token } };
           if (body) {
             init.headers["content-type"] = "application/json";
             init.body = JSON.stringify(body);
+            var size = utf8Len(init.body);
+            if (size > TUNING_BODY_LIMIT) {
+              return Promise.resolve({
+                status: 0,
+                doc: {
+                  ok: false,
+                  error: "面板请求体 " + size + " B 超过服务端上限 " + TUNING_BODY_LIMIT + " B（已在本地拦截，未发出请求）",
+                },
+              });
+            }
           }
-          return fetch(bridge.path, init).then(function (res) {
+          return fetch(url, init).then(function (res) {
             return res.json().then(
               function (doc) { return { status: res.status, doc: doc }; },
               function () { return { status: res.status, doc: null }; }
@@ -644,23 +682,45 @@
           });
         }
 
-        // 服务端实况 + 待保存草稿。同一份 state 供面板与状态行读，避免两处各持一份。
+        // 统计库 → 面板。同一份 state 供面板与状态行读，避免两处各持一份。
+        // 面板每 2 秒静默轮询一次：读的是核心落盘的库，不触发任何计算，也不打断手上的草稿。
+        var PANEL_POLL_MS = 2000;
         function useTuning() {
-          var pair = react.useState({ phase: "loading", data: null, draft: null, error: null, note: null, busy: false });
+          var pair = react.useState({
+            phase: "loading", data: null, database: null, source: null, draft: null,
+            error: null, note: null, busy: false, taskBusy: false, taskNote: null
+          });
           var update = function (part) {
             pair[1](function (prev) { return Object.assign({}, prev, part); });
           };
-          var read = function () {
-            var bridge = tuningBridge();
+          var read = function (quiet) {
+            var bridge = statsBridge();
             if (!bridge) {
-              update({ phase: "unavailable", error: "宿主没有注入 __IG5_TUNING__（非 Web 组合，或插件早于 v0.13.0）" });
+              update({ phase: "unavailable", error: "宿主没有注入 __IG5_STATS__ / __IG5_TUNING__（非 Web 组合，或插件早于 v0.13.0）" });
               return;
             }
-            update({ phase: "loading", error: null, note: null });
-            tuningFetch(bridge, "GET").then(function (r) {
+            var url = bridge.database ? bridge.statsPath : bridge.tuningPath;
+            if (!url) {
+              update({ phase: "unavailable", error: "统计库路径没注入（刷新页面重试）" });
+              return;
+            }
+            if (quiet !== true) update({ phase: "loading", error: null, note: null });
+            panelFetch(bridge, url, "GET").then(function (r) {
               if (r.status !== 200 || !r.doc || r.doc.ok !== true) throw new Error((r.doc && r.doc.error) || ("HTTP " + r.status));
-              update({ phase: "ready", data: r.doc, draft: Object.assign({}, r.doc.effective), error: null });
+              var doc = bridge.database ? r.doc.tuning : r.doc;
+              if (!doc || !doc.effective) throw new Error("统计库里还没有档位分区（重启一次 DSH 让核心发布第一版）");
+              var part = {
+                phase: "ready",
+                database: bridge.database ? r.doc : null,
+                source: bridge.database ? r.doc.source : null,
+                data: doc,
+                error: null
+              };
+              // 静默轮询不动 draft：用户可能正在挑档位，别把它冲掉。
+              if (quiet !== true) part.draft = Object.assign({}, doc.effective);
+              update(part);
             }).catch(function (error) {
+              if (quiet === true) return; // 轮询失败不打扰正在用的面板，下一次自己会好
               update({ phase: "error", error: String((error && error.message) || error) });
             });
           };
@@ -672,23 +732,61 @@
             });
           };
           var save = function (reset) {
-            var bridge = tuningBridge();
+            var bridge = statsBridge();
             if (!bridge) return;
             update({ busy: true, error: null, note: null });
             var body = reset ? { reset: true } : { overrides: pair[0].draft };
-            tuningFetch(bridge, "POST", body).then(function (r) {
+            panelFetch(bridge, bridge.tuningPath, "POST", body).then(function (r) {
               if (r.status !== 200 || !r.doc || r.doc.ok !== true) throw new Error((r.doc && r.doc.error) || ("HTTP " + r.status));
               var changes = (r.doc.changes || []).filter(function (k) { return r.doc.effective[k] !== undefined; });
               update({
                 phase: "ready", busy: false, data: r.doc, draft: Object.assign({}, r.doc.effective), error: null,
                 note: reset ? "已复位成文件默认" : ("已生效：" + (changes.length ? changes.join("、") : "无变化"))
               });
+              read(true);
             }).catch(function (error) {
               update({ busy: false, error: String((error && error.message) || error) });
             });
           };
-          react.useEffect(function () { read(); }, []);
-          return { state: pair[0], stage: stage, save: save, read: read };
+          // 任务清单的写入口：本体校验后写进会话，模型下一轮就能看见，界面也会跟着刷新。
+          var writeTasks = function (action) {
+            var bridge = statsBridge();
+            if (!bridge) return;
+            if (!bridge.tasksPath) {
+              update({ taskNote: "这个宿主没有任务清单入口（需要 v0.13.9 的服务端，刷新页面重试）" });
+              return;
+            }
+            update({ taskBusy: true, taskNote: null });
+            panelFetch(bridge, bridge.tasksPath, "POST", { action: action || "restore" }).then(function (r) {
+              var ok = r.status === 200 && r.doc && r.doc.ok === true;
+              update({
+                taskBusy: false,
+                taskNote: ok
+                  ? "已恢复上次清单（" + ((r.doc.todos || []).length) + " 条）：下一条消息就会带上它"
+                  : "清单写入被拦：" + ((r.doc && r.doc.error) || ("HTTP " + r.status))
+              });
+              read(true);
+            }).catch(function (error) {
+              update({ taskBusy: false, taskNote: "清单写入被拦：" + String((error && error.message) || error) });
+            });
+          };
+          // 轮询用 setTimeout 自续（前端拿到的就是这两个注入进来的定时器，别去碰全局 setInterval）。
+          var poll = { stopped: false, timer: null };
+          var tick = function () {
+            if (poll.stopped) return;
+            read(true);
+            if (typeof setTimeout === "function") poll.timer = setTimeout(tick, PANEL_POLL_MS);
+          };
+          react.useEffect(function () {
+            read();
+            poll.stopped = false;
+            if (typeof setTimeout === "function") poll.timer = setTimeout(tick, PANEL_POLL_MS);
+            return function () {
+              poll.stopped = true;
+              if (poll.timer && typeof clearTimeout === "function") clearTimeout(poll.timer);
+            };
+          }, []);
+          return { state: pair[0], stage: stage, save: save, read: read, writeTasks: writeTasks };
         }
 
         function tuningStatusText(state) {
@@ -733,6 +831,56 @@
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-" + Math.min(cells.length, 4) }, cells)
             );
           });
+        }
+
+        // 任务清单：读的是统计库里那份「本次会话 todos 投影的镜像」，写回宿主自己的清单。
+        // 用户在这里看到的就是模型下一步会看到的进度，不必翻聊天记录数到第几步。
+        var TASK_GLYPH = { completed: "✓", inProgress: "▶", pending: "○" };
+        function taskProgress(state, tuner) {
+          var db = state.database;
+          var tasks = (db && db.tasks) || null;
+          var counts = (tasks && tasks.counts) || { pending: 0, inProgress: 0, completed: 0 };
+          var items = (tasks && tasks.items) || [];
+          var total = counts.pending + counts.inProgress + counts.completed;
+          var percent = total > 0 ? Math.round((counts.completed / total) * 100) : 0;
+          var bars = tasks && tasks.available
+            ? [
+              react.createElement("div", { className: "armor5-task-bar", key: "bar" },
+                react.createElement("div", { className: "armor5-task-bar-fill", style: { width: percent + "%" } })),
+              react.createElement("span", { className: "armor5-console-hint", key: "num" },
+                counts.completed + "/" + total + " 完成 · 进行中 " + counts.inProgress + " · 待办 " + counts.pending + "（" + percent + "%）")
+            ]
+            : react.createElement("span", { className: "armor5-console-hint" },
+              "本次会话还没有清单镜像" + (tasks && tasks.reason ? "（" + tasks.reason + "）" : "（让模型建一份，或点下面恢复上次）"));
+          var list = items.length > 0
+            ? react.createElement("ul", { className: "armor5-task-list" },
+              items.slice(0, 12).map(function (item, index) {
+                return react.createElement("li", { key: "task:" + index, "data-status": item.status },
+                  react.createElement("span", { className: "k" }, TASK_GLYPH[item.status] || "○"),
+                  react.createElement("span", { className: "v" }, item.content));
+              }))
+            : null;
+          return react.createElement("div", { className: "armor5-console-group" },
+            react.createElement("div", { className: "armor5-console-group-title" }, "任务清单进度（宿主 todos 投影）"),
+            bars,
+            list,
+            tuner.state.taskNote ? react.createElement("span", { className: "armor5-console-hint" }, tuner.state.taskNote) : null,
+            react.createElement("div", { className: "armor5-console-foot" },
+              react.createElement("button", {
+                type: "button",
+                className: "armor5-console-btn armor5-tune-btn",
+                disabled: tuner.state.taskBusy === true || !state.database,
+                onClick: function () { tuner.writeTasks("restore"); }
+              }, tuner.state.taskBusy ? "正在写…" : "恢复上次清单"),
+              react.createElement("button", {
+                type: "button",
+                className: "armor5-console-btn armor5-tune-btn",
+                onClick: function () { tuner.read(true); }
+              }, "刷新统计库")
+            ),
+            react.createElement("span", { className: "armor5-console-hint" },
+              "面板只读插件本体落盘的统计库（每 2 秒刷新一次）；写清单是唯一的上行动作，由本体按宿主策略写进会话。")
+          );
         }
 
         /**
@@ -854,6 +1002,7 @@
                 }, "重新读取")
               )
             ),
+            taskProgress(tuner.state, tuner),
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "只读"),
               react.createElement("ul", { className: "armor5-console-rows" },

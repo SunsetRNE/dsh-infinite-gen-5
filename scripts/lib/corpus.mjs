@@ -434,7 +434,12 @@ export function flattenMetrics(snapshot) {
 /**
  * 与基线比对。默认容差 0.005（0.5 个百分点）——
  * 小于它的波动是语料/时序噪声，不该拦人；大于它的回退必须报错。
+ *
+ * 指标方向：P/R/F1/top1 类越大越好，但 FP/FN 是**计数**，变小才是好事。
+ * 早先这里一律按「变大=变好」比，于是 web 的 FN 从 7 降到 4 被报成回退 ——
+ * 门禁方向搞反比没有门禁更危险：它会逼人把误判改回误判。
  */
+const LOWER_IS_BETTER = /(^|\.)(fn|fp|errors|error|skipped|missing|bad|duplicates|failures)$/;
 export function diffSnapshot(baseline, current, epsilon = 0.005) {
   const base = flattenMetrics(baseline);
   const cur = flattenMetrics(current);
@@ -449,7 +454,7 @@ export function diffSnapshot(baseline, current, epsilon = 0.005) {
     }
     const before = base[key];
     if (typeof before !== "number") continue;
-    const delta = value - before;
+    const delta = LOWER_IS_BETTER.test(key) ? before - value : value - before;
     if (delta < -epsilon) regressions.push({ key, from: before, to: value, delta });
     else if (delta > epsilon) improvements.push({ key, from: before, to: value, delta });
   }

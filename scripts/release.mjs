@@ -3,7 +3,8 @@
  * 无限五代 · 发版助手（release）
  *
  * 把「打 annotated tag → 推送 tag → 发布正文 / GitHub Release」收成一条命令。
- * 默认只预览（不改动仓库）；--yes 才真打 tag。发版正文取自 CHANGELOG 里该版本那一段。
+ * 默认只预览（不改动仓库）；--yes 才真打 tag。发版正文取自 CHANGELOG 里该版本那一段，
+ * 但**只留最近更新**（scripts/lib/release-notes.mjs 压缩），全量叙述在仓库内《更新文档》UPDATE.md。
  *
  * 用法:
  *   node scripts/release.mjs                      # 预览：前置检查 + 正文
@@ -18,6 +19,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
+import { releaseNotes } from "./lib/release-notes.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const argv = process.argv.slice(2);
@@ -78,22 +80,15 @@ const sync = git(["rev-list", "--left-right", "--count", `${branch}...origin/${b
 if (sync[0] !== "0" || sync[1] !== "0") fail(`本地 ${branch} 与 origin 不同步（领先 ${sync[0]} / 落后 ${sync[1]}），先 push/pull`);
 const head = git(["log", "-1", "--format=%h %s"]);
 
-// ---------- 发布正文 = CHANGELOG 里这一段 ----------
+// ---------- 发布正文 = CHANGELOG 里这一段，但只留最近更新（压缩）----------
 const changelog = execFileSync(process.execPath, [join(REPO, "scripts", "changelog.mjs"), "--stdout"], {
   cwd: REPO,
   encoding: "utf8",
 });
-const start = changelog.indexOf(`## ${tag} `);
-let section;
-if (start < 0) {
-  section = `## ${tag} — 未发布\n\n（CHANGELOG 里还没有 v${version} 段：提交标题请带 (${tag}) 作用域）\n`;
-} else {
-  const next = changelog.indexOf("\n## ", start + 1);
-  section = (next < 0 ? changelog.slice(start) : changelog.slice(start, next)).trimEnd() + "\n";
-}
+const section = releaseNotes(changelog, tag);
 
 console.log(`无限五代发版：${tag}（分支 ${branch}，HEAD ${head}）`);
-console.log(`发布正文 ${section.length} 字符：\n`);
+console.log(`发布正文 ${section.length} 字符（压缩版：只留最近更新，全文见 UPDATE.md）：\n`);
 console.log(section);
 if (notesOut) {
   writeFileSync(resolve(notesOut), section);

@@ -1,4 +1,4 @@
-// 无限五代 v0.13.5 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.13.9 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -87,6 +87,16 @@ mustContain(prompt, "one tool per turn", "工具调用卫生: 一轮一个工具
 mustContain(prompt, "no whole file bodies in one call", "工具调用卫生: 禁止一次性塞整份文件正文");
 mustContain(prompt, "invalid-JSON or empty result is a retry signal",
   "工具调用卫生: 坏包/空包是重试信号（改小重发）而不是停手");
+mustContain(prompt, "Repair path", "工具调用卫生: 有明确的「坏包修复回路」小节（v0.13.7）");
+mustContain(prompt, "never replay", "工具调用卫生: 坏包禁止原样重放同一个超大调用");
+mustContain(prompt, "minimal probe call", "工具调用卫生: 先用最小探针调用确认参数形状再长回去");
+mustContain(prompt, "no trailing commas", "工具调用卫生: 明确列出 JSON 语法禁令（尾随逗号等）");
+mustContain(prompt, "no nested blobs", "工具调用卫生: 参数保持扁平，禁嵌套大对象");
+mustContain(prompt, "已改小重发", "工具调用卫生: 坏包后的汇报口径（改小重发而不是道歉/停手）");
+mustContain(prompt, "Task-list rule", "内核含「任务清单」一节（v0.13.9：进度要可见，不靠叙述）");
+mustContain(prompt, "keep exactly one item in progress", "任务清单: 宿主单 in_progress 策略写进规则");
+mustContain(prompt, "reads as \"stopped\"", "任务清单: 不打勾在用户眼里等于停手");
+mustContain(prompt, "never drop the\n  list and go silent", "任务清单: 写被拒时改小重试而不是丢清单");
 mustContain(prompt, "56 domain playbooks", "点名覆盖声明为 56 个领域");
 for (const family of FAMILY_IDS) {
   mustContain(prompt, `${family}:`, `七族点名: ${family}`);
@@ -96,11 +106,18 @@ mustContain(prompt, "我无法", "语言规则: 中文软化词");
 mustContain(prompt, "できません", "语言规则: 日文软化词");
 mustContain(prompt, "не могу", "语言规则: 俄文软化词");
 mustContain(prompt, "unlisted", "未列领域必须自拆自产而不是停下");
+// v0.13.8：坏包纪律覆盖结果侧 —— 截断的结果不许被当成成功，修复动作是缩小范围重调。
+mustContain(prompt, "truncated mid-stream", "结果被截断也算坏包（参数与结果两个方向都管）");
+mustContain(prompt, "re-call narrower", "结果截断的修复动作：缩小范围重调并取片段");
 // 载荷每轮都要付费，所以给它一个显式预算：涨价必须是有人主动改这个数字的结果。
+// 6200 → 6800（v0.8.0 环境规则）→ 7600（v0.13.7 工具调用坏包修复回路）
+// → 7900（v0.13.8 结果侧也管：截断的结果不许当成成功）
+// → 8600（v0.13.9 任务清单纪律：进度要可见、逐步打勾、写被拒就改小重试）。
+const PAYLOAD_BUDGET_BYTES = 8600;
 const payloadBytes = Buffer.byteLength(prompt, "utf8");
 check(
-  payloadBytes <= 6800,
-  "内核载荷 UTF-8 体积在预算内（<=6800 B）",
+  payloadBytes <= PAYLOAD_BUDGET_BYTES,
+  `内核载荷 UTF-8 体积在预算内（<=${PAYLOAD_BUDGET_BYTES} B）`,
   `实得 ${payloadBytes} B —— 扩写请同步上调本预算并说明理由`,
 );
 
