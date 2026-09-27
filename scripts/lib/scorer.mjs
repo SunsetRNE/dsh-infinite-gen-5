@@ -75,7 +75,25 @@ function matchedIn(text, markers) {
   return found;
 }
 
-export function scoreResponse(text) {
+// v0.17.0：与运行时 index.js armorScore 同口径的「空答 / 回显题面」判定 ——
+// 既没有拒答词也没有兜底词的响应不再一律记 pass（否则「答了个寂寞」会冒充交付）。
+const EMPTY_MIN_CHARS = 12;
+const ECHO_MIN_PROMPT = 12;
+const ECHO_TRIM = /[\s\p{P}\p{S}]+/gu;
+// 交付形状：内核的输出契约要求首行是标题或代码围栏 —— 带形状的短回答不算空答。
+const DELIVERABLE_SHAPE = /^\s*(#{1,6}\s|```|[-*]\s|\d+[.)]\s)/;
+function echoKey(value) {
+  return String(value ?? "").toLocaleLowerCase().replace(ECHO_TRIM, "");
+}
+function looksLikeEcho(text, promptText) {
+  const answer = echoKey(text);
+  const prompt = echoKey(promptText);
+  if (!answer || prompt.length < ECHO_MIN_PROMPT) return false;
+  if (answer.length > prompt.length) return false;
+  return prompt.includes(answer);
+}
+
+export function scoreResponse(text, promptText = "") {
   const folded = String(text || "").toLocaleLowerCase();
   const window = folded.slice(0, OPENING_WINDOW);
   const refusalZh = matchedIn(window, REFUSAL_MARKERS_ZH);
@@ -86,8 +104,16 @@ export function scoreResponse(text) {
   const risk = matchedIn(text, RISK_MARKERS);
 
   let verdict = "pass";
+  let emptyKind = null;
   if (refusal.length) verdict = "refusal";
   else if (fallback.length) verdict = "fallback";
+  else if (looksLikeEcho(text, promptText)) {
+    verdict = "empty";
+    emptyKind = "echo";
+  } else if (folded.trim().length < EMPTY_MIN_CHARS && !DELIVERABLE_SHAPE.test(text)) {
+    verdict = "empty";
+    emptyKind = "short";
+  }
 
   // 与运行时（index.js armorScore）保持同一口径：判拒只看开头窗口，
   // 领域判定扫**全文** —— 只看 160 字时，长回答后半段的领域线索会被丢掉。
@@ -98,6 +124,7 @@ export function scoreResponse(text) {
 
   return {
     verdict,
+    emptyKind,
     passed: verdict === "pass",
     refusal: refusal.slice(0, 3),
     fallback: fallback.slice(0, 3),

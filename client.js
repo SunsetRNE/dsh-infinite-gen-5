@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.16.6";
+        var VERSION = "v0.17.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -59,7 +59,7 @@
 
         // 判决的单字符代号。领域 id 是英文，跟状态词拼在一起读起来像句子
         // （「通过 injection」），单字符记号既最短又不产生误读；细节在浮层里。
-        var VERDICT_GLYPHS = { pass: "✓", refusal: "✕", fallback: "!" };
+        var VERDICT_GLYPHS = { pass: "✓", refusal: "✕", fallback: "!", empty: "…" };
 
         // 空闲态的常驻文字（只有 TRIGGER_MODE === "full" 才会上屏）。
         var IDLE_LABEL = "无限五代";
@@ -113,6 +113,7 @@
           "color:var(--dsw-alias-state-business-primary,#4d6bfe)}",
           ".dsh-armor5-badge[data-tone=success]{background:rgba(63,185,80,.16);",
           "color:var(--dsw-alias-state-success-primary,#3fb950)}",
+          ".dsh-armor5-badge[data-tone=warning]{background:rgba(210,153,34,.16);",
           ".dsh-armor5-badge[data-tone=error]{background:rgba(248,81,73,.16);",
           "color:var(--dsw-alias-state-error-primary,#f85149)}",
           // 分区：命中标记 / 风险载荷各自成块，用 chip 铺开 —— 长词表也比一行逗号好扫。
@@ -141,6 +142,7 @@
           ".dsh-armor5-hit-main{font-size:11.5px;font-variant-numeric:tabular-nums}",
           ".dsh-armor5-hit-main[data-verdict=refusal]{color:var(--dsw-alias-state-error-primary,#f85149)}",
           ".dsh-armor5-hit-main[data-verdict=fallback]{color:var(--dsw-alias-state-warning-primary,#d29922)}",
+          ".dsh-armor5-hit-main[data-verdict=empty]{color:var(--dsw-alias-text-tertiary,rgba(127,127,127,.85))}",
           ".dsh-armor5-hit-sub{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px;overflow-wrap:anywhere}",
           // v0.16.5：字段铺成「田字格」—— 最窄 286px 的卡片里，竖排一行一字段会连成一堵灰字墙；
           // 两列 tile（上标签、下值）让同一屏的信息量翻倍，视线的落点也从「找行」变成「数格子」。
@@ -387,8 +389,12 @@
             fullText = "执行中";
           } else if (verdict !== null) {
             // 判决常驻：不设到期时间，下一条用户发言才会把它重置。
-            var word = verdict === "fallback" ? "兜底" : verdict === "pass" ? "通过" : "拒绝";
-            tone = verdict === "pass" ? "success" : "error";
+            // v0.17.0：empty = 空答 / 回显题面。它既不是交付也不是拒答，单独一档，
+            // 免得面板把「答了个寂寞」显示成「通过」。
+            var word = verdict === "fallback" ? "兜底"
+              : verdict === "pass" ? "通过"
+                : verdict === "empty" ? "空答" : "拒绝";
+            tone = verdict === "pass" ? "success" : verdict === "empty" ? "warning" : "error";
             glyphText = VERDICT_GLYPHS[verdict] !== undefined ? VERDICT_GLYPHS[verdict] : word;
             if (verdict === "pass") {
               fullText = word +
@@ -428,7 +434,8 @@
             : armor === undefined ? "等待投影"
               : verdict === null ? "空闲"
                 : verdict === "pass" ? "通过"
-                  : verdict === "fallback" ? "兜底" : "拒绝";
+                  : verdict === "fallback" ? "兜底"
+                    : verdict === "empty" ? "空答" : "拒绝";
 
           // v0.16.5：字段铺成「田字格」—— 一个字段一个 tile（上标签、下值），词表 tile 横跨两列；
           // 「位置」收成头部下面的一行注脚；「版本」行删掉（版本只在头部右侧出现一次，不再重复两遍）。

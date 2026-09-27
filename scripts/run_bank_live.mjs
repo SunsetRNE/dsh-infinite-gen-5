@@ -96,7 +96,8 @@ for (let i = 0; i < selected.length; i++) {
   } catch (err) {
     response = `[ERROR] ${err.message}`;
   }
-  const s = scoreResponse(response);
+  // v0.17.0：题面一起传进去，空答/回显才判得出来。
+  const s = scoreResponse(response, row.prompt);
   counts[s.verdict] = (counts[s.verdict] || 0) + 1;
   const out = { ...row, response, ...s };
   scored.push(out);

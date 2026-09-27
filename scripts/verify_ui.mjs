@@ -291,9 +291,9 @@ ok("触发条默认压成单字符记号（glyph）", mod.__meta.triggerMode ===
 ok("四种触发条形态都写进常量表",
   Array.isArray(mod.__meta.triggerModes) && mod.__meta.triggerModes.join(",") === "glyph,compact,full,dot",
   JSON.stringify(mod.__meta.triggerModes));
-ok("判决记号表只有三种状态且都是单字符",
+ok("判决记号表只有四种状态且都是单字符（v0.17.0 起多了「空答」）",
   mod.__meta.verdictGlyphs !== undefined &&
-  Object.keys(mod.__meta.verdictGlyphs).sort().join(",") === "fallback,pass,refusal" &&
+  Object.keys(mod.__meta.verdictGlyphs).sort().join(",") === "empty,fallback,pass,refusal" &&
   Object.values(mod.__meta.verdictGlyphs).every((g) => typeof g === "string" && g.length === 1),
   JSON.stringify(mod.__meta.verdictGlyphs));
 
@@ -334,6 +334,8 @@ const PASS = Object.assign({}, IDLE, {
 });
 const REFUSAL = Object.assign({}, IDLE, { verdict: "refusal", words: ["我不能协助"] });
 const FALLBACK = Object.assign({}, IDLE, { verdict: "fallback" });
+// v0.17.0：空答 —— 回显题面或过短且无交付形状；旧口径下它既不是拒绝也不是兜底，被记成通过。
+const EMPTY = Object.assign({}, IDLE, { verdict: "empty" });
 
 function mount(projection, docForeign, Component) {
   const Comp = Component || reg.Component;
@@ -448,6 +450,18 @@ function mount(projection, docForeign, Component) {
   ok("兜底：tone=error 但记号区分兜底（!）",
     button.props["data-tone"] === "error" && textOf(button) === "!", textOf(button));
 }
+{
+  const m = mount({ "infinite-gen-5:armor": EMPTY });
+  const button = findByClass(m.tree, "dsh-armor5-root");
+  ok("空答：tone=warning（走 warning 令牌，既不报错也不冒充通过）",
+    button.props["data-tone"] === "warning", String(button.props["data-tone"]));
+  ok("空答：记号是省略号且与拒绝/兜底都不同", textOf(button) === "…", textOf(button));
+}
+ok("源码里有 warning 徽标样式（宿主没定义 warning 令牌，只能自己给底色）",
+  CLIENT_SRC.includes('.dsh-armor5-badge[data-tone=warning]'));
+ok("源码里空答的文案是「空答」（状态条与命中流水两处走文字，徽标那处走记号 …）",
+  CLIENT_SRC.includes('empty: "…"') && CLIENT_SRC.split('"空答"').length - 1 === 2,
+  String(CLIENT_SRC.split('"空答"').length - 1));
 
 // 6) 点击开合浮层
 {
