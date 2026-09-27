@@ -761,7 +761,7 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
       await new Promise((resolve) => setTimeout(resolve, 0));
       const fell = textOf(liveView.rerender());
       ok("推送断线立刻回落轮询，并说明白自己怎么了",
-        fell.includes("推送断线，已回落到轮询"),
+        fell.includes("推送断线，已回落"),
         JSON.stringify(fell.slice(Math.max(0, fell.indexOf("信号")), fell.indexOf("信号") + 160)));
       ok("回落之后重新排上轮询定时器（活跃 400 ms / 空闲 3 s 二选一）",
         delays.includes(400) || delays.includes(3000), JSON.stringify(delays.slice(-4)));
@@ -796,7 +796,7 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
       await new Promise((resolve) => setTimeout(resolve, 0));
       const oldText = textOf(oldView.rerender());
       ok("宿主没给推送路径时老实轮询（不臆造 /events）",
-        oldText.includes("轮询中 · 未接推送") && oldText.includes("统计库里还没有实时分区"),
+        oldText.includes("轮询中 · 按") && oldText.includes("节奏（") && oldText.includes("还没有实时分区"),
         JSON.stringify(oldText.slice(0, 200)));
     } finally {
       delete globalThis.EventSource;
@@ -1001,7 +1001,7 @@ function previewPage({ theme, pluginCss, stateRows, panelHtml, consoleHtml, navH
   形态由 <code>client.js</code> 的 <code>TRIGGER_MODE</code> 切换：<code>glyph</code>（当前）/ <code>compact</code>（短词「通过 web(3)」）/ <code>full</code>（v0.8.0 的长文字）/ <code>dot</code>（纯圆点）。
   文字颜色全部来自 <code>--dsw-alias-*</code>，外壳换主题时我们跟着变。</p>
 
-  <h2>3 · 点击展开最近判决（固定浮层：判决 + 覆盖明细，锚在触发器上方）</h2>
+  <h2>3 · 判决浮层卡片（点击展开：徽标头 + 命中 / 风险载荷 chip + 最近命中流水 + 实时四行）</h2>
   <div class="card panel-host">
     <div class="row">${panelHtml}</div>
   </div>
@@ -1014,7 +1014,7 @@ function previewPage({ theme, pluginCss, stateRows, panelHtml, consoleHtml, navH
   </div>
   <p class="note">旧方案是写死的 <code>#10b981</code> 实心胶囊 + 发光 + 呼吸，跟外壳的令牌体系无关；新方案复用原生 chip 的圆角、字号、行高、内边距和 hover 底色。</p>
 
-  <h2>5 · 设置页最顶部的入口 + 插件自己的独立页面（v0.10.0）</h2>
+  <h2>5 · 设置页「插件」之后的无限五代页（v0.16.2 起不再提供侧栏入口）</h2>
   <div class="card">
     <div class="settings-host">
       <div class="settings-nav">${navHtml}</div>

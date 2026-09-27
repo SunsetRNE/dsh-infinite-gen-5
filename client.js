@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.16.2";
+        var VERSION = "v0.16.3";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -142,7 +142,6 @@
           ".dsh-armor5-rows li{display:flex;gap:8px;align-items:baseline}",
           ".dsh-armor5-rows .k{color:var(--dsw-alias-label-tertiary,#8b8b8b);flex:none;min-width:64px}",
           ".dsh-armor5-rows .v{color:var(--dsw-alias-label-primary,#e6e6e6);overflow-wrap:anywhere}",
-          ".dsh-armor5-note{margin:10px 0 0;color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px;line-height:17px}",
           // ── 设置台（settings.section 里的那一页） ──
           // 令牌全部取自设置页自己用的那一套（bg-layer-2 / border-l2 / label-* / business-primary），
           // 每个都带兜底色。比例按设置页的节奏调：可选块用两/三列网格，预览块是一块内嵌面板，
@@ -427,7 +426,7 @@
             ["扫描范围", textChars
               ? "全文 " + textChars + " 字（判拒只看开头 " + openingChars + " 字）"
               : "—"],
-            ["位置", SLOT_MODE + " · " + SLOT_NAME],
+            ["位置", SLOT_MODE + " · " + String(SLOT_NAME).replace(/^conversation\./, "")],
             ["版本", TITLE]
           ];
           var toLis = function (pairs) {
@@ -496,12 +495,7 @@
                         react.createElement("span", { className: "dsh-armor5-hit-sub" }, hit.sub));
                     }))
                   : react.createElement("span", { className: "dsh-armor5-sec-title" },
-                    "还没有判决留档（服务端 v0.16.2 起记录；重启一次 DSH 后开始攒）"), "hits"),
-              react.createElement(
-                "p",
-                { className: "dsh-armor5-note" },
-                "载荷已注入系统提示词最前，Order 200 末位锚点复述。命中标记 / 风险载荷 / 安全标记 / 最近命中读的是本体实时投影与落盘统计库（推送优先、断线回落轮询），只在这张卡片开着时订阅。领域候选按命中数排序，带 * 的是主判。"
-              )
+                    "还没有判决留档（重启 DSH 后开始攒）"), "hits"),
             )
             : null;
 
@@ -922,8 +916,8 @@
               link("paused", "页面在后台，已暂停轮询（切回来立刻补一次）");
               return;
             }
-            link("polling", (poll.fellBack ? "推送断线，已回落到轮询（重开面板会自动再试）；" : "未接推送，") +
-              "按" + (delay === PANEL_POLL_ACTIVE_MS ? "活跃" : "空闲") + "节奏轮询（" + delay + " ms）");
+            link("polling", (poll.fellBack ? "推送断线，已回落（重开面板会再试）；" : "") +
+              "按" + (delay === PANEL_POLL_ACTIVE_MS ? "活跃" : "空闲") + "节奏（" + delay + " ms）");
             if (typeof setTimeout === "function") poll.timer = setTimeout(tick, delay);
           };
           // 接推送：EventSource 带不了自定义请求头，所以 token 走查询串（服务端只对这条路由放行）。
@@ -1262,7 +1256,7 @@
           var events = live && live.events ? live.events : null;
           var tools = live && live.tools ? live.tools : null;
           if (!live) {
-            rows.push(["本轮", "统计库里还没有实时分区（需要 v0.15.0 的服务端；重启一次 DSH 后由本体落盘）"]);
+            rows.push(["本轮", "还没有实时分区（重启 DSH 后由本体落盘）"]);
           } else {
             var started = turn && turn.startedAt ? Date.parse(turn.startedAt) : NaN;
             rows.push(["本轮", turn && turn.active
