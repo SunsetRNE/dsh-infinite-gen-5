@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.13.3)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.13.4)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -69,6 +69,7 @@
 
 | 版本 | 说明 |
 |---|---|
+| **v0.13.4** | **CI 转绿：自检夹具不再受 `umask` 影响 + 同步跟随权限位**（v0.13.2 / v0.13.3 的 CI 全挂在这里）。① `scripts/sync-local.mjs`：目录权限也显式对齐（`listTree` 的 `dirs` 由 Set 变 Map 存 mode，落盘前逐个 `mkdirSync` + `chmodSync`），且「内容一样但权限位变了」也算要更新 —— 宿主指纹把 `mode` 算进去，不跟着改指纹必然对不上；② `scripts/verify_sync.mjs`：夹具建好后 `fixDirModes()` 把所有目录定死 0755（`cpSync` 出来的 scratch 也补一次），冻值按 CI 实测的 `fb0ce5ff9651…` 回填，新增 2 条「只改权限位也算要更新 / 权限位已同步到安装树」⇒ 35 → **37** 项。教训：本会话 `umask` 是 0077（目录 0700），GitHub runner 是 0022（0755），同一份夹具因此算出两个不同的 `codeSha256` |
 | **v0.13.3** | **修 `sync:local` 预览把「现树指纹」说成「将要写入的指纹」**：只读预览时树还没落盘，报告里那句「管理器激活记录过期 — 0.12.4 → 0.13.2，指纹 f1335ff0…」里的指纹其实是**当前**树算出来的，落盘后按新树重算（本机实测同一棵树预览 f1335ff0… / 落盘后 56a4b7d6…，版本号一样所以看着像假账）。现在预览态改为「（现树指纹 …，落盘后按新树重算）」，JSON 里多一个 `record.previewFingerprint` 供自检断言；`verify_sync` 33 → **35** 项（新增该断言，另因 `sync:local:apply` 之后本机记录与现树一致，宿主记录交叉验证多覆盖到本插件自己一条） |
 | **v0.13.2** | **本机安装树同步 + 管理器记账对齐**：`scripts/sync-local.mjs`（`npm run sync:local` 只读预览 / `sync:local:apply` 落盘）把仓库镜像进 dsh 实际加载的那棵树 —— 目标树由 profile `dependencies` 的 `link:`/`file:` 解析（外加 `plugin-src/<name>`、`plugins/<name>`、非软链的 profile `node_modules` 副本，按 realpath 去重），只增改删、跳过 `.git`/`node_modules`/`ui-preview`、保留安装树独有的 `.dsha-dependencies.json`、权限位跟随源文件、删空目录、写盘走 tmp+rename；同时刷新 `~/.dsh/plugin-activations.json` 里的 `version` + `fingerprint`（先留 `.bak-<时间戳>`；`status`/`startup`/`confirmedAt`/`loadedAt` 一律不动，那是管理器上次安装的记账；`--no-record` 可只铺树；管理器没登记过就不新建条目）。指纹算法在 `scripts/lib/tree-fingerprint.mjs`：复刻宿主 `~/.dsh/plugin-dependencies.py` 的 `current()`（逐条 `['file',rel,mode,sha256]`/`['directory',rel,mode]`/`['link',rel,target,sha]` 行 JSON 累进，非 ASCII 按 `\uXXXX` 转义；单节点依赖图再哈希一次），已用宿主**自己记过的**指纹交叉验证（whale-widget 逐字符一致）。动机：管理器式接线下手铺树管理器不知情，界面会一直显示旧版本、加载状态一栏因指纹不符被清空（本机实测「磁盘 0.13.1 / 管理器写 0.12.4」）。新增 `scripts/verify_sync.mjs`（33 项：指纹冻值 + 宿主记录交叉验证 + 假 DSH_HOME 全流程 + 热链接态空操作），并接进 `verify:all`；`cleanup.mjs` 新增「激活记录备份」一类（最近一份标跳过）；`verify_install` 的过期告警补上 `npm run sync:local:apply` 解法提示 |
 | **v0.13.1** | **修「设置页调参接口在真机上从不挂上」**（v0.13.0 的重缺陷）：宿主的 `WebServer` 在 `async [Service.init]()` 里才 `listen()`，服务 fiber 要等 socket 绑定完才激活，而 `ctx.get("webServer")` 默认 strict —— 只返回「提供方 fiber 已激活」的实现，所以插件 `apply()` 里那次 `get` 在真机上永远拿到 `undefined`，面板一直降级成「接口不可用」（演习台用假 webServer 先挂好，反而没暴露）。改为宿主同款 `ctx.inject(["webServer"], (webCtx) => mountTuningRoute(webCtx))`：服务就绪后补挂精确路由与 index 注入（`mountedServer` 去重，同一 server 不重复注册），未就绪期间仍如实汇报不可用而不假装成功。`verify_tuning` 39 → **45** 项（新增「webServer 晚到」一节：未就绪先报不可用 / 补挂路由 / token 注入同样就位 / endpoint 转 ok / 补挂路由 200 且错 token 仍 401）；另外用真实 `dsh-host-webserver`（`port: 0` 临时端口）跑过一次端到端：无 token 401 · 带 token 200 · POST 改档当场重装（`EXCLUSIVE_SECTION: true` 下装配只剩内核一段） |
@@ -106,7 +107,7 @@ node scripts/verify_version.mjs       # 22 项：版本锚点唯一且等于 pac
 node scripts/cleanup.mjs              # 安装残留清理（默认只列；--yes 才删，活着的安装树不在范围内）
 node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：接线入口唯一 / 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
 node scripts/sync-local.mjs           # 本机安装树同步（默认只读预览；--yes 才铺树并刷激活记录）—— 复刻宿主指纹算法，见下文
-node scripts/verify_sync.mjs          # 35 项：指纹算法（与宿主记录交叉验证）/ 预览不落盘 / 增改删 / 权限位 / 幂等 / 激活记录刷新
+node scripts/verify_sync.mjs          # 37 项：指纹算法（与宿主记录交叉验证）/ 预览不落盘 / 增改删 / 权限位 / 幂等 / 激活记录刷新
 node scripts/verify_ui.mjs            # 149 项：状态条行为 + 设置台（偏好读写与持久化 / 形态与位置切换生效 / 侧栏开关 / 清理与幂等；--emit-html 出视觉预览）
 node scripts/verify_env.mjs           # 149 项：环境探测（纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算）
 node scripts/verify_eval.mjs          # 81 项：评测计量（P/R/F1 手算可核）+ 语料载入形状 + CLI 退出码 0/1/3

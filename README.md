@@ -1,4 +1,4 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.13.3
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.13.4
 
 <p align="center">
   <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
@@ -361,7 +361,7 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   │   ├── verify_tuning.mjs       # 设置页调参自检：路由自守 / 重装注入 / 落盘 / 优先级（真实宿主演习台，缺宿主时 SKIP）
 │   │   ├── dev-link.mjs            # 开发热链接：仓库 ↔ ~/.dsh 软链切换（--link / --restore / 只读状态）
 │   │   ├── sync-local.mjs          # 本机安装树同步：仓库 → dsh 实际加载的树 + 刷新管理器激活记录（默认只读预览）
-│   │   ├── verify_sync.mjs         # 同步自检：指纹算法 / 增改删 / 权限位 / 幂等 / 激活记录（35 条）
+│   │   ├── verify_sync.mjs         # 同步自检：指纹算法 / 增改删 / 权限位 / 幂等 / 激活记录（37 条，夹具与 umask 无关）
 │   │   ├── lib/                    # tree-fingerprint.mjs：复刻宿主 plugin-dependencies.py 的 sha256 指纹
 │   │   ├── verify_prompt_gen4.mjs  # ⚠️ 遗留重定向 → verify_prompt_gen5.mjs
 │   │   └── verify_prompt_gen41.mjs # ⚠️ 遗留重定向 → verify_prompt_gen51.mjs
@@ -491,7 +491,7 @@ chmod +x install.sh uninstall.sh
    node scripts/verify_injection.mjs     # 41 条：真实宿主演习台 —— 装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级（无宿主时 SKIP）
    node scripts/verify_version.mjs       # 22 条：版本锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量
    node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：单一接线入口 + 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
-   node scripts/verify_sync.mjs          # 35 条：本机安装树同步 —— 指纹算法（与宿主记录交叉验证）+ 预览不落盘 / 增改删 / 权限位 / 幂等 / 激活记录刷新（缺 ~/.dsh 时只跑 fixture）
+   node scripts/verify_sync.mjs          # 37 条：本机安装树同步 —— 指纹算法（与宿主记录交叉验证）+ 预览不落盘 / 增改删 / 权限位 / 幂等 / 激活记录刷新（缺 ~/.dsh 时只跑 fixture）
    node scripts/verify_tuning.mjs        # 45 条：设置页调参接口 —— 路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位 / webServer 晚挂补挂（无宿主时 SKIP）
    node scripts/verify_ui.mjs            # 149 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理、注入档位面板）
    node scripts/verify_env.mjs           # 149 条：探测纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算
@@ -568,6 +568,9 @@ npm run sync:local:apply   # 真铺 + 刷记录（改记录前先留一份 plugi
   `\uXXXX` 转义）；`verify:sync` 会拿宿主**自己记过的指纹**当标准答案交叉验证，对不上就红灯。
 - **只改两个字段**：`status` / `startup` / `confirmedAt` / `loadedAt` 一概不动 —— 那是「管理器上次安装」的记账，
   代签等于撒谎；`plugin-updates.json`（管理器去 GitHub 查过的结论）也不碰。
+- **权限位也跟着仓库走**（v0.13.4）：宿主的指纹把 `mode` 算进去，所以内容没变、只有 `chmod` 变了也算「要更新」；
+  目录权限同样显式对齐（`mkdir` 出来的目录权限受 `umask` 影响，不跟仓库走就会漂）。自检夹具也据此把目录权限
+  定死成 0755 —— 之前正是这点让 CI 与本机算出两个不同的冻值（本会话 `umask` 是 0077，GitHub runner 是 0022）。
 - **没登记就只告警**：管理器从没记过本插件时不新建条目，退出 0；`--no-record` 可以只铺树不碰记录。
 - 同步完仍要**重启 DSH 进程**才加载新代码 —— `sync:local` 只保证「盘上是对的、记账是对的」。
 

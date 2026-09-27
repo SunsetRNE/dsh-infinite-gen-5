@@ -45,7 +45,7 @@ const argOf = (name, fallback) => {
 };
 
 /** 确定性 fixture 的 codeSha256 冻值（改算法必须同时改这里，并说明理由）。 */
-const FIXTURE_CODE_SHA = "9b0f237f66909037d35a41443175022ad38957ff4dd57b6766b31cbece7b1104";
+const FIXTURE_CODE_SHA = "fb0ce5ff965178010a9fe4d6ee395a0cf4b2dce80337563a6d939dbbbf7ede15";
 
 const passes = [];
 const failures = [];
@@ -106,11 +106,20 @@ w(join(fakeRepo, "node_modules", "junk", "index.js"), "module.exports = 1;\n");
 w(join(fakeRepo, ".git", "config"), "[core]\n");
 w(join(fakeRepo, "ui-preview", "preview.html"), "<html></html>\n");
 
-check(codeSha256(fakeRepo) === FIXTURE_CODE_SHA, "codeSha256 冻值（确定性 fixture）", codeSha256(fakeRepo));
+/** 目录的权限位是 mkdir 按 umask 算出来的 —— CI 与本机 umask 不同就算出不同指纹。定死它。 */
+const fixDirModes = (dir, mode = 0o755) => {
+  chmodSync(dir, mode);
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory()) fixDirModes(join(dir, entry.name), mode);
+  }
+};
+fixDirModes(fakeRepo);
 
+check(codeSha256(fakeRepo) === FIXTURE_CODE_SHA, "codeSha256 冻值（确定性 fixture）", codeSha256(fakeRepo));
 // node_modules / .git / ui-preview 不进指纹
 const scratch = join(root, "scratch");
 cpSync(fakeRepo, scratch, { recursive: true });
+fixDirModes(scratch); // cpSync 不一定保住目录 mode，比指纹前统一
 w(join(scratch, "node_modules", "junk", "extra.js"), "module.exports = 2;\n");
 check(codeSha256(scratch) === FIXTURE_CODE_SHA, "node_modules 内容不进指纹", "加了文件也应当不变");
 // 内容变了 → 指纹变
@@ -201,6 +210,15 @@ const again = runSync(["--yes"]);
 const t = again.json?.targets?.[0] ?? {};
 check(t.add + t.update + t.remove === 0, "二次运行幂等", `add=${t.add} update=${t.update} remove=${t.remove}`);
 check(again.json?.record?.state === "clean", "记录已一致时不再重写", again.json?.record?.state);
+
+// 只改权限位（内容不变）也必须同步：宿主的指纹把 mode 算进去
+chmodSync(join(fakeRepo, "index.js"), 0o600);
+const modeOnly = runSync([]);
+check(modeOnly.json?.targets?.[0]?.update === 1, "只改权限位也算要更新", `update=${modeOnly.json?.targets?.[0]?.update}`);
+runSync(["--yes"]);
+check((statSync(join(dest, "index.js")).mode & 0o7777) === 0o600, "权限位已同步到安装树", "0600");
+chmodSync(join(fakeRepo, "index.js"), 0o644);
+runSync(["--yes"]);
 
 // --no-record：只铺树不碰记录
 w(actFile, JSON.stringify({ format: 1, entries: { [NAME]: { ...rec, version: "0.0.1" } } }, null, 2) + "\n");

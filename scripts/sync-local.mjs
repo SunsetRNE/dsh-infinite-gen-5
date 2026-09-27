@@ -135,17 +135,18 @@ if (targets.length === 0) {
 }
 
 // ---------- 镜像 ----------
-/** 列目录内容：跳过 .git / node_modules / ui-preview，返回 rel → {mode, size, bytes?} */
+/** 列目录内容：跳过 .git / node_modules / ui-preview，返回 rel → {mode, size, bytes?} 与目录 rel → mode */
 const listTree = (root, { keep = false } = {}) => {
   const files = new Map();
-  const dirs = new Set();
+  const dirs = new Map();
   const visit = (base) => {
     for (const d of readdirSync(base, { withFileTypes: true })) {
       if (TOP_SKIP.has(d.name) || (keep && KEEP.has(d.name))) continue;
       const path = join(base, d.name);
       const rel = relative(root, path).split(sep).join("/");
       if (d.isDirectory() && !d.isSymbolicLink()) {
-        dirs.add(rel);
+        // 目录的权限位也在宿主指纹里（mkdir 受 umask 影响，不跟着仓库走就会漂）
+        dirs.set(rel, statSync(path).mode & 0o7777);
         visit(path);
       } else {
         const info = statSync(path);
@@ -173,14 +174,24 @@ const syncTree = (target) => {
   for (const [rel, info] of src.files) {
     const cur = dst.files.get(rel);
     if (!cur) add.push(rel);
-    else if (!sameContent(info, cur)) update.push(rel);
+    // 内容一样但权限位变了也算「要改」—— 宿主指纹把 mode 算进去，不跟着改指纹就对不上
+    else if (!sameContent(info, cur) || info.mode !== cur.mode) update.push(rel);
   }
   for (const rel of dst.files.keys()) {
     if (!src.files.has(rel) && !KEEP.has(rel)) remove.push(rel);
   }
-  const dirsToRemove = [...dst.dirs].filter((rel) => !src.dirs.has(rel)).sort((a, b) => b.length - a.length);
+  const dirsToRemove = [...dst.dirs.keys()].filter((rel) => !src.dirs.has(rel)).sort((a, b) => b.length - a.length);
 
   if (!dryRun) {
+    for (const [rel, mode] of src.dirs) {
+      const dest = join(target.dir, rel);
+      mkdirSync(dest, { recursive: true });
+      try {
+        chmodSync(dest, mode);
+      } catch {
+        /* 权限改不动不影响内容同步 */
+      }
+    }
     for (const rel of [...add, ...update]) {
       const info = src.files.get(rel);
       const dest = join(target.dir, rel);
