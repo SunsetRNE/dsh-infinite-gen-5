@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 无限五代 · 客户端半体行为自检（v0.8.1）
+ * 无限五代 · 客户端半体行为自检（v0.8.2）
  *
  * 不依赖 react / jsdom / 浏览器：自己实现一套最小 hook 运行时 + 最小 DOM，
  * 把 client.js 真正挂起来跑，然后对渲染出的元素树做断言。
@@ -221,10 +221,37 @@ for (const token of [
 ok("三种位置模式都写进了槽位表",
   ["composer", "header", "zone"].every((m) => CLIENT_SRC.includes(m + ": \"conversation.")));
 ok("版本与 package.json 一致", mod.__meta.version === "v" + VERSION, mod.__meta.version + " vs " + VERSION);
-ok("触发条默认压成多态指示器（compact）", mod.__meta.triggerMode === "compact", mod.__meta.triggerMode);
-ok("三种触发条形态都写进常量表",
-  Array.isArray(mod.__meta.triggerModes) && mod.__meta.triggerModes.join(",") === "full,compact,dot",
+ok("触发条默认压成单字符记号（glyph）", mod.__meta.triggerMode === "glyph", mod.__meta.triggerMode);
+ok("四种触发条形态都写进常量表",
+  Array.isArray(mod.__meta.triggerModes) && mod.__meta.triggerModes.join(",") === "glyph,compact,full,dot",
   JSON.stringify(mod.__meta.triggerModes));
+ok("判决记号表只有三种状态且都是单字符",
+  mod.__meta.verdictGlyphs !== undefined &&
+  Object.keys(mod.__meta.verdictGlyphs).sort().join(",") === "fallback,pass,refusal" &&
+  Object.values(mod.__meta.verdictGlyphs).every((g) => typeof g === "string" && g.length === 1),
+  JSON.stringify(mod.__meta.verdictGlyphs));
+
+// 形态是可配置项 —— 同一份源码只改 TRIGGER_MODE 再装载实例，四种形态都要能自检。
+function loadMode(mode) {
+  const src = CLIENT_SRC.replace('var TRIGGER_MODE = "glyph";', 'var TRIGGER_MODE = "' + mode + '";');
+  let s = null;
+  // eslint-disable-next-line no-new-func
+  new Function("window", "document", "MutationObserver", "setTimeout", "clearTimeout", "console", src)(
+    { __ModuleLoader__: { load(x) { s = x; } } }, doc, FakeMutationObserver, setTimeout, clearTimeout, console);
+  const m = s.factory(fakeRequire);
+  const regs = [];
+  m.apply({
+    slots: {
+      inject(name, cb) { return cb(); },
+      register(options, Component) { regs.push(Component); return () => {}; }
+    }
+  });
+  return { meta: m.__meta, Component: regs[0] };
+}
+const compactMode = loadMode("compact");
+const dotMode = loadMode("dot");
+ok("compact 实例装载成功（形态可切换，不是写死一种）",
+  compactMode.meta.triggerMode === "compact" && typeof compactMode.Component === "function");
 
 // ── 渲染：各状态 ────────────────────────────────────────────────────────────
 const IDLE = { running: false, verdict: null, words: [], safe: [], risk: [], domain: null, domainHits: 0 };
@@ -242,7 +269,8 @@ const PASS = Object.assign({}, IDLE, {
 const REFUSAL = Object.assign({}, IDLE, { verdict: "refusal", words: ["我不能协助"] });
 const FALLBACK = Object.assign({}, IDLE, { verdict: "fallback" });
 
-function mount(projection, docForeign) {
+function mount(projection, docForeign, Component) {
+  const Comp = Component || reg.Component;
   doc.__styles = {};
   doc.__listeners.length = 0;
   doc.__observers.length = 0;
@@ -253,12 +281,12 @@ function mount(projection, docForeign) {
   const props = {
     useProjection(key) { readKeys.push(key); return projection === undefined ? undefined : projection[key]; }
   };
-  let r = render(reg.Component, props, store);
+  let r = render(Comp, props, store);
   flush(r.pending);
   const snapshot = () => r.tree;
   // 组件会在 effect 里 setState（量锚点、开浮层、折叠徽标），所以要再跑一轮渲染才看得到结果。
   const rerender = () => {
-    for (let i = 0; i < 2; i += 1) { r = render(reg.Component, props, store); flush(r.pending); }
+    for (let i = 0; i < 2; i += 1) { r = render(Comp, props, store); flush(r.pending); }
     return r.tree;
   };
   rerender();
@@ -273,7 +301,8 @@ function mount(projection, docForeign) {
   ok("空闲：渲染出按钮（原生 chip 形状）", button !== null && button.type === "button");
   ok("空闲：tone=quiet（走 tertiary 文字色，不抢视线）", button.props["data-tone"] === "quiet", button.props["data-tone"]);
   ok("空闲：圆点不呼吸", dot.props["data-busy"] === undefined);
-  ok("空闲：触发条压成单个圆点（compact 不写文字）", textOf(button) === "", JSON.stringify(textOf(button)));
+  ok("空闲：触发条压成单个圆点（glyph 无判决时不写文字）", textOf(button) === "", JSON.stringify(textOf(button)));
+  ok("空闲：圆点仍然是空闲/执行中的形态（有判决才被记号替代）", dot !== null);
   ok("空闲：文字节点被 display:none 收起但不卸载", findByClass(m.tree, "dsh-armor5-text") !== null);
   ok("空闲：浮层默认关闭", findByClass(m.tree, "dsh-armor5-panel") === null);
   ok("空闲：样式表只注入一次", Object.keys(doc.__styles).length === 1 && doc.__styles["dsh-armor5-css"] !== undefined);
@@ -311,9 +340,19 @@ function mount(projection, docForeign) {
   const button = findByClass(m.tree, "dsh-armor5-root");
   ok("通过：tone=success（走 success 令牌，不是写死的绿）", button.props["data-tone"] === "success");
   const passText = textOf(button);
-  ok("通过：短词只留状态与主领域（数值收进浮层）", passText === "通过 web(3)", passText);
-  ok("通过：领域命中数仍在短词里（>1 标在域名后）", passText.includes("web(3)"), passText);
-  ok("通过：title 保留完整明细（载荷数等）", /载荷 2/.test(button.props.title), button.props.title);
+  ok("通过：默认只上屏一个单字符记号（不写「通过 web」这种词组）", passText === "✓", passText);
+  ok("通过：判决记号替代圆点（不再圆点+文字两件套）", findByClass(m.tree, "dsh-armor5-dot") === null);
+  ok("通过：title 保留完整明细（领域与载荷数）",
+    /web/.test(button.props.title) && /载荷 2/.test(button.props.title), button.props.title);
+  // 形态可切：同一数据下 compact 回落到短词、dot 连记号都不写。
+  const cm = mount({ "infinite-gen-5:armor": PASS }, null, compactMode.Component);
+  ok("compact 形态：判决回落到短词「通过 web(3)」",
+    textOf(findByClass(cm.tree, "dsh-armor5-root")) === "通过 web(3)",
+    textOf(findByClass(cm.tree, "dsh-armor5-root")));
+  const dm = mount({ "infinite-gen-5:armor": PASS }, null, dotMode.Component);
+  ok("dot 形态：判决也不写字（一切在浮层与 title）",
+    textOf(findByClass(dm.tree, "dsh-armor5-root")) === "" && findByClass(dm.tree, "dsh-armor5-dot") !== null,
+    JSON.stringify(textOf(findByClass(dm.tree, "dsh-armor5-root"))));
   // 判决常驻：时间推进（远超原先的 3.2 秒窗口）后仍然显示，只有下一条用户发言才重置。
   const later = Date.now() + 60000;
   const realNow = Date.now;
@@ -322,9 +361,9 @@ function mount(projection, docForeign) {
   Date.now = realNow;
   const after = findByClass(tree2, "dsh-armor5-root");
   ok("判决常驻：60 秒后仍显示判决而不是回落空闲",
-    after.props["data-tone"] === "success" && textOf(after).indexOf("通过") === 0, after.props["data-tone"] + " " + textOf(after));
+    after.props["data-tone"] === "success" && textOf(after) === "✓", after.props["data-tone"] + " " + textOf(after));
   const idleM = mount({ "infinite-gen-5:armor": IDLE });
-  ok("无判决时空闲态只有圆点（compact 无文字）",
+  ok("无判决时空闲态只有圆点（glyph 无文字）",
     textOf(findByClass(idleM.tree, "dsh-armor5-root")) === "",
     JSON.stringify(textOf(findByClass(idleM.tree, "dsh-armor5-root"))));
 }
@@ -334,12 +373,14 @@ function mount(projection, docForeign) {
   const m = mount({ "infinite-gen-5:armor": REFUSAL });
   const button = findByClass(m.tree, "dsh-armor5-root");
   ok("拒绝：tone=error（走 error 令牌）", button.props["data-tone"] === "error");
-  ok("拒绝：短词为「拒绝」（命中词进浮层与 title）", textOf(button) === "拒绝", textOf(button));
+  ok("拒绝：记号与通过不同（✕）且命中词进浮层与 title",
+    textOf(button) === "✕" && /我不能协助/.test(button.props.title), textOf(button) + " | " + button.props.title);
 }
 {
   const m = mount({ "infinite-gen-5:armor": FALLBACK });
   const button = findByClass(m.tree, "dsh-armor5-root");
-  ok("兜底：tone=error 但文字区分「兜底」", button.props["data-tone"] === "error" && textOf(button) === "兜底", textOf(button));
+  ok("兜底：tone=error 但记号区分兜底（!）",
+    button.props["data-tone"] === "error" && textOf(button) === "!", textOf(button));
 }
 
 // 6) 点击开合浮层
@@ -491,10 +532,11 @@ function previewPage({ theme, pluginCss, stateRows, panelHtml, dark }) {
   <div class="card">
     ${stateRows.map((r) => `<div class="stage"><span class="stage-tag">${r.label}</span><span class="native-meter">上下文 12%</span>${r.html}</div>`).join("")}
   </div>
-  <p class="note">v0.8.1 起入口是<b>多态指示器</b>：空闲与执行中只有一个圆点（执行中呼吸），判决时圆点变色并只留一个短词，
+  <p class="note">v0.8.2 起入口压成<b>单字符记号</b>（<code>TRIGGER_MODE = "glyph"</code>）：空闲与执行中只有一个圆点（执行中呼吸），
+  判决时圆点被一个记号替代 —— <code>✓</code> 通过 / <code>✕</code> 拒绝 / <code>!</code> 兜底，按宿主 success/error 令牌着色。
   <b>判决常驻 — 不再 3.2 秒淡出</b>，一直留到你发出下一条消息（落笔时刻显示在浮层的「最近判决」一行）。
-  候选领域、命中标记词、扫描范围、载荷数等明细全部收进点击浮层与悬停 title；领域命中数 &gt;1 时标在域名后，如 <code>web(3)</code>。
-  形态由 <code>client.js</code> 的 <code>TRIGGER_MODE</code> 切换：<code>compact</code>（当前）/ <code>full</code>（v0.8.0 的长文字）/ <code>dot</code>（纯圆点）。
+  领域、候选排名、命中标记词、扫描范围、载荷数等明细全部收进点击浮层与悬停 title（避免「通过 injection」这种英文混读）。
+  形态由 <code>client.js</code> 的 <code>TRIGGER_MODE</code> 切换：<code>glyph</code>（当前）/ <code>compact</code>（短词「通过 web(3)」）/ <code>full</code>（v0.8.0 的长文字）/ <code>dot</code>（纯圆点）。
   文字颜色全部来自 <code>--dsw-alias-*</code>，外壳换主题时我们跟着变。</p>
 
   <h2>3 · 点击展开最近判决（固定浮层：判决 + 覆盖明细，锚在触发器上方）</h2>

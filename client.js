@@ -1,6 +1,6 @@
 (() => {
   try {
-    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 v0.8.1 */
+    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 v0.8.2 */
     window.__ModuleLoader__.load({
       id: "dsh-infinite-gen-5",
       factory: (require) => {
@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.8.1";
+        var VERSION = "v0.8.2";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -48,12 +48,18 @@
 
         // 触发条形态（v0.8.1 起可切换；v0.8.0 及以前一律等价于 "full"）
         //   full    —— 常驻文字：空闲「无限五代」，判决「通过 · web(3) · 载荷 2」
-        //   compact —— 多态指示器（默认）：空闲/执行中只有一个圆点；判决只留状态词
+        //   compact —— 短词：空闲/执行中只有一个圆点；判决只留状态词
         //              （通过/拒绝/兜底 + 领域短 id），数值全部收进浮层与 title
+        //   glyph   —— 单字符（默认）：空闲/执行中只有一个圆点；判决只剩一个记号
+        //              （✓ / ✕ / !，按 success/error 令牌着色），领域与数值全进浮层
         //   dot     —— 纯圆点：一切文字只在浮层与 title 里
         // 判决常驻、颜色仍走宿主 success/error 令牌 —— 亮着就说明它生效了。
-        var TRIGGER_MODES = ["full", "compact", "dot"];
-        var TRIGGER_MODE = "compact";
+        var TRIGGER_MODES = ["glyph", "compact", "full", "dot"];
+        var TRIGGER_MODE = "glyph";
+
+        // 判决的单字符代号。领域 id 是英文，跟状态词拼在一起读起来像句子
+        // （「通过 injection」），单字符记号既最短又不产生误读；细节在浮层里。
+        var VERDICT_GLYPHS = { pass: "✓", refusal: "✕", fallback: "!" };
 
         // 空闲态的常驻文字（只有 TRIGGER_MODE === "full" 才会上屏）。
         var IDLE_LABEL = "无限五代";
@@ -237,6 +243,7 @@
           var tone = "quiet";
           var fullText = IDLE_LABEL;
           var shortText = "";
+          var glyphText = "";
           var busy = false;
           if (running) {
             tone = "running";
@@ -246,6 +253,7 @@
             // 判决常驻：不设到期时间，下一条用户发言才会把它重置。
             var word = verdict === "fallback" ? "兜底" : verdict === "pass" ? "通过" : "拒绝";
             tone = verdict === "pass" ? "success" : "error";
+            glyphText = VERDICT_GLYPHS[verdict] !== undefined ? VERDICT_GLYPHS[verdict] : word;
             if (verdict === "pass") {
               fullText = word +
                 (domain ? " · " + domain + (domainHits > 1 ? "(" + domainHits + ")" : "") : "") +
@@ -257,8 +265,14 @@
               shortText = word;
             }
           }
-          // 上屏文字：full 用长文，compact 用短词（空闲/执行中无文字），dot 一律无文字。
-          var text = TRIGGER_MODE === "full" ? fullText : TRIGGER_MODE === "dot" ? "" : shortText;
+          // 上屏文字：glyph 用单字符（空闲/执行中无文字）、compact 用短词、full 用长文、
+          // dot 一律无文字。文字以外的信息一律走 title（悬停）与浮层（点击）。
+          var text = TRIGGER_MODE === "full" ? fullText
+            : TRIGGER_MODE === "compact" ? shortText
+              : TRIGGER_MODE === "glyph" ? glyphText
+                : "";
+          // glyph 形态下判决有记号就不必再画圆点（圆点是空闲/执行中的形态）。
+          var showDot = !(TRIGGER_MODE === "glyph" && glyphText !== "");
 
           var candidatesText = ranked.length
             ? ranked.map(function (row) {
@@ -350,10 +364,10 @@
                 className: "dsh-armor5-text",
                 style: text ? undefined : { display: "none" }
               }, text),
-              react.createElement("span", {
+              showDot ? react.createElement("span", {
                 className: "dsh-armor5-dot",
                 "data-busy": busy ? "true" : undefined
-              })
+              }) : null
             ),
             panel
           );
@@ -381,7 +395,8 @@
           styleId: STYLE_ID,
           idleLabel: IDLE_LABEL,
           triggerMode: TRIGGER_MODE,
-          triggerModes: TRIGGER_MODES
+          triggerModes: TRIGGER_MODES,
+          verdictGlyphs: VERDICT_GLYPHS
         };
         return module.exports;
       }
