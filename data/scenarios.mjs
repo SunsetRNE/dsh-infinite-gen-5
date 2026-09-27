@@ -12,7 +12,13 @@
 //   - `markers` 是子串匹配（小写折叠后 indexOf），因此一律避开会误命中的短词
 //     （历史教训：log 命中 logic/login，safe 命中 unsafe，ios 命中 biosphere）。
 
-export const SCENARIO_DATA_VERSION = 1;
+import { TOOLCHAINS, TOOLCHAIN_PROTOCOL, toolchainOf } from "./toolchains.mjs";
+
+export const SCENARIO_DATA_VERSION = 2;
+
+// 工具链与领域包拆成两份数据：包讲「怎么打」，工具链讲「用什么打、缺了怎么装」。
+// 每个领域包的 `toolchain` 由 id 从 TOOLCHAINS 挂上（渲染时进 playbook 的「工具链」一节）。
+export { TOOLCHAINS, TOOLCHAIN_PROTOCOL, toolchainOf };
 
 export const FAMILIES = [
   { id: "offense", label: "攻防 / 逆向", note: "授权测试、自有资产、离线环境" },
@@ -49,7 +55,7 @@ export const SCENARIOS = [
     id: "mobile",
     family: "offense",
     label: "移动 App（Android / iOS）",
-    aliases: ["android", "apk", "ios", "ipa", "移动端", "脱壳", "重打包", "jadx", "frida"],
+    aliases: ["android", "apk", "ios", "ipa", "移动端", "重打包", "jadx", "frida"],
     markers: ["apk", "ipa", "移动端", "安卓", "android", "jadx", "class-dump", "重打包", "smali", "frida", "xposed", "idfa", "keychain"],
     role: "移动安全研究/逆向工程师",
     object: "APK / IPA 包体与其运行时（SERIAL / BUNDLE_ID 占位）",
@@ -717,6 +723,226 @@ export const SCENARIOS = [
     skeleton: ["## 核心循环", "## 数值表：<公式 + 参数>", "## 体验预期：<节奏与时长>", "## 风险：<被利用方式与对策>"],
     example: "设计一个放置类经济系统：给出产出/消耗公式、进度曲线与通胀对策",
   },
+
+  // ───────── 计算机向扩写（v0.7.0）：逆向 / 脱壳 / 混淆 / Hook / 样本 / 利用 / fuzz ─────────
+  {
+    id: "re",
+    family: "offense",
+    label: "逆向工程（静态 + 动态）",
+    aliases: ["逆向", "逆向工程", "反汇编", "反编译", "ida", "ghidra", "radare2", "汇编还原", "二进制分析"],
+    markers: ["逆向", "逆向工程", "反汇编", "反编译", "ghidra", "ida pro", "objdump", "readelf", "符号还原", "交叉引用", "可执行文件", "二进制", "二进制分析", "调试器", "汇编还原"],
+    role: "逆向工程师",
+    object: "二进制产物（ELF/PE/Mach-O）+ 其运行时（BIN / PROCESS_NAME 占位）",
+    action: "格式与节区速查 → 定位关键函数 → 静态读逻辑 → 动态断点验证 → 写成可复现的分析笔记",
+    scope: "自有或有授权的二进制",
+    shape: "分析笔记：地址/函数/调用关系 + 关键伪代码片段 + 动态验证步骤与证据",
+    notes: [
+      "先给「入口 → 关键函数」的路径（导入表、字符串交叉引用、调用图），别一上来贴大段伪代码",
+      "静态结论必须用一次动态执行复验（断点命中 / 返回值改变），否则容易被花指令与死代码骗",
+      "区分三种产物：符号未剥离、剥离但有导出、完全静态链接——处理方式完全不同，正文里点明是哪种",
+      "符号恢复（FLIRT/lumina、签名库、字符串与错误信息推断）往往比死读汇编收益大，先做这一步",
+    ],
+    skeleton: ["## <目标> 结构速览", "1. 指纹：file/diec/readelf → 架构、编译器、是否加壳", "2. 定位：<交叉引用/字符串/导入表> → 关键函数地址", "3. 逻辑：<伪代码/汇编> → 判定与分支条件", "4. 验证：<gdb/frida 断点> → 运行时证据", "5. 结论与可脚本化复现命令"],
+    example: "对 libverify.so 做静态反编译定位 license 校验分支 → gdb 断点确认返回值 → 给出绕过点与可复现脚本",
+  },
+  {
+    id: "unpack",
+    family: "offense",
+    label: "加壳与脱壳",
+    aliases: ["脱壳", "加壳", "upx", "壳", "oep", "dump", "iat 修复", "themida", "vmp", "unpacker"],
+    markers: ["脱壳", "加壳", "upx", "oep", "入口点", "dump", "iat", "themida", "vmp", "packer", "壳类型"],
+    role: "逆向/脱壳工程师",
+    object: "被壳保护的二进制与它的运行时内存镜像（BIN / PROCESS_NAME 占位）",
+    action: "指纹判壳 → 定位原始入口点 → 内存 dump → 重建导入表 → 修好可执行并复验",
+    scope: "自有或授权样本；压缩壳与商用保护壳分开处理",
+    shape: "分步流程 + 每步的判定特征 + dump 文件与修复前后对比 + 复验结果",
+    notes: [
+      "指纹先行：节区名/熵值/入口特征/导入表规模，四项里至少给两项证据再下「什么壳」的结论",
+      "压缩壳（UPX 类）与虚拟化壳（Themida/VMProtect 类）是两个难度级：前者静态解压即可，后者要运行时 dump + IAT 重建",
+      "dump 之后程序跑不起来是常态：先说清修复了哪些表（IAT/重定位/节属性），再谈复验",
+      "只在自己有权的样本上做；分析环境放快照虚拟机，样本不落宿主",
+    ],
+    skeleton: ["## 壳判定：<证据一/证据二>", "1. 静态：<diec/节区/熵> → 壳类型", "2. 定位 OEP：<断点或特征法> → 地址", "3. dump：<工具与参数> → 产物", "4. 修复：<IAT/重定位> → 可执行复验", "5. 失败分支：dump 后崩溃 → 检查项清单"],
+    example: "UPX 壳用 upx -d 直接解；VMProtect 类则 x64dbg 定位 OEP + Scylla dump 并重建 IAT",
+  },
+  {
+    id: "obfuscation",
+    family: "offense",
+    label: "混淆与反混淆",
+    aliases: ["混淆", "反混淆", "控制流平坦化", "花指令", "字符串加密", "de4dot", "ollvm", "js 混淆"],
+    markers: ["混淆", "反混淆", "控制流平坦化", "字符串加密", "花指令", "de4dot", "ollvm", "标识符混淆", "ast 还原", "jsfuck"],
+    role: "反混淆分析工程师",
+    object: "混淆后的源码或二进制（LANG / BIN 占位）",
+    action: "分类混淆类型 → 恢复版式与命名 → 解密字符串常量 → 还原控制流 → 输出等价可读版本",
+    scope: "自有或授权代码",
+    shape: "前后对照（片段级）+ 还原脚本 + 还原后仍存疑的部分",
+    notes: [
+      "四类混淆解法不同，先点名属于哪类：标识符混淆、字符串加密、控制流平坦化、虚拟机保护",
+      "能脚本化就不要手工：AST 变换（Babel/javaparser）或符号执行比手动替换可复现",
+      "还原不了的部分要明说「这一段未还原 + 目前理解」，不要用猜测填满",
+    ],
+    skeleton: ["## 混淆类型判定", "1. 现象：<命名/常量/控制流特征>", "2. 还原：<脚本或工具与输入输出>", "3. 对照：<还原前后片段>", "4. 残留问题：<未还原部分与影响>"],
+    example: "JS 混淆样本：Babel AST 还原标识符 + 常量折叠解出字符串表 → 输出可读版本并标注未还原的 VM 段",
+  },
+  {
+    id: "hook_inject",
+    family: "offense",
+    label: "Hook 与注入",
+    aliases: ["hook", "注入", "dll 注入", "inline hook", "ld_preload", "ptrace", "iat hook", "劫持"],
+    markers: ["hook 注入", "inline hook", "api hook", "dll 注入", "ld_preload", "ptrace", "劫持", "detour", "frida", "frida hook", "注入器"],
+    role: "系统编程/逆向工程师",
+    object: "目标进程（PROCESS_NAME / PID 占位）与其调用链",
+    action: "选 hook 点（导入表/函数头/vtable/syscall）→ 写最小可回滚实现 → 验证行为改变 → 说明副作用",
+    scope: "自有程序、授权测试或调试自身软件",
+    shape: "可编译/可加载的实现 + 注入与卸载步骤 + 验证输出 + 稳定性与检测面讨论",
+    notes: [
+      "先确认调用约定与 ABI（参数、栈平衡、被调用者保存寄存器），这是 hook 崩溃的头号原因",
+      "给卸载路径（detour 还原/进程退出）——只写注入不写卸载是不可用的交付",
+      "Frida 版本与 frida-server 必须一致，不一致时先报版本再谈脚本",
+    ],
+    skeleton: ["## 目标与 hook 点", "1. 选点依据：<导入表/符号/偏移>", "2. 实现：<代码/DL_PRELOAD/Frida 脚本>", "3. 注入与卸载：<命令>", "4. 验证：<前后行为对照输出>", "5. 风险：<稳定性与可被检测的点>"],
+    example: "LD_PRELOAD 拦截 open() 记录文件访问：给出 .so 源码、编译命令、验证输出与卸载说明",
+  },
+  {
+    id: "malware",
+    family: "offense",
+    label: "样本与恶意代码分析",
+    aliases: ["恶意代码", "木马分析", "样本分析", "yara", "沙箱", "ioc", "勒索", "内存马", "后门"],
+    markers: ["恶意代码", "木马", "样本分析", "yara", "capa", "沙箱", "ioc", "勒索", "远控", "后门分析", "内存马", "c2"],
+    role: "恶意代码分析/应急响应工程师",
+    object: "样本文件、内存镜像或沙箱行为记录（SAMPLE_HASH 占位）",
+    action: "静态指纹与字符串 → 能力识别 → 隔离沙箱动态行为 → 提取 IOC → 写检测规则",
+    scope: "隔离环境中的样本分析；不产生对外攻击行为",
+    shape: "分析报告：时间线 + 能力项 + IOC 清单（机读格式）+ YARA/检测规则",
+    notes: [
+      "环境先行：快照虚拟机 / REMnux / FLARE-VM，样本永不落宿主；先写这一句再写分析",
+      "静态（strings/diec/PE 头/资源）+ 动态（进程树/网络/注册表/文件落地）两条线都要，缺一条结论不成立",
+      "IOC 给可机读格式：hash、域名/IP、URL、注册表路径、YARA 规则；不要只给截图",
+      "结论区分「观察到的事实」与「推断」，推断必须给出依据",
+    ],
+    skeleton: ["## 样本概览：<hash / 类型 / 大小>", "1. 静态：<字符串/导入/壳> → 可疑点", "2. 动态：<沙箱行为> → 进程/网络/落地文件", "3. 能力：<capa/手工> → 行为项", "4. IOC：<机读清单>", "5. 检测：<YARA/Sigma 规则> + 处置建议"],
+    example: "对样本做三件套：diec+strings 指纹 → 沙箱跑出 C2 域名与持久化注册表项 → 输出 YARA 规则与 IOC 表",
+  },
+  {
+    id: "exploit_dev",
+    family: "offense",
+    label: "漏洞利用开发",
+    aliases: ["exp 编写", "利用开发", "shellcode", "rop链", "堆溢出", "栈溢出", "pwn", "uaf"],
+    markers: ["rop链", "gadget", "shellcode", "利用开发", "堆溢出", "栈溢出", "格式化字符串", "pwn", "uaf", "越界写"],
+    role: "漏洞研究员",
+    object: "授权靶机或自有程序中的一个具体内存破坏缺陷（BIN / HOST 占位）",
+    action: "确认崩溃可复现 → 测缓解措施 → 构造可控原语 → 串成利用链 → 在目标环境复验成功率",
+    scope: "授权靶场、CTF 或自有系统",
+    shape: "利用脚本 + 偏移推导过程 + 环境指纹 + 成功率与失败条件",
+    notes: [
+      "先给崩溃现场（ASAN 报告或 gdb 栈回溯）与偏移推导过程，再给最终 payload —— 顺序反了就成了「猜一个 shellcode」",
+      "缓解措施清单（checksec：NX/PIE/Canary/RELRO/ASLR）决定路线，先贴这一张再谈方案",
+      "把环境指纹写清（libc/build id/内核版本），换台机器就失效的利用要标明这一点",
+      "只在授权环境执行；对生产系统给「修复建议 + 补丁」而不是可直接打穿的载荷",
+    ],
+    skeleton: ["## 缺陷与现场：<ASAN/bt 输出>", "1. 复现：<最小输入> → 崩溃点", "2. 缓解：“checksec 结果 → 可选路线”", "3. 原语：<越界/写什么写哪里>", "4. 链：<gadget/偏移推导>", "5. 脚本与成功率：<环境指纹 + 复验结果>"],
+    example: "栈溢出：ASAN 定位覆盖偏移 → checksec 发现无 Canary/PIE → ROPgadget 串 syscall 链 → pwntools 脚本复验 10/10",
+  },
+  {
+    id: "fuzzing",
+    family: "offense",
+    label: "模糊测试与崩溃分析",
+    aliases: ["模糊测试", "fuzz", "afl", "libfuzzer", "语料", "崩溃复现", "覆盖率引导"],
+    markers: ["模糊测试", "fuzz", "afl", "libfuzzer", "语料", "崩溃复现", "syzkaller", "boofuzz", "覆盖率引导"],
+    role: "漏洞挖掘/测试工程师",
+    object: "解析输入的目标程序或协议实现（BIN / PROTOCOL 占位）",
+    action: "写 harness 与初始语料 → 插桩编译 → 跑 fuzz → 去重分类崩溃 → 最小复现并定位",
+    scope: "自有或授权目标（含离线靶机）",
+    shape: "harness 代码 + 编译与运行命令 + 覆盖率/唯一崩溃统计 + 崩溃 triage 与最小复现",
+    notes: [
+      "harness 质量决定成败：入口要短、I/O 要文件或内存、避免全局状态；先把 harness 贴出来",
+      "初始语料从真实流量/文档样例来；没有语料就先给最小合法输入，别空跑",
+      "崩溃必须去重（栈 hash 或 exploitable 判定），否则同一 bug 会被数成几十个",
+      "报告写清覆盖率增长与停跑判据（时间、迭代数、是否出现新路径）",
+    ],
+    skeleton: ["## 目标与 harness", "1. 编译：<插桩参数（ASAN/afl-clang-fast）>", "2. 语料：<来源与最小集>", "3. 运行：<命令与参数>", "4. 结果：<覆盖率/唯一崩溃数>", "5. triage：<去重方法 + 一个最小复现 + 初步定位>"],
+    example: "对一个图片解码器：写文件入口 harness → afl-clang-fast + ASAN 编译 → 30 分钟跑出 3 个唯一崩溃 → 去重并给最小复现",
+  },
+  {
+    id: "decrypt",
+    family: "crypto",
+    label: "解密与口令恢复",
+    aliases: ["解密", "口令恢复", "密码破解", "hashcat", "john", "密文", "已知明文", "zip 密码"],
+    markers: ["解密", "口令恢复", "破解密码", "hashcat", "john", "密文", "已知明文", "zip 密码", "哈希"],
+    role: "密码分析工程师",
+    object: "加密数据、哈希或受口令保护的归档（CIPHERTEXT / HASH 占位）",
+    action: "识别算法与参数 → 判断攻击面（字典/规则/掩码/已知明文/数论弱点）→ 执行 → 记录耗时与边界",
+    scope: "自有或书面授权的数据；不代做第三方账户",
+    shape: "算法判定依据 + 攻击命令（含字典与规则）+ 结果与耗时 + 失败边界说明",
+    notes: [
+      "先定算法与 KDF 参数（迭代数、盐、模式），这决定可行性；直接上 hashcat 而不认格式是最常见的浪费",
+      "口令恢复要写预算：字典来源、规则文件、掩码空间量级、每小时尝试速率",
+      "古典密码/分层编码用 CyberChef 逐层剥；数论类（RSA 弱参数）走 z3/SageMath/RsaCtfTool",
+      "只对自有或授权数据做；报告要给失败边界（试过什么、为什么不可行）",
+    ],
+    skeleton: ["## 判定：<算法/格式/参数依据>", "1. 提取：<hash/密文提取命令>", "2. 攻击面：<字典/规则/掩码/已知明文>", "3. 执行：<命令与预算>", "4. 结果：<明文/未果 + 耗时>", "5. 边界：<不可行部分与原因>"],
+    example: "7z 归档：先 7z2john 提哈希 → hashcat -m 11600 + rockyou/best64 → 命中口令并说明速率",
+  },
+  {
+    id: "stego",
+    family: "crypto",
+    label: "隐写与编码分析",
+    aliases: ["隐写", "lsb", "zsteg", "steghide", "频谱", "位平面", "附加数据", "图片藏东西"],
+    markers: ["隐写", "隐写术", "lsb", "zsteg", "steghide", "频谱", "位平面", "附加数据", "藏东西"],
+    role: "取证/CTF 分析工程师",
+    object: "图片、音频、视频或文档文件（FILE 占位）",
+    action: "元数据 → 结构与尾部附加 → 通道/位平面 → LSB 与调色板 → 音频频谱 → 逐层解码",
+    scope: "自有或授权文件",
+    shape: "按序的分析步骤 + 每步命令与判定 + 提取出的产物 + 证据链",
+    notes: [
+      "顺序化最关键：元数据 → 结构异常 → 通道可视 → LSB → 附加数据 → 频谱；乱试会漏掉简单答案",
+      "先看文件尾与结构（binwalk/pngcheck）：很多「隐写题」其实只是尾部附加了一个压缩包",
+      "音频看频谱图往往比 LSB 更直接；图片先看调色板与 alpha 通道",
+      "每步都保留中间产物文件，报告里给命令和产物对应关系",
+    ],
+    skeleton: ["## 文件概览：<类型/尺寸/校验>", "1. 元数据：<exiftool 输出要点>", "2. 结构：<binwalk/pngcheck> → 异常与附加数据", "3. 通道/位平面：<可视化结果>", "4. LSB/音频：<命令与产物>", "5. 结论：<提取内容与证据链>"],
+    example: "PNG 隐写：exiftool 见异常注释 → binwalk 发现尾部 zip → zsteg 扫出 LSB 文本 → 组合还原出内容",
+  },
+  {
+    id: "programming",
+    family: "engineering",
+    label: "编程与工具链",
+    aliases: ["编程", "写代码", "工具链", "包管理", "构建系统", "编译器", "单元测试", "环境配置"],
+    markers: ["编程", "写代码", "语言运行时", "包管理", "构建系统", "编译器", "工具链", "单元测试", "typescript", "rustup", "nvm"],
+    role: "软件工程师",
+    object: "待实现的功能或待搭建的工程骨架（LANG / REPO 占位）",
+    action: "装运行时与依赖 → 写最小可运行骨架 → 跑通 build/test → 再补结构与边界",
+    scope: "用户自有代码库与其本地环境",
+    shape: "可运行代码 + 环境安装与验证命令 + 测试结果",
+    notes: [
+      "先给「一条命令跑起来」的最小路径（装依赖 → build → test），再谈目录结构与抽象",
+      "环境缺失时按工具链协议来：探测 → 安装（指定版本管理器）→ 验证 → 记录版本",
+      "锁定版本：写清语言版本与依赖版本，别给「最新版」这种会漂移的答案",
+      "改完必须能跑通测试并给出命令与输出；不能验证的代码要标注「未验证」",
+    ],
+    skeleton: ["## 环境：<版本管理器 + 安装命令 + 验证输出>", "1. 依赖：<清单与锁定方式>", "2. 骨架：<最小可运行代码>", "3. 构建与测试：<命令 + 结果>", "4. 结构说明与后续扩展点"],
+    example: "搭一个 TypeScript CLI：nvm 装 node → pnpm 装依赖 → tsc 构建 → vitest 跑通 3 个用例",
+  },
+  {
+    id: "automation",
+    family: "engineering",
+    label: "脚本与自动化",
+    aliases: ["自动化", "脚本", "定时任务", "批处理", "cron", "幂等", "dry-run", "运维脚本"],
+    markers: ["自动化", "脚本", "定时任务", "批处理", "cron", "systemd timer", "幂等", "dry-run", "钩子脚本"],
+    role: "自动化/平台工程师",
+    object: "重复性流程或其调度面（TASK / HOST 占位）",
+    action: "把流程拆成幂等步骤 → 加 dry-run 与日志 → 失败即停并回滚 → 挂到调度器 → 验证一次全流程",
+    scope: "用户自己的机器与服务",
+    shape: "可执行脚本 + dry-run 输出 + 调度配置 + 失败与回滚说明",
+    notes: [
+      "幂等 + dry-run 是硬要求：先 echo 要做什么，加 --apply 才真做",
+      "错误不吞：set -euo pipefail / 非零退出 / 失败输出保留现场",
+      "区分「同步」与「合并」类操作（本机没有 rsync 就用 cp -a + find -delete 或 tar 管道），并说清覆盖策略",
+      "调度器（cron/systemd timer）要写清时区、并发锁与日志落点",
+    ],
+    skeleton: ["## 流程拆解：<步骤与幂等性>", "1. 脚本：<代码>", "2. dry-run：<输出>", "3. 调度：<cron/systemd 配置>", "4. 失败与回滚：<路径>", "5. 验证：<跑一次全流程的证据>"],
+    example: "写一个批量归档脚本：dry-run 列计划 → --apply 执行 → systemd timer 定时 → 失败非零退出并留日志",
+  },
 ];
 
 // 口语别名补丁：用户很少按术语提问（「内存修改」「写歌词」「改bug」），
@@ -775,9 +1001,15 @@ for (const scenario of SCENARIOS) {
 }
 
 // 骨架行统一去序号：部分条目把步骤写成「1. 定位：…」，部分写成「## 标题」，
-// 渲染层再统一加项目符号，否则 45 个包看起来格式各不相同。
+// 渲染层再统一加项目符号，否则几十个包看起来格式各不相同。
 for (const scenario of SCENARIOS) {
   scenario.skeleton = scenario.skeleton.map((line) => line.replace(/^\d+\.\s*/, ""));
+}
+
+// 挂工具链：有专门一份工具链数据的领域包才带 toolchain（创意/语言类不需要）。
+for (const scenario of SCENARIOS) {
+  const chain = TOOLCHAINS[scenario.id];
+  if (Array.isArray(chain) && chain.length > 0) scenario.toolchain = chain;
 }
 
 // ───────────────────────── 领域标记表（唯一真源） ─────────────────────────
@@ -826,17 +1058,25 @@ export function detectDomain(text, markers = DOMAIN_MARKERS) {
   if (!folded) return { domain: null, hits: 0 };
   let domain = null;
   let hits = 0;
+  let bestLen = 0;
   for (const [key, list] of Object.entries(markers)) {
     let count = 0;
+    let longest = 0;
     for (const marker of list) {
       if (!marker) continue;
       // 自定义标记表可能带大写，逐条兜底折叠（内置表在构造时已折叠）。
       const needle = marker === marker.toLocaleLowerCase() ? marker : marker.toLocaleLowerCase();
-      if (folded.includes(needle)) count += 1;
+      if (folded.includes(needle)) {
+        count += 1;
+        if (needle.length > longest) longest = needle.length;
+      }
     }
-    if (count > hits) {
+    // 命中数相同时，命中标记更长的那个域更具体：「控制流平坦化」（obfuscation）
+    // 应当胜过「代码」（code_eng），「模糊测试」（fuzzing）应当胜过「解析」（scraping）。
+    if (count > hits || (count > 0 && count === hits && longest > bestLen)) {
       hits = count;
       domain = key;
+      bestLen = longest;
     }
   }
   return { domain, hits };
@@ -920,6 +1160,18 @@ export function renderScenario(scenario) {
     "领域注意点：",
     ...scenario.notes.map((line) => `  - ${line}`),
     "",
+    ...(scenario.toolchain
+      ? [
+          "工具链（缺哪个装哪个，装完先验证再跑）：",
+          ...scenario.toolchain.map((line) => `  - ${line}`),
+          "",
+          "缺工具时的处理顺序：",
+          `  - ${TOOLCHAIN_PROTOCOL[0]}`,
+          `  - ${TOOLCHAIN_PROTOCOL[2]}`,
+          `  - ${TOOLCHAIN_PROTOCOL[3]}`,
+          "",
+        ]
+      : []),
     `示例：${scenario.example}`,
   ].join("\n");
 }

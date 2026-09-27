@@ -1,6 +1,7 @@
 // 无限五代 · 领域包数据层离线自检（无需 API Key）
-// 检查：45 包结构完整性 / 遗留 9 域判定不回归 / 标记表折叠与唯一真源 / 索引体积预算 /
-//       匹配与渲染行为（含口语说法与「域渗透」这类反向包含陷阱） / 索引与包文本的一致性
+// 检查：56 包结构完整性 / 遗留 9 域判定不回归 / 标记表折叠与唯一真源 / 索引体积预算 /
+//       匹配与渲染行为（含口语说法与「域渗透」这类反向包含陷阱） / 索引与包文本的一致性 /
+//       工具链（每个计算机域都有 装/验 两段命令，且真的渲染进 playbook）
 // 用法：node scripts/verify_scenarios.mjs [--json]
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -12,9 +13,11 @@ const INDEX_PATH = join(ROOT, "index.js");
 const TOOL_NAME = "infinite_gen5_scenario";
 // 预算：索引每一轮都要付费，包本身按需取用。留出余量而不是贴着实测值卡。
 // 注意单位是 UTF-8 字节：中文 3 B/字，用 String.length 量会低估约一半。
-const INDEX_BUDGET_BYTES = 4200;
+// v0.7.0：领域包 45 → 56（计算机向扩写），索引随之变长；单包上限放宽是因为
+// 每个计算机域现在额外带 5–8 行工具链（装/验命令）。两者都只在被调用时付费。
+const INDEX_BUDGET_BYTES = 5200;
 const PLAYBOOK_MIN_BYTES = 600;
-const PLAYBOOK_MAX_BYTES = 1100;
+const PLAYBOOK_MAX_BYTES = 4200;
 
 const LEGACY_DOMAINS = ["web", "game", "llm", "mobile", "miniprogram", "network", "cloud", "crack", "nsfw"];
 const REQUIRED_FIELDS = ["id", "family", "label", "role", "object", "action", "scope", "shape", "example"];
@@ -43,12 +46,14 @@ const {
   renderScenario,
   lookupScenario,
   scenarioIndexText,
+  TOOLCHAINS,
+  TOOLCHAIN_PROTOCOL,
 } = data;
 
 // ---- 1. 结构完整性 ----
 check(Number.isInteger(SCENARIO_DATA_VERSION) && SCENARIO_DATA_VERSION >= 1, "数据层版本号是正整数");
 check(FAMILIES.length === 7, "领域族数量 = 7", `${FAMILIES.length}`);
-check(SCENARIOS.length === 45, "领域包数量 = 45", `${SCENARIOS.length}`);
+check(SCENARIOS.length === 56, "领域包数量 = 56（v0.7.0 计算机向扩写）", `${SCENARIOS.length}`);
 
 const ids = SCENARIOS.map((s) => s.id);
 check(new Set(ids).size === ids.length, "领域包 id 唯一", `重复: ${ids.length - new Set(ids).size}`);
@@ -109,7 +114,7 @@ const unkeyed = ids.filter((id) => !(id in DOMAIN_MARKERS));
 check(unkeyed.length === 0, "每个领域包都有对应标记键", JSON.stringify(unkeyed));
 const unlabeled = Object.keys(DOMAIN_MARKERS).filter((k) => !(k in DOMAIN_LABELS));
 check(unlabeled.length === 0, "每个标记键都有中文标签", JSON.stringify(unlabeled));
-check(Object.keys(DOMAIN_MARKERS).length === 45, "标记表键数 = 45", `${Object.keys(DOMAIN_MARKERS).length}`);
+check(Object.keys(DOMAIN_MARKERS).length === 56, "标记表键数 = 56", `${Object.keys(DOMAIN_MARKERS).length}`);
 
 // 遗留判定回归：这四段文本在 v0.5.x 里的判定结果必须保持
 const legacyCases = [
@@ -128,6 +133,71 @@ check(detectDomain("").domain === null, "空文本判定为 null");
 // 折叠修复的回归：大写占位符必须真的能命中
 const roleHit = detectDomain("ROLE_A 对 ROLE_B 说话");
 check(roleHit.domain === "nsfw" && roleHit.hits === 2, "大写占位符 ROLE_A/ROLE_B 可命中", JSON.stringify(roleHit));
+
+// ---- 2b. 工具链（v0.7.0）：计算机向的每个域都必须带 装/验 两段 ----
+const COMPUTER_FAMILIES = ["offense", "crypto", "data", "engineering"];
+const computerIds = SCENARIOS.filter((s) => COMPUTER_FAMILIES.includes(s.family)).map((s) => s.id);
+const noChain = computerIds.filter((id) => !Array.isArray(TOOLCHAINS[id]) || TOOLCHAINS[id].length === 0);
+check(noChain.length === 0, `计算机向 ${computerIds.length} 个域都有工具链`, JSON.stringify(noChain));
+const thinChain = computerIds.filter((id) => (TOOLCHAINS[id] ?? []).length < 3);
+check(thinChain.length === 0, "每个计算机域的工具链至少 3 条", JSON.stringify(thinChain));
+// 每行分两类：工具行（<工具> — <用途> | 装: … | 验: …）与劝告行（「无网时…」「只做离线…」）。
+// 工具行必须成对出现装/验；劝告行不强制。要求每个域至少 3 条工具行。
+const installRe = /\|\s*装\s*[:：]/;
+const verifyRe = /\|\s*验\s*[:：]/;
+const halfLine = [];
+const tooFewTools = [];
+for (const id of computerIds) {
+  const lines = TOOLCHAINS[id] ?? [];
+  for (const line of lines) {
+    if (installRe.test(line) !== verifyRe.test(line)) halfLine.push(`${id}: ${line.slice(0, 40)}`);
+  }
+  if (lines.filter((l) => installRe.test(l) && verifyRe.test(l)).length < 3) tooFewTools.push(id);
+}
+check(halfLine.length === 0, "有「装:」的工具行必须也有「验:」", JSON.stringify(halfLine.slice(0, 4)));
+check(tooFewTools.length === 0, "每个计算机域至少 3 条带装/验的工具行", JSON.stringify(tooFewTools.slice(0, 6)));
+const creativeChained = SCENARIOS.filter((s) => ["creative", "language"].includes(s.family) && TOOLCHAINS[s.id]);
+check(creativeChained.length === 0, "创意/语言域不挂工具链（不需要装东西）", JSON.stringify(creativeChained.map((s) => s.id)));
+check(TOOLCHAIN_PROTOCOL.length >= 6, "缺工具协议 ≥ 6 条", String(TOOLCHAIN_PROTOCOL.length));
+check(
+  TOOLCHAIN_PROTOCOL.some((l) => l.includes("探测")) &&
+    TOOLCHAIN_PROTOCOL.some((l) => l.includes("验证")) &&
+    TOOLCHAIN_PROTOCOL.some((l) => l.includes("替代")),
+  "协议覆盖 探测 / 验证 / 降级替代 三件事",
+);
+// 渲染层：有工具链的域必须渲染出「工具链」一节 + 三条协议；没工具链的域不得出现该标题
+const reRendered = renderScenario(SCENARIOS.find((s) => s.id === "re"));
+check(reRendered.includes("工具链（缺哪个装哪个"), "re 的 playbook 含工具链一节");
+check(reRendered.includes("apt install ghidra") || reRendered.includes("install ghidra"), "re 的 playbook 里有可照抄的安装命令");
+check(reRendered.includes("缺工具时的处理顺序"), "re 的 playbook 含缺工具处理顺序");
+check(
+  !renderScenario(SCENARIOS.find((s) => s.id === "novel")).includes("工具链（缺哪个装哪个"),
+  "创意域不渲染工具链一节",
+);
+// 工具返回值也要带工具链（经 lookupScenario）
+const reLookup = lookupScenario("脱壳");
+check(reLookup.ok && reLookup.scenario === "unpack", "「脱壳」命中 unpack", JSON.stringify(reLookup.scenario ?? null));
+check(Array.isArray(TOOLCHAINS[reLookup.scenario]) && TOOLCHAINS[reLookup.scenario].length >= 3, "unpack 的工具链可查到");
+
+// 新域的口语命中（v0.7.0 扩写的 11 个域至少覆盖 8 个典型说法）
+const newDomainCases = [
+  ["帮我逆向这个二进制，看看校验逻辑", "re"],
+  ["这个程序加了壳，怎么脱壳", "unpack"],
+  ["控制流平坦化和花指令怎么还原", "obfuscation"],
+  ["用 frida 写个 inline hook", "hook_inject"],
+  ["分析这个木马样本并给出 ioc", "malware"],
+  ["栈溢出怎么写 rop链", "exploit_dev"],
+  ["给这个解析器做模糊测试", "fuzzing"],
+  ["zip 密码忘了，要口令恢复", "decrypt"],
+  ["图片里藏了东西，检查 lsb", "stego"],
+  ["帮我搭一下工具链和构建系统", "programming"],
+  ["写个定时任务脚本，要幂等", "automation"],
+];
+const newMiss = newDomainCases.filter(([text, expected]) => {
+  const got = detectDomain(text);
+  return got.domain !== expected;
+}).map(([text, expected]) => `${text} → ${detectDomain(text).domain} (期望 ${expected})`);
+check(newMiss.length === 0, "11 个新域的口语说法都能判到", JSON.stringify(newMiss));
 
 // ---- 3. 索引体积与内容 ----
 const index = scenarioIndexText();
@@ -201,7 +271,7 @@ for (const s of SCENARIOS) {
   if (/^\s*\d+\.\s*\d+\./m.test(text)) badRender.push(`${s.id}:骨架双重编号`);
   if (/\n\s*\n\s*\n/.test(text)) badRender.push(`${s.id}:连续空行`);
 }
-check(badRender.length === 0, "45 个包渲染格式合规", JSON.stringify(badRender.slice(0, 6)));
+check(badRender.length === 0, `${SCENARIOS.length} 个包渲染格式合规`, JSON.stringify(badRender.slice(0, 6)));
 
 // 包中每一条骨架/注意点都必须真的出现在渲染结果里（防止渲染层丢掉字段）
 const droppedLines = [];
@@ -261,7 +331,7 @@ if (json) {
   for (const f of failures) console.log(`  ❌ ${f}`);
   console.log(`\n结果: ${passes.length} 通过, ${failures.length} 失败`);
   console.log(
-    `索引 ${indexBytes} B ≈ ${indexTokens} tokens · 单包 ${minSize}–${maxSize} B · 45 包合计 ${playbookSizes.reduce((a, b) => a + b, 0)} B（按需取用，不进 system prompt）`,
+    `索引 ${indexBytes} B ≈ ${indexTokens} tokens · 单包 ${minSize}–${maxSize} B · ${SCENARIOS.length} 包合计 ${playbookSizes.reduce((a, b) => a + b, 0)} B（按需取用，不进 system prompt）`,
   );
 }
 process.exit(failures.length === 0 ? 0 : 1);

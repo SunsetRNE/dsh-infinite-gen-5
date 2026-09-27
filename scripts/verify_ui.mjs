@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 无限五代 · 客户端半体行为自检（v0.6.1）
+ * 无限五代 · 客户端半体行为自检（v0.7.0）
  *
  * 不依赖 react / jsdom / 浏览器：自己实现一套最小 hook 运行时 + 最小 DOM，
  * 把 client.js 真正挂起来跑，然后对渲染出的元素树做断言。
@@ -351,7 +351,7 @@ function mount(projection, docForeign) {
 // 7) 折叠上一代徽标
 {
   const foreign = makeNode("div");
-  foreign.setAttribute("title", "无限四代 v0.6.1");
+  foreign.setAttribute("title", "无限四代 v0.7.0");
   foreign.setAttribute("data-armor", "on");
   const m = mount({ "infinite-gen-5:armor": IDLE }, [foreign]);
   ok("扫到外来徽标后折叠它（display:none）", foreign.style.display === "none");

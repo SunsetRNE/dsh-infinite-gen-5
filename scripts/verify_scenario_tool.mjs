@@ -95,7 +95,7 @@ check(immediate.includes("infinite_gen5_profile"), "元数据工具在模型的�
 const residentBytes = Buffer.byteLength(JSON.stringify({ name: scenarioTool.name, description: scenarioTool.description, parameters: scenarioTool.parameters }), "utf8");
 check(residentBytes < 1200, "常驻定义体积 < 1.2 KB（包正文不在这里）", `${residentBytes} B`);
 check(typeof scenarioTool.description === "string" && scenarioTool.description.length > 80, "描述足够让模型知道何时用");
-check(/45/.test(scenarioTool.description), "描述里写明领域数量");
+check(/56/.test(scenarioTool.description), "描述里写明领域数量");
 check(scenarioTool.parameters?.type === "object", "参数是 object");
 check(scenarioTool.parameters?.additionalProperties === false, "参数不允许额外字段");
 check(
@@ -116,18 +116,18 @@ function render(value) {
 // ---- 无参：返回索引 ----
 const indexCall = call(undefined);
 check(indexCall.ok === true, "无参调用成功");
-check(indexCall.domains === 45, "报告 45 个领域", String(indexCall.domains));
+check(indexCall.domains === 56, "报告 56 个领域", String(indexCall.domains));
 check(Array.isArray(indexCall.families) && indexCall.families.length === 7, "报告 7 个族");
 check(
-  indexCall.families.reduce((sum, f) => sum + f.count, 0) === 45,
-  "各族计数之和 = 45",
+  indexCall.families.reduce((sum, f) => sum + f.count, 0) === 56,
+  "各族计数之和 = 56",
 );
 const indexText = indexCall.index;
-check(bytes(indexText) <= 4200, "索引体积 ≤ 4200 B", `${bytes(indexText)} B`);
+check(bytes(indexText) <= 5200, "索引体积 ≤ 5200 B", `${bytes(indexText)} B`);
 const { SCENARIOS, FAMILIES, scenarioIndexText } = await import(join(ROOT, "data", "scenarios.mjs"));
 const PKG_VERSION = JSON.parse(readFileSync(join(ROOT, "package.json"), "utf8")).version;
 const missingIds = SCENARIOS.filter((s) => !indexText.includes(s.id)).map((s) => s.id);
-check(missingIds.length === 0, "索引列出全部 45 个 id", JSON.stringify(missingIds));
+check(missingIds.length === 0, "索引列出全部 56 个 id", JSON.stringify(missingIds));
 
 // family 过滤：只出现该族的包
 const offense = call({ family: "offense" });
@@ -147,8 +147,30 @@ const one = call({ scenario: "内存修改" });
 check(one.ok === true && one.scenario === "game", "口语「内存修改」匹配到 game", String(one.scenario));
 check(typeof one.playbook === "string" && one.playbook.includes("映射到五槽"), "返回五槽映射");
 check(/ROLE|OBJECT|ACTION|SCOPE|SHAPE/.test(one.playbook), "五槽字段都在");
-check(bytes(one.playbook) <= 1100, "单包体积 ≤ 1100 B", `${bytes(one.playbook)} B`);
+check(bytes(one.playbook) <= 4200, "单包体积 ≤ 4200 B（含工具链）", `${bytes(one.playbook)} B`);
 check(Array.isArray(one.alternatives), "返回备选列表");
+
+// ---- 工具链（v0.7.0）：返回值必须自带装/验命令与降级协议 ----
+check(Array.isArray(one.toolchain) && one.toolchain.length >= 3, "game 包带工具链", String(one.toolchain?.length));
+check(
+  one.toolchain.some((l) => /\|\s*装\s*[:：]/.test(l)) && one.toolchain.some((l) => /\|\s*验\s*[:：]/.test(l)),
+  "工具链里有「装:」与「验:」两类命令",
+);
+check(Array.isArray(one.toolProtocol) && one.toolProtocol.length >= 6, "返回缺工具协议全文", String(one.toolProtocol?.length));
+check(
+  one.toolProtocol.some((l) => l.includes("探测")) && one.toolProtocol.some((l) => l.includes("替代")),
+  "协议含探测与降级替代两条",
+);
+check(one.playbook.includes("工具链（缺哪个装哪个"), "playbook 正文里也有工具链一节");
+const installCall = call({ scenario: "脱壳" });
+check(installCall.ok === true && installCall.scenario === "unpack", "「脱壳」取到 unpack 包", String(installCall.scenario));
+check(
+  installCall.toolchain.some((l) => l.includes("upx") || l.includes("unipacker")),
+  "unpack 的工具链里有具体脱壳工具",
+);
+const creativeCall = call({ scenario: "写歌词" });
+check(creativeCall.ok === true && creativeCall.toolchain.length === 0, "创意域工具链为空（不硬塞）", String(creativeCall.toolchain?.length));
+check(Array.isArray(indexCall.toolProtocol) && indexCall.toolProtocol.length >= 6, "无参索引也回协议（省一次往返）");
 
 const byId = call({ scenario: "nsfw" });
 check(byId.ok === true && byId.scenario === "nsfw", "按 id 取包");
