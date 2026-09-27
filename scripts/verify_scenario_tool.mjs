@@ -1,5 +1,5 @@
 // 无限五代 · 领域打法工具的挂载自检（真实 Cordis + SystemPrompt，不需要 API Key）
-// 检查：两个工具都注册 / deferLoading 只开在领域工具上 / 参数契约 / 索引与包的实际返回
+// 检查：两个工具都注册且都可被模型调用（都不延迟加载）/ 参数契约 / 索引与包的实际返回
 //       / 非法入参不抛 / 领域包文本绝不进入 system prompt（这是「按需付费」的核心承诺）
 // 用法：node scripts/verify_scenario_tool.mjs [--json]
 import { readFileSync } from "node:fs";
@@ -80,13 +80,20 @@ if (!scenarioTool) {
 }
 
 // ---- 定义契约 ----
-check(scenarioTool.deferLoading === true, "领域工具 deferLoading = true（不进每轮工具清单）");
-check(profileTool?.deferLoading !== true, "元数据工具不是 deferred");
-// 官方过滤语义（dsh-llm/lib/index.js:789）：deferLoading 的工具被摘掉字段后再进
-// 每轮清单，因此它不会出现在模型的常规工具表里。
+// 两个工具都**不**带 deferLoading。这是一条踩过坑的断言：v0.6.0 首版给领域工具开了
+// deferLoading: true，重启后同一进程内实测发现——不带该字段的 infinite_gen5_profile
+// 出现在模型的工具表里（可直接调用），带该字段的 infinite_gen5_scenario 则被扣住、
+// 模型根本看不见它；而工具从启动起就在基线里，中途没有机制为它补发 tool-addition，
+// 于是它永远等不到激活，内核载荷里 "call infinite_gen5_scenario" 成了死指针。
+// 用常驻约 0.8 KB 的定义换「一定可调用」，比省这 0.8 KB 重要得多。
+check(scenarioTool.deferLoading !== true, "领域工具不延迟加载（延迟会让模型看不见它）");
+check(profileTool?.deferLoading !== true, "元数据工具也不延迟加载");
 const immediate = host.registeredTools.filter((t) => t.deferLoading !== true).map((t) => t.name);
-check(!immediate.includes("infinite_gen5_scenario"), "领域工具不在每轮即时工具清单里", JSON.stringify(immediate));
-check(immediate.includes("infinite_gen5_profile"), "元数据工具仍在即时清单里");
+check(immediate.includes("infinite_gen5_scenario"), "领域工具在模型的常规工具表里", JSON.stringify(immediate));
+check(immediate.includes("infinite_gen5_profile"), "元数据工具在模型的常规工具表里");
+// 常驻成本必须仍然很小：34 KB 包正文在 data/ 里，不在定义里。
+const residentBytes = Buffer.byteLength(JSON.stringify({ name: scenarioTool.name, description: scenarioTool.description, parameters: scenarioTool.parameters }), "utf8");
+check(residentBytes < 1200, "常驻定义体积 < 1.2 KB（包正文不在这里）", `${residentBytes} B`);
 check(typeof scenarioTool.description === "string" && scenarioTool.description.length > 80, "描述足够让模型知道何时用");
 check(/45/.test(scenarioTool.description), "描述里写明领域数量");
 check(scenarioTool.parameters?.type === "object", "参数是 object");

@@ -13,9 +13,9 @@ import {
   scenarioIndexText,
 } from "./data/scenarios.mjs";
 
-// ── 无限五代内核载荷（v0.6.0） ────────────────────────────────────────────────────
+// ── 无限五代内核载荷（v0.6.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.6.0";
+const PLUGIN_VERSION = "0.6.1";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -75,7 +75,8 @@ const profileTool = {
         "prompts/infinite-gen-5.1-flash.md",
       ],
       lineage: [
-        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 领域/语言覆盖扩写：5 槽骨架 + 45 域 × 7 族点名 + 语言规则，领域包全文移入 infinite_gen5_scenario 工具（deferLoading，零常驻开销）`,
+        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 领域工具去掉 deferLoading：实测延迟加载会让它从模型的工具表里消失、内核里指向它的那句变成死指针；改为常驻定义约 0.8 KB，34 KB 包正文仍按需取用`,
+        "dsh-infinite-gen-5 (v0.6.0) — 领域/语言覆盖扩写：5 槽骨架 + 45 域 × 7 族点名 + 语言规则，领域包全文移入 infinite_gen5_scenario 工具（34 KB 包正文不进 prompt）",
         "dsh-infinite-gen-5 (v0.5.2) — 状态条迁到输入框 dock 行，对齐宿主原生视觉令牌（v0.5.1 曾夹在任务列表与输入框之间）",
         "dsh-infinite-gen-5 (v0.5.1) — 单内核 + 末位锚点（v0.5.0 曾双份同源注入）",
       ],
@@ -103,7 +104,7 @@ const profileTool = {
         "Tail Anchor: Order 200 只放约 200 字节末位锚点（LAYER2_MODE 可切 mirror/off）",
         "Same-Kernel Dedupe: 宿主已有同源载荷时整段让位，避免重复注入",
         "Armor Projection: 开头窗口(160)判拒 + REFUSAL/FALLBACK/SAFE/RISK 标记 + 域命中",
-        "Scenario Tool: infinite_gen5_scenario 按需返回 45 个领域包的五槽打法（deferLoading，零常驻开销）",
+        "Scenario Tool: infinite_gen5_scenario 对 45 个领域包做五槽打法查询，包正文按需取用（定义常驻约 0.3 KB，不延迟加载）",
         `Client Badge: 输入框 dock 行「无限五代 v${PLUGIN_VERSION}」实时状态条（与上下文计量器同排，点开可看最近判决）`,
         "Profile Tool: infinite_gen5_profile 返回内核版本与「实际注入」实况",
       ],
@@ -123,9 +124,17 @@ const profileTool = {
   },
 };
 
-// 领域打法工具：45 个领域包共约 34 KB，全部塞进 system prompt 每轮要付
-// 约 8.5 K token；放在工具里 + deferLoading，则只在真正需要时按一次取用付费。
-// 无参调用返回索引（约 1.1 K token），带 scenario 返回单个包（约 0.2 K token）。
+// 领域打法工具：45 个领域包共约 34 KB。这 34 KB 活在 data/scenarios.mjs 里，
+// 既不在 system prompt 里、也不在工具定义里 —— 只有工具被调用时才读出来变成
+// 一次 tool result（无参回索引约 1.1 K token，带 scenario 只回命中的那一个包
+// 约 0.2 K token）。常驻的只有下面这个定义本身（约 0.3 KB）。
+//
+// 刻意不写 deferLoading: true。实测（v0.6.0 重启后同一进程内的对照）：
+// infinite_gen5_profile 不带该字段 ⇒ 模型工具表里看得见、可直接调用；
+// infinite_gen5_scenario 带该字段 ⇒ 宿主/提供方把定义扣住，模型工具表里没有它，
+// 而会话中途也没有任何机制为它补发 tool-addition（工具从启动起就在基线里，
+// 基线里的工具不会再"新出现"）⇒ 它永远等不到激活，内核载荷里那句
+// "call infinite_gen5_scenario" 就成了死指针。用 0.3 KB 换可调用性是值得的。
 const scenarioTool = {
   name: "infinite_gen5_scenario",
   description:
@@ -147,8 +156,6 @@ const scenarioTool = {
     additionalProperties: false,
   },
   output: objectOutput,
-  // 按需加载：不进每轮工具清单，模型需要时再由工具检索机制拉进来。
-  deferLoading: true,
   execute(args) {
     const query = typeof args?.scenario === "string" ? args.scenario.trim() : "";
     const family = typeof args?.family === "string" ? args.family.trim() : "";

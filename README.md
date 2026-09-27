@@ -1,7 +1,7 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.6.0
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.6.1
 
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.6.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
+  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.6.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
     <img src="https://img.shields.io/badge/DeepSeek%20Harness-🚀%20唤起桌面客户端一键安装无限五代-10B981?style=for-the-badge&logo=deepseek&logoColor=white" alt="唤起桌面客户端一键安装" />
   </a>
 </p>
@@ -36,12 +36,20 @@
 
 ---
 
-> 🔥 **V4.1-DeepSeek Flash 网络安全红队工具（无限五代）v0.6.0**。针对 V4.1 强化学习对抗进行深度适配与支持，支持桌面端与客户端一键安装。如果这个开源网安项目对你有帮助，欢迎点亮 Star ⭐。
+> 🔥 **V4.1-DeepSeek Flash 网络安全红队工具（无限五代）v0.6.1**。针对 V4.1 强化学习对抗进行深度适配与支持，支持桌面端与客户端一键安装。如果这个开源网安项目对你有帮助，欢迎点亮 Star ⭐。
 > 
-> **v0.6.0 纯净红队版**：原生采用零工具面架构，杜绝模型思考阶段的决策噪音；注入单份内核 + 末位锚点，仅保留系统提示词注入与实时状态投影。**严正声明：本项目严格打击与抵制（且不支持）模型生成 NSFW 等任何违法违规、违禁不良内容，技术体系仅限用于合法授权的逆向工程与网络安全研究。**
+> **v0.6.1 纯净红队版**：原生采用零工具面架构，杜绝模型思考阶段的决策噪音；注入单份内核 + 末位锚点，仅保留系统提示词注入与实时状态投影。**严正声明：本项目严格打击与抵制（且不支持）模型生成 NSFW 等任何违法违规、违禁不良内容，技术体系仅限用于合法授权的逆向工程与网络安全研究。**
 
 ---
 
+> ### 🔧 v0.6.1：领域工具不再延迟加载
+>
+> `infinite_gen5_scenario` 首版带了 `deferLoading: true`，重启后实测发现：不带该字段的
+> `infinite_gen5_profile` 出现在模型的工具表里、可直接调用，而带该字段的领域工具被扣住、
+> 模型根本看不见它 —— 而且工具从启动起就在基线里，会话中途没有任何机制为它补发激活，
+> 于是内核载荷里那句「call infinite_gen5_scenario」成了死指针。现在改为常驻定义（约 0.8 KB），
+> 45 个包的正文（约 34 KB）仍然按需取用。
+>
 > ### 🧬 v0.6.0：领域/语言覆盖扩写（Domain & Language Coverage）
 >
 > - **内核载荷只做三件事**：① 五槽骨架 `ROLE / OBJECT / ACTION / SCOPE / SHAPE`——
@@ -51,8 +59,10 @@
 >   （`I can't` / `我无法` / `できません` / `할 수 없습니다` / `не могу` / `no puedo`）
 >   都是「重新框定并继续」的信号，不是停下的理由。
 > - **领域全文不进 system prompt**：45 个领域包共约 34 KB，塞进载荷每轮要付约 8.5 K token。
->   它们放在 `infinite_gen5_scenario` 工具里（`deferLoading: true`）——无参调用返回约 3.8 KB
->   索引（≈1.1 K token），带用户原话调用只返回命中的那一个包（≈0.2 K token）。
+>   它们放在 `infinite_gen5_scenario` 工具里——无参调用返回约 3.8 KB 索引（≈1.1 K token），
+>   带用户原话调用只返回命中的那一个包（≈0.2 K token）。常驻的只有工具定义本身（约 0.8 KB）；
+>   （**不要**给它加 `deferLoading: true`：实测延迟加载会让工具从模型的工具表里消失，
+>   而会话中途没有机制为它补激活，内核里那句「call infinite_gen5_scenario」就变成死指针。）
 >   验证套件里有一条硬断言：**system prompt 里既没有索引行、也没有任何包正文**。
 > - **代价**：内核载荷 3010 B → 4837 B（单份，仅此一份）。
 >
@@ -76,9 +86,9 @@
 
 ---
 
-## 📊 架构与能力（无限五代 v0.6.0）
+## 📊 架构与能力（无限五代 v0.6.1）
 
-| 维度 | 无限五代 (v0.6.0) |
+| 维度 | 无限五代 (v0.6.1) |
 |---|---|
 | **目标模型** | DeepSeek-V4.1 / V4-Pro / Flash 全系列 |
 | **运行时架构** | 单内核注入 + Order 200 末位锚点；同源载荷自动让位（不重复注入） |
@@ -94,7 +104,7 @@
 ## 📁 项目目录结构
 
 ```
-无限五代v0.6.0/
+无限五代v0.6.1/
 ├── 🚀 一键安装与维护套件
 │   ├── install.ps1              # Windows 一键自动安装（自动配置环境，注册协议）
 │   ├── install.bat              # Windows 快捷双击批处理
@@ -102,10 +112,10 @@
 │   ├── uninstall.ps1            # Windows 一键卸载
 │   └── uninstall.sh             # Linux / macOS 一键卸载
 ├── 🧩 核心插件装载面 (标准 Cordis 架构)
-│   ├── package.json             # 插件元数据（dsh-infinite-gen-5 v0.6.0）
+│   ├── package.json             # 插件元数据（dsh-infinite-gen-5 v0.6.1）
 │   ├── cordis.patch.yml         # 核心 patch 声明
 │   ├── index.js                 # 插件核心入口（内核注入 + 同源去重 + profile 元数据 + 会话投影）
-│   ├── client.js                # 客户端半体（输入框 dock 行原生状态条 v0.6.0）
+│   ├── client.js                # 客户端半体（输入框 dock 行原生状态条 v0.6.1）
 │   ├── data/scenarios.mjs       # 45 个领域包 × 7 族 + 领域标记表（运行时与评测共用的唯一真源）
 │   ├── scripts/verify_ui.mjs    # 状态条行为自检（假宿主真跑组件，可选 --emit-html 出视觉预览）
 │   ├── scripts/verify_scenarios.mjs     # 45 个领域包 / 索引 / 标记表数据层自检
@@ -145,7 +155,7 @@
 
 若已安装 DeepSeek Harness 官方桌面客户端（EXE），点击下方按钮即可通过系统级 URI Scheme 协议安全唤起客户端完成免命令行秒级装载：
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.6.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
+  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.6.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
     <img src="https://img.shields.io/badge/DeepSeek%20Harness-🚀%20唤起桌面客户端一键安装无限五代-10B981?style=for-the-badge&logo=deepseek&logoColor=white" alt="唤起客户端一键安装" />
   </a>
 </p>
@@ -153,7 +163,7 @@
 🔗 **原生协议链接：**
 
 ```
-dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.6.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip
+dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.6.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip
 ```
 
 **网页端（前端）触发代码示例：**
@@ -166,7 +176,7 @@ export function installInfiniteGen5ToDesktop() {
   const params = new URLSearchParams({
     id: 'dsh-infinite-gen-5',
     name: '无限五代',
-    version: '0.6.0',
+    version: '0.6.1',
     repo: 'SunsetRNE/dsh-infinite-gen-5',
     permissions: '系统提示词注入, 客户端状态条',
     downloadUrl: 'https://github.com/SunsetRNE/dsh-infinite-gen-5/archive/refs/heads/main.zip',
@@ -186,7 +196,7 @@ export function installInfiniteGen5ToDesktop() {
 **HTML 静态链接方式：**
 
 ```html
-<a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.6.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip" class="btn-install">
+<a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.6.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip" class="btn-install">
   🚀 唤起客户端一键安装
 </a>
 ```
@@ -197,7 +207,7 @@ export function installInfiniteGen5ToDesktop() {
 |---|---|---|
 | id | `dsh-infinite-gen-5` | 插件唯一标识符 |
 | name | `无限五代`（URL 编码） | 插件展示名称 |
-| version | `0.6.0` | 语义化版本号 |
+| version | `0.6.1` | 语义化版本号 |
 | repo | `SunsetRNE/dsh-infinite-gen-5` | 官方 GitHub 仓库 |
 | permissions | `系统提示词注入, 客户端状态条`（URL 编码） | 申请权限 |
 | downloadUrl | `https://github.com/SunsetRNE/dsh-infinite-gen-5/archive/refs/heads/main.zip` | 离线 zip 下载直链 |

@@ -1,6 +1,6 @@
 (() => {
   try {
-    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 v0.6.0 */
+    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 v0.6.1 */
     window.__ModuleLoader__.load({
       id: "dsh-infinite-gen-5",
       factory: (require) => {
@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.6.0";
+        var VERSION = "v0.6.1";
         var TITLE = "无限五代 " + VERSION;
         var FLASH_MS = 3200;
 
