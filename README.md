@@ -252,7 +252,7 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   └── uninstall.sh             # Linux / macOS 一键卸载
 ├── ⚙️ CI 门禁
 │   ├── .github/workflows/verify.yml  # push / PR 触发 npm run verify:all（零依赖，无需 npm install）
-│   └── .github/workflows/release.yml # push v* tag 触发：自检 → 打包 → 产品上传到 Release
+│   └── .github/workflows/release.yml # push v* tag 触发：自检 → 打包 → 产物上传到 Release
 ├── 🧩 核心插件装载面 (标准 Cordis 架构)
 │   ├── package.json             # 插件元数据（dsh-infinite-gen-5 v0.11.1）
 │   ├── cordis.patch.yml         # 核心 patch 声明
