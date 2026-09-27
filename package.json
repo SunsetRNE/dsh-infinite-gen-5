@@ -88,8 +88,9 @@
     "gate:eval": "node scripts/eval-corpus.mjs --gate",
     "baseline:eval": "node scripts/eval-corpus.mjs --write-baseline",
     "verify:eval": "node scripts/verify_eval.mjs",
-    "verify:all": "npm run harness:check && npm run verify:version && npm run verify:notes && npm run verify:gen5 && npm run verify:gen51 && npm run verify:dedupe && npm run verify:injection && npm run verify:tuning && npm run verify:scenarios && npm run verify:vocab && npm run verify:scenario-tool && npm run verify:tool-budget && npm run verify:stats-panel && npm run verify:ui && npm run verify:env && npm run verify:eval && npm run gate:eval && npm run verify:sync && npm run verify:install",
-    "release:pack": "node scripts/package-release.mjs"
+    "verify:all": "npm run harness:check && npm run verify:version && npm run verify:notes && npm run verify:gen5 && npm run verify:gen51 && npm run verify:dedupe && npm run verify:injection && npm run verify:tuning && npm run verify:scenarios && npm run verify:vocab && npm run verify:scenario-tool && npm run verify:tool-budget && npm run verify:stats-panel && npm run verify:ui && npm run verify:ui:size && npm run verify:env && npm run verify:eval && npm run gate:eval && npm run verify:sync && npm run verify:install",
+    "release:pack": "node scripts/package-release.mjs",
+    "verify:ui:size": "node scripts/verify_card_size.mjs"
   },
   "dsh": {
     "id": "dsh-infinite-gen-5",

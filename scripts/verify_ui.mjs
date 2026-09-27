@@ -569,21 +569,43 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
     cssText.length + " 字符");
   // v0.19.0：整体比例压缩（面板更窄、字号更小、行高与留白同步收紧）。逐个细项钉死，
   // 免得以后「顺手删一条规则」时排版又静默退化 —— 光有选择器不算数。
+  // v0.19.0 定稿：整体比例压缩（面板更窄、字号更小、行高与留白同步收紧）。
+  // v0.19.1：这张表就是「面板大小」的唯一真源 —— 表长也被断言，删掉一条锚点直接红；
+  // 单条规则「顺手改回去一点」同样红。光有选择器不算数，值也必须对。
   const compactAnchors = [
-    ["面板宽度 260px", cssText.includes("width:min(260px,100vw - 18px)")],
+    ["面板宽度 min(260px,100vw - 18px)", cssText.includes("width:min(260px,100vw - 18px)")],
     ["面板内边距 7px 8px 8px", /\.dsh-armor5-panel\{[^}]*padding:7px 8px 8px/.test(cssText)],
+    ["面板圆角 9px", /\.dsh-armor5-panel\{[^}]*border-radius:var\(--dsw-radius-lg,9px\)/.test(cssText)],
     ["面板正文 11px/15px", /\.dsh-armor5-panel\{[^}]*font-size:11px;line-height:15px/.test(cssText)],
+    ["头部间距 gap 4px", cssText.includes(".dsh-armor5-head{display:flex;align-items:center;gap:4px}")],
+    ["头部时刻 10px", cssText.includes("font-size:10px;font-variant-numeric:tabular-nums}")],
+    ["徽标高 15px / 内边距 0 6px", /\.dsh-armor5-badge\{[^}]*height:15px;padding:0 6px/.test(cssText)],
+    ["徽标字号 10px", /\.dsh-armor5-badge\{[^}]*font-size:10px;background:/.test(cssText)],
+    ["分区 margin-top 6px / gap 3px", cssText.includes(".dsh-armor5-sec{margin-top:6px;display:flex;flex-direction:column;gap:3px}")],
     ["分区间距 6px/6px", /\.dsh-armor5-sec \+ \.dsh-armor5-sec\{margin-top:6px;padding-top:6px;/.test(cssText)],
+    ["区标题 10px/13px", /\.dsh-armor5-sec-title\{[^}]*font-size:10px;[^}]*line-height:13px/.test(cssText)],
+    ["chip 间距 gap 2px", cssText.includes(".dsh-armor5-chips{display:flex;flex-wrap:wrap;gap:2px}")],
+    ["chip 内边距 0.5px 5px", /\.dsh-armor5-chip\{[^}]*padding:0\.5px 5px/.test(cssText)],
+    ["chip 圆角 4px", /\.dsh-armor5-chip\{[^}]*border-radius:4px/.test(cssText)],
+    ["chip 字号/行高 10.5px/13px", /\.dsh-armor5-chip\{[^}]*font-size:10\.5px;line-height:13px/.test(cssText)],
+    ["命中流水 gap 3px", /\.dsh-armor5-hits\{[^}]*gap:3px/.test(cssText)],
+    ["命中流水上限 120px", /\.dsh-armor5-hits\{[^}]*max-height:120px/.test(cssText)],
+    ["命中条目 4px 6px / 圆角 6px", /\.dsh-armor5-hits li\{[^}]*padding:4px 6px;border-radius:6px/.test(cssText)],
+    ["命中主行 10.5px", /\.dsh-armor5-hit-main\{[^}]*font-size:10\.5px/.test(cssText)],
+    ["命中副行 10px", /\.dsh-armor5-hit-sub\{[^}]*font-size:10px/.test(cssText)],
+    ["栅格 gap 4px", cssText.includes(".dsh-armor5-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}")],
+    ["tile 标签 10px/12px", /\.dsh-armor5-tile \.t\{[^}]*font-size:10px;line-height:12px/.test(cssText)],
     ["tile 值行 10.5px/13px", /\.dsh-armor5-tile \.b\{[^}]*font-size:10\.5px;line-height:13px/.test(cssText)],
-    ["chip 内边距 0.5px 6px", /\.dsh-armor5-chip\{[^}]*padding:0\.5px 5px/.test(cssText)],
-    ["cap 字号 10px", /\.dsh-armor5-cap\{[^}]*font-size:10px;/.test(cssText)]
+    ["注脚 10px/12px", /\.dsh-armor5-cap\{[^}]*font-size:10px;[^}]*line-height:12px/.test(cssText)]
   ];
-  ok("紧凑比例锚点齐全（面板宽度/内边距/正文行高/tile 行高/分区间距/chip 内边距/cap 字号）",
-    compactAnchors.every(([, pass]) => pass),
-    compactAnchors.filter(([, pass]) => !pass).map(([name]) => {
-      const found = cssText.match(/\.dsh-armor5-sec \+ \.dsh-armor5-sec\{[^}]{0,60}/);
-      return name + (found ? " => " + found[0] : " => 未找到");
-    }).join(" · ") || cssText.length + " 字符");
+  const COMPACT_ANCHOR_COUNT = 24;
+  const compactFailures = compactAnchors.filter(([, pass]) => !pass).map(([name]) => name);
+  ok("紧凑比例锚点数量固定（" + compactAnchors.length + "/" + COMPACT_ANCHOR_COUNT + " 条，删一条就红）",
+    compactAnchors.length === COMPACT_ANCHOR_COUNT,
+    compactAnchors.length + " 条");
+  ok("紧凑比例锚点齐全（面板 / 徽标 / 分区 / chip / 命中流水 / tile / 注脚 全部按定稿值）",
+    compactFailures.length === 0,
+    compactFailures.join(" · ") || cssText.length + " 字符");
   // v0.16.1：浮层卡片自己也订一份统计库（与设置页那组同源），卡片没拿到桥时至少要有「信号 / 本轮」两行。
   ok("浮层卡片带「实时」行（卡片自己订阅统计库）",
     panelText.includes("信号") && panelText.includes("本轮"), panelText.slice(-160));
