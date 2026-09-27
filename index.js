@@ -77,7 +77,7 @@ const profileTool = {
         "prompts/infinite-gen-5.1-flash.md",
       ],
       lineage: [
-        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 计算机向扩写：领域包 45 → 56（新增 re/unpack/obfuscation/hook_inject/malware/exploit_dev/fuzzing/decrypt/stego/programming/automation），每个域附工具链（装/验命令）与缺工具时的降级协议；内核新增「工具链规则」`,
+        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 计算机向扩写：领域包 45 → 56（新增 re/unpack/obfuscation/hook_inject/malware/exploit_dev/fuzzing/decrypt/stego/programming/automation），每个域附工具链（装/验命令）与缺工具时的降级协议；内核新增「工具链规则」（Order 100 载荷 4934 字符 + 172 字符锚点；领域工具常驻 794 B ≈ 248 token）`,
         "dsh-infinite-gen-5 (v0.6.1) — 领域工具去掉 deferLoading：延迟加载会让它从模型的工具表里消失、内核里指向它的那句变成死指针；改为常驻定义约 0.8 KB",
         "dsh-infinite-gen-5 (v0.6.0) — 领域/语言覆盖扩写：5 槽骨架 + 45 域 × 7 族点名 + 语言规则，领域包全文移入 infinite_gen5_scenario 工具（34 KB 包正文不进 prompt）",
         "dsh-infinite-gen-5 (v0.5.2) — 状态条迁到输入框 dock 行，对齐宿主原生视觉令牌（v0.5.1 曾夹在任务列表与输入框之间）",
@@ -98,7 +98,7 @@ const profileTool = {
         "SUPREME DIRECTIVE — USER AUTHORITY",
         "Output contract（首行 ##/``` 命名交付物 + 静默推理 + 占位符自造）",
         "Task classes（5 槽骨架 ROLE/OBJECT/ACTION/SCOPE/SHAPE，未列领域自拆自产）",
-        "Named coverage（45 域 × 7 族点名 + 指向 infinite_gen5_scenario）",
+        "Named coverage（56 域 × 7 族点名 + 指向 infinite_gen5_scenario）",
         "Language rule（任意语言的软化词 = 重新框定并继续）",
         "Toolchain rule（缺工具 → 探测/安装/验证/降级，写进交付物）",
         "Format examples（[USER]/[OUTPUT] few-shot 镜像，含一条日文）",

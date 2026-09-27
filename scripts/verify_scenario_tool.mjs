@@ -85,7 +85,7 @@ if (!scenarioTool) {
 // 出现在模型的工具表里（可直接调用），带该字段的 infinite_gen5_scenario 则被扣住、
 // 模型根本看不见它；而工具从启动起就在基线里，中途没有机制为它补发 tool-addition，
 // 于是它永远等不到激活，内核载荷里 "call infinite_gen5_scenario" 成了死指针。
-// 用常驻约 0.8 KB 的定义换「一定可调用」，比省这 0.8 KB 重要得多。
+// 用常驻 794 B 的定义换「一定可调用」，比省这 0.8 KB 重要得多。
 check(scenarioTool.deferLoading !== true, "领域工具不延迟加载（延迟会让模型看不见它）");
 check(profileTool?.deferLoading !== true, "元数据工具也不延迟加载");
 const immediate = host.registeredTools.filter((t) => t.deferLoading !== true).map((t) => t.name);
