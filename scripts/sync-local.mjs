@@ -218,6 +218,8 @@ if (!rec) {
     file: actFile,
     from: { version: rec.version ?? "", fingerprint: rec.fingerprint ?? "" },
     to: { version, fingerprint: primary.fingerprint },
+    // 只读预览时这个指纹是**现树**的：落盘后内容会变，指纹得按新树重算，报告里必须说清楚
+    previewFingerprint: dryRun || !wantRecord,
     status: rec.status,
     backup: `${actFile}.bak-${stamp()}`,
   };
@@ -267,7 +269,9 @@ if (asJson) {
   } else if (recordPlan?.state === "clean") {
     ok("管理器激活记录与磁盘一致", `${version}（${recordPlan.status}）`);
   } else if (recordPlan?.state === "stale") {
-    const detail = `${recordPlan.from.version || "?"} → ${recordPlan.to.version}，指纹 ${recordPlan.to.fingerprint.slice(0, 12)}…`;
+    const detail = recordPlan.previewFingerprint
+      ? `${recordPlan.from.version || "?"} → ${recordPlan.to.version}（现树指纹 ${recordPlan.to.fingerprint.slice(0, 12)}…，落盘后按新树重算）`
+      : `${recordPlan.from.version || "?"} → ${recordPlan.to.version}，指纹 ${recordPlan.to.fingerprint.slice(0, 12)}…`;
     if (dryRun || !wantRecord) warn("管理器激活记录过期", `${detail}${wantRecord ? "（加 --yes 刷新）" : "（--no-record 已跳过）"}`);
     else ok("管理器激活记录已刷新", `${detail}（原文件备份 ${short(recordPlan.backup)}）`);
   }

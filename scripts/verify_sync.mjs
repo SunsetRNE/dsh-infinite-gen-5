@@ -175,6 +175,7 @@ check(preview.json?.targets?.[0]?.update === 2, "预览识别出 2 个更新", `
 check(preview.json?.targets?.[0]?.remove === 2, "预览识别出 2 个删除", `remove=${preview.json?.targets?.[0]?.remove}`);
 check(existsSync(join(dest, "STALE.txt")), "预览不落盘", "STALE.txt 还在");
 check(readAct().version === "0.0.1", "预览不写激活记录", readAct().version);
+check(preview.json?.record?.previewFingerprint === true, "预览说明指纹取自现树", "落盘后按新树重算，不当成将要写入的值");
 
 // --yes：真同步
 const applied = runSync(["--yes"]);
