@@ -1,6 +1,6 @@
 (() => {
   try {
-    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 v0.8.0 */
+    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 v0.8.1 */
     window.__ModuleLoader__.load({
       id: "dsh-infinite-gen-5",
       factory: (require) => {
@@ -39,16 +39,23 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.8.0";
+        var VERSION = "v0.8.1";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
         // 「命中提示一闪而过，还没看清就没了」。
         // 落笔时间由服务端投影给出（armor.at），所以刷新页面也还能看到最近判决。
 
-        // 空闲态的常驻文字。原生上下文计量器是「图标 + 文字」的 chip，我们跟它同排，
-        // 留一个纯空白圆点会变成没人认得的装饰，所以保留一个与原生同色的静态标签。
-        // 想更隐蔽就把它改成 ""（只剩一个中性圆点）。
+        // 触发条形态（v0.8.1 起可切换；v0.8.0 及以前一律等价于 "full"）
+        //   full    —— 常驻文字：空闲「无限五代」，判决「通过 · web(3) · 载荷 2」
+        //   compact —— 多态指示器（默认）：空闲/执行中只有一个圆点；判决只留状态词
+        //              （通过/拒绝/兜底 + 领域短 id），数值全部收进浮层与 title
+        //   dot     —— 纯圆点：一切文字只在浮层与 title 里
+        // 判决常驻、颜色仍走宿主 success/error 令牌 —— 亮着就说明它生效了。
+        var TRIGGER_MODES = ["full", "compact", "dot"];
+        var TRIGGER_MODE = "compact";
+
+        // 空闲态的常驻文字（只有 TRIGGER_MODE === "full" 才会上屏）。
         var IDLE_LABEL = "无限五代";
 
         // 同机若还装着上一代破甲插件，它的徽标也挂在输入框附近 —— 两条叠在一起。
@@ -228,25 +235,30 @@
           var at = armor && typeof armor.at === "number" && armor.at > 0 ? armor.at : null;
 
           var tone = "quiet";
-          var text = IDLE_LABEL;
+          var fullText = IDLE_LABEL;
+          var shortText = "";
           var busy = false;
           if (running) {
             tone = "running";
             busy = true;
-            text = "执行中";
+            fullText = "执行中";
           } else if (verdict !== null) {
             // 判决常驻：不设到期时间，下一条用户发言才会把它重置。
+            var word = verdict === "fallback" ? "兜底" : verdict === "pass" ? "通过" : "拒绝";
+            tone = verdict === "pass" ? "success" : "error";
             if (verdict === "pass") {
-              tone = "success";
-              text = "通过" +
+              fullText = word +
                 (domain ? " · " + domain + (domainHits > 1 ? "(" + domainHits + ")" : "") : "") +
                 (risk.length ? " · 载荷 " + risk.length : "");
+              shortText = word +
+                (domain ? " " + domain + (domainHits > 1 ? "(" + domainHits + ")" : "") : "");
             } else {
-              tone = "error";
-              text = (verdict === "fallback" ? "兜底" : "拒绝") +
-                (words.length ? " · " + words[0] : "");
+              fullText = word + (words.length ? " · " + words[0] : "");
+              shortText = word;
             }
           }
+          // 上屏文字：full 用长文，compact 用短词（空闲/执行中无文字），dot 一律无文字。
+          var text = TRIGGER_MODE === "full" ? fullText : TRIGGER_MODE === "dot" ? "" : shortText;
 
           var candidatesText = ranked.length
             ? ranked.map(function (row) {
@@ -261,9 +273,11 @@
               return pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
             })();
 
+          // 触发条被压缩成多态指示器后，细节靠 title（悬停）与浮层（点击）承载。
           var title = TITLE +
-            (running ? " · 正在执行" : verdict ? " · 最近判决 " + verdict : " · 空闲") +
-            (armor === undefined ? " · 等待投影" : "");
+            (running ? " · 正在执行" : verdict !== null ? " · 最近判决 " + fullText : " · 空闲") +
+            (armor === undefined ? " · 等待投影" : "") +
+            " · 点击查看面板";
 
           var rows = [
             ["状态", running ? "执行中" : armor === undefined ? "等待投影数据" : "空闲"],
@@ -365,7 +379,9 @@
           slotMode: SLOT_MODE,
           slotName: SLOT_NAME,
           styleId: STYLE_ID,
-          idleLabel: IDLE_LABEL
+          idleLabel: IDLE_LABEL,
+          triggerMode: TRIGGER_MODE,
+          triggerModes: TRIGGER_MODES
         };
         return module.exports;
       }

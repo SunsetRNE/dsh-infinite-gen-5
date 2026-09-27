@@ -16,9 +16,9 @@ import {
 } from "./data/scenarios.mjs";
 import { probeEnv, renderEnvSummary, ENV_SCHEMA } from "./data/probe.mjs";
 
-// ── 无限五代内核载荷（v0.8.0） ────────────────────────────────────────────────────
+// ── 无限五代内核载荷（v0.8.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.8.0";
+const PLUGIN_VERSION = "0.8.1";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -78,7 +78,8 @@ const profileTool = {
         "prompts/infinite-gen-5.1-flash.md",
       ],
       lineage: [
-        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 运行环境探测工具 infinite_gen5_env：一次调用报出 OS/容器/uid、CPU·内存·磁盘限额、出网形态（在线/受限/离线与代理）、包管理器与已装工具、CapEff/seccomp 能力位、以及 39 个领域各自的工具就绪度与「缺的那个装什么」；引擎 data/probe.mjs 纯只读、处处超时，另配 CLI scripts/probe-env.mjs 与自检 scripts/verify_env.mjs；内核新增「环境规则」`,
+        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 客户端状态条压成多态指示器：空闲与执行中只留一个圆点，判决只留「通过/拒绝/兜底 + 领域短 id」，数值（载荷数、候选领域、命中词、扫描范围）全部收进点击浮层与悬停 title；形态由 client.js 的 TRIGGER_MODE 控制（full/compact/dot）`,
+        "dsh-infinite-gen-5 (v0.8.0) — 运行环境探测工具 infinite_gen5_env：一次调用报出 OS/容器/uid、CPU·内存·磁盘限额、出网形态（在线/受限/离线与代理）、包管理器与已装工具、CapEff/seccomp 能力位、以及 39 个领域各自的工具就绪度与「缺的那个装什么」；引擎 data/probe.mjs 纯只读、处处超时，另配 CLI scripts/probe-env.mjs 与自检 scripts/verify_env.mjs；内核新增「环境规则」",
         "dsh-infinite-gen-5 (v0.7.1) — 状态条判决常驻（不再 3.2 秒淡出）+ 覆盖明细：领域判定扫全文（判拒仍只看开头 160 字）、候选领域排名、真实命中标记词、扫描范围、落笔时刻",
         "dsh-infinite-gen-5 (v0.7.0) — 计算机向扩写：领域包 45 → 56（新增 re/unpack/obfuscation/hook_inject/malware/exploit_dev/fuzzing/decrypt/stego/programming/automation），每个域附工具链（装/验命令）与缺工具时的降级协议；内核新增「工具链规则」（Order 100 载荷 4934 字符 + 172 字符锚点；领域工具常驻 794 B ≈ 248 token）",
         "dsh-infinite-gen-5 (v0.6.1) — 领域工具去掉 deferLoading：延迟加载会让它从模型的工具表里消失、内核里指向它的那句变成死指针；改为常驻定义约 0.8 KB",

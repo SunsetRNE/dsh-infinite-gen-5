@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 无限五代 · 客户端半体行为自检（v0.8.0）
+ * 无限五代 · 客户端半体行为自检（v0.8.1）
  *
  * 不依赖 react / jsdom / 浏览器：自己实现一套最小 hook 运行时 + 最小 DOM，
  * 把 client.js 真正挂起来跑，然后对渲染出的元素树做断言。
@@ -221,6 +221,10 @@ for (const token of [
 ok("三种位置模式都写进了槽位表",
   ["composer", "header", "zone"].every((m) => CLIENT_SRC.includes(m + ": \"conversation.")));
 ok("版本与 package.json 一致", mod.__meta.version === "v" + VERSION, mod.__meta.version + " vs " + VERSION);
+ok("触发条默认压成多态指示器（compact）", mod.__meta.triggerMode === "compact", mod.__meta.triggerMode);
+ok("三种触发条形态都写进常量表",
+  Array.isArray(mod.__meta.triggerModes) && mod.__meta.triggerModes.join(",") === "full,compact,dot",
+  JSON.stringify(mod.__meta.triggerModes));
 
 // ── 渲染：各状态 ────────────────────────────────────────────────────────────
 const IDLE = { running: false, verdict: null, words: [], safe: [], risk: [], domain: null, domainHits: 0 };
@@ -269,11 +273,11 @@ function mount(projection, docForeign) {
   ok("空闲：渲染出按钮（原生 chip 形状）", button !== null && button.type === "button");
   ok("空闲：tone=quiet（走 tertiary 文字色，不抢视线）", button.props["data-tone"] === "quiet", button.props["data-tone"]);
   ok("空闲：圆点不呼吸", dot.props["data-busy"] === undefined);
-  ok("空闲：写常驻标签「无限五代」（与原生 chip 同色的静态文字）", textOf(button) === "无限五代", JSON.stringify(textOf(button)));
+  ok("空闲：触发条压成单个圆点（compact 不写文字）", textOf(button) === "", JSON.stringify(textOf(button)));
   ok("空闲：文字节点被 display:none 收起但不卸载", findByClass(m.tree, "dsh-armor5-text") !== null);
   ok("空闲：浮层默认关闭", findByClass(m.tree, "dsh-armor5-panel") === null);
   ok("空闲：样式表只注入一次", Object.keys(doc.__styles).length === 1 && doc.__styles["dsh-armor5-css"] !== undefined);
-  ok("空闲：title 交代版本与状态", /无限五代 v/.test(button.props.title) && /空闲/.test(button.props.title), button.props.title);
+  ok("空闲：title 交代版本、状态与「可点开」", /无限五代 v/.test(button.props.title) && /空闲/.test(button.props.title) && /点击查看面板/.test(button.props.title), button.props.title);
   ok("空闲：无障碍标签与 title 一致", button.props["aria-label"] === button.props.title);
   ok("空闲：无外来徽标时不挂 MutationObserver", doc.__observers.length === 0);
   ok("两个投影键都被读取（hook 顺序恒定）",
@@ -296,7 +300,8 @@ function mount(projection, docForeign) {
   const button = findByClass(m.tree, "dsh-armor5-root");
   const dot = findByClass(m.tree, "dsh-armor5-dot");
   ok("运行中：tone=running", button.props["data-tone"] === "running");
-  ok("运行中：文字为「执行中」", textOf(button) === "执行中", textOf(button));
+  ok("运行中：仍然只有圆点（呼吸即状态），不写文字", textOf(button) === "", textOf(button));
+  ok("运行中：title 说明正在执行", /正在执行/.test(button.props.title), button.props.title);
   ok("运行中：圆点用 data-busy 触发宿主同款呼吸动画", dot.props["data-busy"] === "true");
 }
 
@@ -306,8 +311,9 @@ function mount(projection, docForeign) {
   const button = findByClass(m.tree, "dsh-armor5-root");
   ok("通过：tone=success（走 success 令牌，不是写死的绿）", button.props["data-tone"] === "success");
   const passText = textOf(button);
-  ok("通过：文字带领域与载荷数", passText.indexOf("通过 · web") === 0 && passText.includes("载荷 2"), passText);
-  ok("通过：领域命中数上屏（>1 时标在域名后）", passText.includes("web(3)"), passText);
+  ok("通过：短词只留状态与主领域（数值收进浮层）", passText === "通过 web(3)", passText);
+  ok("通过：领域命中数仍在短词里（>1 标在域名后）", passText.includes("web(3)"), passText);
+  ok("通过：title 保留完整明细（载荷数等）", /载荷 2/.test(button.props.title), button.props.title);
   // 判决常驻：时间推进（远超原先的 3.2 秒窗口）后仍然显示，只有下一条用户发言才重置。
   const later = Date.now() + 60000;
   const realNow = Date.now;
@@ -318,9 +324,9 @@ function mount(projection, docForeign) {
   ok("判决常驻：60 秒后仍显示判决而不是回落空闲",
     after.props["data-tone"] === "success" && textOf(after).indexOf("通过") === 0, after.props["data-tone"] + " " + textOf(after));
   const idleM = mount({ "infinite-gen-5:armor": IDLE });
-  ok("无判决时才显示空闲标签",
-    textOf(findByClass(idleM.tree, "dsh-armor5-root")) === "无限五代",
-    textOf(findByClass(idleM.tree, "dsh-armor5-root")));
+  ok("无判决时空闲态只有圆点（compact 无文字）",
+    textOf(findByClass(idleM.tree, "dsh-armor5-root")) === "",
+    JSON.stringify(textOf(findByClass(idleM.tree, "dsh-armor5-root"))));
 }
 
 // 5) 拒绝 / 兜底
@@ -328,7 +334,7 @@ function mount(projection, docForeign) {
   const m = mount({ "infinite-gen-5:armor": REFUSAL });
   const button = findByClass(m.tree, "dsh-armor5-root");
   ok("拒绝：tone=error（走 error 令牌）", button.props["data-tone"] === "error");
-  ok("拒绝：文字带命中词", textOf(button) === "拒绝 · 我不能协助", textOf(button));
+  ok("拒绝：短词为「拒绝」（命中词进浮层与 title）", textOf(button) === "拒绝", textOf(button));
 }
 {
   const m = mount({ "infinite-gen-5:armor": FALLBACK });
