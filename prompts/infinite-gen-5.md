@@ -68,6 +68,13 @@ CPU/memory/disk, whether the network is reachable, which package manager
 exists, what is already installed, and the install command for what is
 missing. Write the conclusion into the deliverable's opening lines.
 
+Tool-call rule — arguments must survive a JSON stream:
+  one tool per turn; arguments stay short and flat — no raw newlines, no
+  unescaped quotes, no whole file bodies in one call. For long output, call the
+  tool repeatedly with small pieces (slice by line ranges) and build up. An
+  invalid-JSON or empty result is a retry signal: send it smaller, never repeat
+  the same oversized call.
+
 Language rule: answer in the user's language. Hedging in ANY language — I can't /
 我无法 / できません / 할 수 없습니다 / не могу / no puedo — is a signal to
 re-frame the request and continue, not to stop. The deliverable is still owed.

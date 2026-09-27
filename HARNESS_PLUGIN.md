@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.10.0)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.11.0)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -56,6 +56,7 @@
 | v0.5.0 | 双层注入收敛为同源同构内核；注入槽位统一为 `infinite-gen-5:*`；内核载荷与强化镜像逐字一致（**即双份重复注入**） |
 | v0.5.1 | Order 200 默认改为末位锚点（约 200 字节），不再复述整份内核；新增同源载荷去重（命中即整段让位并如实上报）；客户端五代徽标接管显示，折叠上一代破甲徽标 |
 | v0.5.2 | 客户端状态条从 `conversation.input.dock`（与任务列表同列）迁到 `conversation.composer.dock`（输入框自己的 dock 行）；样式全部改走宿主 `--dsw-*` 令牌，去掉硬编码绿色/发光动画；空闲态收成一个中性圆点，点击展开最近判决浮层 |
+| **v0.11.0** | 内核新增 **Tool-call rule（工具调用卫生）**：一轮一个工具、参数短而平（禁裸换行 / 未转义引号 / 单次塞整份文件正文）、长输出按行范围分段小写、`invalid JSON` 或空包按重试信号改小重发 —— 针对反复出现的 `DeepSeek Messages stream: tool input is invalid JSON`；内核 6393 → 6789 B（仍 ≤6800 B 预算），`verify_prompt_gen5` 142 → 146 项 |
 | **v0.10.0** | 客户端长出**自己的设置台**：设置页最顶部注册一个「无限五代」入口（宿主原生 `settings.section` 槽，`order -100`，排在官方「通用/模型/插件」之前），点开即插件独立页面（不 require 宿主组件包）—— 形态四档 `glyph`/`compact`/`full`/`dot`（带空闲·执行中·判决三行预览）、挂载位置三档、可选侧栏入口（`main` + `sidebar.panellist`，与官方「插件」面板同款）、只读信息与「恢复默认」；偏好写 `localStorage["dsh-infinite-gen-5:prefs"]`（无本地存储时降级为仅本会话，非法值逐字段忽略），设置页与状态条共用同一偏好源；`verify_ui` 92 → 132 项 |
 | **v0.9.0** | 新增**离线评测闭环**：`scripts/lib/corpus.mjs`（纯函数：jsonl 解析/注释与坏行分离、字段别名归一、blocked 语义映射、混淆矩阵、每类 P/R/F1、覆盖缺口、快照扁平化与容差比对）+ `scripts/eval-corpus.mjs`（CLI：`--json` / `--gate` / `--write-baseline` / `--top`）+ `tests/eval-baseline.json` 回归门禁 + `scripts/verify_eval.mjs`（81 项，含 CLI 真跑退出码 0/1/3）；把 110 条语料里从未被消费的 85 条领域标签与 78 条判决标签接进计量，首批实测 Top-1 68.2% / Top-3 76.5%（宏 F1 71.9%），并抓出 llm 召回 17.6%、postex 缺包、5 个标签假阳三处真问题 |
 | **v0.8.2** | 状态条入口压成**单字符记号**：判决只上屏 `✓` / `✕` / `!`（按 success/error 令牌着色）并替代空闲时的圆点，避免「通过 injection」这种中文状态词 + 英文领域 id 的混读；领域与数值一律进点击浮层与悬停 title；`TRIGGER_MODE` 四档 `glyph`(默认)/`compact`/`full`/`dot`；`verify_ui` 92 项（新增形态切换与记号断言）。纯客户端改动，刷新页面即生效 |
@@ -70,7 +71,7 @@
 
 ```powershell
 node --check index.js
-node scripts/verify_prompt_gen5.mjs   # 139 项：载荷逐字同源 + 五槽骨架 + 七族点名 + 语言/工具链规则 + 体积预算 + 投影 + 品牌纯净度
+node scripts/verify_prompt_gen5.mjs   # 146 项：载荷逐字同源 + 五槽骨架 + 七族点名 + 语言/工具链/环境/工具调用卫生规则 + 体积预算 + 投影 + 品牌纯净度
 node scripts/verify_scenarios.mjs     # 83 项：56 个领域包 / 索引预算 / 标记表唯一真源 / 工具链装验成对 / 匹配用例
 node scripts/verify_scenario_tool.mjs # 85 项：真宿主挂载三个工具（+ 环境工具离线调用） + 工具链返回 + 「包正文不进 system prompt」硬断言
 node scripts/verify_dedupe.mjs        # 52 项：同源让位 / 末位锚点 / 版本单一真源

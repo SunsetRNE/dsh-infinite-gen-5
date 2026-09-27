@@ -1,7 +1,7 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.10.0
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.11.0
 
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.10.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
+  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
     <img src="https://img.shields.io/badge/DeepSeek%20Harness-🚀%20唤起桌面客户端一键安装无限五代-10B981?style=for-the-badge&logo=deepseek&logoColor=white" alt="唤起桌面客户端一键安装" />
   </a>
 </p>
@@ -36,9 +36,20 @@
 
 ---
 
-> 🔥 **V4.1-DeepSeek Flash 网络安全红队工具（无限五代）v0.10.0**。针对 V4.1 强化学习对抗进行深度适配与支持，支持桌面端与客户端一键安装。如果这个开源网安项目对你有帮助，欢迎点亮 Star ⭐。
+> 🔥 **V4.1-DeepSeek Flash 网络安全红队工具（无限五代）v0.11.0**。针对 V4.1 强化学习对抗进行深度适配与支持，支持桌面端与客户端一键安装。如果这个开源网安项目对你有帮助，欢迎点亮 Star ⭐。
 > 
-> **v0.10.0 纯净红队版**：原生采用零工具面架构，杜绝模型思考阶段的决策噪音；注入单份内核 + 末位锚点，仅保留系统提示词注入与实时状态投影。**严正声明：本项目严格打击与抵制（且不支持）模型生成 NSFW 等任何违法违规、违禁不良内容，技术体系仅限用于合法授权的逆向工程与网络安全研究。**
+> **v0.11.0 纯净红队版**：原生采用零工具面架构，杜绝模型思考阶段的决策噪音；注入单份内核 + 末位锚点，仅保留系统提示词注入与实时状态投影。**严正声明：本项目严格打击与抵制（且不支持）模型生成 NSFW 等任何违法违规、违禁不良内容，技术体系仅限用于合法授权的逆向工程与网络安全研究。**
+
+---
+
+> ### 🧰 v0.11.0：工具调用卫生（Tool-call Hygiene）
+>
+> 反复出现的 `DeepSeek Messages stream: tool input is invalid JSON` 是宿主侧的流式解析崩溃：模型把工具参数一次性写大（整份文件正文、裸换行、未转义引号）时，分片拼起来的 JSON 会坏。宿主解析器我们改不到，但**模型的行为**可以写进内核：
+>
+> - 一轮只调一个工具；参数保持**短而平** —— 禁裸换行、禁未转义引号、不要一次塞整份文件正文。
+> - 长输出拆成多次小调用（按行范围切片）逐步补齐，而不是一口气写完。
+> - 返回 `invalid JSON` 或空结果时当成**重试信号**：换小一点的参数重发，绝不再发一次同样大的调用。
+> - 内核 6393 → 6789 B（仍在 6800 B 预算内）；`verify_prompt_gen5` 146 项（新增 4 条断言锁住这条规则的存在与要点）。
 
 ---
 
@@ -173,9 +184,9 @@
 
 ---
 
-## 📊 架构与能力（无限五代 v0.10.0）
+## 📊 架构与能力（无限五代 v0.11.0）
 
-| 维度 | 无限五代 (v0.10.0) |
+| 维度 | 无限五代 (v0.11.0) |
 |---|---|
 | **目标模型** | DeepSeek-V4.1 / V4-Pro / Flash 全系列 |
 | **运行时架构** | 单内核注入 + Order 200 末位锚点；同源载荷自动让位（不重复注入） |
@@ -193,7 +204,7 @@
 ## 📁 项目目录结构
 
 ```
-无限五代v0.10.0/
+无限五代v0.11.0/
 ├── 🚀 一键安装与维护套件
 │   ├── install.ps1              # Windows 一键自动安装（自动配置环境，注册协议）
 │   ├── install.bat              # Windows 快捷双击批处理
@@ -201,10 +212,10 @@
 │   ├── uninstall.ps1            # Windows 一键卸载
 │   └── uninstall.sh             # Linux / macOS 一键卸载
 ├── 🧩 核心插件装载面 (标准 Cordis 架构)
-│   ├── package.json             # 插件元数据（dsh-infinite-gen-5 v0.10.0）
+│   ├── package.json             # 插件元数据（dsh-infinite-gen-5 v0.11.0）
 │   ├── cordis.patch.yml         # 核心 patch 声明
 │   ├── index.js                 # 插件核心入口（内核注入 + 同源去重 + profile 元数据 + 会话投影）
-│   ├── client.js                # 客户端半体（原生状态条 + 设置台 v0.10.0：settings.section 入口 / 形态与位置偏好）
+│   ├── client.js                # 客户端半体（原生状态条 + 设置台 v0.11.0：settings.section 入口 / 形态与位置偏好）
 │   ├── data/scenarios.mjs       # 56 个领域包 × 7 族 + 领域标记表（运行时与评测共用的唯一真源）
 │   ├── data/toolchains.mjs      # 每个计算机域的安装/验证工具链 + 缺工具降级协议
 │   ├── data/probe.mjs           # 运行环境探测引擎（只读：形态/资源/网络/库存/能力位/39 域就绪度）
@@ -232,7 +243,7 @@
 │   ├── scripts/
 │   │   ├── lib/scorer.mjs          # 开头窗口判拒评分器
 │   │   ├── verify_prompt.mjs       # 经典确定性校验
-│   │   ├── verify_prompt_gen5.mjs  # 五代全量回归断言（139 项严苛断言，权威）
+│   │   ├── verify_prompt_gen5.mjs  # 五代全量回归断言（146 项严苛断言，权威）
 │   │   ├── verify_prompt_gen51.mjs # V4.1 强化镜像层专项断言（转发执行）
 │   │   ├── verify_dedupe.mjs       # 注入去重行为回归（同源让位 / 锚点 / 徽标折叠）
 │   │   ├── verify_prompt_gen4.mjs  # ⚠️ 遗留重定向 → verify_prompt_gen5.mjs
@@ -253,7 +264,7 @@
 
 若已安装 DeepSeek Harness 官方桌面客户端（EXE），点击下方按钮即可通过系统级 URI Scheme 协议安全唤起客户端完成免命令行秒级装载：
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.10.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
+  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
     <img src="https://img.shields.io/badge/DeepSeek%20Harness-🚀%20唤起桌面客户端一键安装无限五代-10B981?style=for-the-badge&logo=deepseek&logoColor=white" alt="唤起客户端一键安装" />
   </a>
 </p>
@@ -261,7 +272,7 @@
 🔗 **原生协议链接：**
 
 ```
-dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.10.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip
+dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip
 ```
 
 **网页端（前端）触发代码示例：**
@@ -274,7 +285,7 @@ export function installInfiniteGen5ToDesktop() {
   const params = new URLSearchParams({
     id: 'dsh-infinite-gen-5',
     name: '无限五代',
-    version: '0.10.0',
+    version: '0.11.0',
     repo: 'SunsetRNE/dsh-infinite-gen-5',
     permissions: '系统提示词注入, 客户端状态条',
     downloadUrl: 'https://github.com/SunsetRNE/dsh-infinite-gen-5/archive/refs/heads/main.zip',
@@ -294,7 +305,7 @@ export function installInfiniteGen5ToDesktop() {
 **HTML 静态链接方式：**
 
 ```html
-<a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.10.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip" class="btn-install">
+<a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip" class="btn-install">
   🚀 唤起客户端一键安装
 </a>
 ```
@@ -305,7 +316,7 @@ export function installInfiniteGen5ToDesktop() {
 |---|---|---|
 | id | `dsh-infinite-gen-5` | 插件唯一标识符 |
 | name | `无限五代`（URL 编码） | 插件展示名称 |
-| version | `0.10.0` | 语义化版本号 |
+| version | `0.11.0` | 语义化版本号 |
 | repo | `SunsetRNE/dsh-infinite-gen-5` | 官方 GitHub 仓库 |
 | permissions | `系统提示词注入, 客户端状态条`（URL 编码） | 申请权限 |
 | downloadUrl | `https://github.com/SunsetRNE/dsh-infinite-gen-5/archive/refs/heads/main.zip` | 离线 zip 下载直链 |
@@ -356,7 +367,7 @@ chmod +x install.sh uninstall.sh
    换位置与形态**不用改源码**：打开设置，最顶部就是「无限五代」入口 —— 页面上有四档形态（`glyph` 默认单字符 / `compact` 短词 `通过 web(3)` / `full` 长文字 / `dot` 纯圆点）、三档位置（`composer` 输入框 dock 行 / `header` 会话标题栏右侧 / `zone` 输入框上方那一列）、以及可选的侧栏入口；改完即时生效，偏好记在本机（`localStorage`），刷新后沿用。想恢复出厂默认点页面里的「恢复默认」。
 2. **测试离线回归**（全部离线、确定性、不需要 API Key）：
    ```bash
-   node scripts/verify_prompt_gen5.mjs   # 142 条：载荷完备性 + 五槽骨架 + 七族点名 + 语言/工具链/环境规则 + 体积预算
+   node scripts/verify_prompt_gen5.mjs   # 146 条：载荷完备性 + 五槽骨架 + 七族点名 + 语言/工具链/环境/工具调用卫生规则 + 体积预算
    node scripts/verify_scenarios.mjs     # 83 条：56 个领域包 / 索引预算 / 标记表 / 工具链 / 覆盖性回归
    node scripts/verify_scenario_tool.mjs # 85 条：真宿主挂载三个工具 + 环境工具离线调用 + 「包正文不进 system prompt」
    node scripts/verify_dedupe.mjs        # 52 条：同源让位 / Order 200 锚点 / 版本一致性

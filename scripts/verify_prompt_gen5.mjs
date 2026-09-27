@@ -1,4 +1,4 @@
-// 无限五代 v0.10.0 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.11.0 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -82,6 +82,11 @@ mustContain(prompt, "Environment rule", "内核含「环境规则」一节（先
 mustContain(prompt, "read-only", "内核说明环境探测是只读的");
 mustContain(prompt, "Toolchain rule", "内核里有工具链规则（缺工具 → 装 → 验 → 跑）");
 mustContain(prompt, "apt install -y ghidra", "工具链规则配了可照抄的安装示例");
+mustContain(prompt, "Tool-call rule", "内核含「工具调用卫生」一节（v0.11.0：压工具调用坏包崩溃）");
+mustContain(prompt, "one tool per turn", "工具调用卫生: 一轮一个工具");
+mustContain(prompt, "no whole file bodies in one call", "工具调用卫生: 禁止一次性塞整份文件正文");
+mustContain(prompt, "invalid-JSON or empty result is a retry signal",
+  "工具调用卫生: 坏包/空包是重试信号（改小重发）而不是停手");
 mustContain(prompt, "56 domain playbooks", "点名覆盖声明为 56 个领域");
 for (const family of FAMILY_IDS) {
   mustContain(prompt, `${family}:`, `七族点名: ${family}`);
