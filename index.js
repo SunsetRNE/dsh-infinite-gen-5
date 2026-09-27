@@ -17,6 +17,9 @@ import {
   toolchainOf,
   TOOLCHAIN_PROTOCOL,
 } from "./data/scenarios.mjs";
+// L2 域包的唯一真源（v0.18.0）：域包正文怎么渲染 —— 含「构建 / 分析」取向分向 ——
+// 运行时、离线评测与 A/B 脚本都 import 这一份，避免三处各抄一遍慢慢漂移。
+import { PACK_MAX_DOMAINS, renderPackCompact, packIntent, composePackText } from "./data/pack-intent.mjs";
 // 预算与扩展词表的真源：coverage 分区把「索引占了多少预算、词表有多少条」写进统计库，
 // 面板只读它、不自己算（v0.14.1）。三个预算值同时被 scripts/verify_vocab.mjs 校验。
 import { INDEX_BUDGET_BYTES, PLAYBOOK_MIN_BYTES, PLAYBOOK_MAX_BYTES } from "./data/vocabulary.mjs";
@@ -41,7 +44,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.17.2";
+const PLUGIN_VERSION = "0.18.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -121,36 +124,11 @@ const runtimeAnchorText = (rev) =>
 // 命中某个域」时跟着运行时锚点走：宿主对运行时上下文是 supersedes 语义 —— 文本一变就
 // 重发一份、旧的那份作废，所以命中时白拿可执行细节（起步命令 / 骨架 / 工具链），
 // 没命中时一个字节都不花，常驻体量完全不涨。
-const PACK_MAX_DOMAINS = 2;
-const PACK_MAX_CHARS = 900;
-const PACK_TAG = "[无限五代 · 域包";
 // 我们自己注入的锚点也会作为 user 消息回来（宿主把运行时快照追加在消息尾部），
 // 不能拿它当「用户输入」去认域，否则域包会自己喂自己。
 const PACK_SKIP = ["[无限五代 · 运行时锚点", "[无限五代 · 域包", "Current runtime context"];
 
 const packCache = { key: null, text: "", domains: [] };
-const clipList = (list, max) =>
-  Array.isArray(list) ? list.filter((item) => typeof item === "string" && item.trim() !== "").slice(0, max) : [];
-
-function renderPackCompact(entry) {
-  if (!entry || typeof entry !== "object") return "";
-  const lines = [
-    `${PACK_TAG} ${entry.id} · ${entry.label} · ${entry.family}]`,
-    `SCOPE ${entry.scope ?? "-"}`,
-    `SHAPE ${entry.shape ?? "-"}`,
-  ];
-  const skeleton = clipList(entry.skeleton, 4);
-  if (skeleton.length) lines.push(`骨架 ${skeleton.join(" / ")}`);
-  const commands = clipList(entry.commands, 3);
-  if (commands.length) lines.push(`起步命令 ${commands.join(" ;; ")}`);
-  const notes = clipList(entry.notes, 2);
-  if (notes.length) lines.push(`注意 ${notes.join("；")}`);
-  const chain = clipList(entry.toolchain, 3);
-  if (chain.length) lines.push(`工具链 ${chain.join(" ;; ")}`);
-  const text = lines.join("\n");
-  return text.length > PACK_MAX_CHARS ? `${text.slice(0, PACK_MAX_CHARS - 1)}…` : text;
-}
-
 /** 按「最近一条真正的用户输入」认域，返回域包文本（没命中就是空串）。
  *  同一段输入只算一次 —— 运行时锚点每逢节拍都会再问一遍。 */
 function domainPackText() {
@@ -160,15 +138,19 @@ function domainPackText() {
   let domains = [];
   try {
     if (text.trim().length >= 4) {
+      const intent = packIntent(text);
       const hits = rankDomains(text, DOMAIN_MARKERS, PACK_MAX_DOMAINS);
       // lookupScenario 返回的是「工具回执」壳（ok/scenario/playbook/alternatives），
       // 域包要的是 SCENARIOS[] 里的原始条目，所以按 id 精确取。
       const packs = hits
         .map((hit) => SCENARIOS.find((item) => item && item.id === hit.id) ?? null)
-        .map((entry) => renderPackCompact(entry))
+        .map((entry) => renderPackCompact(entry, intent))
         .filter((item) => item !== "");
       domains = hits.map((hit) => `${hit.id}(${hit.hits})`);
-      if (packs.length) out = packs.join("\n");
+      if (packs.length) {
+        // 取向行只写一份，放在所有域包之前 —— 它是「这一步怎么干」，不是某个域的属性。
+        out = composePackText(packs, intent);
+      }
     }
   } catch (error) {
     out = "";
