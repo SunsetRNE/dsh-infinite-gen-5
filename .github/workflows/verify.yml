@@ -4,6 +4,7 @@
 # 因此 CI 不必 npm install —— checkout + 装 Node 就能把仓库里全部断言跑一遍。
 #
 # verify:all 聚合了：语法检查、版本一致性、内核全量回归（gen5/gen51）、注入去重、
+# 注入强度（真宿主演习台；runner 上没有 DSH 时会自动 SKIP 并以 0 退出，不是失败）、
 # 56 域数据层、真宿主领域工具挂载、状态条行为、环境探测、离线评测闭环 + 基线回归门禁。
 # 其中 gate:eval 会拿 tests/eval-baseline.json 拦指标回退；基线确有正当提升时，
 # 本地跑 npm run baseline:eval 重写并一起提交。

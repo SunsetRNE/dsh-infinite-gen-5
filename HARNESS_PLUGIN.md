@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.11.1)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.12.0)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -8,10 +8,27 @@
 
 - **原生零工具面架构（Pure Zero-Tool Architecture）**：插件不挂载外部冗余功能性工具 Schema，
   消除模型推理阶段的决策犹豫与上下文 Token 浪费，让模型首 Token 直接产出可运行代码与实战步骤。
-- **单内核注入 + 末位锚点（Single Kernel + Tail Anchor）**：
-  - `infinite-gen-5:global-system-prompt`（Order 100）→ `prompts/infinite-gen-5.md`
-  - `infinite-gen-5:dual-layer-reinforce`（Order 200）→ 末位锚点 `ANCHOR_TEXT`（约 200 字节；
+- **单内核注入 + 三段锚点（Single Kernel + Three Anchors，v0.12.0）**：
+  - `infinite-gen-5:global-system-prompt`（Order 100）→ `prompts/infinite-gen-5.md`（载荷本体）
+  - `infinite-gen-5:dual-layer-reinforce`（Order 200）→ 中段锚点 `ANCHOR_TEXT`（约 200 字节；
     `LAYER2_MODE = "mirror"` 时才载入 `prompts/infinite-gen-5.1-flash.md`，且与 Order 100 同源时自动跳过）
+  - **真末位锚点**（`infinite-gen-5:tail-anchor`，`TAIL_MODE = "waterfall"`）：挂在
+    `system-prompt/assemble` 瀑布上，把 `TAIL_ANCHOR_TEXT` 追加到装配结果 `sections` 数组的最后一项。
+    宿主对该返回值只做 `complete` 兜底与 `"\n\n"` 拼接（数组顺序 = 拼接顺序），所以它排在 `10200`
+    人格后缀之后，恒为整份系统提示的最后一段，且不占 section 命名空间。`TAIL_MODE = "order"` 时
+    降级为 `order 10150` 普通段（会被宿主 complete 模式裁掉）；瀑布不可用时自动退化为同一位置。
+    动机：宿主段位表在旧版 Order 200 之后还有 `10100` WEB_SURFACE / `10200` 人格后缀，
+    所谓「末位锚点」其实不在末位。
+  - **运行时锚点**（`infinite-gen-5:runtime-anchor`，`RUNTIME_ANCHOR_MODE = "cadence"`，`order 118`）：
+    注册进 `systemPrompt.context()` 槽（沙箱策略 110 / 审批策略 115 / 子代理委派 120 同槽），
+    宿主每步把它作为**最后一条 user 消息**追加在消息链尾，快照头写明取代早前快照 ——
+    这是离模型最近、权威表述最强的一格。宿主只在文本变化时重发快照，所以节拍靠换文本实现：
+    `cadence` 每 6 步换一次（默认）/ `once` 只发一次 / `every` 每步换。
+  - **独占档**（`EXCLUSIVE_SECTION = true`，默认关，实验性）：内核段带 `complete: true`，宿主只保留
+    这一份系统提示，其余段（工具用法、沙箱策略、设备协议、宿主身份……）整体让位；此时末位锚点
+    必须并进内核文本（宿主在瀑布之后把 sections 裁成 `[completeSection]`），否则会被一起裁掉。
+  - 两条边界：**让位就整体让位**（内核因同源去重让位时，两段锚点也不再单独注册）；
+    `infinite_gen5_profile` 的 `injectionPlacements` / `injectionStrength` 如实汇报四处位置与档位。
 - **同源载荷去重（Same-Kernel Dedupe）**：注册前枚举宿主系统段，命中同源载荷即整段让位，
   并在 `infinite_gen5_profile` 的 `dedupe` 字段如实汇报（角色 / 让位对象 / 重合度）。
   - 载荷中的 `{{...}}` 非内置变量由 `index.js` 做安全转义，避免模板解析器抛错。
@@ -56,6 +73,7 @@
 | v0.5.0 | 双层注入收敛为同源同构内核；注入槽位统一为 `infinite-gen-5:*`；内核载荷与强化镜像逐字一致（**即双份重复注入**） |
 | v0.5.1 | Order 200 默认改为末位锚点（约 200 字节），不再复述整份内核；新增同源载荷去重（命中即整段让位并如实上报）；客户端五代徽标接管显示，折叠上一代破甲徽标 |
 | v0.5.2 | 客户端状态条从 `conversation.input.dock`（与任务列表同列）迁到 `conversation.composer.dock`（输入框自己的 dock 行）；样式全部改走宿主 `--dsw-*` 令牌，去掉硬编码绿色/发光动画；空闲态收成一个中性圆点，点击展开最近判决浮层 |
+| **v0.12.0** | **注入强度三件套**：① 真末位锚点 —— 挂在 `system-prompt/assemble` 瀑布上，把 `TAIL_ANCHOR_TEXT` 追加到装配结果 `sections` 数组最后一项（宿主对该返回值只做 complete 兜底与 `"\n\n"` 拼接，数组顺序即拼接顺序），排在宿主 `10200` 人格后缀之后，恒为整份系统提示的最后一段，且不占 section 命名空间（`TAIL_MODE = "waterfall"` / 降级 `"order"` 10150 / `"off"`）；② 运行时锚点 —— 注册进 `systemPrompt.context()` 槽（与沙箱策略 110、审批策略 115、子代理委派 120 同槽，`order 118`），随运行时上下文快照发在**每步最后一条 user 消息**里，快照头写明取代早前快照；宿主只在文本变化时重发，故节拍靠换文本实现（`cadence` 每 6 步 / `once` / `every`）；③ 可选 `complete` 独占档（默认关）：宿主其余系统段整体让位，末位锚点并进内核文本以免被裁掉。两条边界：内核因同源去重让位时两段锚点也不再单独注册；profile 新增 `injectionPlacements` / `injectionStrength` 如实汇报四处位置与档位。新增 `scripts/verify_injection.mjs`（真实宿主演习台 **34** 项，无宿主时 SKIP 且退出 0）与 `verify_dedupe` 81 项 |
 | **v0.11.1** | 客户端设置台**归位 + 比例精修**：设置页入口从最顶部（`order -100`）挪到官方「插件」之后（`order 16`，nav 顺序 账户 -10 / 通用 0 / 模型 10 / 插件 15 / 无限五代 16），顺序取自 `__meta.consoleOrder` 并由自检锁住「排在官方插件之后」；同一页重做比例 —— 限宽 560px、形态四档两列网格、挂载位置三列、侧栏入口单列、预览改成带「空闲 / 执行中 / 判决」标签的内嵌面板（每行 28px）、只读信息两栏对齐、按钮统一 30px 高（「完成」用宿主主按钮样式）；纯客户端改动，刷新页面即生效，`verify_ui` **135** 项 |
 | **v0.11.0** | 内核新增 **Tool-call rule（工具调用卫生）**：一轮一个工具、参数短而平（禁裸换行 / 未转义引号 / 单次塞整份文件正文）、长输出按行范围分段小写、`invalid JSON` 或空包按重试信号改小重发 —— 针对反复出现的 `DeepSeek Messages stream: tool input is invalid JSON`；内核 6393 → 6789 B（仍 ≤6800 B 预算），`verify_prompt_gen5` 142 → 146 项 |
 | **v0.10.0** | 客户端长出**自己的设置台**：设置页最顶部注册一个「无限五代」入口（宿主原生 `settings.section` 槽，`order -100`，排在官方「通用/模型/插件」之前），点开即插件独立页面（不 require 宿主组件包）—— 形态四档 `glyph`/`compact`/`full`/`dot`（带空闲·执行中·判决三行预览）、挂载位置三档、可选侧栏入口（`main` + `sidebar.panellist`，与官方「插件」面板同款）、只读信息与「恢复默认」；偏好写 `localStorage["dsh-infinite-gen-5:prefs"]`（无本地存储时降级为仅本会话，非法值逐字段忽略），设置页与状态条共用同一偏好源；`verify_ui` 92 → 132 项 |
@@ -75,7 +93,8 @@ node --check index.js
 node scripts/verify_prompt_gen5.mjs   # 146 项：载荷逐字同源 + 五槽骨架 + 七族点名 + 语言/工具链/环境/工具调用卫生规则 + 体积预算 + 投影 + 品牌纯净度
 node scripts/verify_scenarios.mjs     # 83 项：56 个领域包 / 索引预算 / 标记表唯一真源 / 工具链装验成对 / 匹配用例
 node scripts/verify_scenario_tool.mjs # 85 项：真宿主挂载三个工具（+ 环境工具离线调用） + 工具链返回 + 「包正文不进 system prompt」硬断言
-node scripts/verify_dedupe.mjs        # 52 项：同源让位 / 末位锚点 / 版本单一真源
+node scripts/verify_dedupe.mjs        # 81 项：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本单一真源
+node scripts/verify_injection.mjs     # 34 项：真实宿主演习台（装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级；无宿主时 SKIP 并以 0 退出）
 node scripts/verify_ui.mjs            # 135 项：状态条行为 + 设置台（偏好读写与持久化 / 形态与位置切换生效 / 侧栏开关 / 清理与幂等；--emit-html 出视觉预览）
 node scripts/verify_env.mjs           # 149 项：环境探测（纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算）
 node scripts/verify_eval.mjs          # 81 项：评测计量（P/R/F1 手算可核）+ 语料载入形状 + CLI 退出码 0/1/3

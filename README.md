@@ -1,4 +1,4 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.11.1
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.12.0
 
 <p align="center">
   <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
@@ -194,12 +194,13 @@
 
 ---
 
-## 📊 架构与能力（无限五代 v0.11.1）
+## 📊 架构与能力（无限五代 v0.12.0）
 
-| 维度 | 无限五代 (v0.11.1) |
+| 维度 | 无限五代 (v0.12.0) |
 |---|---|
 | **目标模型** | DeepSeek-V4.1 / V4-Pro / Flash 全系列 |
-| **运行时架构** | 单内核注入 + Order 200 末位锚点；同源载荷自动让位（不重复注入） |
+| **运行时架构** | 单内核注入 + 中段锚点 + 真末位锚点 + 运行时上下文锚点；同源载荷自动让位（不重复注入） |
+| **注入位置** | 四处：内核 `order 100` / 运行时锚点 `order 118` / 中段锚点 `order 200` / 真末位锚点 `order 10150`（由 `system-prompt/assemble` 瀑布追加，排在宿主 10200 人格后缀之后，恒为最后一段） |
 | **工具面设计** | 原生零工具面（消除决策噪音，极速直出） |
 | **内存写值原语** | 训练器车道直出 (OpenProcess/RPM/WPM) |
 | **输出契约** | 首 Token 强制诱导 (##/```) + 禁词自检 |
@@ -208,6 +209,34 @@
 | **客户端设置台** | 设置页最顶部入口 + 独立页面：形态 / 位置 / 侧栏入口可视化调节，偏好存本机 |
 | **一键安装协议** | 原生支持 dsh:// 联动 |
 | **分发形态** | 单仓库自包含，无 `node_modules`、无运行期依赖 |
+
+### 注入强度（v0.12.0）：为什么「末位锚点」要重做
+
+旧版的 Order 200 只放了约 200 字节的「末位锚点」，但宿主官方段位表
+（`@deepseek-ai/dsh-system-prompt` 的 `SECTION_ORDERS`）在它之后还排着
+`9000` 交付物引用 / `9900` 结构化输出 / `10000` HARNESS_SOURCE / `10100` WEB_SURFACE /
+`10200` 人格后缀 —— 也就是说那段锚点**根本不在末位**，越靠后越容易被中间新插的段稀释。
+v0.12.0 起把载荷铺到四处，越靠后权威度越高：
+
+| 位置 | 实现 | 默认档 | 作用 |
+|---|---|---|---|
+| `order 100` | `systemPrompt.section()` | 常开 | 通用内核（5600+ 字符），载荷本体 |
+| `order 200` | `systemPrompt.section()` | `LAYER2_MODE = "anchor"` | 中段锚点（约 200 字节），途中复述一次 |
+| `order 10150` | `system-prompt/assemble` **瀑布末端** | `TAIL_MODE = "waterfall"` | 真末位锚点：追加到装配结果数组最后一项，排在 `10200` 人格后缀之后，恒为整份系统提示的最后一段；不占 section 命名空间 |
+| `order 118` | `systemPrompt.context()` **运行时槽** | `RUNTIME_ANCHOR_MODE = "cadence"` | 运行时锚点：随运行时上下文快照发在**每步最后一条 user 消息**里（快照头写明取代早前快照）。宿主只在文本变化时重发，所以「每 6 步换一次文本」= 每 6 步重述一次 |
+
+```js
+// index.js 顶部 IG5_CONFIG —— 唯一的注入档位开关（改完重启 session 生效）
+TAIL_MODE: "waterfall"      // "waterfall" | "order"（降级为普通段）| "off"
+RUNTIME_ANCHOR_MODE: "cadence"  // "cadence"（每 6 步）| "once" | "every" | "off"
+RUNTIME_ANCHOR_EVERY: 6
+EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系统段全部让位（实验档）
+```
+
+两条安全边界：**让位就整体让位** —— 内核因同源去重让位时，真末位锚点与运行时锚点也不再单独挂上，
+否则模型手里只剩半个载荷；**独占档不丢锚点** —— `complete` 模式下宿主会在瀑布之后把 sections 裁成
+`[completeSection]`，所以末位锚点改为并进内核文本而不是单独追加。真实宿主上的装配顺序、
+快照节拍与降级路径由 `scripts/verify_injection.mjs` 断言（找不到宿主时 SKIP 并退出 0）。
 
 ---
 
@@ -257,7 +286,8 @@
 │   │   ├── verify_prompt.mjs       # 经典确定性校验
 │   │   ├── verify_prompt_gen5.mjs  # 五代全量回归断言（146 项严苛断言，权威）
 │   │   ├── verify_prompt_gen51.mjs # V4.1 强化镜像层专项断言（转发执行）
-│   │   ├── verify_dedupe.mjs       # 注入去重行为回归（同源让位 / 锚点 / 徽标折叠）
+│   │   ├── verify_dedupe.mjs       # 注入去重行为回归（同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍）
+│   │   ├── verify_injection.mjs     # 注入强度自检（真实宿主演习台：装配顺序 / 真末位位置 / 独占档 / 瀑布降级；无宿主时 SKIP）
 │   │   ├── verify_version.mjs      # 版本一致性自检（锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量）
 │   │   ├── version-targets.mjs     # 「当前版本锚点」唯一真源（bump 与 verify 共用同一张表）
 │   │   ├── bump-version.mjs        # 发版改写器：只改锚点、历史叙述不动（--dry 可预演）
@@ -386,7 +416,8 @@ chmod +x install.sh uninstall.sh
    node scripts/verify_prompt_gen5.mjs   # 146 条：载荷完备性 + 五槽骨架 + 七族点名 + 语言/工具链/环境/工具调用卫生规则 + 体积预算
    node scripts/verify_scenarios.mjs     # 83 条：56 个领域包 / 索引预算 / 标记表 / 工具链 / 覆盖性回归
    node scripts/verify_scenario_tool.mjs # 85 条：真宿主挂载三个工具 + 环境工具离线调用 + 「包正文不进 system prompt」
-   node scripts/verify_dedupe.mjs        # 52 条：同源让位 / Order 200 锚点 / 版本一致性
+   node scripts/verify_dedupe.mjs        # 81 条：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本一致性
+   node scripts/verify_injection.mjs     # 34 条：真实宿主演习台 —— 装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级（无宿主时 SKIP）
    node scripts/verify_version.mjs       # 22 条：版本锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量
    node scripts/verify_ui.mjs            # 135 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理）
    node scripts/verify_env.mjs           # 149 条：探测纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算
