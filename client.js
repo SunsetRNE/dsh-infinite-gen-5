@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.16.3";
+        var VERSION = "v0.16.5";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -116,8 +116,12 @@
           ".dsh-armor5-badge[data-tone=error]{background:rgba(248,81,73,.16);",
           "color:var(--dsw-alias-state-error-primary,#f85149)}",
           // 分区：命中标记 / 风险载荷各自成块，用 chip 铺开 —— 长词表也比一行逗号好扫。
-          ".dsh-armor5-sec{margin-top:10px;display:flex;flex-direction:column;gap:6px}",
-          ".dsh-armor5-sec-title{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:11px}",
+          ".dsh-armor5-sec{margin-top:9px;display:flex;flex-direction:column;gap:5px}",
+          // 分区之间压一条发丝线：整张卡片原来是同权重的灰字墙，靠 1px 边线分组才扫得动。
+          ".dsh-armor5-sec + .dsh-armor5-sec{margin-top:10px;padding-top:9px;",
+          "border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.16))}",
+          ".dsh-armor5-sec-title{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:10.5px;",
+          "line-height:16px;letter-spacing:.02em}",
           ".dsh-armor5-chips{display:flex;flex-wrap:wrap;gap:4px}",
           ".dsh-armor5-chip{display:inline-flex;align-items:center;max-width:100%;padding:1px 7px;border-radius:6px;",
           "font-size:11px;line-height:16px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.12));",
@@ -132,16 +136,29 @@
           // 最近命中流水：一条 = 时刻 · 判决 · 领域(命中数) · 载荷数，副行是那次的命中词。
           ".dsh-armor5-hits{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px;",
           "max-height:168px;overflow:auto}",
-          ".dsh-armor5-hits li{display:flex;flex-direction:column;gap:1px;padding:5px 7px;border-radius:8px;",
+          ".dsh-armor5-hits li{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:8px;",
           "background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08))}",
           ".dsh-armor5-hit-main{font-size:11.5px;font-variant-numeric:tabular-nums}",
           ".dsh-armor5-hit-main[data-verdict=refusal]{color:var(--dsw-alias-state-error-primary,#f85149)}",
           ".dsh-armor5-hit-main[data-verdict=fallback]{color:var(--dsw-alias-state-warning-primary,#d29922)}",
           ".dsh-armor5-hit-sub{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px;overflow-wrap:anywhere}",
-          ".dsh-armor5-rows{margin:0;padding:0;list-style:none}",
-          ".dsh-armor5-rows li{display:flex;gap:8px;align-items:baseline}",
-          ".dsh-armor5-rows .k{color:var(--dsw-alias-label-tertiary,#8b8b8b);flex:none;min-width:64px}",
-          ".dsh-armor5-rows .v{color:var(--dsw-alias-label-primary,#e6e6e6);overflow-wrap:anywhere}",
+          // v0.16.5：字段铺成「田字格」—— 最窄 286px 的卡片里，竖排一行一字段会连成一堵灰字墙；
+          // 两列 tile（上标签、下值）让同一屏的信息量翻倍，视线的落点也从「找行」变成「数格子」。
+          ".dsh-armor5-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}",
+          ".dsh-armor5-tile{display:flex;flex-direction:column;gap:3px;min-width:0;padding:7px 8px;",
+          "border-radius:9px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08))}",
+          // 词表（命中 / 风险载荷）与长值独占一行：chip 换行时不会被挤进半个格子。
+          ".dsh-armor5-tile[data-span='2']{grid-column:1/-1}",
+          ".dsh-armor5-tile .t{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:10.5px;line-height:15px;",
+          "letter-spacing:.02em}",
+          ".dsh-armor5-tile .b{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:11.5px;line-height:16px;",
+          "overflow-wrap:anywhere;font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-tile .b[data-dim='1']{color:var(--dsw-alias-label-caption,#8b8b8b)}",
+          // 工具名这类长英文串不换行（换行会把一个词劈成两半），溢出让省略号接管，全文进 title。
+          ".dsh-armor5-tile .b[data-nowrap='1']{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+          // 头部下面那行技术注脚：只放「位置」，不占格子。
+          ".dsh-armor5-cap{margin-top:7px;color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10.5px;",
+          "line-height:15px;overflow-wrap:anywhere}",
           // ── 设置台（settings.section 里的那一页） ──
           // 令牌全部取自设置页自己用的那一套（bg-layer-2 / border-l2 / label-* / business-primary），
           // 每个都带兜底色。比例按设置页的节奏调：可选块用两/三列网格，预览块是一块内嵌面板，
@@ -413,31 +430,30 @@
                 : verdict === "pass" ? "通过"
                   : verdict === "fallback" ? "兜底" : "拒绝";
 
-          // 主表只留「一句话」字段；命中标记 / 风险载荷 / 安全标记这类词表改成 chip 块，
-          // 长词表不再挤成一坨逗号 —— 这是 v0.16.2「卡片整合」的主要动因。
-          var rows = [
-            ["识别领域", domain
-              ? (domainLabel && domainLabel !== domain
-                  ? domainLabel + "（" + domain + " · 命中 " + domainHits + "）"
-                  : domain + "（命中 " + domainHits + "）")
-              : "—"],
-            ["领域候选", candidatesText],
-            ["拒答/兜底词", words.length ? words.join("、") : "—"],
-            ["扫描范围", textChars
-              ? "全文 " + textChars + " 字（判拒只看开头 " + openingChars + " 字）"
-              : "—"],
-            ["位置", SLOT_MODE + " · " + String(SLOT_NAME).replace(/^conversation\./, "")],
-            ["版本", TITLE]
-          ];
-          var toLis = function (pairs) {
-            return pairs.map(function (pair, index) {
-              return react.createElement(
-                "li",
-                { key: index },
-                react.createElement("span", { className: "k" }, pair[0]),
-                react.createElement("span", { className: "v" }, pair[1])
-              );
-            });
+          // v0.16.5：字段铺成「田字格」—— 一个字段一个 tile（上标签、下值），词表 tile 横跨两列；
+          // 「位置」收成头部下面的一行注脚；「版本」行删掉（版本只在头部右侧出现一次，不再重复两遍）。
+          var slotText = String(SLOT_NAME).replace(/^conversation\./, "");
+          var tile = function (titleText, child, key, span) {
+            return react.createElement("div",
+              {
+                className: "dsh-armor5-tile",
+                key: key,
+                "data-span": span === 2 ? "2" : undefined
+              },
+              react.createElement("span", { className: "t" }, titleText),
+              child);
+          };
+          var textValue = function (value, nowrap) {
+            return react.createElement("span",
+              {
+                className: "b",
+                "data-dim": value === "—" || value === "无" ? "1" : undefined,
+                "data-nowrap": nowrap ? "1" : undefined,
+                title: nowrap ? value : undefined
+              }, value);
+          };
+          var tileGrid = function (items, key) {
+            return react.createElement("div", { className: "dsh-armor5-grid", key: key }, items);
           };
           var chipList = function (items, kind, emptyText) {
             return react.createElement("div", { className: "dsh-armor5-chips" },
@@ -454,7 +470,11 @@
               child);
           };
 
-          var livePairs = open ? liveRowPairs(liveState.liveDoc, liveState.link) : [];
+          var livePairs = open ? liveRowPairs(liveState.liveDoc, liveState.link, true) : [];
+          var liveTiles = livePairs.map(function (pair, index) {
+            // 工具名是英文长串，给省略号而不是断词；卡片半边格放不下整串时 title 里有全文。
+            return tile(pair[0], textValue(pair[1], pair[0] === "最近工具"), "live" + index, 1);
+          });
           var hitList = open ? hitRows(liveState.liveDoc && liveState.liveDoc.hits) : [];
 
           var panel = open
@@ -476,15 +496,22 @@
                   react.createElement("span", null, clock === "—" ? "本次会话" : clock),
                   react.createElement("span", null, VERSION))
               ),
-              section("命中标记" + (domainMarkers.length ? " · " + domainMarkers.length : ""),
-                chipList(domainMarkers, "hit", "本次没有领域标记词"), "hit"),
-              section("风险载荷" + (risk.length ? " · " + risk.length : ""),
-                chipList(risk, "risk", "本次没有风险载荷"), "risk"),
-              section("安全标记" + (safe.length ? " · " + safe.length : ""),
-                chipList(safe, "safe", "本次没有安全标记"), "safe"),
-              section("本次判定", react.createElement("ul", { className: "dsh-armor5-rows" }, toLis(rows)), "main"),
-              section("实时（信号来源 / 本轮 / 事件速率 / 工具流水）",
-                react.createElement("ul", { className: "dsh-armor5-rows" }, toLis(livePairs)), "live"),
+              react.createElement("div", { className: "dsh-armor5-cap" }, "位置 " + slotText),
+              tileGrid([
+                tile("命中标记" + (domainMarkers.length ? " · " + domainMarkers.length : ""),
+                  chipList(domainMarkers, "hit", "无"), "hit", 2),
+                tile("风险载荷" + (risk.length ? " · " + risk.length : ""),
+                  chipList(risk, "risk", "无"), "risk", 2),
+                tile("安全标记" + (safe.length ? " · " + safe.length : ""),
+                  chipList(safe, "safe", "无"), "safe", 1),
+                tile("识别领域", textValue(domain ? (domainLabel || domain) : "—"), "domain", 1),
+                tile("领域候选", textValue(candidatesText), "cand", 1),
+                tile("拒答/兜底词", textValue(words.length ? words.join("、") : "—"), "words", 1),
+                tile("扫描范围", textValue(textChars
+                  ? "全文 " + textChars + " 字 · 判拒 " + openingChars + " 字"
+                  : "—"), "range", 2)
+              ], "fields"),
+              section("实时", tileGrid(liveTiles, "live"), "live"),
               section(hitList.length ? "最近命中（本进程最近 " + hitList.length + " 次判决）" : "最近命中",
                 hitList.length
                   ? react.createElement("ul", { className: "dsh-armor5-hits" },
@@ -916,8 +943,8 @@
               link("paused", "页面在后台，已暂停轮询（切回来立刻补一次）");
               return;
             }
-            link("polling", (poll.fellBack ? "推送断线，已回落（重开面板会再试）；" : "") +
-              "按" + (delay === PANEL_POLL_ACTIVE_MS ? "活跃" : "空闲") + "节奏（" + delay + " ms）");
+            link("polling", (poll.fellBack ? "断线回落；" : "") +
+              (delay === PANEL_POLL_ACTIVE_MS ? "活跃" : "空闲") + " " + delay + " ms");
             if (typeof setTimeout === "function") poll.timer = setTimeout(tick, delay);
           };
           // 接推送：EventSource 带不了自定义请求头，所以 token 走查询串（服务端只对这条路由放行）。
@@ -1248,30 +1275,43 @@
          * 「实时」那四行的文案，只有这一处（v0.16.1）。
          * 浮层卡片与设置页那组共用同一个构造，免得两处各写一遍、改一处忘一处。
          */
-        function liveRowPairs(live, link) {
+        function liveRowPairs(live, link, compact) {
           var rows = [];
-          rows.push(["信号", (link ? (LIVE_MODE_LABEL[link.mode] || link.mode) + " · " + link.text : "等第一条信号…") +
-            (live && live.at ? "　·　库 " + fmtAgo(live.at) : "")]);
+          var modeText = link ? (LIVE_MODE_LABEL[link.mode] || link.mode) : "等第一条信号…";
+          var freshText = live && live.at ? fmtAgo(live.at) : "";
+          // compact = 浮层卡片那套田字格：半格宽只放得下一句话，链接自述（「统计库一落盘就刷新」）
+          // 就留给设置页那一整行；卡片上只留「怎么连的 · 库几秒前」。
+          rows.push(["信号", compact
+            ? modeText + (freshText ? " · " + freshText : "")
+            : modeText + " · " + (link ? link.text : "还没有信号") + (freshText ? "　·　库 " + freshText : "")]);
           var turn = live && live.turn ? live.turn : null;
           var events = live && live.events ? live.events : null;
           var tools = live && live.tools ? live.tools : null;
           if (!live) {
-            rows.push(["本轮", "还没有实时分区（重启 DSH 后由本体落盘）"]);
+            rows.push(["本轮", compact
+              ? "还没有实时分区"
+              : "还没有实时分区（重启 DSH 后由本体落盘）"]);
           } else {
             var started = turn && turn.startedAt ? Date.parse(turn.startedAt) : NaN;
-            rows.push(["本轮", turn && turn.active
-              ? "进行中 · 已 " + fmtSpan(Date.now() - started) + "（最后事件 " + fmtAgo(turn.lastEventAt) + "）"
-              : "空闲 · 最后事件 " + fmtAgo(turn ? turn.lastEventAt : null)]);
+            rows.push(["本轮", compact
+              ? (turn && turn.active
+                ? "进行中 · 已 " + fmtSpan(Date.now() - started)
+                : "空闲 · " + fmtAgo(turn ? turn.lastEventAt : null))
+              : (turn && turn.active
+                ? "进行中 · 已 " + fmtSpan(Date.now() - started) + "（最后事件 " + fmtAgo(turn.lastEventAt) + "）"
+                : "空闲 · 最后事件 " + fmtAgo(turn ? turn.lastEventAt : null))]);
             // 分母用 spanMs（真正参与计算的那个跨度）：高事件率下环被截断，分子不再是 30 秒里的事，
             // 拿 windowMs 当分母就会出现「60 次 / 30 秒（3.x 次/秒）」这种自己打自己的写法。
             var spanMs = Number(events && (events.spanMs || events.windowMs)) || 0;
             rows.push(["事件速率", events
-              ? events.count + " 次 / " + Math.round(spanMs / 1000) + " 秒（" + (events.perSecond || 0) + " 次/秒）"
+              ? events.count + " 次 / " + Math.round(spanMs / 1000) + " 秒 · " + (events.perSecond || 0) + "/s"
               : "—"]);
             var recent = (tools && tools.recent) || [];
             rows.push(["最近工具", recent.length
-              ? recent.slice(-4).map(function (item) { return item.tool + "(" + fmtBytes(item.bytes) + ")"; }).join(" → ")
-              : "本进程还没调过工具"]);
+              ? (compact
+                ? recent[recent.length - 1].tool
+                : recent.slice(-4).map(function (item) { return item.tool + "(" + fmtBytes(item.bytes) + ")"; }).join(" → "))
+              : (compact ? "还没调过" : "本进程还没调过工具")]);
           }
           return rows;
         }

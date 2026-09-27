@@ -465,14 +465,18 @@ function mount(projection, docForeign, Component) {
     panel.props.style.left >= 8 && panel.props.style.left + panel.props.style.width <= 1280 - 8,
     JSON.stringify(panel.props.style));
   const panelText = textOf(panel);
+  // v0.16.5：字段搬进「田字格」的 tile 后「版本」不再单独占一行，所以字段列表里也去掉它，
+  // 单独断言版本只出现一次（头部右侧），见下面那条。
   for (const field of ["识别领域", "领域候选", "命中标记", "拒答/兜底词", "风险载荷",
-    "安全标记", "扫描范围", "位置", "版本"]) {
+    "安全标记", "扫描范围", "位置"]) {
     ok("浮层含字段「" + field + "」", panelText.includes(field));
   }
   ok("浮层头部用徽标交代判决（不再单占一行「状态 / 最近判决」）",
     panelText.includes("无限五代内核") && panelText.includes("通过"));
   ok("浮层里能看到真实值", panelText.includes("通过") && panelText.includes("web"));
-  ok("识别领域显示中文标签 + 命中数", panelText.includes("Web 应用与 API") && panelText.includes("命中 3"));
+  // v0.16.4：领域键与命中数从「识别领域」挪走（那行只留中文标签），命中数在「领域候选」的 3* 里。
+  ok("识别领域显示中文标签，命中数在领域候选里带 *",
+    panelText.includes("Web 应用与 API") && panelText.includes("3*"));
   ok("领域候选按命中数排序且主判带 *", panelText.includes("web 3*") && panelText.includes("network 1"), panelText);
   ok("命中标记列出真正命中的词（不是黑箱）", panelText.includes("渗透") && panelText.includes("sql注入"));
   ok("扫描范围写明全文与判拒窗口", panelText.includes("全文 1288 字") && panelText.includes("160"));
@@ -493,6 +497,18 @@ function mount(projection, docForeign, Component) {
   ok("卡片样式与流水结构都写进源码（chip / 命中流水）",
     CLIENT_SRC.includes(".dsh-armor5-chip") && CLIENT_SRC.includes(".dsh-armor5-hits") &&
     CLIENT_SRC.includes("function hitRows"));
+  // v0.16.5：字段铺成「田字格」（两列 tile），词表与长值跨列；版本标识只剩头部一处。
+  const tiles = collectByClass(tree, "dsh-armor5-tile");
+  const span2 = tiles.filter((t) => t.props["data-span"] === "2");
+  ok("字段铺成「田字格」（两列 tile，词表 / 长值跨列）",
+    tiles.length >= 8 && span2.length >= 3, "tiles=" + tiles.length + " span2=" + span2.length);
+  ok("卡片里不再有「版本」行，版本只在头部出现一次",
+    panelText.includes("版本") === false &&
+    (panelText.match(/v\d+\.\d+\.\d+/g) || []).length === 1,
+    JSON.stringify((panelText.match(/v\d+\.\d+\.\d+/g) || [])));
+  ok("田字格样式写进源码（grid / tile / 跨列选择器）",
+    CLIENT_SRC.includes(".dsh-armor5-grid") && CLIENT_SRC.includes(".dsh-armor5-tile") &&
+    CLIENT_SRC.includes("[data-span='2']"));
   // v0.16.1：浮层卡片自己也订一份统计库（与设置页那组同源），卡片没拿到桥时至少要有「信号 / 本轮」两行。
   ok("浮层卡片带「实时」行（卡片自己订阅统计库）",
     panelText.includes("信号") && panelText.includes("本轮"), panelText.slice(-160));
@@ -761,7 +777,7 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
       await new Promise((resolve) => setTimeout(resolve, 0));
       const fell = textOf(liveView.rerender());
       ok("推送断线立刻回落轮询，并说明白自己怎么了",
-        fell.includes("推送断线，已回落"),
+        fell.includes("断线回落"),
         JSON.stringify(fell.slice(Math.max(0, fell.indexOf("信号")), fell.indexOf("信号") + 160)));
       ok("回落之后重新排上轮询定时器（活跃 400 ms / 空闲 3 s 二选一）",
         delays.includes(400) || delays.includes(3000), JSON.stringify(delays.slice(-4)));
@@ -796,7 +812,7 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
       await new Promise((resolve) => setTimeout(resolve, 0));
       const oldText = textOf(oldView.rerender());
       ok("宿主没给推送路径时老实轮询（不臆造 /events）",
-        oldText.includes("轮询中 · 按") && oldText.includes("节奏（") && oldText.includes("还没有实时分区"),
+        oldText.includes("轮询中 · ") && oldText.includes(" ms") && oldText.includes("还没有实时分区"),
         JSON.stringify(oldText.slice(0, 200)));
     } finally {
       delete globalThis.EventSource;

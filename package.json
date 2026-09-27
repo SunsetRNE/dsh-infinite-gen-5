@@ -1,6 +1,6 @@
 {
   "name": "dsh-infinite-gen-5",
-  "version": "0.16.3",
+  "version": "0.16.5",
   "description": "DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.11.0：领域包 45 → 56（计算机向扩写：逆向/脱壳/反混淆/Hook 注入/样本分析/利用开发/模糊测试/口令恢复/隐写/编程工具链/自动化），每个计算机域附「装: / 验:」工具链与缺工具降级协议；内核为 5 槽骨架 + 56 域 × 7 族点名 + 语言规则 + 工具链规则 + 工具调用卫生（v0.11.0：一轮一个工具、参数短而平、长文本分段小写、坏 JSON/空包当作重试信号改小重发，压制 tool input is invalid JSON 崩溃），领域包全文经 infinite_gen5_scenario 工具按需取用（定义常驻约 0.8 KB，不延迟加载）；另附运行环境探测工具 infinite_gen5_env 与 scripts/probe-env.mjs（纯只读：形态/资源/出网/库存/能力位/39 域工具就绪度，缺什么直接给装什么）；单内核注入 + Order 200 末位锚点 + 同源载荷自动让位，profile 元数据工具、实时会话投影与原生风格客户端状态条（v0.10.0 起客户端状态条长出自己的设置台：设置页多一个「无限五代」入口（v0.11.1 起排在官方「插件」之后，order 16），形态 / 位置 / 侧栏入口可视化调节、改完即时生效并保存在本机 localStorage；v0.9.0 起入口压成单字符记号：空闲/执行中只留圆点，判决只留 ✓/✕/!，明细进点击浮层）；注入强度三件套（v0.12.0）：真末位锚点走 system-prompt/assemble 瀑布追加，排在宿主 10200 人格后缀之后恒为最后一段；运行时锚点走 context() 槽每 4 步重述（可用 IG5_RUNTIME_ANCHOR_EVERY 或 profile config 调），坐落在每步最后一条 user 消息里；可选 complete 独占档（末位锚点并进内核文本）；新增真实宿主演习台自检 scripts/verify_injection.mjs（41 条，无宿主时 SKIP）；v0.12.3 起六个注入开关运行期可调（优先级 profile config > IG5_* 环境变量 > 文件内默认，profile 工具汇报 configOverrides），管理器式安装只需一条带 config 的定向覆盖即可试档位；新增离线评测闭环 scripts/eval-corpus.mjs（把 110 条语料的 expected_domain/expected_verdict 接进计量：混淆矩阵 + 每类 P/R/F1 + 误判样本 + 覆盖缺口 + baseline 回归门禁）；v0.13.0 设置面板新增「注入档位」可调控 UI：宿主 webServer 上挂 /infinite-gen-5/tuning（回环 + 页面注入 token 自守），六个开关 + 节拍间隔 N 点一下就改，服务端当场卸掉注入段按新档重装（settings/rebuild，无需重启进程），档位落盘 DSH_HOME/infinite-gen-5-tuning.json 重启照旧生效，优先级 设置页 > profile config > IG5_* env > 文件默认，profile 工具新增 tuning 实况（effective/sources/persisted/rebuilds/endpoint）；新增 scripts/verify_tuning.mjs（真实宿主 39 条）并把客户端调参面板接进 verify_ui（149 条）；v0.13.1 起改用 ctx.inject 等 webServer 就绪再挂调参路由（真机上 apply 时那次 ctx.get 拿不到后挂服务）；v0.13.2 新增本机安装树同步 npm run sync:local（复刻宿主 plugin-dependencies.py 的 sha256 指纹算法，把仓库铺进 dsh 实际加载的树、顺手把插件管理器激活记录刷成与磁盘一致，默认只读预览）+ scripts/verify_sync.mjs（33 条自检，含指纹算法与宿主记录的交叉验证）；v0.13.3 修 sync:local 只读预览把「现树指纹」当成「将要写入的指纹」显示（预览态明确标注，落盘后按新树重算，JSON 多一个 record.previewFingerprint）；v0.13.4 起同步跟随权限位（宿主指纹含 mode：内容没变但 chmod 变了也算要改，目录权限同样显式对齐，避免 umask 造成的漂移），自检夹具 37 条且目录权限定死 0755（CI 与本机 umask 不同曾算出两个冻值）",
   "type": "module",
   "main": "./index.js",
@@ -94,7 +94,7 @@
   "dsh": {
     "id": "dsh-infinite-gen-5",
     "name": "无限五代",
-    "version": "0.16.3",
+    "version": "0.16.5",
     "repo": "SunsetRNE/dsh-infinite-gen-5",
     "permissions": "系统提示词注入, 客户端状态条",
     "bundle": {
