@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.18.0";
+        var VERSION = "v0.19.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -97,18 +97,18 @@
           ".dsh-armor5-text{max-width:22ch;overflow:hidden;text-overflow:ellipsis}",
           // 详情浮层：逐项对齐宿主 ContextMeter 的 .panel。
           ".dsh-armor5-panel{position:fixed;z-index:1100;box-sizing:border-box;",
-          "width:min(286px,100vw - 24px);padding:12px;border:0;cursor:default;",
-          "border-radius:var(--dsw-radius-lg,12px);background:var(--dsw-specific-menu,#1f1f1f);",
+          "width:min(260px,100vw - 18px);padding:7px 8px 8px;border:0;cursor:default;",
+          "border-radius:var(--dsw-radius-lg,9px);background:var(--dsw-specific-menu,#1f1f1f);",
           "backdrop-filter:var(--dsw-menu-backdrop-filter,none);",
           "box-shadow:var(--dsw-elevation-prominent,0 8px 32px rgba(0,0,0,.45));",
-          "color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:12px;line-height:20px}",
+          "color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:11px;line-height:15px}",
           // 头部：判决徽标 + 标题 + 版本/时刻（右对齐）。徽标按 tone 上色，一眼分辨通过/拒绝/执行中。
-          ".dsh-armor5-head{display:flex;align-items:center;gap:6px}",
+          ".dsh-armor5-head{display:flex;align-items:center;gap:4px}",
           ".dsh-armor5-head b{color:var(--dsw-alias-label-primary,#e6e6e6);font-weight:500}",
-          ".dsh-armor5-head-right{margin-left:auto;display:flex;align-items:center;gap:6px;",
-          "color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px;font-variant-numeric:tabular-nums}",
-          ".dsh-armor5-badge{display:inline-flex;align-items:center;height:18px;padding:0 8px;border-radius:999px;",
-          "font-size:11px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.14))}",
+          ".dsh-armor5-head-right{margin-left:auto;display:flex;align-items:center;gap:5px;",
+          "color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-badge{display:inline-flex;align-items:center;height:15px;padding:0 6px;border-radius:999px;",
+          "font-size:10px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.14))}",
           ".dsh-armor5-badge[data-tone=running]{background:rgba(77,107,254,.16);",
           "color:var(--dsw-alias-state-business-primary,#4d6bfe)}",
           ".dsh-armor5-badge[data-tone=success]{background:rgba(63,185,80,.16);",
@@ -121,15 +121,15 @@
           ".dsh-armor5-badge[data-tone=error]{background:rgba(248,81,73,.16);",
           "color:var(--dsw-alias-state-error-primary,#f85149)}",
           // 分区：命中标记 / 风险载荷各自成块，用 chip 铺开 —— 长词表也比一行逗号好扫。
-          ".dsh-armor5-sec{margin-top:9px;display:flex;flex-direction:column;gap:5px}",
+          ".dsh-armor5-sec{margin-top:6px;display:flex;flex-direction:column;gap:3px}",
           // 分区之间压一条发丝线：整张卡片原来是同权重的灰字墙，靠 1px 边线分组才扫得动。
-          ".dsh-armor5-sec + .dsh-armor5-sec{margin-top:10px;padding-top:9px;",
+          ".dsh-armor5-sec + .dsh-armor5-sec{margin-top:6px;padding-top:6px;",
           "border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.16))}",
-          ".dsh-armor5-sec-title{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:10.5px;",
-          "line-height:16px;letter-spacing:.02em}",
-          ".dsh-armor5-chips{display:flex;flex-wrap:wrap;gap:4px}",
-          ".dsh-armor5-chip{display:inline-flex;align-items:center;max-width:100%;padding:1px 7px;border-radius:6px;",
-          "font-size:11px;line-height:16px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.12));",
+          ".dsh-armor5-sec-title{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:10px;",
+          "line-height:13px;letter-spacing:.02em}",
+          ".dsh-armor5-chips{display:flex;flex-wrap:wrap;gap:2px}",
+          ".dsh-armor5-chip{display:inline-flex;align-items:center;max-width:100%;padding:0.5px 5px;border-radius:4px;",
+          "font-size:10.5px;line-height:13px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.12));",
           "overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
           ".dsh-armor5-chip[data-kind=hit]{background:rgba(77,107,254,.14);",
           "color:var(--dsw-alias-state-business-primary,#4d6bfe)}",
@@ -139,32 +139,32 @@
           "color:var(--dsw-alias-state-success-primary,#3fb950)}",
           ".dsh-armor5-chip[data-kind=none]{padding:1px 0;background:0 0;color:var(--dsw-alias-label-caption,#8b8b8b)}",
           // 最近命中流水：一条 = 时刻 · 判决 · 领域(命中数) · 载荷数，副行是那次的命中词。
-          ".dsh-armor5-hits{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:5px;",
-          "max-height:168px;overflow:auto}",
-          ".dsh-armor5-hits li{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:8px;",
+          ".dsh-armor5-hits{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;",
+          "max-height:120px;overflow:auto}",
+          ".dsh-armor5-hits li{display:flex;flex-direction:column;gap:2px;padding:4px 6px;border-radius:6px;",
           "background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08))}",
-          ".dsh-armor5-hit-main{font-size:11.5px;font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-hit-main{font-size:10.5px;font-variant-numeric:tabular-nums}",
           ".dsh-armor5-hit-main[data-verdict=refusal]{color:var(--dsw-alias-state-error-primary,#f85149)}",
           ".dsh-armor5-hit-main[data-verdict=fallback]{color:var(--dsw-alias-state-warning-primary,#d29922)}",
           ".dsh-armor5-hit-main[data-verdict=empty]{color:var(--dsw-alias-text-tertiary,rgba(127,127,127,.85))}",
-          ".dsh-armor5-hit-sub{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px;overflow-wrap:anywhere}",
+          ".dsh-armor5-hit-sub{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;overflow-wrap:anywhere}",
           // v0.16.5：字段铺成「田字格」—— 最窄 286px 的卡片里，竖排一行一字段会连成一堵灰字墙；
           // 两列 tile（上标签、下值）让同一屏的信息量翻倍，视线的落点也从「找行」变成「数格子」。
-          ".dsh-armor5-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}",
-          ".dsh-armor5-tile{display:flex;flex-direction:column;gap:3px;min-width:0;padding:7px 8px;",
-          "border-radius:9px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08))}",
+          ".dsh-armor5-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}",
+          ".dsh-armor5-tile{display:flex;flex-direction:column;gap:2px;min-width:0;padding:5px 6px;",
+          "border-radius:7px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08))}",
           // 词表（命中 / 风险载荷）与长值独占一行：chip 换行时不会被挤进半个格子。
           ".dsh-armor5-tile[data-span='2']{grid-column:1/-1}",
-          ".dsh-armor5-tile .t{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:10.5px;line-height:15px;",
+          ".dsh-armor5-tile .t{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:10px;line-height:12px;",
           "letter-spacing:.02em}",
-          ".dsh-armor5-tile .b{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:11.5px;line-height:16px;",
+          ".dsh-armor5-tile .b{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:10.5px;line-height:13px;",
           "overflow-wrap:anywhere;font-variant-numeric:tabular-nums}",
           ".dsh-armor5-tile .b[data-dim='1']{color:var(--dsw-alias-label-caption,#8b8b8b)}",
           // 工具名这类长英文串不换行（换行会把一个词劈成两半），溢出让省略号接管，全文进 title。
           ".dsh-armor5-tile .b[data-nowrap='1']{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
           // 头部下面那行技术注脚：只放「位置」，不占格子。
-          ".dsh-armor5-cap{margin-top:7px;color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10.5px;",
-          "line-height:15px;overflow-wrap:anywhere}",
+          ".dsh-armor5-cap{margin-top:5px;color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;",
+          "line-height:12px;overflow-wrap:anywhere}",
           // ── 设置台（settings.section 里的那一页） ──
           // 令牌全部取自设置页自己用的那一套（bg-layer-2 / border-l2 / label-* / business-primary），
           // 每个都带兜底色。比例按设置页的节奏调：可选块用两/三列网格，预览块是一块内嵌面板，

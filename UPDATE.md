@@ -10,6 +10,34 @@
 
 ---
 
+## v0.19.0
+
+两件事：**让宿主的坏包不再掐断整轮**，以及**浮层判决卡片整体比例再压两轮**。
+
+### ① 宿主适配器：坏掉的 tool 参数不再让整轮「什么都不输出」
+
+用户报的现象是「本轮运行失败 + `DeepSeek Messages stream: tool input is invalid JSON`」——整轮没有任何输出。链路追到宿主适配器 `@deepseek-ai/dsh-llm-deepseek/lib/index.js`：流式 tool-call 的 `arguments` 若被截断或转义坏掉，`message_stop` 分支里那段严格预检直接 `return malformed("tool input is invalid JSON")`，抛 `MALFORMED_RESPONSE`；而 `MALFORMED_RESPONSE` **不在** `DEFAULT_RETRYABLE_CODES`（只有 `EMPTY_RESPONSE` / `RATE_LIMIT` / `SERVER` / `TIMEOUT` / `TRANSPORT` 会重试）里，于是整轮直接死。更要紧的是**下游本来就宽容**：`dsh-agent-loop` 的 `parseArguments` 对非法 JSON 是「原样当文本交给工具层」，模型能看到错误并自纠 —— 掐断整轮的只有适配器这一处预检。
+
+补丁 `scripts/patch-host-toolargs.mjs`（apply / `--check` / `--revert` / `--log`，幂等、改前备份、旧版补丁先回滚再升级），三处：
+
+1. 新增 `repairToolArguments(raw)`：剥 ```json 围栏、花引号、全角逗号冒号、尾逗号、缺引号键、单引号字符串、字符串内裸换行，逐个候选 `JSON.parse`，全失败返回 `undefined`；
+2. block-end 处 `block.content.arguments = block.json` 改为先修再用（block-end 发出去的是拷贝，晚到 `message_stop` 再改已经到不了下游）；
+3. `message_stop` 的预检把「抛错」改成「记一笔诊断后 `continue`」——非对象（数组 / 字符串）也走 `continue`，坏包不再升级成整轮失败。
+
+诊断落在 `~/.dsh/llm-deepseek/malformed-toolargs.jsonl`（at / tool / 长度 / 首尾 200 字符 / 参数 4000 字符），下次真出坏包时能直接看到是哪个工具、坏在哪。自检：`repairToolArguments` 单测 11/11、行为模拟 9/9、`node --check` 通过；负控（回滚补丁跑同一段）三条坏包全部复现 `MALFORMED_RESPONSE`。**这是宿主侧代码，必须重启 DSH 才生效。**
+
+### ② 浮层判决卡片：两轮比例压缩（高 487 → 398 → 353 px，−27.5%）
+
+只动尺寸不动信息：卡宽 `min(272px,100vw - 20px)` → `min(260px,100vw - 18px)`，面板内边距 `9px 10px 10px` → `7px 8px 8px`，正文 `11.5px/17px` → `11px/15px`；徽标 16 → 15 px（内边距 7 → 6 px，字号 10.5 → 10 px）；分区间距 8/7 → 6/6 px，区标题行高 14 → 13 px；chip 内边距 `0.5px 6px` → `0.5px 5px`、圆角 5 → 4 px、行高 14 → 13 px；tile 内边距 6/7 → 5/6 px、圆角 8 → 7 px、值行 11px/14px → 10.5px/13px；命中流水区高度上限 150 → 120 px、条目内边距 5/7 → 4/6 px、圆角 7 → 6 px；注脚行高 13 → 12 px。字号底线守住「标签 10 px、值/徽标 10.5 px」，不再往下走，可读性用 dark / light 两版截图复核。
+
+量测方式：`verify_ui.mjs --emit-html` 出预览页 → 注入只留卡片两节的 `<style>` + 一段把 `getBoundingClientRect()` 写进 `document.title` 的脚本 → Chrome headless `--dump-dom` 读回真实高度（宽 470 与 600 两次取样一致）。按 v0.17.2 的教训，版式断言是**改写**不是删除：`verify_ui.mjs` 的「版式锚点齐全」跟着换成新值（tile `padding:5px 6px` + `border-radius:7px`、chip `border-radius:4px`），另加「紧凑比例锚点齐全」7 条（260px 宽 / 7px 8px 8px 内边距 / 11px:15px 正文 / 6px:6px 分区间距 / 10.5px:13px tile 值行 / `0.5px 5px` chip 内边距 / 10px 注脚），任一条不达标都点名。客户端自检 185 通过 / 0 失败。
+
+### 教训
+
+- **坏包不该升级成整轮失败**：下游已经能把非法参数当文本交给工具层自纠，适配器再判一次死刑，代价是整轮零输出 —— 预检该做的是记录，不是阻止。
+- **改尺寸也要改断言**：r1 那版把 72px 栅格断言整组删掉，于是排版静默失效没人发现；这轮起「密度」也有量化锚点，压过头会红。
+- **压缩的收益在大件上**：这一轮真正省下来的是留白（间距 / 内边距 / 行高）与流水区高度上限，字号只降半档 —— 保住可读性的前提下，密度比字号更划算。
+
 ## v0.18.0
 
 **技术说明**

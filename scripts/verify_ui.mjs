@@ -561,12 +561,29 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
   // v0.16.4 的版式锚点（分区发丝线 / 值列定宽）与 v0.16.5 的田字格必须同时在样式表里：
   // 光有选择器不够，底色 / 圆角 / 留白缺一个，卡片就退回灰字墙。
   ok("版式锚点齐全（田字格底色留白 / 两列栅格 / 分区发丝线 / chip 圆角）",
-    /\.dsh-armor5-tile\{[^}]*padding:7px 8px[^}]*border-radius:9px/.test(cssText) &&
+    /\.dsh-armor5-tile\{[^}]*padding:5px 6px[^}]*border-radius:7px/.test(cssText) &&
     cssText.includes(".dsh-armor5-grid{display:grid;grid-template-columns:1fr 1fr") &&
     cssText.includes(".dsh-armor5-sec + .dsh-armor5-sec{") &&
     cssText.includes("border-top:1px solid") &&
-    /\.dsh-armor5-chip\{[^}]*border-radius:6px/.test(cssText),
+    /\.dsh-armor5-chip\{[^}]*border-radius:4px/.test(cssText),
     cssText.length + " 字符");
+  // v0.19.0：整体比例压缩（面板更窄、字号更小、行高与留白同步收紧）。逐个细项钉死，
+  // 免得以后「顺手删一条规则」时排版又静默退化 —— 光有选择器不算数。
+  const compactAnchors = [
+    ["面板宽度 260px", cssText.includes("width:min(260px,100vw - 18px)")],
+    ["面板内边距 7px 8px 8px", /\.dsh-armor5-panel\{[^}]*padding:7px 8px 8px/.test(cssText)],
+    ["面板正文 11px/15px", /\.dsh-armor5-panel\{[^}]*font-size:11px;line-height:15px/.test(cssText)],
+    ["分区间距 6px/6px", /\.dsh-armor5-sec \+ \.dsh-armor5-sec\{margin-top:6px;padding-top:6px;/.test(cssText)],
+    ["tile 值行 10.5px/13px", /\.dsh-armor5-tile \.b\{[^}]*font-size:10\.5px;line-height:13px/.test(cssText)],
+    ["chip 内边距 0.5px 6px", /\.dsh-armor5-chip\{[^}]*padding:0\.5px 5px/.test(cssText)],
+    ["cap 字号 10px", /\.dsh-armor5-cap\{[^}]*font-size:10px;/.test(cssText)]
+  ];
+  ok("紧凑比例锚点齐全（面板宽度/内边距/正文行高/tile 行高/分区间距/chip 内边距/cap 字号）",
+    compactAnchors.every(([, pass]) => pass),
+    compactAnchors.filter(([, pass]) => !pass).map(([name]) => {
+      const found = cssText.match(/\.dsh-armor5-sec \+ \.dsh-armor5-sec\{[^}]{0,60}/);
+      return name + (found ? " => " + found[0] : " => 未找到");
+    }).join(" · ") || cssText.length + " 字符");
   // v0.16.1：浮层卡片自己也订一份统计库（与设置页那组同源），卡片没拿到桥时至少要有「信号 / 本轮」两行。
   ok("浮层卡片带「实时」行（卡片自己订阅统计库）",
     panelText.includes("信号") && panelText.includes("本轮"), panelText.slice(-160));
