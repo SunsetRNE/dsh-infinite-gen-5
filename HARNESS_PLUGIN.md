@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.13.1)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.13.2)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -69,6 +69,7 @@
 
 | 版本 | 说明 |
 |---|---|
+| **v0.13.2** | **本机安装树同步 + 管理器记账对齐**：`scripts/sync-local.mjs`（`npm run sync:local` 只读预览 / `sync:local:apply` 落盘）把仓库镜像进 dsh 实际加载的那棵树 —— 目标树由 profile `dependencies` 的 `link:`/`file:` 解析（外加 `plugin-src/<name>`、`plugins/<name>`、非软链的 profile `node_modules` 副本，按 realpath 去重），只增改删、跳过 `.git`/`node_modules`/`ui-preview`、保留安装树独有的 `.dsha-dependencies.json`、权限位跟随源文件、删空目录、写盘走 tmp+rename；同时刷新 `~/.dsh/plugin-activations.json` 里的 `version` + `fingerprint`（先留 `.bak-<时间戳>`；`status`/`startup`/`confirmedAt`/`loadedAt` 一律不动，那是管理器上次安装的记账；`--no-record` 可只铺树；管理器没登记过就不新建条目）。指纹算法在 `scripts/lib/tree-fingerprint.mjs`：复刻宿主 `~/.dsh/plugin-dependencies.py` 的 `current()`（逐条 `['file',rel,mode,sha256]`/`['directory',rel,mode]`/`['link',rel,target,sha]` 行 JSON 累进，非 ASCII 按 `\uXXXX` 转义；单节点依赖图再哈希一次），已用宿主**自己记过的**指纹交叉验证（whale-widget 逐字符一致）。动机：管理器式接线下手铺树管理器不知情，界面会一直显示旧版本、加载状态一栏因指纹不符被清空（本机实测「磁盘 0.13.1 / 管理器写 0.12.4」）。新增 `scripts/verify_sync.mjs`（33 项：指纹冻值 + 宿主记录交叉验证 + 假 DSH_HOME 全流程 + 热链接态空操作），并接进 `verify:all`；`cleanup.mjs` 新增「激活记录备份」一类（最近一份标跳过）；`verify_install` 的过期告警补上 `npm run sync:local:apply` 解法提示 |
 | **v0.13.1** | **修「设置页调参接口在真机上从不挂上」**（v0.13.0 的重缺陷）：宿主的 `WebServer` 在 `async [Service.init]()` 里才 `listen()`，服务 fiber 要等 socket 绑定完才激活，而 `ctx.get("webServer")` 默认 strict —— 只返回「提供方 fiber 已激活」的实现，所以插件 `apply()` 里那次 `get` 在真机上永远拿到 `undefined`，面板一直降级成「接口不可用」（演习台用假 webServer 先挂好，反而没暴露）。改为宿主同款 `ctx.inject(["webServer"], (webCtx) => mountTuningRoute(webCtx))`：服务就绪后补挂精确路由与 index 注入（`mountedServer` 去重，同一 server 不重复注册），未就绪期间仍如实汇报不可用而不假装成功。`verify_tuning` 39 → **45** 项（新增「webServer 晚到」一节：未就绪先报不可用 / 补挂路由 / token 注入同样就位 / endpoint 转 ok / 补挂路由 200 且错 token 仍 401）；另外用真实 `dsh-host-webserver`（`port: 0` 临时端口）跑过一次端到端：无 token 401 · 带 token 200 · POST 改档当场重装（`EXCLUSIVE_SECTION: true` 下装配只剩内核一段） |
 | **v0.13.0** | **设置页「注入档位」可调控 UI**：插件设置页里直接改六个注入开关与节拍间隔 N（服务端在宿主 `webServer` 上挂精确路由 `/infinite-gen-5/tuning`，路径与一次性 token 随 index.html 注入 `window.__IG5_TUNING__`；路由自守 —— 只收本机回环 + 该 token，因为宿主的路由匹配前没有鉴权中间件）。点「保存并生效」= 一条 POST：档位落盘 `$DSH_HOME/infinite-gen-5-tuning.json`，并**卸掉注入部分的 effect、按新档重装一遍**（工具/投影不重挂，次数计入 `rebuilds`），因此不重启进程、不刷页面即生效；`apply()` 内的注入块重构为可卸载重装的 `mountInjection()` + 三个注册点收句柄，`LAYER2_MODE` / `TAIL_MODE` / `RUNTIME_ANCHOR_MODE` 都改成装配时现读 `CFG`，所以档位改了立刻反映到装配结果。优先级变为 **设置页（持久化）> profile config > `IG5_*` env > 文件默认**（`resolveTuning` 每次从文件默认重算，覆盖不会粘住），每键 `sources` 汇报来源档，「复位到默认」发 `{reset:true}`；接口不可用时面板降级为只读提示 + 可粘贴的 `cordis.patch.yml` 片段。profile 工具新增 `tuning` 实况（effective / sources / persisted / store / rebuilds / endpoint）。新增 `scripts/verify_tuning.mjs`（真实宿主演习台 39 项，存储指到临时目录、不碰真实 `~/.dsh`），客户端调参面板接进 `verify_ui` 135 → **149** 项 |
 | **v0.12.4** | **安装残留清理 + 调参实测归档**：新增 `scripts/cleanup.mjs`（`npm run clean:legacy` 只列 / `clean:legacy:force` 真删）—— 一次列清 install.sh 快照、profile 接线备份、dev-link 备份与仓库临时探针文件，并**绝不动活着的安装树**（profile 依赖解析到的落点只标「跳过」）；README 补上「改配置 → 重启」这条路的本机实测证据（定向 `config` 覆盖合进同一条 `- id:` 条目、重启后运行时锚点序号由 `R#1 → R#4 → R#8` 变为 `R#1 → R#2 → R#4`）；顺手修掉 `verify_install` 的误报 —— 它把「顶层 `- id:` + `config:` 的定向覆盖」也算成 insert，于是在调参态下误报双接线，现在按缩进区分 insert 列表与覆盖条目 |
@@ -103,6 +104,8 @@ node scripts/verify_tuning.mjs        # 45 项：设置页调参接口（路由�
 node scripts/verify_version.mjs       # 22 项：版本锚点唯一且等于 package.json / 文档无超前版本号 / 全仓无未登记字面量
 node scripts/cleanup.mjs              # 安装残留清理（默认只列；--yes 才删，活着的安装树不在范围内）
 node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：接线入口唯一 / 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
+node scripts/sync-local.mjs           # 本机安装树同步（默认只读预览；--yes 才铺树并刷激活记录）—— 复刻宿主指纹算法，见下文
+node scripts/verify_sync.mjs          # 33 项：指纹算法（与宿主记录交叉验证）/ 预览不落盘 / 增改删 / 权限位 / 幂等 / 激活记录刷新
 node scripts/verify_ui.mjs            # 149 项：状态条行为 + 设置台（偏好读写与持久化 / 形态与位置切换生效 / 侧栏开关 / 清理与幂等；--emit-html 出视觉预览）
 node scripts/verify_env.mjs           # 149 项：环境探测（纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算）
 node scripts/verify_eval.mjs          # 81 项：评测计量（P/R/F1 手算可核）+ 语料载入形状 + CLI 退出码 0/1/3
@@ -134,6 +137,22 @@ npm run release:pack                        # 发布产物：tar.gz / zip / SHA2
 `--release` 优先用 `gh release create`；没装 `gh` 时自动改用 GitHub REST（`POST /repos/<owner>/<repo>/releases`）。凭据顺序：`GH_TOKEN` / `GITHUB_TOKEN` → `GH_TOKEN_FILE` / `--token-file=PATH` → 约定路径 `~/.local-gh/.token`（通用凭据目录）。只想补 Release、tag 已推过：加 `--release-only`。
 
 README / 本文档的版本沿革、`package.json` description、`ENV_PROBE.md` 的历史引用、以及生成物 `CHANGELOG.md` 里的版本号属**历史叙述**，刻意不改写（`verify_version.mjs` 只在 `PROSE_ALLOWED_FILES` 里放行）；发版时改了它们等于篡改历史。
+
+### 把仓库铺进安装树并刷新管理器记账（sync:local）
+
+管理器式接线下「改仓库」和「管理器看到的版本」是两条独立的路：手工 `tar` / `cp` 铺树之后，
+`~/.dsh/plugin-activations.json` 里仍记着上一次**管理器自己**安装的版本与指纹，于是管理器的卡片写着旧版本、
+加载状态一栏还会因指纹不符被清空（本机实测：磁盘 0.13.1 / 记录 0.12.4）。`sync:local` 把两条路对齐：
+
+```bash
+npm run sync:local         # 只读预览：哪棵树要同步 · 新增/更新/删除各几项 · 记录是否过期
+npm run sync:local:apply   # 落盘：铺树 + 刷激活记录的 version/fingerprint（改记录前留 .bak-<时间戳>）
+node scripts/sync-local.mjs --no-record --dsh-home=PATH --repo=PATH   # 只铺树 / 指到别处（自检用）
+```
+
+指纹不是占位符：宿主 `~/.dsh/plugin-dependencies.py` 的 `current()` 在本仓库由 `scripts/lib/tree-fingerprint.mjs`
+逐字节复刻（行 JSON 累进 + 单节点依赖图再哈希，非 ASCII 文件名按 `\uXXXX`），`verify:sync` 拿宿主**自己记过的**
+指纹当标准答案交叉验证。同步只保证「盘上是对的、记账是对的」，**加载新代码仍要重启 DSH 进程**。
 
 ### 开发热链接（dev 期省掉安装 + 重启）
 

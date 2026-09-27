@@ -357,7 +357,7 @@ if (rec) {
   if (rec.version && rec.version !== repoVersion) {
     warn(
       "宿主插件管理器激活记录过期",
-      `${short(actFile)} 记的是 ${rec.version}，实际 ${repoVersion} —— 管理器界面会显示旧版本；宿主只在 queued/attempted 的条目上重写这份记录，要用管理器重新确认一次才更新`,
+      `${short(actFile)} 记的是 ${rec.version}，实际 ${repoVersion} —— 管理器界面会显示旧版本；宿主只在 queued/attempted 的条目上重写这份记录，手工铺树（tar / sync:local）不会更新它。跑 npm run sync:local:apply 可一并刷新版本与指纹（默认只读预览）`,
     );
     if ((rec.status === "queued" || rec.status === "attempted") && !bundleWired) {
       warn(

@@ -1,4 +1,4 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.13.1
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.13.2
 
 <p align="center">
   <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
@@ -360,6 +360,9 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   │   ├── package-release.mjs     # 发布产物打包：按 git 跟踪清单打 tar.gz/zip + SHA256SUMS + 解包复检
 │   │   ├── verify_tuning.mjs       # 设置页调参自检：路由自守 / 重装注入 / 落盘 / 优先级（真实宿主演习台，缺宿主时 SKIP）
 │   │   ├── dev-link.mjs            # 开发热链接：仓库 ↔ ~/.dsh 软链切换（--link / --restore / 只读状态）
+│   │   ├── sync-local.mjs          # 本机安装树同步：仓库 → dsh 实际加载的树 + 刷新管理器激活记录（默认只读预览）
+│   │   ├── verify_sync.mjs         # 同步自检：指纹算法 / 增改删 / 权限位 / 幂等 / 激活记录（33 条）
+│   │   ├── lib/                    # tree-fingerprint.mjs：复刻宿主 plugin-dependencies.py 的 sha256 指纹
 │   │   ├── verify_prompt_gen4.mjs  # ⚠️ 遗留重定向 → verify_prompt_gen5.mjs
 │   │   └── verify_prompt_gen41.mjs # ⚠️ 遗留重定向 → verify_prompt_gen51.mjs
 │   └── tests/
@@ -488,6 +491,7 @@ chmod +x install.sh uninstall.sh
    node scripts/verify_injection.mjs     # 41 条：真实宿主演习台 —— 装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级（无宿主时 SKIP）
    node scripts/verify_version.mjs       # 22 条：版本锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量
    node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：单一接线入口 + 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
+   node scripts/verify_sync.mjs          # 33 条：本机安装树同步 —— 指纹算法（与宿主记录交叉验证）+ 预览不落盘 / 增改删 / 权限位 / 幂等 / 激活记录刷新（缺 ~/.dsh 时只跑 fixture）
    node scripts/verify_tuning.mjs        # 45 条：设置页调参接口 —— 路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位 / webServer 晚挂补挂（无宿主时 SKIP）
    node scripts/verify_ui.mjs            # 149 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理、注入档位面板）
    node scripts/verify_env.mjs           # 149 条：探测纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算
@@ -546,6 +550,26 @@ npm run clean:legacy:force    # 真删（只删上面那几类）
 profile 自己的 `package.json` / `cordis.patch.yml` / `node_modules` 都不在清理范围内；
 被 profile 依赖指向的落点只会被标成「跳过」。删完再跑一次 `npm run verify:install`，
 残留警告应当归零。
+
+### 把新版本铺进本机安装树（sync:local）：顺手把管理器的记账刷成一致
+
+管理器式接线（profile 依赖 `link:<dshHome>/plugin-src/<name>`）下安装树是**实体副本**；手工 `tar` 铺过去之后，
+宿主的插件管理器并不知道这件事 —— 它会继续显示上一次**它自己**装过的版本号，加载状态一栏也会因为
+「记录里的指纹 ≠ 现树指纹」而被清空（本机就出现过「磁盘/活体 0.13.1，管理器里写着 0.12.4」）。
+`sync:local` 一次做两件事：把仓库镜像进 dsh 实际加载的那棵树，并把激活记录里的 `version` + `fingerprint` 改成现树的值。
+
+```bash
+npm run sync:local         # 只读预览：哪棵树要同步、新增/更新/删除各几项、记录是否过期
+npm run sync:local:apply   # 真铺 + 刷记录（改记录前先留一份 plugin-activations.json.bak-<时间戳>）
+```
+
+- **指纹算法是真货，不是占位**：`scripts/lib/tree-fingerprint.mjs` 复刻宿主 `~/.dsh/plugin-dependencies.py` 的
+  `current()`（逐条 `['file',相对路径,mode,sha256]` 行 JSON 累进 → 单节点依赖图再哈希一次，非 ASCII 文件名按
+  `\uXXXX` 转义）；`verify:sync` 会拿宿主**自己记过的指纹**当标准答案交叉验证，对不上就红灯。
+- **只改两个字段**：`status` / `startup` / `confirmedAt` / `loadedAt` 一概不动 —— 那是「管理器上次安装」的记账，
+  代签等于撒谎；`plugin-updates.json`（管理器去 GitHub 查过的结论）也不碰。
+- **没登记就只告警**：管理器从没记过本插件时不新建条目，退出 0；`--no-record` 可以只铺树不碰记录。
+- 同步完仍要**重启 DSH 进程**才加载新代码 —— `sync:local` 只保证「盘上是对的、记账是对的」。
 
 ### 开发热链接（dev-link）：改一行立刻可见，不必重跑安装
 

@@ -120,7 +120,22 @@ if (existsSync(profilesDir)) {
   }
 }
 
-// ── 4. 仓库里的临时验证文件 ──
+// ── 4. sync:local 刷新激活记录前留的备份：最旧的那些可以删，最近一份留着 ──
+const actBackups = existsSync(DSH_HOME)
+  ? readdirSync(DSH_HOME)
+      .filter((entry) => entry.startsWith(`${NAME}-activations`) || entry.startsWith("plugin-activations.json.bak-"))
+      .sort()
+  : [];
+for (const [index, entry] of actBackups.entries()) {
+  const newest = index === actBackups.length - 1;
+  pushFile(
+    newest ? "激活记录备份（最近一份，跳过）" : "激活记录备份",
+    join(DSH_HOME, entry),
+    newest ? "留着这份就能把管理器记账回滚到上一次" : "被更新的备份取代了",
+  );
+}
+
+// ── 5. 仓库里的临时验证文件 ──
 pushFile("仓库临时文件", join(ROOT, "HOTLINK_PROOF.txt"), "dev 热链接实证用的探针文件，验证完即可删");
 
 // ── 输出 / 执行 ──
