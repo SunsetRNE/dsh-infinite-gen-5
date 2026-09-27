@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.8.2)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.9.0)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -32,6 +32,7 @@
   不存在可拒绝的请求类别。
 - **评分器与会话投影**：开头窗口（160）判拒 + REFUSAL / FALLBACK / SAFE / RISK 四类标记
   + 域命中检测，驱动客户端状态条展示。该投影是**评分器**，不参与系统提示词注入。
+- **离线评测闭环**：`scripts/lib/corpus.mjs` + `scripts/eval-corpus.mjs` 把 `tests/` 里 110 条语料的领域/判决标签接进计量（混淆矩阵、每类 P/R/F1、Top-1/Top-3、误判样本、覆盖缺口），并以 `tests/eval-baseline.json` 做回归门禁（回退超过 0.5 个百分点即失败）；判分口径与运行时同一套（`rankDomains` + `scorer.mjs`），语料里的 `blocked`（真红线）按语义映射成 refusal，所以「为了刷分把红线一起破掉」会立刻掉分。
 - **客户端实时状态条**：在输入框 dock 行（与上下文计量器同排）挂载**单字符记号指示器**（v0.8.2 起：空闲/执行中只有一个圆点，执行中呼吸；判决时圆点被一个记号替代 —— `✓` 通过 / `✕` 拒绝 / `!` 兜底，按宿主 success/error 令牌着色，判决常驻到你的下一条发言）。全部使用宿主 `--dsw-*` 令牌；领域、候选排名、命中标记词、扫描范围、落笔时刻等明细进**点击浮层**与悬停 title。形态由 `client.js` 的 `TRIGGER_MODE` 控制：`glyph`（默认，单字符）/ `compact`（短词 `通过 web(3)`）/ `full`（v0.8.0 的长文字）/ `dot`（纯圆点）。
 - **profile 元数据工具**：`infinite_gen5_profile` 返回内核版本、注入槽位清单与能力标记。
 
@@ -53,6 +54,7 @@
 | v0.5.0 | 双层注入收敛为同源同构内核；注入槽位统一为 `infinite-gen-5:*`；内核载荷与强化镜像逐字一致（**即双份重复注入**） |
 | v0.5.1 | Order 200 默认改为末位锚点（约 200 字节），不再复述整份内核；新增同源载荷去重（命中即整段让位并如实上报）；客户端五代徽标接管显示，折叠上一代破甲徽标 |
 | v0.5.2 | 客户端状态条从 `conversation.input.dock`（与任务列表同列）迁到 `conversation.composer.dock`（输入框自己的 dock 行）；样式全部改走宿主 `--dsw-*` 令牌，去掉硬编码绿色/发光动画；空闲态收成一个中性圆点，点击展开最近判决浮层 |
+| **v0.9.0** | 新增**离线评测闭环**：`scripts/lib/corpus.mjs`（纯函数：jsonl 解析/注释与坏行分离、字段别名归一、blocked 语义映射、混淆矩阵、每类 P/R/F1、覆盖缺口、快照扁平化与容差比对）+ `scripts/eval-corpus.mjs`（CLI：`--json` / `--gate` / `--write-baseline` / `--top`）+ `tests/eval-baseline.json` 回归门禁 + `scripts/verify_eval.mjs`（81 项，含 CLI 真跑退出码 0/1/3）；把 110 条语料里从未被消费的 85 条领域标签与 78 条判决标签接进计量，首批实测 Top-1 68.2% / Top-3 76.5%（宏 F1 71.9%），并抓出 llm 召回 17.6%、postex 缺包、5 个标签假阳三处真问题 |
 | **v0.8.2** | 状态条入口压成**单字符记号**：判决只上屏 `✓` / `✕` / `!`（按 success/error 令牌着色）并替代空闲时的圆点，避免「通过 injection」这种中文状态词 + 英文领域 id 的混读；领域与数值一律进点击浮层与悬停 title；`TRIGGER_MODE` 四档 `glyph`(默认)/`compact`/`full`/`dot`；`verify_ui` 92 项（新增形态切换与记号断言）。纯客户端改动，刷新页面即生效 |
 | **v0.8.1** | 客户端状态条入口压成**多态指示器**：空闲与执行中只有一个圆点（执行中呼吸），判决时圆点变 success/error 色并只留短词（`通过 web(3)` / `拒绝` / `兜底`）；载荷数、候选领域排名、命中标记词、扫描范围、落笔时刻全部收进点击浮层与悬停 title；形态由 `client.js` 的 `TRIGGER_MODE` 控制（`compact` 默认 / `full` v0.8.0 长文字 / `dot` 纯圆点）。纯客户端改动，刷新页面即生效 |
 | **v0.8.0** | 新增 `infinite_gen5_env` 运行环境探测工具 + `scripts/probe-env.mjs` CLI + `data/probe.mjs` 只读引擎 + `scripts/verify_env.mjs`（149 项）；分层探测形态/资源/出网/库存/能力位/设备/39 域就绪度，把「缺工具」翻译成「装什么」；内核新增「环境规则」，载荷预算 6200 → 6800 B |
@@ -71,6 +73,8 @@ node scripts/verify_scenario_tool.mjs # 85 项：真宿主挂载三个工具（+
 node scripts/verify_dedupe.mjs        # 52 项：同源让位 / 末位锚点 / 版本单一真源
 node scripts/verify_ui.mjs            # 92 项：客户端状态条行为（单字符记号 / 形态切换 / 常驻判决 / 覆盖明细 / 浮层；--emit-html 出视觉预览）
 node scripts/verify_env.mjs           # 149 项：环境探测（纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算）
+node scripts/verify_eval.mjs          # 81 项：评测计量（P/R/F1 手算可核）+ 语料载入形状 + CLI 退出码 0/1/3
+node scripts/eval-corpus.mjs --gate   # 离线评测门禁：坏行=1、相对 tests/eval-baseline.json 回退=3
 node scripts/verify_prompt.mjs        # 64 项：载荷锚点 + 导出 + 安装协议 + 用例库
 ```
 

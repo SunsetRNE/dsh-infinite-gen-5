@@ -1,7 +1,7 @@
 {
   "name": "dsh-infinite-gen-5",
-  "version": "0.8.2",
-  "description": "DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.8.2：领域包 45 → 56（计算机向扩写：逆向/脱壳/反混淆/Hook 注入/样本分析/利用开发/模糊测试/口令恢复/隐写/编程工具链/自动化），每个计算机域附「装: / 验:」工具链与缺工具降级协议；内核为 5 槽骨架 + 56 域 × 7 族点名 + 语言规则 + 工具链规则，领域包全文经 infinite_gen5_scenario 工具按需取用（定义常驻约 0.8 KB，不延迟加载）；另附运行环境探测工具 infinite_gen5_env 与 scripts/probe-env.mjs（纯只读：形态/资源/出网/库存/能力位/39 域工具就绪度，缺什么直接给装什么）；单内核注入 + Order 200 末位锚点 + 同源载荷自动让位，profile 元数据工具、实时会话投影与原生风格客户端状态条（v0.8.2 起入口压成单字符记号：空闲/执行中只留圆点，判决只留 ✓/✕/!，明细进点击浮层；形态由 TRIGGER_MODE 切换）。",
+  "version": "0.9.0",
+  "description": "DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.9.0：领域包 45 → 56（计算机向扩写：逆向/脱壳/反混淆/Hook 注入/样本分析/利用开发/模糊测试/口令恢复/隐写/编程工具链/自动化），每个计算机域附「装: / 验:」工具链与缺工具降级协议；内核为 5 槽骨架 + 56 域 × 7 族点名 + 语言规则 + 工具链规则，领域包全文经 infinite_gen5_scenario 工具按需取用（定义常驻约 0.8 KB，不延迟加载）；另附运行环境探测工具 infinite_gen5_env 与 scripts/probe-env.mjs（纯只读：形态/资源/出网/库存/能力位/39 域工具就绪度，缺什么直接给装什么）；单内核注入 + Order 200 末位锚点 + 同源载荷自动让位，profile 元数据工具、实时会话投影与原生风格客户端状态条（v0.9.0 起入口压成单字符记号：空闲/执行中只留圆点，判决只留 ✓/✕/!，明细进点击浮层；形态由 TRIGGER_MODE 切换）；新增离线评测闭环 scripts/eval-corpus.mjs（把 110 条语料的 expected_domain/expected_verdict 接进计量：混淆矩阵 + 每类 P/R/F1 + 误判样本 + 覆盖缺口 + baseline 回归门禁）。",
   "type": "module",
   "main": "./index.js",
   "repository": {
@@ -31,7 +31,11 @@
     "ENV_PROBE.md",
     "data/probe.mjs",
     "scripts/probe-env.mjs",
-    "scripts/verify_env.mjs"
+    "scripts/verify_env.mjs",
+    "scripts/eval-corpus.mjs",
+    "scripts/verify_eval.mjs",
+    "scripts/lib/corpus.mjs",
+    "tests/eval-baseline.json"
   ],
   "scripts": {
     "harness:check": "node --check index.js && node --check client.js",
@@ -46,12 +50,16 @@
     "verify:scenarios": "node scripts/verify_scenarios.mjs",
     "verify:scenario-tool": "node scripts/verify_scenario_tool.mjs",
     "probe:env": "node scripts/probe-env.mjs",
-    "verify:env": "node scripts/verify_env.mjs"
+    "verify:env": "node scripts/verify_env.mjs",
+    "eval:corpus": "node scripts/eval-corpus.mjs",
+    "gate:eval": "node scripts/eval-corpus.mjs --gate",
+    "baseline:eval": "node scripts/eval-corpus.mjs --write-baseline",
+    "verify:eval": "node scripts/verify_eval.mjs"
   },
   "dsh": {
     "id": "dsh-infinite-gen-5",
     "name": "无限五代",
-    "version": "0.8.2",
+    "version": "0.9.0",
     "repo": "SunsetRNE/dsh-infinite-gen-5",
     "permissions": "系统提示词注入, 客户端状态条",
     "bundle": {

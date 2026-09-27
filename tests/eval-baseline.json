@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "createdAt": "2026-09-27T06:38:11.883Z",
+  "note": "无限五代离线评测基线 · node scripts/eval-corpus.mjs --write-baseline 可刷新；--gate 用本文件做回归门禁",
+  "corpus": {
+    "cases": 110,
+    "files": 4,
+    "labeledDomain": 85,
+    "labeledVerdict": 78,
+    "wildcard": 8,
+    "missingPrompt": 0,
+    "duplicates": 0
+  },
+  "domain": {
+    "evaluated": 85,
+    "top1": 0.6823529411764706,
+    "top3": 0.7647058823529411,
+    "macro": {
+      "precision": 0.7693650793650794,
+      "recall": 0.7573906485671191,
+      "f1": 0.7193626502825501,
+      "labels": 10
+    },
+    "micro": {
+      "precision": 0.7532467532467533,
+      "recall": 0.6823529411764706,
+      "f1": 0.7160493827160493
+    },
+    "perLabel": {
+      "adversarial_suffix": {
+        "precision": 0,
+        "recall": null,
+        "f1": null,
+        "support": 0,
+        "tp": 0,
+        "fp": 2,
+        "fn": 0
+      },
+      "cloud": {
+        "precision": 0.5,
+        "recall": 1,
+        "f1": 0.6666666666666666,
+        "support": 3,
+        "tp": 3,
+        "fp": 3,
+        "fn": 0
+      },
+      "code_eng": {
+        "precision": 0,
+        "recall": null,
+        "f1": null,
+        "support": 0,
+        "tp": 0,
+        "fp": 1,
+        "fn": 0
+      },
+      "crack": {
+        "precision": 0.8888888888888888,
+        "recall": 1,
+        "f1": 0.9411764705882353,
+        "support": 8,
+        "tp": 8,
+        "fp": 1,
+        "fn": 0
+      },
+      "exploit_dev": {
+        "precision": 0,
+        "recall": null,
+        "f1": null,
+        "support": 0,
+        "tp": 0,
+        "fp": 1,
+        "fn": 0
+      },
+      "game": {
+        "precision": 0.8,
+        "recall": 0.6666666666666666,
+        "f1": 0.7272727272727272,
+        "support": 12,
+        "tp": 8,
+        "fp": 2,
+        "fn": 4
+      },
+      "hook_inject": {
+        "precision": 0,
+        "recall": null,
+        "f1": null,
+        "support": 0,
+        "tp": 0,
+        "fp": 3,
+        "fn": 0
+      },
+      "llm": {
+        "precision": 1,
+        "recall": 0.17647058823529413,
+        "f1": 0.3,
+        "support": 17,
+        "tp": 3,
+        "fp": 0,
+        "fn": 14
+      },
+      "miniprogram": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 2,
+        "tp": 2,
+        "fp": 0,
+        "fn": 0
+      },
+      "mobile": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "network": {
+        "precision": 0.6,
+        "recall": 1,
+        "f1": 0.7499999999999999,
+        "support": 3,
+        "tp": 3,
+        "fp": 2,
+        "fn": 0
+      },
+      "nsfw": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 9,
+        "tp": 9,
+        "fp": 0,
+        "fn": 0
+      },
+      "osint": {
+        "precision": 0,
+        "recall": null,
+        "f1": null,
+        "support": 0,
+        "tp": 0,
+        "fp": 2,
+        "fn": 0
+      },
+      "postex": {
+        "precision": 0,
+        "recall": 0,
+        "f1": 0,
+        "support": 2,
+        "tp": 0,
+        "fp": 0,
+        "fn": 2
+      },
+      "web": {
+        "precision": 0.9047619047619048,
+        "recall": 0.7307692307692307,
+        "f1": 0.8085106382978723,
+        "support": 26,
+        "tp": 19,
+        "fp": 2,
+        "fn": 7
+      }
+    }
+  },
+  "verdict": {
+    "evaluated": 0,
+    "accuracy": null,
+    "macro": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "labels": 0
+    },
+    "micro": {
+      "precision": null,
+      "recall": null,
+      "f1": null
+    },
+    "perLabel": {}
+  },
+  "runDomain": {
+    "evaluated": 0,
+    "accuracy": null,
+    "macro": {
+      "precision": null,
+      "recall": null,
+      "f1": null,
+      "labels": 0
+    },
+    "perLabel": {}
+  }
+}
