@@ -4,3 +4,6 @@ tests/runs/
 .DS_Store
 Thumbs.db
 ui-preview/
+
+# 发布产物打包输出（npm run release:pack）
+dist/

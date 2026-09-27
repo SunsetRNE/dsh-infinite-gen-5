@@ -1,0 +1,62 @@
+# 无限五代 · 发布流水线（打 tag 即带产物）
+#
+# 触发：① push 形如 v* 的 tag（日常发版走这条）；② 手动 workflow_dispatch 补某个已存在 tag 的产物。
+# 动作：先在 runner 上把 verify:all 跑一遍（不带病发布），再打包成可直接安装的归档 +
+#       SHA256SUMS + RELEASE-NOTES，然后上传到该 tag 的 GitHub Release（没有就先建）。
+#
+# 产物说明（scripts/package-release.mjs，零依赖，本地同命令可复现：npm run release:pack）：
+#   dsh-infinite-gen-5-v<版本>.tar.gz   顶层目录 dsh-infinite-gen-5/，解开就能 ./install.sh
+#   dsh-infinite-gen-5-v<版本>.zip      Windows 用户友好
+#   SHA256SUMS                          两个包的校验和
+#   RELEASE-NOTES.md                    CHANGELOG 里当前版本段（建 Release 时当正文）
+# 包里只有 git 跟踪的文件：ui-preview / node_modules / .git 天然不进包。
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "要补产物的 tag（例如 vX.Y.Z）"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 取代码（tag 指向的提交）
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 护栏 · 自检脚本不得硬导宿主绝对路径
+        run: |
+          if grep -rnE '^[[:space:]]*(import|export)[^\n]*"(/usr/local|/opt|/home/runner)' scripts/ --include='*.mjs'; then
+            echo "::error::自检脚本硬写了宿主绝对路径 import —— runner 上必然 ERR_MODULE_NOT_FOUND"
+            exit 1
+          fi
+          echo "✓ 没有硬写宿主绝对路径的 import"
+      - name: 全量自检（不带病发布）
+        run: npm run verify:all
+      - name: 打包产物
+        run: node scripts/package-release.mjs --out dist
+      - name: 上传到 GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" >/dev/null 2>&1 || \
+            gh release create "$TAG" --title "无限五代 $TAG" --notes-file dist/RELEASE-NOTES.md
+          files="dist/*.tar.gz dist/SHA256SUMS"
+          for z in dist/*.zip; do [ -e "$z" ] && files="$files $z"; done
+          gh release upload "$TAG" $files --clobber
+          gh release view "$TAG" --json assets --jq '.assets[] | "\(.name)\t\(.size) B"'

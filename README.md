@@ -251,7 +251,8 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   ├── uninstall.ps1            # Windows 一键卸载
 │   └── uninstall.sh             # Linux / macOS 一键卸载
 ├── ⚙️ CI 门禁
-│   └── .github/workflows/verify.yml  # push / PR 触发 npm run verify:all（零依赖，无需 npm install）
+│   ├── .github/workflows/verify.yml  # push / PR 触发 npm run verify:all（零依赖，无需 npm install）
+│   └── .github/workflows/release.yml # push v* tag 触发：自检 → 打包 → 产品上传到 Release
 ├── 🧩 核心插件装载面 (标准 Cordis 架构)
 │   ├── package.json             # 插件元数据（dsh-infinite-gen-5 v0.11.1）
 │   ├── cordis.patch.yml         # 核心 patch 声明
@@ -296,6 +297,7 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   │   ├── bump-version.sh         # 同上的 shell 薄包装：bash scripts/bump-version.sh X.Y.Z
 │   │   ├── changelog.mjs           # CHANGELOG 生成器（按提交标题里的 (vX.Y.Z) 切版本段）
 │   │   ├── release.mjs             # 发版助手：前置检查 + 发布正文 + 打 tag/推送 + Release（gh 优先，缺 gh 走 REST）
+│   │   ├── package-release.mjs     # 发布产物打包：按 git 跟踪清单打 tar.gz/zip + SHA256SUMS + 解包复检
 │   │   ├── dev-link.mjs            # 开发热链接：仓库 ↔ ~/.dsh 软链切换（--link / --restore / 只读状态）
 │   │   ├── verify_prompt_gen4.mjs  # ⚠️ 遗留重定向 → verify_prompt_gen5.mjs
 │   │   └── verify_prompt_gen41.mjs # ⚠️ 遗留重定向 → verify_prompt_gen51.mjs
@@ -481,6 +483,7 @@ npm run verify:all                          # 必过；verify:version 会拦漏�
 git add -A && git commit -m "feat(vX.Y.Z): <一句话>"
 git push origin main
 npm run release -- --yes --release          # 打 annotated tag vX.Y.Z + 推送 + 发 GitHub Release（gh 或 REST）
+npm run release:pack                        # 可选：本地先打一份产物验证（CI 在 tag 推送时会自动打并上传）
 ```
 
 `npm run release`（= `scripts/release.mjs`）默认只**预览**：先做前置检查（工作区干净、tag 不存在、本地与 origin 同步），再把 CHANGELOG 里该版本的段落当发布正文打印出来。加 `--yes` 才真打 tag 并推送；再加 `--release` 才发 GitHub Release。CHANGELOG 由 `scripts/changelog.mjs` 生成（版本段按提交标题里的 `(vX.Y.Z)` 作用域切分），别手改。
@@ -503,6 +506,25 @@ npm run release -- --yes --release          # 打 annotated tag vX.Y.Z + 推送 
   ```
 
   token 只用于这一次 POST、脚本不回显内容；Release 已存在时返回 422 只提示不改动。tag 早已推过、只想补 Release 时用 `--release-only`（跳过打 tag，但要求 tag 已存在）。
+
+#### 发布产物：tag 一推，附件自己上去
+
+`.github/workflows/release.yml` 在 push `v*` tag（或手动 dispatch）时自动跑：**全量自检 → 打包 → 上传到该 tag 的 Release**（Release 不存在就先建，正文用 `RELEASE-NOTES.md`）。四个附件：
+
+| 附件 | 内容 |
+|---|---|
+| `dsh-infinite-gen-5-v<版本>.tar.gz` | 顶层目录 `dsh-infinite-gen-5/`，解开就能 `./install.sh`；**只有 git 跟踪的文件**（`ui-preview/`、`node_modules`、`.git` 天然不在内） |
+| `dsh-infinite-gen-5-v<版本>.zip` | 同上，Windows 用户友好（runner 上没有 `zip` 就降级跳过） |
+| `SHA256SUMS` | 两个包的 sha256 |
+| `RELEASE-NOTES.md` | CHANGELOG 里该版本那一段（建 Release 时当正文） |
+
+本地同一条命令可复现，且**打完会解包复检**（在包里跑 `scripts/verify_version.mjs`，漏打文件就失败）：
+
+```bash
+npm run release:pack -- --out=dist
+```
+
+给历史 tag 补产物：Actions → release → Run workflow（填 tag），或 `gh workflow run release.yml -f tag=vX.Y.Z`。
 
 `scripts/version-targets.mjs` 是「当前版本锚点」的唯一真源（`index.js` 的 `PLUGIN_VERSION`、`client.js` 的 `VERSION`、`cordis.patch.yml` 头注释、README / HARNESS_PLUGIN 标题、两个 verify 脚本头注释），改写器与自检共用它。README 版本沿革、`package.json` description、`ENV_PROBE.md` 里「随插件 v0.8.0 引入」、以及生成物 `CHANGELOG.md` 这类**记录当时**的版本号刻意不改、只在 `PROSE_ALLOWED_FILES` 里登记放行 —— 发版改写它们等于篡改历史。`verify_version.mjs` 另外断言：文档里不出现比当前更新的版本号、全仓没有未登记的版本号字面量（新增文件里硬写版本号会被抓出来）。
 

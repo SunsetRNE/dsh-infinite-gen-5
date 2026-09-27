@@ -118,6 +118,7 @@ node scripts/bump-version.mjs X.Y.Z         # 只改「当前版本锚点」（v
 npm run changelog                           # 由 Conventional Commits 重生成 CHANGELOG.md（勿手改）
 npm run verify:all && git add -A && git commit -m "feat(vX.Y.Z): <一句话>"
 npm run release -- --yes --release          # 默认只预览；--yes 打 tag 并推送，--release 发 Release
+npm run release:pack                        # 发布产物：tar.gz / zip / SHA256SUMS / RELEASE-NOTES（CI 在 tag 推送时自动打并上传）
 ```
 
 `--release` 优先用 `gh release create`；没装 `gh` 时自动改用 GitHub REST（`POST /repos/<owner>/<repo>/releases`）。凭据顺序：`GH_TOKEN` / `GITHUB_TOKEN` → `GH_TOKEN_FILE` / `--token-file=PATH` → 约定路径 `~/.local-gh/.token`（通用凭据目录）。只想补 Release、tag 已推过：加 `--release-only`。
