@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.14.0";
+        var VERSION = "v0.14.1";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -161,6 +161,16 @@
           ".armor5-task-list li{grid-template-columns:18px minmax(0,1fr)}",
           ".armor5-task-list li[data-status=inProgress] .k{color:var(--dsw-alias-state-warning-primary,#d29922)}",
           ".armor5-task-list li[data-status=completed] .v{color:var(--dsw-alias-label-caption,#8b8b8b);text-decoration:line-through}",
+          // 领域覆盖 · 词表 · 预算（v0.14.1）：族条形 + 预算进度条。条形颜色按占比分档，
+          // 75% 起转黄、90% 起转红 —— 预算见底是「该加预算或减词」的信号，得让人一眼看见。
+          ".armor5-cov-rows{display:flex;flex-direction:column;gap:6px}",
+          ".armor5-cov-row{display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:10px;align-items:center}",
+          ".armor5-cov-row .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:12px}",
+          ".armor5-cov-row .n{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:12px;font-variant-numeric:tabular-nums}",
+          ".armor5-cov-bar{height:6px;border-radius:999px;background:var(--dsw-alias-fill-l2,rgba(127,127,127,.22));overflow:hidden}",
+          ".armor5-cov-bar-fill{height:100%;border-radius:999px;background:var(--dsw-alias-state-success-primary,#3fb950);transition:width .25s ease}",
+          ".armor5-cov-bar[data-level=warn] .armor5-cov-bar-fill{background:var(--dsw-alias-state-warning-primary,#d29922)}",
+          ".armor5-cov-bar[data-level=danger] .armor5-cov-bar-fill{background:#d05a5a}",
           ".armor5-console-foot{display:flex;gap:8px;padding-top:2px}",
           ".armor5-console-btn{height:30px;padding:0 13px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
           "border-radius:var(--dsw-radius-sm,6px);background:0 0;color:var(--dsw-alias-label-secondary,#b4b4b4);",
@@ -883,6 +893,100 @@
           );
         }
 
+        // ── 领域覆盖 · 词表 · 预算 · 注入健康（v0.14.1） ─────────────────────────
+        // 数据全部来自本体的 coverage / runtime / boot 分区：面板一个数字都不算，
+        // 只把库里的东西画出来。库还没发布 coverage（老服务端）时给出可读原因。
+        function covBar(percent, level) {
+          var width = Math.max(0, Math.min(100, Number(percent) || 0));
+          return react.createElement("div", { className: "armor5-cov-bar", "data-level": level || "ok" },
+            react.createElement("div", { className: "armor5-cov-bar-fill", style: { width: width + "%" } }));
+        }
+
+        function covLevel(percent) {
+          var value = Number(percent) || 0;
+          return value >= 90 ? "danger" : value >= 75 ? "warn" : "ok";
+        }
+
+        function fmtBytes(bytes) {
+          var n = Number(bytes) || 0;
+          return n >= 1024 ? (Math.round((n / 1024) * 10) / 10) + " KB" : n + " B";
+        }
+
+        function coverageGroup(state) {
+          var db = state.database;
+          var cov = db && db.coverage ? db.coverage : null;
+          if (!cov) {
+            return react.createElement("div", { className: "armor5-console-group" },
+              react.createElement("div", { className: "armor5-console-group-title" }, "领域覆盖 · 词表 · 注入健康"),
+              react.createElement("span", { className: "armor5-console-hint" },
+                state.database
+                  ? "统计库里还没有覆盖分区（需要 v0.14.1 的服务端；重启一次 DSH 后由本体落盘）"
+                  : "统计库不可用：" + String(state.error || "面板没拿到库路径"))
+            );
+          }
+          var families = cov.families || {};
+          var order = cov.familyOrder && cov.familyOrder.length ? cov.familyOrder : Object.keys(families);
+          var labels = cov.familyLabels || {};
+          var familyRows = order.map(function (id) {
+            var count = Number(families[id]) || 0;
+            var percent = cov.domains > 0 ? Math.round((count / cov.domains) * 100) : 0;
+            return react.createElement("div", { className: "armor5-cov-row", key: "fam:" + id },
+              react.createElement("span", { className: "k" }, labels[id] || id),
+              covBar(percent),
+              react.createElement("span", { className: "n" }, count + " 域 · " + percent + "%"));
+          });
+          var index = cov.index || {};
+          var playbooks = cov.playbooks || {};
+          var markers = cov.markers || {};
+          var extended = cov.extended || {};
+          var hits = cov.hits || {};
+          var hitIds = Object.keys(hits);
+          var hitTotal = hitIds.reduce(function (sum, id) { return sum + (Number(hits[id]) || 0); }, 0);
+          var top = hitIds.map(function (id) { return [id, Number(hits[id]) || 0]; })
+            .sort(function (a, b) { return b[1] - a[1] || (a[0] < b[0] ? -1 : 1); })
+            .slice(0, 5)
+            .map(function (pair) { return pair[0] + " " + pair[1]; });
+          var runtime = (db && db.runtime) || {};
+          var boot = (db && db.boot) || {};
+          var at = db && db.generatedAt ? Date.parse(db.generatedAt) : 0;
+          var age = at ? Math.max(0, Math.round((Date.now() - at) / 1000)) : null;
+          var misses = Number(cov.misses) || 0;
+          var rows = [
+            ["词表", String(extended.total || 0) + " 条扩展（别名 " + (extended.aliases || 0) + " · 命中 " + (extended.markers || 0) +
+              " · 命令 " + (extended.commands || 0) + " · 工具链 " + (extended.toolchains || 0) + "）"],
+            ["标记表", String(markers.total || 0) + " 个词（latin " + (markers.latin || 0) + " · cjk " + (markers.cjk || 0) +
+              " · mixed " + (markers.mixed || 0) + "）"],
+            ["索引", fmtBytes(index.bytes) + " / " + fmtBytes(index.budget) + "（" + (index.percent || 0) + "%）"],
+            ["单包体量", fmtBytes(playbooks.min) + " – " + fmtBytes(playbooks.max) + "（护栏 " + fmtBytes(playbooks.minBytes) +
+              " – " + fmtBytes(playbooks.maxBytes) + "）· " + cov.domains + " 包合计 " + fmtBytes(playbooks.total)],
+            ["工具取用", hitTotal > 0
+              ? hitTotal + " 次 · " + top.join(" · ") + (misses > 0 ? "（未命中 " + misses + " 次）" : "")
+              : "本进程还没取过领域包"],
+            ["健康", "库 v" + String((db && db.version) || "?") + " · pid " + String(boot.pid || "?") + " · 落盘 " +
+              (age === null ? "未知" : age + " 秒前") + " · 锚点已发 " + (runtime.anchorEmissions || 0) + " 版 · 注入 " +
+              (runtime.placements || []).length + " 处"]
+          ];
+          return react.createElement("div", { className: "armor5-console-group" },
+            react.createElement("div", { className: "armor5-console-group-title" },
+              "领域覆盖 · 词表 · 预算（" + cov.domains + " 域 × " + order.length + " 族）"),
+            react.createElement("div", { className: "armor5-cov-rows" }, familyRows),
+            react.createElement("div", { className: "armor5-cov-row" },
+              react.createElement("span", { className: "k" }, "索引预算"),
+              covBar(index.percent, covLevel(index.percent)),
+              react.createElement("span", { className: "n" }, (index.percent || 0) + "%")),
+            react.createElement("ul", { className: "armor5-console-rows" },
+              rows.map(function (row) {
+                return react.createElement("li", { key: row[0] },
+                  react.createElement("span", { className: "k" }, row[0]),
+                  react.createElement("span", { className: "v" }, row[1])
+                );
+              })
+            ),
+            react.createElement("span", { className: "armor5-console-hint" },
+              "全部读插件本体落盘的统计库：域数 / 族分布 / 词表 / 预算 / 取用次数都由核心算好，面板只负责画。")
+          );
+        }
+
         /**
          * 设置页里我们自己的那一页（settings.section，排在最顶部）。
          * 只读偏好 + 写偏好，改动立刻反映到状态条（同一个 prefs 源）。
@@ -906,7 +1010,9 @@
             ["位置", prefs.slotMode + " → " + (SLOT_MODES[prefs.slotMode] || SLOT_MODES.composer)],
             ["内核载荷", "Order 100 单段载荷 + Order 200 末位锚点，同源命中自动让位"],
             ["判定源", "本次会话的实时投影（key armor），判决一直留到你的下一条发言"],
-            ["领域与工具", "56 域 × 7 族；infinite_gen5_scenario 取领域包，infinite_gen5_env 看本机环境"],
+            // 域数不再写死：读本体 coverage 分区（库还没发布时显示占位，不谎报数字）。
+            ["领域与工具", ((tuner.state.database && tuner.state.database.coverage && tuner.state.database.coverage.domains) || "—") +
+              " 域 × 7 族；infinite_gen5_scenario 取领域包，infinite_gen5_env 看本机环境"],
             ["存储", store ? "本机 localStorage（" + PREF_KEY + "）" : "仅本会话（当前环境没有本地存储）"]
           ];
 
@@ -1003,6 +1109,7 @@
               )
             ),
             taskProgress(tuner.state, tuner),
+            coverageGroup(tuner.state),
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "只读"),
               react.createElement("ul", { className: "armor5-console-rows" },

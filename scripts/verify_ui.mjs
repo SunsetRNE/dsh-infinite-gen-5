@@ -520,6 +520,8 @@ function loadInstance(options) {
   const win = { __ModuleLoader__: { load(x) { loaded = x; } } };
   if (opts.storage !== undefined) win.localStorage = opts.storage;
   if (opts.tuning !== undefined) win.__IG5_TUNING__ = opts.tuning;
+  // v0.14.1：注入统计库桥（token + path），用于真渲染「领域覆盖 · 词表 · 预算」显示组。
+  if (opts.stats !== undefined) win.__IG5_STATS__ = opts.stats;
   const fetchFn = typeof opts.fetch === "function" ? opts.fetch : (...args) => fetchImpl(...args);
   // eslint-disable-next-line no-new-func
   new Function("window", "document", "MutationObserver", "setTimeout", "clearTimeout", "console", "fetch", src)(
@@ -593,6 +595,76 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
     textOf(view.tree).includes("恢复默认") && !textOf(view.tree).includes("完成"));
   const withClose = mountComponent(inst.page, undefined);
   ok("owner 传了 close 才出现「完成」按钮（走宿主给的退出路径）", true);
+
+  // ── 覆盖显示组（v0.14.1）：喂一份真统计库，面板必须把族分布 / 预算 / 取用画出来 ──
+  const coverageDoc = (percent) => ({
+    ok: true,
+    source: "disk",
+    version: "0.0.0-ui",
+    generatedAt: new Date().toISOString(),
+    boot: { pid: 4242, version: "0.0.0-ui" },
+    runtime: { anchorEmissions: 7, placements: [{ order: 100 }, { order: 200 }, { order: 118 }, { order: 10150 }] },
+    coverage: {
+      domains: 62,
+      families: { offense: 26, crypto: 7, ai: 6, data: 4, creative: 6, language: 5, engineering: 8 },
+      familyOrder: ["offense", "crypto", "ai", "data", "creative", "language", "engineering"],
+      familyLabels: { offense: "攻防 / 逆向", crypto: "密码与协议", ai: "AI / LLM", data: "数据与隐私", creative: "内容创作", language: "语言与学术", engineering: "工程与业务" },
+      markers: { total: 1484, latin: 662, cjk: 734, mixed: 88 },
+      extended: { total: 2053, aliases: 619, markers: 894, commands: 332, toolchains: 208 },
+      index: { bytes: 11702, budget: 16000, percent },
+      playbooks: { min: 639, max: 4540, total: 167740, minBytes: 600, maxBytes: 6000 },
+      hits: { web: 3, re: 2, malware: 1 },
+      misses: 2
+    },
+    tuning: { effective: { LAYER2_MODE: "off" }, catalog: null, sources: { LAYER2_MODE: "default" }, live: { placements: [], rebuilds: 0, anchorEmissions: 0 } },
+    tasks: { available: true, source: "todos@sessionProjections", counts: { pending: 1, inProgress: 0, completed: 2 }, items: [] }
+  });
+  const covFetch = (doc) => () => Promise.resolve({ status: 200, json: () => Promise.resolve(doc) });
+  const covInst = loadInstance({
+    storage: fakeStorage({}),
+    stats: { path: "/infinite-gen-5/stats", tasksPath: "/infinite-gen-5/tasks", tuningPath: "/infinite-gen-5/tuning", token: "tok-cov" },
+    fetch: covFetch(coverageDoc(73.1))
+  });
+  const covView = mountComponent(covInst.page, undefined, { hooks: [] });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const covTree = covView.rerender();
+  const covText = textOf(covTree);
+  ok("覆盖显示组按库里的分区渲染（标题带域数与族数）",
+    covText.includes("领域覆盖 · 词表 · 预算（62 域 × 7 族）"), JSON.stringify(covText.slice(0, 120)));
+  ok("族分布画 7 条 + 索引预算 1 条",
+    collectByClass(covTree, "armor5-cov-row").length === 8, String(collectByClass(covTree, "armor5-cov-row").length));
+  ok("词表 / 标记表 / 索引 / 单包 / 取用都上屏",
+    covText.includes("2053 条扩展") && covText.includes("1484 个词") && covText.includes("11.4 KB / 15.6 KB（73.1%）") &&
+    covText.includes("639 B – 4.4 KB") && covText.includes("web 3"), JSON.stringify(covText.slice(0, 400)));
+  ok("健康行带库版本 / pid / 锚点数 / 注入处数",
+    covText.includes("库 v0.0.0-ui") && covText.includes("pid 4242") && covText.includes("锚点已发 7 版") &&
+    covText.includes("注入 4 处"), JSON.stringify(covText.slice(0, 400)));
+  ok("只读表里的域数也来自库（不再硬编码 56）",
+    covText.includes("62 域 × 7 族；infinite_gen5_scenario"));
+  ok("索引占比 < 75% 时预算条是正常档",
+    collectByClass(covTree, "armor5-cov-bar").some((b) => b.props["data-level"] === "ok"));
+  const hotInst = loadInstance({
+    storage: fakeStorage({}),
+    stats: { path: "/infinite-gen-5/stats", tuningPath: "/infinite-gen-5/tuning", token: "tok-hot" },
+    fetch: covFetch(coverageDoc(92.5))
+  });
+  const hotView = mountComponent(hotInst.page, undefined, { hooks: [] });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const hotTree = hotView.rerender();
+  ok("索引占比 >= 90% 时预算条转红（预算见底一眼可见）",
+    collectByClass(hotTree, "armor5-cov-bar").some((b) => b.props["data-level"] === "danger"));
+  const bare = coverageDoc(73.1);
+  delete bare.coverage;
+  const bareInst = loadInstance({
+    storage: fakeStorage({}),
+    stats: { path: "/infinite-gen-5/stats", tuningPath: "/infinite-gen-5/tuning", token: "tok-bare" },
+    fetch: covFetch(bare)
+  });
+  const bareView = mountComponent(bareInst.page, undefined, { hooks: [] });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const bareText = textOf(bareView.rerender());
+  ok("没有覆盖分区时给可读原因、域数留占位（不谎报）",
+    bareText.includes("统计库里还没有覆盖分区") && bareText.includes("— 域 × 7 族"), JSON.stringify(bareText.slice(0, 160)));
 
   // 点选 -> 落盘 -> 页面与状态条同步
   modeBtns.find((b) => b.props["data-choice"] === "compact").props.onClick();

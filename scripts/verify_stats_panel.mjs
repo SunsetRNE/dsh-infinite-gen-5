@@ -40,7 +40,7 @@ const { createStatsStore, emptyStats, statsFile, STATS_SCHEMA, STATS_PLUGIN } = 
 check(statsFile() === STATS_A, "IG5_STATS_FILE 覆盖数据库路径（自检不碰用户真实库）", statsFile());
 
 const skeleton = emptyStats("0.0.0");
-const skeletonKeys = ["schema", "plugin", "version", "generatedAt", "boot", "runtime", "tuning", "tools", "tasks", "sessions", "counters"];
+const skeletonKeys = ["schema", "plugin", "version", "generatedAt", "boot", "runtime", "tuning", "coverage", "tools", "tasks", "sessions", "counters"];
 check(
   skeletonKeys.every((key) => key in skeleton) && skeleton.schema === STATS_SCHEMA && skeleton.plugin === STATS_PLUGIN,
   "空库骨架键齐全且带 schema/plugin 标识",
@@ -296,6 +296,38 @@ check(bootDoc.version === pkgVersion, "库里的 version 是当前插件版本�
 check(bootDoc.tuning !== null && typeof bootDoc.tuning.effective === "object",
   "库里已经有档位分区（面板不必再让服务端现算）", bootDoc.tuning === null ? "tuning=null" : "");
 
+// ── 覆盖分区（v0.14.1）：面板的「领域 / 词表 / 预算」显示组只读这一份，数字由本体算 ──
+const cov = bootDoc.coverage;
+check(cov !== null && typeof cov === "object" && Number(cov.domains) > 0,
+  "库里已经有覆盖分区（领域数 / 族分布 / 词表 / 预算）", cov === null ? "coverage=null" : "");
+const scenarioMod = await import("../data/scenarios.mjs");
+const familySum = Object.values(cov?.families ?? {}).reduce((sum, n) => sum + Number(n || 0), 0);
+check(familySum === cov?.domains && cov?.domains === scenarioMod.SCENARIOS.length,
+  "族分布之和 = 领域数 = SCENARIOS.length（面板条形图既不多数也不漏数）",
+  `${familySum} vs ${cov?.domains} vs ${scenarioMod.SCENARIOS.length}`);
+const uniqueMarkers = new Set(Object.values(scenarioMod.DOMAIN_MARKERS).flat());
+check(cov?.markers?.total === uniqueMarkers.size &&
+  cov.markers.latin + cov.markers.cjk + cov.markers.mixed === cov.markers.total,
+  "标记表计数 = 去重后的真实标记数，且三种词形互斥求和相等",
+  cov?.markers ? `${cov.markers.total} vs ${uniqueMarkers.size}` : "markers 缺失");
+check(cov?.index?.bytes > 0 && cov.index.bytes <= cov.index.budget,
+  "索引体积在预算内（见底会先在面板上转黄 / 转红）",
+  cov?.index ? `${cov.index.bytes}/${cov.index.budget}` : "index 缺失");
+check(cov?.playbooks?.min > 0 && cov.playbooks.max <= cov.playbooks.maxBytes,
+  "单包体量落在护栏区间内（面板显示的上下限不是编的）",
+  cov?.playbooks ? `${cov.playbooks.min}–${cov.playbooks.max}` : "playbooks 缺失");
+
+// 取用分布：驱动真实领域工具，计数必须落进 coverage.hits / coverage.misses。
+const scenarioToolRef = mount.runtime.tools.find((tool) => tool.name === "infinite_gen5_scenario");
+const hitResult = scenarioToolRef.execute({ scenario: "web 渗透信息收集" });
+const missResult = scenarioToolRef.execute({ scenario: "zzz 这个域根本不存在 zzz" });
+const afterHit = plugin.statsSinkOf().snapshot();
+check(hitResult.ok === true && afterHit.coverage.hits?.web >= 1,
+  "领域工具被取用后按域计数（面板的「工具取用」来自真实调用）",
+  JSON.stringify(afterHit.coverage.hits));
+check(missResult.ok === false && afterHit.coverage.misses >= 1,
+  "未命中也记账（面板能显示 miss 次数）", String(afterHit.coverage.misses));
+
 // 三条路由 + 注入脚本
 check(mount.server.routes.has("/infinite-gen-5/tuning"), "注册了调参路由");
 check(mount.server.routes.has("/infinite-gen-5/stats"), "注册了统计库只读路由");
@@ -454,6 +486,10 @@ check(indexSrc.includes("session.append(TODOS_EVENT"), "index.js 的写侧走的
 check(indexSrc.includes('stats.set("tuning"') && indexSrc.includes("publishStats"), "档位状态由核心发布进库（面板不再让服务端现算）");
 check(clientSrc.includes("__IG5_STATS__") && clientSrc.includes("statsBridge") && clientSrc.includes("panelFetch"),
   "面板读的是注入的统计库桥（不是插件内部结构）");
+check(clientSrc.includes("coverageGroup") && clientSrc.includes("db.coverage") && clientSrc.includes("armor5-cov-bar"),
+  "面板新增「领域覆盖 · 词表 · 预算」显示组，画的都是库里 coverage 分区的数字");
+check(!clientSrc.includes("56 域 × 7 族"),
+  "面板不再硬编码领域数（改读统计库，域数 56 → 62 时面板自动跟上）");
 check(!/setInterval\s*\(/.test(clientSrc) && clientSrc.includes("setTimeout(tick"), "面板轮询用注入的定时器（自续 setTimeout），不碰全局 setInterval");
 check(
   (clientSrc.match(/JSON\.parse\(/g) || []).length === 1 && /JSON\.parse\(store\.getItem\(PREF_KEY\)/.test(clientSrc),

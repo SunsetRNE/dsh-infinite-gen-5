@@ -17,6 +17,15 @@ import {
   toolchainOf,
   TOOLCHAIN_PROTOCOL,
 } from "./data/scenarios.mjs";
+// 预算与扩展词表的真源：coverage 分区把「索引占了多少预算、词表有多少条」写进统计库，
+// 面板只读它、不自己算（v0.14.1）。三个预算值同时被 scripts/verify_vocab.mjs 校验。
+import { INDEX_BUDGET_BYTES, PLAYBOOK_MIN_BYTES, PLAYBOOK_MAX_BYTES } from "./data/vocabulary.mjs";
+import {
+  ALIAS_EXTRA,
+  MARKER_EXTRA,
+  COMMAND_VOCAB,
+  TOOLCHAIN_EXTRA,
+} from "./data/vocabulary-data.mjs";
 import { probeEnv, renderEnvSummary, ENV_SCHEMA } from "./data/probe.mjs";
 // 统计数据库：插件本体单写、前端面板单读。面板不参与任何计算，也不认识插件内部形态。
 import { createStatsStore, emptyStats, statsFile, STATS_SCHEMA } from "./stats-store.mjs";
@@ -32,7 +41,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.14.0";
+const PLUGIN_VERSION = "0.14.1";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -426,6 +435,66 @@ const recordToolResult = (toolName, capped, raw) => {
   });
 };
 
+/** 领域工具取用了哪个包：面板据此显示「模型实际读了哪些域」（v0.14.1）。 */
+export const recordDomainHit = (id) => {
+  if (statsSink === null || !id) return;
+  statsSink.bump(["coverage", "hits", String(id)]);
+};
+
+/**
+ * 领域覆盖快照（v0.14.1）：域数 / 族分布 / 词表规模 / 索引预算 / 单包体量。
+ *
+ * 面板要显示「插件现在覆盖到什么程度」，而这些全是插件本体的静态事实 ——
+ * 由本体在启动时算一次写进统计库，面板只读，守住「面板不参与计算」的边界。
+ * 开销：62 次 renderScenario + 一次索引渲染，启动时一次性（实测 < 20 ms）。
+ * 自检接缝：scripts/verify_stats_panel.mjs 直接调它核对数字，不必靠真挂载。
+ */
+export const coverageSnapshot = () => {
+  const families = {};
+  for (const s of SCENARIOS) families[s.family] = (families[s.family] ?? 0) + 1;
+  const markers = new Set();
+  for (const list of Object.values(DOMAIN_MARKERS)) for (const word of list) markers.add(word);
+  const shape = { latin: 0, cjk: 0, mixed: 0 };
+  for (const word of markers) {
+    const latin = /[a-z0-9]/i.test(word);
+    const cjk = /[\u3400-\u9fff]/.test(word);
+    shape[latin && cjk ? "mixed" : cjk ? "cjk" : "latin"] += 1;
+  }
+  const countOf = (table) =>
+    Object.values(table ?? {}).reduce((sum, list) => sum + (Array.isArray(list) ? list.length : 0), 0);
+  const extended = {
+    aliases: countOf(ALIAS_EXTRA),
+    markers: countOf(MARKER_EXTRA),
+    commands: countOf(COMMAND_VOCAB),
+    toolchains: countOf(TOOLCHAIN_EXTRA),
+  };
+  extended.total = extended.aliases + extended.markers + extended.commands + extended.toolchains;
+  const playbooks = { min: null, max: 0, total: 0 };
+  for (const s of SCENARIOS) {
+    const bytes = utf8Bytes(renderScenario(s));
+    playbooks.total += bytes;
+    if (playbooks.min === null || bytes < playbooks.min) playbooks.min = bytes;
+    if (bytes > playbooks.max) playbooks.max = bytes;
+  }
+  const indexBytes = utf8Bytes(scenarioIndexText());
+  return {
+    domains: SCENARIOS.length,
+    at: new Date().toISOString(),
+    families,
+    familyOrder: FAMILIES.map((f) => f.id),
+    familyLabels: Object.fromEntries(FAMILIES.map((f) => [f.id, f.label])),
+    markers: { total: markers.size, ...shape },
+    extended,
+    index: {
+      bytes: indexBytes,
+      budget: INDEX_BUDGET_BYTES,
+      percent: Math.round((indexBytes / INDEX_BUDGET_BYTES) * 1000) / 10,
+    },
+    playbooks: { ...playbooks, minBytes: PLAYBOOK_MIN_BYTES, maxBytes: PLAYBOOK_MAX_BYTES },
+    hits: {},
+  };
+};
+
 /** 三个工具共用的结果出口；名字只用于计数，渲染逻辑与 v0.13.8 逐字一致。 */
 const budgetedOutput = (toolName) => ({
   ...objectOutputBase,
@@ -629,6 +698,8 @@ const scenarioTool = {
     }
     const found = lookupScenario(query);
     if (!found.ok) {
+      // 未命中也要记账：面板上「取用分布」旁边的 miss 数就是它（v0.14.1）。
+      if (statsSink !== null) statsSink.bump(["coverage", "misses"]);
       return {
         ok: false,
         query,
@@ -638,6 +709,7 @@ const scenarioTool = {
         toolProtocol: TOOLCHAIN_PROTOCOL,
       };
     }
+    recordDomainHit(found.scenario);
     return {
       ok: true,
       query,
@@ -982,6 +1054,9 @@ export function apply(ctx, config) {
   const stats = createStatsStore({ version: PLUGIN_VERSION, autoLoad: true });
   attachStatsSink(stats);
   stats.set("boot", { at: new Date().toISOString(), pid: process.pid, version: PLUGIN_VERSION, schema: STATS_SCHEMA, file: stats.file, statsFile: statsFile() });
+  // 领域覆盖分区（v0.14.1）：面板的「领域 / 词表 / 预算」显示组只读这一份。
+  // 注意顺序：先 set 分区，之后 recordDomainHit 的 bump 才落进 coverage.hits。
+  stats.set("coverage", coverageSnapshot());
   // 面板读侧：优先读盘上那份（证明它读的是数据库，不是内存里的插件）；还没落盘就用内存快照。
   const panelDoc = () => {
     const disk = stats.read();

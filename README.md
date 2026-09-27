@@ -1,4 +1,4 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.14.0
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.14.1
 
 <p align="center">
   <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
@@ -46,7 +46,7 @@
 
 逐版「改了什么、为什么」统一收在仓库内《更新文档》—— [`UPDATE.md`](UPDATE.md)（随包分发）。README 只留机制解释与最近几条摘要：
 
-- **最近**：v0.14.0 领域包 56 → 62（新增 evasion / privesc / phishing / rat_c2 / dos / drm，词表扩到 2053 条）· v0.13.10 `sessions.lastAt` 语义修正（「最近活跃」名副其实 + 真回归断言）· v0.13.9 任务清单与统计库解耦（核心写库、面板只读 + 任务进度上屏）· v0.13.8 JSON 边界统一强化（唯一解析入口 + 结果体积闸 + 参数/结果两个方向）· v0.13.7 工具调用坏包修复回路（内核 + 运行时锚点）· v0.13.6 命中词汇深度（词表扩展 + 索引命中行 + 语料测出路由缺陷）· v0.13.5 远端补发与产物描述压缩 —— 全文与更早各版见 [`UPDATE.md`](UPDATE.md)。
+- **最近**：v0.14.1 前端面板强化（本体新增 `coverage` 分区：域数 / 族分布 / 词表 / 索引预算 / 领域取用次数，面板新增「领域覆盖 · 词表 · 预算」显示组，硬编码的域数改成读库）· v0.14.0 领域包 56 → 62（新增 evasion / privesc / phishing / rat_c2 / dos / drm，词表扩到 2053 条）· v0.13.10 `sessions.lastAt` 语义修正（「最近活跃」名副其实 + 真回归断言）· v0.13.9 任务清单与统计库解耦（核心写库、面板只读 + 任务进度上屏）· v0.13.8 JSON 边界统一强化（唯一解析入口 + 结果体积闸 + 参数/结果两个方向）· v0.13.7 工具调用坏包修复回路（内核 + 运行时锚点）· v0.13.6 命中词汇深度（词表扩展 + 索引命中行 + 语料测出路由缺陷）· v0.13.5 远端补发与产物描述压缩 —— 全文与更早各版见 [`UPDATE.md`](UPDATE.md)。
 - **机械清单**：[`CHANGELOG.md`](CHANGELOG.md)（`node scripts/changelog.mjs` 生成，别手改）。
 - **发布产物与 Release 正文**：只带最近一次更新（压缩过）并指回 `UPDATE.md`。
 
@@ -195,8 +195,8 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   ├── package.json             # 插件元数据（dsh-infinite-gen-5 v0.11.1）
 │   ├── cordis.patch.yml         # 核心 patch 声明
 │   ├── index.js                 # 插件核心入口（内核注入 + 同源去重 + profile 元数据 + 会话投影）
-│   ├── client.js                # 客户端半体（原生状态条 + 设置台：只读统计库，另有任务进度条与「恢复上次清单」）
-│   ├── stats-store.mjs          # 统计数据库（原子写 + 防抖；核心只写、面板只读；schema ig5-stats/1）
+│   ├── client.js                # 客户端半体（原生状态条 + 设置台：只读统计库，含任务进度条与「领域覆盖 · 词表 · 预算」显示组）
+│   ├── stats-store.mjs          # 统计数据库（原子写 + 防抖；核心只写、面板只读；boot 时填 coverage 分区（域数/族分布/词表/预算）；schema ig5-stats/1）
 │   ├── tasks.mjs                # 任务清单规则（读宿主 todos 投影 / 写 todo/write 事件 / 单 in_progress 策略）
 │   ├── data/scenarios.mjs       # 62 个领域包 × 7 族 + 领域标记表（运行时与评测共用的唯一真源）
 │   ├── data/vocabulary.mjs      # 命中词汇的规则与护栏：形态校验 / 白名单 / 跨族签字 / 预算常量
@@ -218,7 +218,7 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   ├── scripts/vocab-report.mjs         # 命中词表报告（--md 出逐域深度表 / --domain=web 出单词全表）
 │   ├── scripts/verify_scenario_tool.mjs # 真宿主挂载：领域工具行为 + 「包正文不进 system prompt」硬断言
 │   ├── scripts/verify_tool_budget.mjs   # 48 项：唯一解析入口 / 结果体积闸（真实 render 驱动）/ 参数扁平 / 两端体积上限同值
-│   ├── scripts/verify_stats_panel.mjs   # 66 项：统计库（原子写/防抖/纯读）+ 任务清单（读投影、写走 todo/write）+ 面板只读库
+│   ├── scripts/verify_stats_panel.mjs   # 75 项：统计库（原子写/防抖/纯读）+ 任务清单（读投影、写走 todo/write）+ 面板只读库
 │   └── HARNESS_PLUGIN.md        # 插件规范说明
 ├── 📜 网络安全红队系统提示词本体
 │   └── prompts/
@@ -379,7 +379,7 @@ chmod +x install.sh uninstall.sh
    node scripts/verify_vocab.mjs         # 16 项：2053 条扩展词条形态 / 跨族签字 / 英文碰撞扫描 / 102 条真实语料 + 41 条破甲题库 + 20 条行话 + 7 条负样本 / 预算
    node scripts/verify_scenario_tool.mjs # 85 条：真宿主挂载三个工具 + 环境工具离线调用 + 「包正文不进 system prompt」
    node scripts/verify_tool_budget.mjs   # 48 项：唯一解析入口 safeParseJson / 结果体积闸（用真实 render 驱动）/ 工具参数扁平 / 两端体积上限同值
-   node scripts/verify_stats_panel.mjs   # 66 项：统计库（原子写/防抖/只读不写盘）+ 任务清单（读投影、写走 todo/write）+ 面板只读库
+   node scripts/verify_stats_panel.mjs   # 75 项：统计库（原子写/防抖/只读不写盘）+ 任务清单（读投影、写走 todo/write）+ 面板只读库
    node scripts/verify_dedupe.mjs        # 84 条：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本一致性
    node scripts/verify_injection.mjs     # 41 条：真实宿主演习台 —— 装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级（无宿主时 SKIP）
    node scripts/verify_version.mjs       # 23 条：版本锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量
@@ -387,7 +387,7 @@ chmod +x install.sh uninstall.sh
    node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：单一接线入口 + 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
    node scripts/verify_sync.mjs          # 37 条：本机安装树同步 —— 指纹算法（与宿主记录交叉验证）+ 预览不落盘 / 增改删 / 权限位 / 幂等 / 激活记录刷新（缺 ~/.dsh 时只跑 fixture）
    node scripts/verify_tuning.mjs        # 45 条：设置页调参接口 —— 路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位 / webServer 晚挂补挂（无宿主时 SKIP）
-   node scripts/verify_ui.mjs            # 149 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理、注入档位面板）
+   node scripts/verify_ui.mjs            # 157 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理、注入档位面板）
    node scripts/verify_env.mjs           # 149 条：探测纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算
    node scripts/verify_eval.mjs          # 81 条：评测计量（合成数据手算可核）+ CLI 退出码 0/1/3
    node scripts/verify_prompt.mjs        # 64 条：经典确定性校验

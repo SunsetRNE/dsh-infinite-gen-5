@@ -44,6 +44,9 @@ export const emptyStats = (version, at = null) => ({
   boot: { at, pid: process.pid, version },
   runtime: { role: "unknown", anchorEmissions: 0, rebuilds: 0, sections: [], placements: [] },
   tuning: null,
+  // v0.14.1：启动时由 index.js 用 coverageSnapshot() 填满（域数 / 族分布 / 词表 / 预算）。
+  // 骨架里先摆 null，是为了「读侧键永远齐全」这条不变量 —— 面板不必判 undefined。
+  coverage: null,
   tools: { calls: {}, total: 0, capped: 0, truncated: 0, lastCall: null },
   tasks: {
     available: false,
