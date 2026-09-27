@@ -70,7 +70,9 @@ const tag = `v${version}`;
 const dirty = git(["status", "--porcelain"]);
 if (dirty) fail(`工作区不干净，先提交：\n${dirty}`);
 const existing = git(["tag", "--list", tag]);
-if (existing) fail(`tag ${tag} 已存在（要重打先 git tag -d ${tag} 并删远端）`);
+if (existing && !releaseOnly) {
+  fail(`tag ${tag} 已存在（要重打先 git tag -d ${tag} 并删远端；只想补 GitHub Release 就加 --release-only）`);
+}
 const branch = git(["rev-parse", "--abbrev-ref", "HEAD"]);
 const sync = git(["rev-list", "--left-right", "--count", `${branch}...origin/${branch}`]).split(/\s+/);
 if (sync[0] !== "0" || sync[1] !== "0") fail(`本地 ${branch} 与 origin 不同步（领先 ${sync[0]} / 落后 ${sync[1]}），先 push/pull`);

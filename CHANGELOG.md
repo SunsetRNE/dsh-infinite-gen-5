@@ -8,10 +8,14 @@
 
 ### ✨ 新特性
 
-- 缺 gh 时用 GitHub REST 发 Release（凭据走 GH_TOKEN/--token-file/~/.local-gh/.token）+ --release-only
+- 缺 gh 时用 GitHub REST 发 Release（凭据走 GH_TOKEN/--token-file/~/.local-gh/.token）+ --release-only（`1993df9`）
 - 体检识别「管理器启用集合 = dsh.profile.bundles」与 patch insert 接线的错位（`fb3dec7`）
 - 体检新增宿主激活记录检查（插件管理器界面曾长期显示旧版本）（`b9a8c66`）
 - dev 热链接模式 —— 仓库 ↔ ~/.dsh 软链切换 + 体检识别 + 文档（`3f69e78`）
+
+### 🐛 修复
+
+- --release-only 时不再被「tag 已存在」前置检查拦住
 
 ## v0.12.0 — 2026-09-27
 
