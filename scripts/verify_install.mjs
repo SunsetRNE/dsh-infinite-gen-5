@@ -212,5 +212,22 @@ if (backups.length > 0) {
   if (backups.length > 10) warn("快照堆积", `${backups.length} 份，可按 mtime 清理 14 天前的`);
 }
 
+// ---------- 5) 宿主插件管理器的激活记录（plugin-activations.json） ----------
+// 这份记录由宿主侧的插件管理器维护，记「上一次确认过的插件版本与指纹」。
+// 它是另一条会撒谎的路径：插件已升到新版，管理器界面里却还显示旧版号。
+const actFile = join(dshHome, "plugin-activations.json");
+const act = readJson(actFile);
+const rec = act?.entries?.[NAME];
+if (rec) {
+  if (rec.version && rec.version !== repoVersion) {
+    warn(
+      "宿主插件管理器激活记录过期",
+      `${short(actFile)} 记的是 ${rec.version}，实际 ${repoVersion} —— 管理器界面会显示旧版本，重启后应自动刷新`,
+    );
+  } else {
+    passes.push({ label: "宿主插件管理器激活记录 = 仓库版本", detail: `${rec.version || "?"}（${rec.status || "?"}）` });
+  }
+}
+
 report();
 process.exit(failures.length > 0 || (strict && warnings.length > 0) ? 1 : 0);
