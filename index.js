@@ -108,7 +108,7 @@ const profileTool = {
         "Tail Anchor: Order 200 只放约 200 字节末位锚点（LAYER2_MODE 可切 mirror/off）",
         "Same-Kernel Dedupe: 宿主已有同源载荷时整段让位，避免重复注入",
         "Armor Projection: 开头窗口(160)判拒 + REFUSAL/FALLBACK/SAFE/RISK 标记 + 域命中",
-        "Scenario Tool: infinite_gen5_scenario 对 56 个领域包做五槽打法查询，并给出每域工具链（装/验命令）与缺工具的降级协议（定义常驻约 0.8 KB，不延迟加载）",
+        "Scenario Tool: infinite_gen5_scenario 对 56 个领域包做五槽打法查询，并给出每域工具链（装/验命令）与缺工具的降级协议（定义常驻 794 B ≈ 248 token，不延迟加载）",
         `Client Badge: 输入框 dock 行「无限五代 v${PLUGIN_VERSION}」实时状态条（与上下文计量器同排，点开可看最近判决）`,
         "Profile Tool: infinite_gen5_profile 返回内核版本与「实际注入」实况",
       ],
@@ -133,15 +133,15 @@ const profileTool = {
 // 工具链。全部正文活在 data/scenarios.mjs 与 data/toolchains.mjs 里，
 // 既不在 system prompt 里、也不在工具定义里 —— 只有工具被调用时才读出来变成
 // 一次 tool result（无参回索引约 1.1 K token，带 scenario 只回命中的那一个包
-// 约 0.2 K token）。常驻的只有下面这个定义本身（实测 832 B —— name 22 B +
-// description 436 B + parameters 374 B ≈ 260 token）。
+// 约 0.2 K token）。常驻的只有下面这个定义本身（v0.7.0 实测 794 B —— name 22 B +
+// description 479 B + parameters 293 B ≈ 248 token）。
 //
 // 刻意不写 deferLoading: true。实测（v0.6.0 重启后同一进程内的对照）：
 // infinite_gen5_profile 不带该字段 ⇒ 模型工具表里看得见、可直接调用；
 // infinite_gen5_scenario 带该字段 ⇒ 宿主/提供方把定义扣住，模型工具表里没有它，
 // 而会话中途也没有任何机制为它补发 tool-addition（工具从启动起就在基线里，
 // 基线里的工具不会再"新出现"）⇒ 它永远等不到激活，内核载荷里那句
-// "call infinite_gen5_scenario" 就成了死指针。用 260 token 换「一定可调用」是划算的。
+// "call infinite_gen5_scenario" 就成了死指针。用 248 token 换「一定可调用」是划算的。
 const scenarioTool = {
   name: "infinite_gen5_scenario",
   description:

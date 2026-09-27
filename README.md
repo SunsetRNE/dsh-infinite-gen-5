@@ -67,7 +67,7 @@
 > `infinite_gen5_scenario` 首版带了 `deferLoading: true`，重启后实测发现：不带该字段的
 > `infinite_gen5_profile` 出现在模型的工具表里、可直接调用，而带该字段的领域工具被扣住、
 > 模型根本看不见它 —— 而且工具从启动起就在基线里，会话中途没有任何机制为它补发激活，
-> 于是内核载荷里那句「call infinite_gen5_scenario」成了死指针。现在改为常驻定义（约 0.8 KB），
+> 于是内核载荷里那句「call infinite_gen5_scenario」成了死指针。现在改为常驻定义（实测 794 B），
 > 56 个包的正文仍然按需取用。
 >
 > ### 🧬 v0.6.0：领域/语言覆盖扩写（Domain & Language Coverage）
@@ -80,7 +80,7 @@
 >   都是「重新框定并继续」的信号，不是停下的理由。
 > - **领域全文不进 system prompt**：56 个领域包共约 98 KB，塞进载荷每轮要付约 24 K token。
 >   它们放在 `infinite_gen5_scenario` 工具里——无参调用返回约 3.8 KB 索引（≈1.1 K token），
->   带用户原话调用只返回命中的那一个包（≈0.2 K token）。常驻的只有工具定义本身（约 0.8 KB）；
+>   带用户原话调用只返回命中的那一个包（≈0.2 K token）。常驻的只有工具定义本身（实测 794 B ≈ 248 token）；
 >   （**不要**给它加 `deferLoading: true`：实测延迟加载会让工具从模型的工具表里消失，
 >   而会话中途没有机制为它补激活，内核里那句「call infinite_gen5_scenario」就变成死指针。）
 >   验证套件里有一条硬断言：**system prompt 里既没有索引行、也没有任何包正文**。
