@@ -117,8 +117,10 @@ npm run verify:install                      # 体检：三处副本版本一致 
 node scripts/bump-version.mjs X.Y.Z         # 只改「当前版本锚点」（version-targets.mjs 为唯一真源）
 npm run changelog                           # 由 Conventional Commits 重生成 CHANGELOG.md（勿手改）
 npm run verify:all && git add -A && git commit -m "feat(vX.Y.Z): <一句话>"
-npm run release -- --yes --release          # 默认只预览：前置检查 + CHANGELOG 正文；--yes 打 tag 并推送，--release 再调 gh
+npm run release -- --yes --release          # 默认只预览；--yes 打 tag 并推送，--release 发 Release
 ```
+
+`--release` 优先用 `gh release create`；没装 `gh` 时自动改用 GitHub REST（`POST /repos/<owner>/<repo>/releases`）。凭据顺序：`GH_TOKEN` / `GITHUB_TOKEN` → `GH_TOKEN_FILE` / `--token-file=PATH` → 约定路径 `~/.local-gh/.token`（通用凭据目录）。只想补 Release、tag 已推过：加 `--release-only`。
 
 README / 本文档的版本沿革、`package.json` description、`ENV_PROBE.md` 的历史引用、以及生成物 `CHANGELOG.md` 里的版本号属**历史叙述**，刻意不改写（`verify_version.mjs` 只在 `PROSE_ALLOWED_FILES` 里放行）；发版时改了它们等于篡改历史。
 

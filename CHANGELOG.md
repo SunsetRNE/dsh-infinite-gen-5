@@ -8,7 +8,8 @@
 
 ### ✨ 新特性
 
-- 体检识别「管理器启用集合 = dsh.profile.bundles」与 patch insert 接线的错位
+- 缺 gh 时用 GitHub REST 发 Release（凭据走 GH_TOKEN/--token-file/~/.local-gh/.token）+ --release-only
+- 体检识别「管理器启用集合 = dsh.profile.bundles」与 patch insert 接线的错位（`fb3dec7`）
 - 体检新增宿主激活记录检查（插件管理器界面曾长期显示旧版本）（`b9a8c66`）
 - dev 热链接模式 —— 仓库 ↔ ~/.dsh 软链切换 + 体检识别 + 文档（`3f69e78`）
 

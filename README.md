@@ -295,7 +295,7 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   │   ├── bump-version.mjs        # 发版改写器：只改锚点、历史叙述不动（--dry 可预演）
 │   │   ├── bump-version.sh         # 同上的 shell 薄包装：bash scripts/bump-version.sh X.Y.Z
 │   │   ├── changelog.mjs           # CHANGELOG 生成器（按提交标题里的 (vX.Y.Z) 切版本段）
-│   │   ├── release.mjs             # 发版助手：前置检查 + 发布正文 + 打 tag/推送 +（有 gh 时）建 Release
+│   │   ├── release.mjs             # 发版助手：前置检查 + 发布正文 + 打 tag/推送 + Release（gh 优先，缺 gh 走 REST）
 │   │   ├── dev-link.mjs            # 开发热链接：仓库 ↔ ~/.dsh 软链切换（--link / --restore / 只读状态）
 │   │   ├── verify_prompt_gen4.mjs  # ⚠️ 遗留重定向 → verify_prompt_gen5.mjs
 │   │   └── verify_prompt_gen41.mjs # ⚠️ 遗留重定向 → verify_prompt_gen51.mjs
@@ -480,10 +480,28 @@ npm run changelog                           # 由 Conventional Commits 重生成
 npm run verify:all                          # 必过；verify:version 会拦漏改
 git add -A && git commit -m "feat(vX.Y.Z): <一句话>"
 git push origin main
-npm run release -- --yes --release          # 打 annotated tag vX.Y.Z + 推送 +（有 gh 时）建 Release
+npm run release -- --yes --release          # 打 annotated tag vX.Y.Z + 推送 + 发 GitHub Release（gh 或 REST）
 ```
 
-`npm run release`（= `scripts/release.mjs`）默认只**预览**：先做前置检查（工作区干净、tag 不存在、本地与 origin 同步），再把 CHANGELOG 里该版本的段落当发布正文打印出来。加 `--yes` 才真打 tag 并推送；再加 `--release` 才调 `gh release create`。没装/没登录 `gh` 时它**降级**为打印正文与安装命令（`apt install -y gh` → `gh auth login`），tag 照样推上去、源码包照样可用。CHANGELOG 由 `scripts/changelog.mjs` 生成（版本段按提交标题里的 `(vX.Y.Z)` 作用域切分），别手改。
+`npm run release`（= `scripts/release.mjs`）默认只**预览**：先做前置检查（工作区干净、tag 不存在、本地与 origin 同步），再把 CHANGELOG 里该版本的段落当发布正文打印出来。加 `--yes` 才真打 tag 并推送；再加 `--release` 才发 GitHub Release。CHANGELOG 由 `scripts/changelog.mjs` 生成（版本段按提交标题里的 `(vX.Y.Z)` 作用域切分），别手改。
+
+**发 Release 的两条路**（`--release`）：
+
+- 有 `gh` 且已登录 → 走 `gh release create`；
+- **没装 `gh` 也能发** → 自动改用 GitHub REST（`POST /repos/<owner>/<repo>/releases`，owner/repo 从 `git remote origin` 解析）。凭据按这个顺序找，都找不到才降级打印提示：
+
+  | 顺序 | 来源 |
+  |---|---|
+  | 1 | 环境变量 `GH_TOKEN` / `GITHUB_TOKEN` |
+  | 2 | `GH_TOKEN_FILE` 指向的文件，或 `--token-file=PATH` |
+  | 3 | 约定路径 `~/.local-gh/.token`（通用凭据目录，`chmod 600`） |
+
+  本机的通用凭据现放在 `Branchbase/.local-gh/.token`（尚未挪到公共位置），要用就：
+  ```bash
+  GH_TOKEN_FILE=/root/Branchbase/.local-gh/.token npm run release -- --release-only --release
+  ```
+
+  token 只用于这一次 POST、脚本不回显内容；Release 已存在时返回 422 只提示不改动。tag 早已推过、只想补 Release 时用 `--release-only`（跳过打 tag，但要求 tag 已存在）。
 
 `scripts/version-targets.mjs` 是「当前版本锚点」的唯一真源（`index.js` 的 `PLUGIN_VERSION`、`client.js` 的 `VERSION`、`cordis.patch.yml` 头注释、README / HARNESS_PLUGIN 标题、两个 verify 脚本头注释），改写器与自检共用它。README 版本沿革、`package.json` description、`ENV_PROBE.md` 里「随插件 v0.8.0 引入」、以及生成物 `CHANGELOG.md` 这类**记录当时**的版本号刻意不改、只在 `PROSE_ALLOWED_FILES` 里登记放行 —— 发版改写它们等于篡改历史。`verify_version.mjs` 另外断言：文档里不出现比当前更新的版本号、全仓没有未登记的版本号字面量（新增文件里硬写版本号会被抓出来）。
 

@@ -224,7 +224,7 @@ if (rec) {
   if (rec.version && rec.version !== repoVersion) {
     warn(
       "宿主插件管理器激活记录过期",
-      `${short(actFile)} 记的是 ${rec.version}，实际 ${repoVersion} —— 管理器界面会显示旧版本，重启后应自动刷新`,
+      `${short(actFile)} 记的是 ${rec.version}，实际 ${repoVersion} —— 管理器界面会显示旧版本；宿主只在 queued/attempted 的条目上重写这份记录（实测重启也不会刷新），要用管理器重新确认一次才更新`,
     );
     if ((rec.status === "queued" || rec.status === "attempted") && !bundleWired) {
       warn(
