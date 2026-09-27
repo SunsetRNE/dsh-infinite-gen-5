@@ -187,9 +187,12 @@ const fakeRequire = (id) => {
   if (id === "react") return react;
   throw new Error("unexpected require(" + JSON.stringify(id) + ")");
 };
+// 调参面板要 fetch：真机上是浏览器全局，这里挂一个可替换实现，默认拒绝（自检不联网）。
+let fetchImpl = () => Promise.reject(new Error("harness 里没装 fetch"));
 // eslint-disable-next-line no-new-func
-new Function("window", "document", "MutationObserver", "setTimeout", "clearTimeout", "console", CLIENT_SRC)(
-  fakeWindow, doc, FakeMutationObserver, setTimeout, clearTimeout, console
+new Function("window", "document", "MutationObserver", "setTimeout", "clearTimeout", "console", "fetch", CLIENT_SRC)(
+  fakeWindow, doc, FakeMutationObserver, setTimeout, clearTimeout, console,
+  (...args) => fetchImpl(...args)
 );
 
 ok("客户端半体注册进了模块加载器", spec !== null && spec.id === "dsh-infinite-gen-5");
@@ -514,9 +517,11 @@ function loadInstance(options) {
   let loaded = null;
   const win = { __ModuleLoader__: { load(x) { loaded = x; } } };
   if (opts.storage !== undefined) win.localStorage = opts.storage;
+  if (opts.tuning !== undefined) win.__IG5_TUNING__ = opts.tuning;
+  const fetchFn = typeof opts.fetch === "function" ? opts.fetch : (...args) => fetchImpl(...args);
   // eslint-disable-next-line no-new-func
-  new Function("window", "document", "MutationObserver", "setTimeout", "clearTimeout", "console", src)(
-    win, doc, FakeMutationObserver, setTimeout, clearTimeout, console);
+  new Function("window", "document", "MutationObserver", "setTimeout", "clearTimeout", "console", "fetch", src)(
+    win, doc, FakeMutationObserver, setTimeout, clearTimeout, console, fetchFn);
   const m = loaded.factory(fakeRequire);
   const log = { injected: [], registrations: [], disposed: [] };
   const dispose = m.apply(makeCtx(log));
@@ -572,7 +577,16 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
   ok("设置台只读信息 >= 6 行（版本/形态/位置/载荷/判定源/存储…）",
     collectByClass(view.tree, "armor5-console-rows")[0].children.length >= 6,
     String(collectByClass(view.tree, "armor5-console-rows")[0].children.length));
-  ok("有「恢复默认」按钮", collectByClass(view.tree, "armor5-console-btn").length === 1);
+  ok("有「恢复默认」按钮（偏好复位，与调参复位分开）",
+    collectByClass(view.tree, "armor5-console-btn").filter((b) => textOf(b) === "恢复默认").length === 1,
+    JSON.stringify(collectByClass(view.tree, "armor5-console-btn").map((b) => textOf(b))));
+  ok("设置台有调参按钮（保存并生效 / 复位到默认 / 重新读取）",
+    collectByClass(view.tree, "armor5-tune-btn").length === 3,
+    String(collectByClass(view.tree, "armor5-tune-btn").length));
+  ok("没有 __IG5_TUNING__ 时降级成只读提示 + YAML 片段（不联网、不白屏）",
+    textOf(view.tree).includes("调参接口不可用") && findByClass(view.tree, "armor5-console-yaml") !== null &&
+    textOf(view.tree).includes("cordis.patch.yml"),
+    JSON.stringify(textOf(view.tree).slice(0, 160)));
   ok("owner 不传 close 时不渲染「完成」按钮（不崩）",
     textOf(view.tree).includes("恢复默认") && !textOf(view.tree).includes("完成"));
   const withClose = mountComponent(inst.page, undefined);
@@ -861,6 +875,118 @@ if (process.argv.includes("--emit-html")) {
     writeFileSync(target, previewPage({ theme, pluginCss, stateRows, panelHtml, consoleHtml, navHtml, dark }), "utf8");
     console.log("预览已生成 → " + target);
   }
+}
+
+// ── 设置页调参面板（v0.13.0）：接口在时真读真写，改档位立即 POST ────────────────
+{
+  const TUNE_PATH = "/infinite-gen-5/tuning";
+  const baseEffective = {
+    LAYER2_MODE: "anchor", DEDUPE_PAYLOAD: true, TAIL_MODE: "waterfall",
+    RUNTIME_ANCHOR_MODE: "cadence", RUNTIME_ANCHOR_EVERY: 4, EXCLUSIVE_SECTION: false
+  };
+  const baseSources = {
+    LAYER2_MODE: "ui", DEDUPE_PAYLOAD: "default", TAIL_MODE: "default",
+    RUNTIME_ANCHOR_MODE: "config", RUNTIME_ANCHOR_EVERY: "ui", EXCLUSIVE_SECTION: "default"
+  };
+  const live = { role: "primary", placements: [1, 2, 3, 4], rebuilds: 2, anchorEmissions: 12, sections: [], skipped: [] };
+  const calls = [];
+  const stubFetch = (path, init) => {
+    const method = (init && init.method) || "GET";
+    calls.push({ path, method, init });
+    if (method === "GET") {
+      return Promise.resolve({ status: 200, json: () => Promise.resolve({
+        ok: true, version: "v0.13.0", effective: baseEffective, sources: baseSources, persisted: { LAYER2_MODE: "off" },
+        catalog: null, live, store: { file: "/tmp/infinite-gen-5-tuning.json", updatedAt: null, error: null } }) });
+    }
+    const body = JSON.parse(init.body);
+    const effective = Object.assign({}, baseEffective, body.reset ? {} : body.overrides);
+    const sources = Object.assign({}, baseSources);
+    if (!body.reset) for (const k of Object.keys(body.overrides || {})) sources[k] = "ui";
+    return Promise.resolve({ status: 200, json: () => Promise.resolve({
+      ok: true, effective, sources, persisted: body.reset ? {} : body.overrides, catalog: null,
+      live: Object.assign({}, live, { rebuilds: 3 }),
+      changes: body.reset ? [] : Object.keys(body.overrides || {}), requested: body }) });
+  };
+  const inst = loadInstance({
+    storage: fakeStorage({}),
+    tuning: { path: TUNE_PATH, token: "tok-abc", version: "v0.13.0" },
+    fetch: stubFetch
+  });
+  const store = { hooks: [] };
+  const view = mountComponent(inst.page, undefined, store);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const tree = view.rerender();
+
+  ok("调参面板按注入的路径 + token 拉取（GET）",
+    calls.length >= 1 && calls[0].path === TUNE_PATH && calls[0].method === "GET" &&
+    calls[0].init.headers["x-ig5-token"] === "tok-abc", JSON.stringify(calls[0] && calls[0].init.headers));
+  ok("六个开关各渲染一行来源标记（服务端 catalog 缺失时用兜底目录）",
+    collectByClass(tree, "armor5-console-tag").length === 6,
+    String(collectByClass(tree, "armor5-console-tag").length));
+  const tagSources = collectByClass(tree, "armor5-console-tag").map((t) => t.props["data-source"]);
+  ok("来源标记如实反映服务端 sources（ui / config / default 都出现过）",
+    tagSources.includes("ui") && tagSources.includes("config") && tagSources.includes("default"),
+    JSON.stringify(tagSources));
+  ok("状态行报出注入处数 / 重装次数 / 锚点版本数",
+    textOf(tree).includes("4 处注入") && textOf(tree).includes("已重装 2 次") && textOf(tree).includes("已发 12 版"),
+    JSON.stringify(textOf(tree).slice(0, 200)));
+  ok("不再渲染 YAML 片段（接口可用时不吓人）", findByClass(tree, "armor5-console-yaml") === null);
+
+  const choices = collectByClass(tree, "armor5-console-choice");
+  const offBtn = choices.find((b) => b.props["data-choice"] === "LAYER2_MODE=off");
+  const everyTwo = choices.find((b) => b.props["data-choice"] === "RUNTIME_ANCHOR_EVERY=2");
+  ok("档位按钮带 key=value 的 data-choice，能被点", !!offBtn && !!everyTwo,
+    JSON.stringify(choices.map((b) => b.props["data-choice"])));
+  offBtn.props.onClick();
+  everyTwo.props.onClick();
+  const staged = view.rerender();
+  const stagedOff = collectByClass(staged, "armor5-console-choice").find((b) => b.props["data-choice"] === "LAYER2_MODE=off");
+  ok("点一下先只改草稿（高亮跟着走，没发请求）",
+    stagedOff.props.className.includes("is-active") && calls.filter((c) => c.method === "POST").length === 0,
+    stagedOff.props.className);
+
+  const saveBtn = collectByClass(staged, "armor5-tune-btn").find((b) => textOf(b).includes("保存并生效"));
+  saveBtn.props.onClick();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const posted = calls.filter((c) => c.method === "POST");
+  ok("点「保存并生效」把整份草稿 POST 给服务端（一次请求带全部六键）",
+    posted.length === 1 && posted[0].init.headers["x-ig5-token"] === "tok-abc" &&
+    JSON.parse(posted[0].init.body).overrides.LAYER2_MODE === "off" &&
+    JSON.parse(posted[0].init.body).overrides.RUNTIME_ANCHOR_EVERY === 2,
+    JSON.stringify(posted[0] && posted[0].init.body));
+  const afterSave = view.rerender();
+  ok("保存后状态行报出「已生效」与哪些键被改写",
+    textOf(afterSave).includes("已生效") && textOf(afterSave).includes("LAYER2_MODE"),
+    JSON.stringify(textOf(afterSave).slice(0, 200)));
+
+  const resetBtn = collectByClass(afterSave, "armor5-tune-btn").find((b) => textOf(b).includes("复位到默认"));
+  resetBtn.props.onClick();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const allPosted = calls.filter((c) => c.method === "POST");
+  ok("「复位到默认」发的是 {reset:true}，不是把当前值再发一遍",
+    allPosted.length === 2 && JSON.parse(allPosted[1].init.body).reset === true,
+    JSON.stringify(allPosted[1] && allPosted[1].init.body));
+  const afterReset = view.rerender();
+  ok("复位后状态行说清楚了（已复位成文件默认）", textOf(afterReset).includes("已复位成文件默认"), JSON.stringify(textOf(afterReset).slice(0, 160)));
+
+  // 服务端报错时不当成成功：错误文案要上屏，且不把草稿清空
+  calls.length = 0;
+  const failInst = loadInstance({
+    storage: fakeStorage({}),
+    tuning: { path: TUNE_PATH, token: "tok-abc", version: "v0.13.0" },
+    fetch: (path, init) => Promise.resolve({ status: 200, json: () => Promise.resolve(
+      ((init && init.method) || "GET") === "GET"
+        ? { ok: true, version: "v0.13.0", effective: baseEffective, sources: baseSources, catalog: null, live, persisted: {} }
+        : { ok: false, error: "写入 ~/.dsh 失败" }) })
+  });
+  const failView = mountComponent(failInst.page, undefined, { hooks: [] });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  const failTree = failView.rerender();
+  collectByClass(failTree, "armor5-tune-btn").find((b) => textOf(b).includes("保存并生效")).props.onClick();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  ok("服务端 ok:false 时不谎报成功，错误原文上屏",
+    textOf(failView.rerender()).includes("写入 ~/.dsh 失败"),
+    JSON.stringify(textOf(failView.rerender()).slice(0, 200)));
 }
 
 // ── 结果 ────────────────────────────────────────────────────────────────────

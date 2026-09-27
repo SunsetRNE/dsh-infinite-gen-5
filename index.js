@@ -1,4 +1,7 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync, renameSync, mkdirSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname as dirNameOf, join as joinPath } from "node:path";
+import { randomBytes } from "node:crypto";
 // 领域标记表与领域包数据的唯一真源。历史上运行时的表与离线评测的表各自
 // 复制了一份，慢慢漂移成两个版本；现在两边都只 import 这一份。
 import {
@@ -18,7 +21,7 @@ import { probeEnv, renderEnvSummary, ENV_SCHEMA } from "./data/probe.mjs";
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.12.4";
+const PLUGIN_VERSION = "0.13.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -139,23 +142,149 @@ const coerce = (key, raw) => {
   }
   return s;
 };
-// 就地写回 IG5_CONFIG：profile 工具读的就是它，实况报告因此天然等于生效值。
-const applyOverrides = (config) => {
-  const applied = [];
+// 文件默认值：唯一基线。每次重新解析都从这里重算，避免上一次的覆盖「粘」在配置里。
+const IG5_DEFAULTS = Object.freeze({
+  LAYER2_MODE,
+  DEDUPE_PAYLOAD,
+  TAIL_MODE,
+  RUNTIME_ANCHOR_MODE,
+  RUNTIME_ANCHOR_EVERY,
+  EXCLUSIVE_SECTION,
+});
+
+// 三档来源：设置页 UI（持久化）> profile config > 环境变量 > 文件默认。
+const SOURCE_LABEL = { ui: "设置页 UI", config: "profile config", env: "env", default: "文件默认" };
+const resolveTuning = (config, persisted) => {
+  const values = { ...IG5_DEFAULTS };
+  const sources = {};
   for (const key of TUNABLE_KEYS) {
+    let picked = "default";
     const envKey = ENV_OF_KEY[key];
     const rawEnv = envKey ? process.env[envKey] : undefined;
     if (rawEnv !== undefined && rawEnv !== "") {
-      IG5_CONFIG[key] = coerce(key, rawEnv);
-      applied.push(`${key}=${IG5_CONFIG[key]}（env ${envKey}）`);
+      const v = coerce(key, rawEnv);
+      if (v !== undefined) { values[key] = v; picked = "env"; }
     }
     if (config && typeof config === "object" && config[key] !== undefined) {
-      IG5_CONFIG[key] = coerce(key, config[key]);
-      applied.push(`${key}=${IG5_CONFIG[key]}（profile config）`);
+      const v = coerce(key, config[key]);
+      if (v !== undefined) { values[key] = v; picked = "config"; }
     }
+    if (persisted && typeof persisted === "object" && persisted[key] !== undefined) {
+      const v = coerce(key, persisted[key]);
+      if (v !== undefined) { values[key] = v; picked = "ui"; }
+    }
+    sources[key] = picked;
+  }
+  return { values, sources };
+};
+// 就地写回 IG5_CONFIG：profile 工具读的就是它，实况报告因此天然等于生效值。
+const applyResolved = (resolved) => {
+  for (const key of TUNABLE_KEYS) IG5_CONFIG[key] = resolved.values[key];
+  return resolved;
+};
+const describeOverrides = (resolved) => {
+  const applied = [];
+  for (const key of TUNABLE_KEYS) {
+    const source = resolved.sources[key];
+    if (source === "default") continue;
+    const label = source === "env" ? `env ${ENV_OF_KEY[key]}` : SOURCE_LABEL[source];
+    applied.push(`${key}=${resolved.values[key]}（${label}）`);
   }
   return applied;
 };
+// 兼容旧签名（自检直接调它驱动各档）：解析 → 落盘到 IG5_CONFIG → 返回生效项描述。
+const applyOverrides = (config, persisted) => describeOverrides(applyResolved(resolveTuning(config, persisted)));
+
+// 设置页的持久化档位：DSH_HOME（默认 ~/.dsh）下的一个 JSON，进程重启后照旧生效。
+const TUNING_FILE_NAME = "infinite-gen-5-tuning.json";
+const tuningHome = () => {
+  const envHome = process.env.IG5_HOME ?? process.env.DSH_HOME;
+  const base = envHome && envHome.trim() ? envHome.trim() : joinPath(homedir(), ".dsh");
+  return base;
+};
+const tuningFile = () => process.env.IG5_TUNING_FILE?.trim() || joinPath(tuningHome(), TUNING_FILE_NAME);
+const readTuning = () => {
+  const file = tuningFile();
+  try {
+    const doc = JSON.parse(readFileSync(file, "utf8"));
+    const overrides = doc && typeof doc.overrides === "object" && doc.overrides ? doc.overrides : {};
+    return { overrides, updatedAt: typeof doc.updatedAt === "string" ? doc.updatedAt : null, file, ok: true, error: null };
+  } catch (error) {
+    const missing = error && error.code === "ENOENT";
+    return { overrides: {}, updatedAt: null, file, ok: missing, error: missing ? null : String((error && error.message) || error) };
+  }
+};
+const writeTuning = (overrides) => {
+  const file = tuningFile();
+  mkdirSync(dirNameOf(file), { recursive: true });
+  const tmp = `${file}.tmp-${process.pid}`;
+  writeFileSync(tmp, JSON.stringify({ overrides, updatedAt: new Date().toISOString() }, null, 2) + "\n", "utf8");
+  renameSync(tmp, file);
+  return file;
+};
+
+// 控件目录：设置页照它渲染，服务端与页面因此不会各写一份取值表。
+const TUNING_CATALOG = [
+  {
+    key: "LAYER2_MODE",
+    label: "中段锚点（Order 200）",
+    hint: "同源让位时优先砍掉的就是它",
+    options: [
+      { value: "anchor", label: "锚点", hint: "172 字符中段复述（默认）" },
+      { value: "mirror", label: "镜像", hint: "把 Order 100 内核镜像一遍（最重）" },
+      { value: "off", label: "关闭", hint: "只留 Order 100 内核" },
+    ],
+  },
+  {
+    key: "TAIL_MODE",
+    label: "真末位锚点（Order 10150）",
+    hint: "决定锚点是否恒为整份 system prompt 的最后一段",
+    options: [
+      { value: "waterfall", label: "瀑布末位", hint: "assemble 末端追加，恒为最后一段（默认）" },
+      { value: "order", label: "按 order 排", hint: "退化到 order 10150（排在 10200 人格后缀之前）" },
+      { value: "off", label: "关闭", hint: "去掉末位锚点" },
+    ],
+  },
+  {
+    key: "RUNTIME_ANCHOR_MODE",
+    label: "运行时锚点节拍",
+    hint: "每步最后一条 user 消息里的同源复述",
+    options: [
+      { value: "cadence", label: "按步换版", hint: "第 1 步 + 每 N 步换一次文本（默认）" },
+      { value: "once", label: "只发一次", hint: "整段会话只随第一次快照注入" },
+      { value: "every", label: "每步都发", hint: "每步重发一版（最贵，≈4.3K token/100 步）" },
+      { value: "off", label: "关闭", hint: "不注入运行时锚点" },
+    ],
+  },
+  {
+    key: "RUNTIME_ANCHOR_EVERY",
+    kind: "number",
+    min: 1,
+    max: 12,
+    label: "节拍间隔 N",
+    hint: "第 1 步 + 每 N 步重发。N=2 ≈ 每轮刷新，N=6 省 token",
+  },
+  {
+    key: "DEDUPE_PAYLOAD",
+    kind: "bool",
+    label: "同源让位",
+    hint: "宿主已有同源载荷时内核让位，避免同一份内核注入两遍",
+    options: [
+      { value: true, label: "开", hint: "让位（默认）" },
+      { value: false, label: "关", hint: "永远注入自己的载荷" },
+    ],
+  },
+  {
+    key: "EXCLUSIVE_SECTION",
+    kind: "bool",
+    label: "独占系统段",
+    hint: "开了会丢弃宿主其余系统段，属危险档",
+    options: [
+      { value: false, label: "关", hint: "与其他系统段共存（默认）" },
+      { value: true, label: "开", hint: "内核 complete，宿主工具用法/沙箱策略等被整体丢弃" },
+    ],
+  },
+];
 
 // 注入配置的唯一读取口：apply() 一律从这里取值，自检因此可以直接改它来驱动各档行为。
 export const IG5_CONFIG = {
@@ -175,6 +304,10 @@ const runtime = {
   anchorEmissions: 0,
   overrides: [],
   role: "unknown",
+  rebuilds: 0,
+  // 设置页调参实况：effective 是当前生效值，sources 是每个键的来源档。
+  tuning: { effective: {}, sources: {}, persisted: {}, store: {}, at: null, changes: [] },
+  tuningEndpoint: { ok: false, path: null, reason: "尚未注册" },
 };
 
 const objectOutput = {
@@ -252,6 +385,17 @@ const profileTool = {
               },
       },
       configOverrides: runtime.overrides,
+      // v0.13.0：设置页调参实况（谁给的值、存在哪、重装过几次、接口通不通）。
+      tuning: {
+        effective: { ...runtime.tuning.effective },
+        sources: { ...runtime.tuning.sources },
+        persisted: { ...runtime.tuning.persisted },
+        store: { ...runtime.tuning.store },
+        at: runtime.tuning.at,
+        changes: [...runtime.tuning.changes],
+        rebuilds: runtime.rebuilds,
+        endpoint: { ...runtime.tuningEndpoint },
+      },
       layer2Mode: IG5_CONFIG.LAYER2_MODE,
       dualLayer: DUAL_LAYER_INJECTION,
       dedupe: {
@@ -683,15 +827,26 @@ export function apply(ctx, config) {
   const LAYER2 = "infinite-gen-5:dual-layer-reinforce";
   const ownNames = new Set([PRIMARY, LAYER2, TAIL_SECTION, RUNTIME_ANCHOR_SECTION]);
   const CFG = IG5_CONFIG;
-  const exclusive = CFG.EXCLUSIVE_SECTION === true;
   const sections = [];
+  // 注入部分的可卸载句柄：设置页改档位 = 卸掉这些 effect 再装一遍，工具不重挂。
+  const injectionHandles = [];
   // 每次挂载都是全新的实况：上一次挂载的让位记录不能漏进这一轮的报告。
   runtime.sections = [];
   runtime.skipped = [];
   runtime.placements = [];
   runtime.anchorEmissions = 0;
-  runtime.overrides = applyOverrides(config);
+  const initialTuning = readTuning();
+  const initialResolved = applyResolved(resolveTuning(config, initialTuning.overrides));
+  runtime.overrides = describeOverrides(initialResolved);
   runtime.role = "unknown";
+  runtime.tuning = {
+    effective: { ...initialResolved.values },
+    sources: { ...initialResolved.sources },
+    persisted: { ...initialTuning.overrides },
+    store: { file: initialTuning.file, updatedAt: initialTuning.updatedAt, error: initialTuning.error },
+    at: null,
+    changes: [],
+  };
 
   const recordPlacement = (row) => {
     runtime.placements.push(row);
@@ -720,7 +875,7 @@ export function apply(ctx, config) {
         return false;
       }
     }
-    ctx.effect(() => ctx.systemPrompt.section(spec));
+    injectionHandles.push(ctx.effect(() => ctx.systemPrompt.section(spec)));
     sections.push({
       section: spec.name,
       order: spec.order,
@@ -755,7 +910,7 @@ export function apply(ctx, config) {
       };
     };
     try {
-      ctx.effect(() => ctx.on("system-prompt/assemble", handler));
+      injectionHandles.push(ctx.effect(() => ctx.on("system-prompt/assemble", handler)));
     } catch (error) {
       console.warn(
         `[infinite-gen-5] 无法挂载 system-prompt/assemble 瀑布（${String(error?.message ?? error)}），` +
@@ -790,7 +945,7 @@ export function apply(ctx, config) {
     };
     const spec = { name: RUNTIME_ANCHOR_SECTION, order: RUNTIME_ANCHOR_ORDER, text };
     try {
-      ctx.effect(() => ctx.systemPrompt.context(spec));
+      injectionHandles.push(ctx.effect(() => ctx.systemPrompt.context(spec)));
     } catch (error) {
       console.warn(
         `[infinite-gen-5] 无法注册运行时上下文锚点（${String(error?.message ?? error)}）；` +
@@ -814,10 +969,16 @@ export function apply(ctx, config) {
   };
 
   const canHost = !!ctx.systemPrompt && typeof ctx.systemPrompt.section === "function";
-  if (!canHost) {
-    runtime.role = "no-system-prompt";
-    console.warn("[infinite-gen-5] 宿主未提供 systemPrompt.section，跳过载荷注入（工具与投影仍会注册）");
-  } else {
+
+  // 注入部分整体可卸载重装：设置页改档位不必重启进程。
+  // 工具与投影不在此列（ctx.tools.register 重复注册会报重名），只在 apply 里挂一次。
+  const mountInjection = () => {
+    const exclusive = CFG.EXCLUSIVE_SECTION === true;
+    if (!canHost) {
+      runtime.role = "no-system-prompt";
+      console.warn("[infinite-gen-5] 宿主未提供 systemPrompt.section，跳过载荷注入（工具与投影仍会注册）");
+      return;
+    }
     // 独占档：把末位锚点并进内核文本（宿主会丢弃其余系统段，瀑布追加也会被裁掉）。
     const primaryText = exclusive ? `${PROMPT_TEXT}\n\n${TAIL_ANCHOR_TEXT}` : PROMPT_TEXT;
     const primarySpec = { name: PRIMARY, order: 100, text: primaryText };
@@ -874,7 +1035,167 @@ export function apply(ctx, config) {
         });
       }
     }
-  }
+  };
+
+  mountInjection();
+
+  // 卸掉注入、清空实况、按当前档位重装一遍。工具/投影/路由保持不动。
+  const rebuildInjection = () => {
+    for (const handle of injectionHandles.splice(0).reverse()) {
+      if (typeof handle !== "function") continue;
+      try {
+        const pending = handle();
+        if (pending && typeof pending.then === "function") pending.catch(() => {});
+      } catch {}
+    }
+    sections.length = 0;
+    runtime.sections = [];
+    runtime.skipped = [];
+    runtime.placements = [];
+    runtime.anchorEmissions = 0;
+    runtime.role = "unknown";
+    runtime.rebuilds += 1;
+    mountInjection();
+  };
+
+  // 设置页调参入口：持久化 + 重解析 + 立即重装注入。
+  const tuningState = (persistedDoc) => {
+    const store = persistedDoc === undefined ? readTuning() : null;
+    const persisted = persistedDoc === undefined ? store.overrides : persistedDoc;
+    const resolved = resolveTuning(config, persisted);
+    return {
+      ok: true,
+      plugin: "dsh-infinite-gen-5",
+      version: PLUGIN_VERSION,
+      effective: { ...resolved.values },
+      sources: { ...resolved.sources },
+      persisted: { ...persisted },
+      store: store
+        ? { file: store.file, updatedAt: store.updatedAt, error: store.error }
+        : { file: runtime.tuning?.store?.file ?? tuningFile(), updatedAt: runtime.tuning?.at ?? null, error: null },
+      catalog: TUNING_CATALOG,
+      live: {
+        role: runtime.role,
+        anchorEmissions: runtime.anchorEmissions,
+        rebuilds: runtime.rebuilds,
+        sections: runtime.sections.map((s) => `${s.label}（order ${s.order} · ${s.chars} 字符）`),
+        placements: runtime.placements.map((p) => `${p.label} @ order ${p.order} · ${p.chars} 字符`),
+      },
+    };
+  };
+  const applyTuning = (patch, options = {}) => {
+    const store = readTuning();
+    const next = options.reset ? {} : { ...store.overrides };
+    const touched = [];
+    for (const [key, value] of Object.entries(patch && typeof patch === "object" ? patch : {})) {
+      if (!TUNABLE_KEYS.includes(key)) continue;
+      touched.push(key);
+      if (value === null || value === undefined || value === "") { delete next[key]; continue; }
+      const coerced = coerce(key, value);
+      if (coerced === undefined) continue;
+      next[key] = coerced;
+    }
+    let wrote = null;
+    let writeError = null;
+    if (options.persist !== false) {
+      try {
+        wrote = writeTuning(next);
+      } catch (error) {
+        writeError = String((error && error.message) || error);
+      }
+    }
+    const resolved = applyResolved(resolveTuning(config, next));
+    runtime.overrides = describeOverrides(resolved);
+    rebuildInjection();
+    runtime.tuning = {
+      effective: { ...resolved.values },
+      sources: { ...resolved.sources },
+      persisted: { ...next },
+      store: { file: tuningFile(), updatedAt: new Date().toISOString(), error: null },
+      at: new Date().toISOString(),
+      changes: touched,
+    };
+    return { ...tuningState(next), wrote, writeError, changes: touched };
+  };
+  // 宿主 webServer 上挂一条精确路由 + 把一次性 token 注入 index.html。
+  // 宿主的路由匹配没有鉴权中间件，所以这里自守：只收本机回环 + 页面注入的 token。
+  const TUNING_PATH = "/infinite-gen-5/tuning";
+  const tuningToken = randomBytes(16).toString("hex");
+  const isLoopback = (req) => {
+    const addr = (req.socket && (req.socket.remoteAddress || "")) || "";
+    return addr === "127.0.0.1" || addr === "::1" || addr === "::ffff:127.0.0.1";
+  };
+  const sendJson = (res, status, payload) => {
+    const body = JSON.stringify(payload);
+    res.writeHead(status, {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      "content-length": Buffer.byteLength(body),
+    });
+    res.end(body);
+  };
+  const tuningHandler = async (req, res) => {
+    if (!isLoopback(req)) return sendJson(res, 403, { ok: false, error: "只接受本机回环请求" });
+    if ((req.headers["x-ig5-token"] || "") !== tuningToken) {
+      return sendJson(res, 401, { ok: false, error: "缺少或错误的 x-ig5-token（刷新页面重新注入）" });
+    }
+    try {
+      const method = (req.method || "GET").toUpperCase();
+      if (method === "GET") return sendJson(res, 200, tuningState());
+      if (method === "POST") {
+        const raw = await new Promise((resolve, reject) => {
+          let size = 0;
+          const chunks = [];
+          req.on("data", (chunk) => {
+            size += chunk.length;
+            if (size > 8192) { reject(new Error("请求体超过 8 KB")); req.destroy(); return; }
+            chunks.push(chunk);
+          });
+          req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+          req.on("error", reject);
+        });
+        let payload = {};
+        try {
+          payload = raw.trim() ? JSON.parse(raw) : {};
+        } catch {
+          return sendJson(res, 400, { ok: false, error: "请求体不是合法 JSON" });
+        }
+        const patch = payload && typeof payload === "object" && payload.overrides && typeof payload.overrides === "object" ? payload.overrides : payload;
+        const result = applyTuning(patch, { reset: payload?.reset === true, persist: true });
+        return sendJson(res, result.writeError ? 500 : 200, { ...result, requested: patch });
+      }
+      return sendJson(res, 405, { ok: false, error: "只支持 GET / POST" });
+    } catch (error) {
+      return sendJson(res, 500, { ok: false, error: String((error && error.message) || error) });
+    }
+  };
+  const registerTuningEndpoint = () => {
+    const server = typeof ctx.get === "function" ? ctx.get("webServer") : undefined;
+    if (!server || typeof server.register !== "function") {
+      runtime.tuningEndpoint = {
+        ok: false,
+        path: TUNING_PATH,
+        reason: "宿主没有 webServer 服务（非 Web 组合）：设置页只能看当前值，不能改",
+      };
+      return;
+    }
+    try {
+      ctx.effect(() => server.register({ kind: "exact", path: TUNING_PATH, handler: tuningHandler }), "infinite-gen-5: 调参路由");
+      if (typeof ctx.on === "function") {
+        ctx.on("webserver/index-inject", (table) => {
+          table.push({
+            kind: "script",
+            placement: "body",
+            text: `window.__IG5_TUNING__=${JSON.stringify({ path: TUNING_PATH, token: tuningToken, version: PLUGIN_VERSION })};`,
+          });
+        });
+      }
+      runtime.tuningEndpoint = { ok: true, path: TUNING_PATH, tokenInjected: typeof ctx.on === "function" };
+    } catch (error) {
+      runtime.tuningEndpoint = { ok: false, path: TUNING_PATH, reason: String((error && error.message) || error) };
+      console.warn(`[infinite-gen-5] 无法注册设置页调参路由：${runtime.tuningEndpoint.reason}`);
+    }
+  };
 
   ctx.effect(() => {
     ctx.tools.register(profileTool);
@@ -906,6 +1227,8 @@ export function apply(ctx, config) {
       view: (state) => state,
     },
   };
+
+  registerTuningEndpoint();
 
   const registerArmor = (p) => {
     try {

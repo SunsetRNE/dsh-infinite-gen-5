@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.12.4";
+        var VERSION = "v0.13.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -166,7 +166,16 @@
           ".armor5-console-btn.is-primary:hover{background:var(--dsw-alias-button-primary-hover,#3d5bee);",
           "color:var(--dsw-alias-label-primary-foreground,#fff)}",
           ".armor5-console-icon{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;",
-          "color:var(--dsw-alias-label-tertiary,#8b8b8b)}"
+          "color:var(--dsw-alias-label-tertiary,#8b8b8b)}",
+          ".armor5-console-tag{display:inline-flex;align-items:center;height:15px;padding:0 6px;border-radius:999px;",
+          "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));color:var(--dsw-alias-label-caption,#8b8b8b);",
+          "font-size:10.5px;font-weight:400;vertical-align:middle}",
+          ".armor5-console-tag[data-source=ui]{border-color:var(--dsw-alias-state-business-primary,#4d6bfe);",
+          "color:var(--dsw-alias-state-business-primary,#4d6bfe)}",
+          ".armor5-console-choices-4{grid-template-columns:repeat(4,minmax(0,1fr))}",
+          ".armor5-console-yaml{margin:0;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
+          "border-radius:6px;background:var(--dsw-alias-bg-layer-1,rgba(127,127,127,.06));color:var(--dsw-alias-label-secondary,#b4b4b4);",
+          "font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;line-height:17px;white-space:pre-wrap;overflow-wrap:anywhere}"
         ].join("");
 
         function sameNode(a, b) {
@@ -578,11 +587,160 @@
           );
         }
 
+        // ── 注入档位：设置页里的可调控面板（v0.13.0） ──────────────────────────
+        // 服务端在宿主 webServer 上挂了 /infinite-gen-5/tuning，并把路径与一次性
+        // token 注入 index.html（window.__IG5_TUNING__）。改档位走 POST，服务端当场
+        // 卸掉注入段再按新档重装 —— 页面不必刷新，进程不必重启。
+        var TUNING_SOURCE_LABEL = { ui: "设置页", config: "profile config", env: "环境变量", default: "文件默认" };
+        var TUNING_PATH_FALLBACK = "/infinite-gen-5/tuning";
+        var TUNING_YAML_HINT = [
+          "# 宿主没给调参接口时，把下面这段贴进 profile 的 cordis.patch.yml（顶层，别写成 insert）：",
+          "- id: dsh-infinite-gen-5",
+          "  config:",
+          "    RUNTIME_ANCHOR_MODE: cadence",
+          "    RUNTIME_ANCHOR_EVERY: 2"
+        ].join("\n");
+        // 接口拿不到时的兜底目录（服务端正常时以它下发的 catalog 为准，两边不会各写一份取值表太久）。
+        var TUNING_CATALOG_FALLBACK = [
+          { key: "LAYER2_MODE", label: "中段锚点（Order 200）", hint: "同源让位时优先砍掉的就是它", options: [
+            { value: "anchor", label: "锚点", hint: "172 字符中段复述（默认）" },
+            { value: "mirror", label: "镜像", hint: "把内核再镜像一遍（最重）" },
+            { value: "off", label: "关闭", hint: "只留 Order 100 内核" }] },
+          { key: "TAIL_MODE", label: "真末位锚点（Order 10150）", hint: "锚点是否恒为整份系统提示的最后一段", options: [
+            { value: "waterfall", label: "瀑布末位", hint: "assemble 末端追加（默认）" },
+            { value: "order", label: "按 order 排", hint: "退化到 order 10150" },
+            { value: "off", label: "关闭", hint: "去掉末位锚点" }] },
+          { key: "RUNTIME_ANCHOR_MODE", label: "运行时锚点节拍", hint: "每步最后一条 user 消息里的同源复述", options: [
+            { value: "cadence", label: "按步换版", hint: "第 1 步 + 每 N 步换文本（默认）" },
+            { value: "once", label: "只发一次", hint: "整段会话一版" },
+            { value: "every", label: "每步都发", hint: "最贵" },
+            { value: "off", label: "关闭", hint: "不注入运行时锚点" }] },
+          { key: "RUNTIME_ANCHOR_EVERY", kind: "number", label: "节拍间隔 N", hint: "第 1 步 + 每 N 步重发" },
+          { key: "DEDUPE_PAYLOAD", kind: "bool", label: "同源让位", hint: "宿主已有同源载荷时内核让位", options: [
+            { value: true, label: "开", hint: "让位（默认）" },
+            { value: false, label: "关", hint: "永远注入自己的载荷" }] },
+          { key: "EXCLUSIVE_SECTION", kind: "bool", label: "独占系统段", hint: "开了会丢弃宿主其余系统段，属危险档", options: [
+            { value: false, label: "关", hint: "与其他系统段共存（默认）" },
+            { value: true, label: "开", hint: "内核 complete" }] }
+        ];
+
+        function tuningBridge() {
+          var w = typeof window !== "undefined" ? window : null;
+          var bridge = w && w.__IG5_TUNING__;
+          return bridge && bridge.path ? bridge : null;
+        }
+
+        function tuningFetch(bridge, method, body) {
+          var init = { method: method, credentials: "same-origin", headers: { "x-ig5-token": bridge.token } };
+          if (body) {
+            init.headers["content-type"] = "application/json";
+            init.body = JSON.stringify(body);
+          }
+          return fetch(bridge.path, init).then(function (res) {
+            return res.json().then(
+              function (doc) { return { status: res.status, doc: doc }; },
+              function () { return { status: res.status, doc: null }; }
+            );
+          });
+        }
+
+        // 服务端实况 + 待保存草稿。同一份 state 供面板与状态行读，避免两处各持一份。
+        function useTuning() {
+          var pair = react.useState({ phase: "loading", data: null, draft: null, error: null, note: null, busy: false });
+          var update = function (part) {
+            pair[1](function (prev) { return Object.assign({}, prev, part); });
+          };
+          var read = function () {
+            var bridge = tuningBridge();
+            if (!bridge) {
+              update({ phase: "unavailable", error: "宿主没有注入 __IG5_TUNING__（非 Web 组合，或插件早于 v0.13.0）" });
+              return;
+            }
+            update({ phase: "loading", error: null, note: null });
+            tuningFetch(bridge, "GET").then(function (r) {
+              if (r.status !== 200 || !r.doc || r.doc.ok !== true) throw new Error((r.doc && r.doc.error) || ("HTTP " + r.status));
+              update({ phase: "ready", data: r.doc, draft: Object.assign({}, r.doc.effective), error: null });
+            }).catch(function (error) {
+              update({ phase: "error", error: String((error && error.message) || error) });
+            });
+          };
+          var stage = function (key, value) {
+            pair[1](function (prev) {
+              var draft = Object.assign({}, prev.draft);
+              draft[key] = value;
+              return Object.assign({}, prev, { draft: draft, note: null });
+            });
+          };
+          var save = function (reset) {
+            var bridge = tuningBridge();
+            if (!bridge) return;
+            update({ busy: true, error: null, note: null });
+            var body = reset ? { reset: true } : { overrides: pair[0].draft };
+            tuningFetch(bridge, "POST", body).then(function (r) {
+              if (r.status !== 200 || !r.doc || r.doc.ok !== true) throw new Error((r.doc && r.doc.error) || ("HTTP " + r.status));
+              var changes = (r.doc.changes || []).filter(function (k) { return r.doc.effective[k] !== undefined; });
+              update({
+                phase: "ready", busy: false, data: r.doc, draft: Object.assign({}, r.doc.effective), error: null,
+                note: reset ? "已复位成文件默认" : ("已生效：" + (changes.length ? changes.join("、") : "无变化"))
+              });
+            }).catch(function (error) {
+              update({ busy: false, error: String((error && error.message) || error) });
+            });
+          };
+          react.useEffect(function () { read(); }, []);
+          return { state: pair[0], stage: stage, save: save, read: read };
+        }
+
+        function tuningStatusText(state) {
+          if (state.phase === "unavailable") return "调参接口不可用（" + state.error + "）—— 下面这段 YAML 一样能改，改完重启 DSH 生效";
+          if (state.phase === "loading") return "正在读取服务端的注入档位…";
+          // 读取失败与保存失败都走这条：错误必须上屏，不能让按钮点了没反应。
+          if (state.error) {
+            return (state.phase === "error" ? "读取失败：" : "调参失败：") + state.error +
+              "（token 每次启动都会换，刷新页面重试）";
+          }
+          var live = (state.data && state.data.live) || {};
+          return "生效中：" + ((live.placements || []).length) + " 处注入 · 已重装 " + (live.rebuilds || 0) +
+            " 次 · 运行时锚点已发 " + (live.anchorEmissions || 0) + " 版" + (state.note ? "　·　" + state.note : "");
+        }
+
+        function tuningRows(state, tuner) {
+          var catalog = state.data && state.data.catalog ? state.data.catalog : TUNING_CATALOG_FALLBACK;
+          var sources = state.data && state.data.sources ? state.data.sources : {};
+          return catalog.map(function (item) {
+            var value = state.draft ? state.draft[item.key] : undefined;
+            var tag = react.createElement("span", {
+              className: "armor5-console-tag",
+              "data-source": sources[item.key] || "default",
+              key: "tag:" + item.key
+            }, TUNING_SOURCE_LABEL[sources[item.key]] || TUNING_SOURCE_LABEL.default);
+            var options = item.kind === "number"
+              ? [2, 4, 6, 8].map(function (n) { return { value: n, label: "N=" + n, hint: n === Number(value) ? "当前" : "" }; })
+              : (item.options || []);
+            var cells = options.map(function (opt) {
+              return react.createElement(ArmorChoice, {
+                key: item.key + ":" + String(opt.value),
+                value: item.key + "=" + String(opt.value),
+                label: opt.label,
+                hint: opt.hint,
+                active: String(value) === String(opt.value),
+                onPick: function () { tuner.stage(item.key, opt.value); }
+              });
+            });
+            return react.createElement("div", { className: "armor5-console-group", key: item.key },
+              react.createElement("div", { className: "armor5-console-group-title" }, item.label + "　", tag),
+              react.createElement("span", { className: "armor5-console-hint" }, item.hint),
+              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-" + Math.min(cells.length, 4) }, cells)
+            );
+          });
+        }
+
         /**
          * 设置页里我们自己的那一页（settings.section，排在最顶部）。
          * 只读偏好 + 写偏好，改动立刻反映到状态条（同一个 prefs 源）。
          */
         function ArmorConsolePage(props) {
+          var tuner = useTuning();
           var prefs = usePrefs();
           var mode = prefs.triggerMode;
           var onClose = props && typeof props.close === "function" ? props.close : null;
@@ -669,6 +827,31 @@
                   active: prefs.sidebarIcon === true,
                   onPick: function () { writePrefs({ sidebarIcon: prefs.sidebarIcon !== true }); }
                 })
+              )
+            ),
+            react.createElement("div", { className: "armor5-console-group" },
+              react.createElement("div", { className: "armor5-console-group-title" }, "注入档位（改完点保存，服务端当场重装，不必重启）"),
+              react.createElement("span", { className: "armor5-console-hint" }, tuningStatusText(tuner.state)),
+              tuner.state.phase === "ready"
+                ? react.createElement("div", null, tuningRows(tuner.state, tuner))
+                : react.createElement("pre", { className: "armor5-console-yaml" }, TUNING_YAML_HINT),
+              react.createElement("div", { className: "armor5-console-foot" },
+                react.createElement("button", {
+                  type: "button",
+                  className: "armor5-console-btn armor5-tune-btn is-primary",
+                  disabled: tuner.state.busy === true || tuner.state.phase !== "ready",
+                  onClick: function () { tuner.save(false); }
+                }, tuner.state.busy ? "正在生效…" : "保存并生效"),
+                react.createElement("button", {
+                  type: "button",
+                  className: "armor5-console-btn armor5-tune-btn",
+                  onClick: function () { tuner.save(true); }
+                }, "复位到默认"),
+                react.createElement("button", {
+                  type: "button",
+                  className: "armor5-console-btn armor5-tune-btn",
+                  onClick: function () { tuner.read(); }
+                }, "重新读取")
               )
             ),
             react.createElement("div", { className: "armor5-console-group" },

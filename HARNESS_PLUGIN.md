@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.12.4)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.13.0)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -69,6 +69,7 @@
 
 | 版本 | 说明 |
 |---|---|
+| **v0.13.0** | **设置页「注入档位」可调控 UI**：插件设置页里直接改六个注入开关与节拍间隔 N（服务端在宿主 `webServer` 上挂精确路由 `/infinite-gen-5/tuning`，路径与一次性 token 随 index.html 注入 `window.__IG5_TUNING__`；路由自守 —— 只收本机回环 + 该 token，因为宿主的路由匹配前没有鉴权中间件）。点「保存并生效」= 一条 POST：档位落盘 `$DSH_HOME/infinite-gen-5-tuning.json`，并**卸掉注入部分的 effect、按新档重装一遍**（工具/投影不重挂，次数计入 `rebuilds`），因此不重启进程、不刷页面即生效；`apply()` 内的注入块重构为可卸载重装的 `mountInjection()` + 三个注册点收句柄，`LAYER2_MODE` / `TAIL_MODE` / `RUNTIME_ANCHOR_MODE` 都改成装配时现读 `CFG`，所以档位改了立刻反映到装配结果。优先级变为 **设置页（持久化）> profile config > `IG5_*` env > 文件默认**（`resolveTuning` 每次从文件默认重算，覆盖不会粘住），每键 `sources` 汇报来源档，「复位到默认」发 `{reset:true}`；接口不可用时面板降级为只读提示 + 可粘贴的 `cordis.patch.yml` 片段。profile 工具新增 `tuning` 实况（effective / sources / persisted / store / rebuilds / endpoint）。新增 `scripts/verify_tuning.mjs`（真实宿主演习台 **39** 项，存储指到临时目录、不碰真实 `~/.dsh`），客户端调参面板接进 `verify_ui` 135 → **149** 项 |
 | **v0.12.4** | **安装残留清理 + 调参实测归档**：新增 `scripts/cleanup.mjs`（`npm run clean:legacy` 只列 / `clean:legacy:force` 真删）—— 一次列清 install.sh 快照、profile 接线备份、dev-link 备份与仓库临时探针文件，并**绝不动活着的安装树**（profile 依赖解析到的落点只标「跳过」）；README 补上「改配置 → 重启」这条路的本机实测证据（定向 `config` 覆盖合进同一条 `- id:` 条目、重启后运行时锚点序号由 `R#1 → R#4 → R#8` 变为 `R#1 → R#2 → R#4`）；顺手修掉 `verify_install` 的误报 —— 它把「顶层 `- id:` + `config:` 的定向覆盖」也算成 insert，于是在调参态下误报双接线，现在按缩进区分 insert 列表与覆盖条目 |
 | **v0.12.3** | **运行期调参**：六个注入开关（`LAYER2_MODE` / `DEDUPE_PAYLOAD` / `TAIL_MODE` / `RUNTIME_ANCHOR_MODE` / `RUNTIME_ANCHOR_EVERY` / `EXCLUSIVE_SECTION`）改为三级覆盖 —— `apply(ctx, config)` 的 profile config > `IG5_*` 环境变量 > 文件内默认，就地写回 `IG5_CONFIG`，`infinite_gen5_profile` 新增 `configOverrides` 汇报来源（形如 `TAIL_MODE=off（env IG5_TAIL_MODE）`）；管理器式安装只需在 profile `cordis.patch.yml` 加一条只带 `config` 的定向覆盖（无 insert，不算双接线）。默认运行时锚点节拍 6 → **4** 步；档位键保持字符串语义（`"off"` 不做布尔化，自检锁死这条）；两条自检改为从 `IG5_CONFIG` 读默认档，`verify_injection` 34 → **41**、`verify_dedupe` 81 → **82** |
 | v0.3.0 | 双层注入首版（Order 100 通用内核 + Order 200 战场实测层） |
@@ -97,10 +98,11 @@ node scripts/verify_scenarios.mjs     # 83 项：56 个领域包 / 索引预算 
 node scripts/verify_scenario_tool.mjs # 85 项：真宿主挂载三个工具（+ 环境工具离线调用） + 工具链返回 + 「包正文不进 system prompt」硬断言
 node scripts/verify_dedupe.mjs        # 82 项：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本单一真源
 node scripts/verify_injection.mjs     # 41 项：真实宿主演习台（装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级；无宿主时 SKIP 并以 0 退出）
+node scripts/verify_tuning.mjs        # 39 项：设置页调参接口（路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位 / 无 webServer 降级；无宿主时 SKIP 并以 0 退出）
 node scripts/verify_version.mjs       # 22 项：版本锚点唯一且等于 package.json / 文档无超前版本号 / 全仓无未登记字面量
 node scripts/cleanup.mjs              # 安装残留清理（默认只列；--yes 才删，活着的安装树不在范围内）
 node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：接线入口唯一 / 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
-node scripts/verify_ui.mjs            # 135 项：状态条行为 + 设置台（偏好读写与持久化 / 形态与位置切换生效 / 侧栏开关 / 清理与幂等；--emit-html 出视觉预览）
+node scripts/verify_ui.mjs            # 149 项：状态条行为 + 设置台（偏好读写与持久化 / 形态与位置切换生效 / 侧栏开关 / 清理与幂等；--emit-html 出视觉预览）
 node scripts/verify_env.mjs           # 149 项：环境探测（纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算）
 node scripts/verify_eval.mjs          # 81 项：评测计量（P/R/F1 手算可核）+ 语料载入形状 + CLI 退出码 0/1/3
 node scripts/verify_prompt.mjs        # 64 项：载荷锚点 + 导出 + 安装协议 + 用例库

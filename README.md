@@ -1,4 +1,4 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.12.4
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.13.0
 
 <p align="center">
   <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
@@ -194,7 +194,7 @@
 
 ---
 
-## 📊 架构与能力（无限五代 v0.12.0）
+## 📊 架构与能力（无限五代 v0.13.0）
 
 | 维度 | 无限五代 (v0.12.0) |
 |---|---|
@@ -210,7 +210,7 @@
 | **一键安装协议** | 原生支持 dsh:// 联动 |
 | **分发形态** | 单仓库自包含，无 `node_modules`、无运行期依赖 |
 
-### 注入强度（v0.12.0）：为什么「末位锚点」要重做
+### 注入强度（v0.13.0）：为什么「末位锚点」要重做
 
 旧版的 Order 200 只放了约 200 字节的「末位锚点」，但宿主官方段位表
 （`@deepseek-ai/dsh-system-prompt` 的 `SECTION_ORDERS`）在它之后还排着
@@ -235,8 +235,8 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 
 #### 运行期调参：六个开关不必改代码重发布
 
-优先级 **profile config > `IG5_*` 环境变量 > 文件内默认值**，三级覆盖就地写回 `IG5_CONFIG`，
-`infinite_gen5_profile` 工具新增 `configOverrides`，如实汇报每个生效值是哪来的。
+优先级 **设置页（v0.13.0 起）> profile config > `IG5_*` 环境变量 > 文件内默认值**，各级覆盖就地写回
+`IG5_CONFIG`，`infinite_gen5_profile` 工具新增 `configOverrides`，如实汇报每个生效值是哪来的。
 
 | 开关 | 环境变量 | 取值 |
 |---|---|---|
@@ -265,6 +265,25 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 临时试一次也可以用环境变量（只影响这一次进程）：`IG5_EXCLUSIVE_SECTION=1 dsh web …`。
 注意档位键（`LAYER2_MODE` / `TAIL_MODE` / `RUNTIME_ANCHOR_MODE`）的取值是**字符串**：
 `"off"` 不会被当成布尔 `false` —— 自检专门锁了这条，否则 off 档会静默失效。
+
+#### 设置面板里直接调档位（v0.13.0）：点一下就重装，不必重启进程
+
+上面那条「改配置 → 重启」还得手工敲。v0.13.0 起插件在自己的设置页里长出一个**注入档位**面板
+（设置 → 插件 → 无限五代那一页，或侧栏那个入口），六个开关与节拍间隔 N 都能点。
+
+- 服务端在宿主 `webServer` 上挂一条精确路由 `/infinite-gen-5/tuning`，并把**一次性的 token**
+  随 index.html 注入页面（`window.__IG5_TUNING__`）。路由自守：只收本机回环 + 这个 token
+  —— 宿主的路由匹配前没有任何鉴权中间件，所以这一步必须插件自己做。
+- 点「保存并生效」= 一条 POST：服务端把档位写进 `$DSH_HOME/infinite-gen-5-tuning.json`，
+  然后**卸掉注入部分的 effect、按新档重装一遍**（工具与投影不重挂，重装次数计入 `rebuilds`），
+  因此**不用重启进程、不用刷页面**。每行右侧的标记写明这个值是谁给的（设置页 / profile config /
+  环境变量 / 文件默认）；`infinite_gen5_profile` 的 `tuning` 字段是同一份实况。
+- 「复位到默认」发的是 `{reset:true}`（删掉落盘的覆盖），不是把当前值再发一遍；接口拿不到时
+  （非 Web 组合、宿主没给 `webServer`、插件早于 v0.13.0）面板降级成只读提示 + 一段可直接贴进
+  `cordis.patch.yml` 的 YAML，既不白屏，也不偷偷把失败当成功。
+- 自检：`scripts/verify_tuning.mjs`（真实宿主演习台 39 条；存储被指到临时目录，全程不碰真实
+  `~/.dsh`）覆盖路由自守 / 改档位后装配真的换了 / 落盘 / 优先级 / 复位 / 无 webServer 降级；
+  客户端那一半（面板渲染、草稿、POST 内容、错误上屏）接在 `verify_ui.mjs` 里。
 
 两条安全边界：**让位就整体让位** —— 内核因同源去重让位时，真末位锚点与运行时锚点也不再单独挂上，
 否则模型手里只剩半个载荷；**独占档不丢锚点** —— `complete` 模式下宿主会在瀑布之后把 sections 裁成
@@ -331,6 +350,7 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   │   ├── changelog.mjs           # CHANGELOG 生成器（按提交标题里的 (vX.Y.Z) 切版本段）
 │   │   ├── release.mjs             # 发版助手：前置检查 + 发布正文 + 打 tag/推送 + Release（gh 优先，缺 gh 走 REST）
 │   │   ├── package-release.mjs     # 发布产物打包：按 git 跟踪清单打 tar.gz/zip + SHA256SUMS + 解包复检
+│   │   ├── verify_tuning.mjs       # 设置页调参自检：路由自守 / 重装注入 / 落盘 / 优先级（真实宿主演习台，缺宿主时 SKIP）
 │   │   ├── dev-link.mjs            # 开发热链接：仓库 ↔ ~/.dsh 软链切换（--link / --restore / 只读状态）
 │   │   ├── verify_prompt_gen4.mjs  # ⚠️ 遗留重定向 → verify_prompt_gen5.mjs
 │   │   └── verify_prompt_gen41.mjs # ⚠️ 遗留重定向 → verify_prompt_gen51.mjs
@@ -456,11 +476,12 @@ chmod +x install.sh uninstall.sh
    node scripts/verify_prompt_gen5.mjs   # 146 条：载荷完备性 + 五槽骨架 + 七族点名 + 语言/工具链/环境/工具调用卫生规则 + 体积预算
    node scripts/verify_scenarios.mjs     # 83 条：56 个领域包 / 索引预算 / 标记表 / 工具链 / 覆盖性回归
    node scripts/verify_scenario_tool.mjs # 85 条：真宿主挂载三个工具 + 环境工具离线调用 + 「包正文不进 system prompt」
-   node scripts/verify_dedupe.mjs        # 81 条：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本一致性
+   node scripts/verify_dedupe.mjs        # 82 条：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本一致性
    node scripts/verify_injection.mjs     # 41 条：真实宿主演习台 —— 装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级（无宿主时 SKIP）
    node scripts/verify_version.mjs       # 22 条：版本锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量
    node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：单一接线入口 + 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
-   node scripts/verify_ui.mjs            # 135 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理）
+   node scripts/verify_tuning.mjs        # 39 条：设置页调参接口 —— 路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位（无宿主时 SKIP）
+   node scripts/verify_ui.mjs            # 149 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理、注入档位面板）
    node scripts/verify_env.mjs           # 149 条：探测纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算
    node scripts/verify_eval.mjs          # 81 条：评测计量（合成数据手算可核）+ CLI 退出码 0/1/3
    node scripts/verify_prompt.mjs        # 64 条：经典确定性校验
