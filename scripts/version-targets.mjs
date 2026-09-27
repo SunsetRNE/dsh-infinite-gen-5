@@ -55,7 +55,9 @@ export const VERSION_ANCHORS = [
 
 // 允许「散见叙述」当前版本号、但不作为锚点的文件：
 // 命中检查时视为已知，发版时不改写（package.json 由 bump 结构化处理）。
-export const PROSE_ALLOWED_FILES = ["package.json", "ENV_PROBE.md"];
+// CHANGELOG.md 是 scripts/changelog.mjs 的生成物、按提交标题切版本段，天然满篇版本号；
+// 它记的是「哪个版本发布了什么」，属历史叙述，发版时交给 changelog.mjs 重生成。
+export const PROSE_ALLOWED_FILES = ["package.json", "ENV_PROBE.md", "CHANGELOG.md"];
 
 // 全仓字面量扫描时跳过的目录：依赖 / 生成物 / 运行产物 / 版本库内部。
 export const SCAN_SKIP_DIRS = [".git", "node_modules", "ui-preview", "runs", ".dsh"];

@@ -278,6 +278,7 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │       └── infinite-gen-5-classic.md          # 经典内核同源副本（逐字一致）
 ├── 📖 文档中心
 │   ├── README.md                # 综合主说明文档（本文件）
+│   ├── CHANGELOG.md             # 版本变更史（scripts/changelog.mjs 由 Conventional Commits 生成，勿手改）
 │   ├── LICENSE                  # MIT License（本项目）
 │   └── THIRD_PARTY_NOTICES.md   # 第三方许可与归属声明（上游 MIT 全文）
 ├── 🛡️ 确定性回归测试套件
@@ -289,9 +290,12 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   │   ├── verify_dedupe.mjs       # 注入去重行为回归（同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍）
 │   │   ├── verify_injection.mjs     # 注入强度自检（真实宿主演习台：装配顺序 / 真末位位置 / 独占档 / 瀑布降级；无宿主时 SKIP）
 │   │   ├── verify_version.mjs      # 版本一致性自检（锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量）
+│   │   ├── verify_install.mjs      # 安装体检：盘上三处版本一致 / profile 接线 / 进程是否比副本更旧（缺 ~/.dsh 时 SKIP）
 │   │   ├── version-targets.mjs     # 「当前版本锚点」唯一真源（bump 与 verify 共用同一张表）
 │   │   ├── bump-version.mjs        # 发版改写器：只改锚点、历史叙述不动（--dry 可预演）
 │   │   ├── bump-version.sh         # 同上的 shell 薄包装：bash scripts/bump-version.sh X.Y.Z
+│   │   ├── changelog.mjs           # CHANGELOG 生成器（按提交标题里的 (vX.Y.Z) 切版本段）
+│   │   ├── release.mjs             # 发版助手：前置检查 + 发布正文 + 打 tag/推送 +（有 gh 时）建 Release
 │   │   ├── verify_prompt_gen4.mjs  # ⚠️ 遗留重定向 → verify_prompt_gen5.mjs
 │   │   └── verify_prompt_gen41.mjs # ⚠️ 遗留重定向 → verify_prompt_gen51.mjs
 │   └── tests/
@@ -419,6 +423,7 @@ chmod +x install.sh uninstall.sh
    node scripts/verify_dedupe.mjs        # 81 条：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本一致性
    node scripts/verify_injection.mjs     # 34 条：真实宿主演习台 —— 装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级（无宿主时 SKIP）
    node scripts/verify_version.mjs       # 22 条：版本锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量
+   node scripts/verify_install.mjs       # 10 条：盘上三处版本一致 / profile 接线 / 进程是否比副本更旧（缺 ~/.dsh 时 SKIP）
    node scripts/verify_ui.mjs            # 135 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理）
    node scripts/verify_env.mjs           # 149 条：探测纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算
    node scripts/verify_eval.mjs          # 81 条：评测计量（合成数据手算可核）+ CLI 退出码 0/1/3
@@ -438,27 +443,34 @@ chmod +x install.sh uninstall.sh
 
 ## 🔧 维护与发版（改代码 → 自检 → 版本 → 发布）
 
-### 开发循环：改仓库 ≠ 改线上
+### 开发循环：改仓库 ≠ 改线上（而且不重启就不生效）
 
-安装脚本是**复制**而不是软链 —— `install.sh` 把仓库整份拷进 `~/.dsh/plugin-src/dsh-infinite-gen-5`，profile 里再用 `link:` 指向那个副本。所以改完仓库**必须重跑安装脚本**才会进线上：
+安装脚本是**复制**而不是软链 —— `install.sh` 把仓库整份拷进 `~/.dsh/plugins/dsh-infinite-gen-5`，profile 的依赖写成 `file:../../plugins/dsh-infinite-gen-5`、并在 profile 的 `cordis.patch.yml` 里插一条 `id: dsh-infinite-gen-5` 接线。所以改完仓库**必须重跑安装脚本 + 重启 DSH 进程**才会进线上：
 
 ```bash
 npm run verify:all     # 1) 本地全量自检（与 CI 同一入口）
-./install.sh           # 2) 覆盖 plugin-src（自动留 .bak-<时间戳>-pre-v<版本> 快照）
-# 3) 重启 DSH 进程，进 GUI 确认状态条 / 设置台
+./install.sh           # 2) 覆盖 ~/.dsh/plugins/ 副本（自动留 package.json 备份 + plugin-src 快照）
+npm run verify:install # 3) 体检：盘上三处版本是否一致、接线是哪一种、进程是不是比副本更旧
+# 4) 重启 DSH 进程，进 GUI 确认状态条 / 设置台
 ```
 
-### 发版三步
+`verify:install` 专治两种「看着装了其实没生效」：**装了没重启**（dsh web 进程启动时间早于副本 mtime → 警告）与**接线漂移**（`link:` 旧接线、patch insert 与 `bundles` 双接线、`node_modules` 副本没同步）。缺 `~/.dsh` 时它打印 SKIP 并退出 0，所以 CI 上不会误伤；本地想把它当门禁用就加 `--strict`（警告也算失败）。
+
+### 发版三步（bump → changelog → release）
 
 ```bash
 node scripts/bump-version.mjs X.Y.Z --dry   # 先看会改哪几处（不落盘）
 node scripts/bump-version.mjs X.Y.Z         # 只改「当前版本锚点」，历史叙述不动
+npm run changelog                           # 由 Conventional Commits 重生成 CHANGELOG.md
 npm run verify:all                          # 必过；verify:version 会拦漏改
 git add -A && git commit -m "feat(vX.Y.Z): <一句话>"
-git tag -a vX.Y.Z -m "无限五代 vX.Y.Z" && git push origin main --tags
+git push origin main
+npm run release -- --yes --release          # 打 annotated tag vX.Y.Z + 推送 +（有 gh 时）建 Release
 ```
 
-`scripts/version-targets.mjs` 是「当前版本锚点」的唯一真源（`index.js` 的 `PLUGIN_VERSION`、`client.js` 的 `VERSION`、`cordis.patch.yml` 头注释、README / HARNESS_PLUGIN 标题、两个 verify 脚本头注释），改写器与自检共用它。README 版本沿革、`package.json` description、`ENV_PROBE.md` 里「随插件 v0.8.0 引入」这类**记录当时**的旧版本号刻意不改、也不登记为锚点 —— 发版改写它们等于篡改历史。`verify_version.mjs` 另外断言：文档里不出现比当前更新的版本号、全仓没有未登记的版本号字面量（新增文件里硬写版本号会被抓出来）。
+`npm run release`（= `scripts/release.mjs`）默认只**预览**：先做前置检查（工作区干净、tag 不存在、本地与 origin 同步），再把 CHANGELOG 里该版本的段落当发布正文打印出来。加 `--yes` 才真打 tag 并推送；再加 `--release` 才调 `gh release create`。没装/没登录 `gh` 时它**降级**为打印正文与安装命令（`apt install -y gh` → `gh auth login`），tag 照样推上去、源码包照样可用。CHANGELOG 由 `scripts/changelog.mjs` 生成（版本段按提交标题里的 `(vX.Y.Z)` 作用域切分），别手改。
+
+`scripts/version-targets.mjs` 是「当前版本锚点」的唯一真源（`index.js` 的 `PLUGIN_VERSION`、`client.js` 的 `VERSION`、`cordis.patch.yml` 头注释、README / HARNESS_PLUGIN 标题、两个 verify 脚本头注释），改写器与自检共用它。README 版本沿革、`package.json` description、`ENV_PROBE.md` 里「随插件 v0.8.0 引入」、以及生成物 `CHANGELOG.md` 这类**记录当时**的版本号刻意不改、只在 `PROSE_ALLOWED_FILES` 里登记放行 —— 发版改写它们等于篡改历史。`verify_version.mjs` 另外断言：文档里不出现比当前更新的版本号、全仓没有未登记的版本号字面量（新增文件里硬写版本号会被抓出来）。
 
 ### CI 门禁
 

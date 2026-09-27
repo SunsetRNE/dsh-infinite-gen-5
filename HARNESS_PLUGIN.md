@@ -95,17 +95,39 @@ node scripts/verify_scenarios.mjs     # 83 项：56 个领域包 / 索引预算 
 node scripts/verify_scenario_tool.mjs # 85 项：真宿主挂载三个工具（+ 环境工具离线调用） + 工具链返回 + 「包正文不进 system prompt」硬断言
 node scripts/verify_dedupe.mjs        # 81 项：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本单一真源
 node scripts/verify_injection.mjs     # 34 项：真实宿主演习台（装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级；无宿主时 SKIP 并以 0 退出）
+node scripts/verify_version.mjs       # 22 项：版本锚点唯一且等于 package.json / 文档无超前版本号 / 全仓无未登记字面量
+node scripts/verify_install.mjs       # 10 项：盘上三处版本一致 / profile 接线 / 进程是否比已装副本更旧（缺 ~/.dsh 时 SKIP）
 node scripts/verify_ui.mjs            # 135 项：状态条行为 + 设置台（偏好读写与持久化 / 形态与位置切换生效 / 侧栏开关 / 清理与幂等；--emit-html 出视觉预览）
 node scripts/verify_env.mjs           # 149 项：环境探测（纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算）
 node scripts/verify_eval.mjs          # 81 项：评测计量（P/R/F1 手算可核）+ 语料载入形状 + CLI 退出码 0/1/3
-node scripts/eval-corpus.mjs --gate   # 离线评测门禁：坏行=1、相对 tests/eval-baseline.json 回退=3
 node scripts/verify_prompt.mjs        # 64 项：载荷锚点 + 导出 + 安装协议 + 用例库
+node scripts/eval-corpus.mjs --gate   # 离线评测门禁：坏行=1、相对 tests/eval-baseline.json 回退=3
 ```
+
+一条命令跑全部（CI 门禁同一入口）：`npm run verify:all`。
+
+## 维护与发版
+
+```bash
+npm run verify:all                          # 与 CI 同一入口，必须全绿
+./install.sh                                # 把仓库整份拷进 ~/.dsh/plugins/dsh-infinite-gen-5
+npm run verify:install                      # 体检：三处副本版本一致 / 接线 / 是否需要重启
+# 重启 DSH 进程后才会生效（安装是复制，不是软链）
+
+node scripts/bump-version.mjs X.Y.Z         # 只改「当前版本锚点」（version-targets.mjs 为唯一真源）
+npm run changelog                           # 由 Conventional Commits 重生成 CHANGELOG.md（勿手改）
+npm run verify:all && git add -A && git commit -m "feat(vX.Y.Z): <一句话>"
+npm run release -- --yes --release          # 默认只预览：前置检查 + CHANGELOG 正文；--yes 打 tag 并推送，--release 再调 gh
+```
+
+README / 本文档的版本沿革、`package.json` description、`ENV_PROBE.md` 的历史引用、以及生成物 `CHANGELOG.md` 里的版本号属**历史叙述**，刻意不改写（`verify_version.mjs` 只在 `PROSE_ALLOWED_FILES` 里放行）；发版时改了它们等于篡改历史。
 
 ## Install in the desktop Harness
 
+两种接线都能装载本插件，`install.sh` / `install.ps1` 用的是**第二种**（patch insert），因为它在 profile 里显式、可回滚：
+
 ```powershell
-# profiles/default/package.json
+# 方式 A：bundles 装载（profile/package.json）
 "dependencies": {
   "dsh-infinite-gen-5": "file:../../plugins/dsh-infinite-gen-5"
 },
@@ -116,7 +138,14 @@ node scripts/verify_prompt.mjs        # 64 项：载荷锚点 + 导出 + 安装�
 }
 ```
 
-然后 `cd $env:USERPROFILE\.dsh\profiles\default && pnpm install`，重启会话（或执行 `install.ps1`）。
+```yaml
+# 方式 B：profile/cordis.patch.yml 里显式插一条（install.sh 写入）
+- insert:
+    - id: dsh-infinite-gen-5
+      name: dsh-infinite-gen-5
+```
+
+依赖统一写成 `file:../../plugins/dsh-infinite-gen-5`（指向 `~/.dsh/plugins/` 下的实体副本，**不是** `link:` 到 `plugin-src` 的旧接线），然后 `cd ~/.dsh/profiles/<profile> && pnpm install`，**重启 DSH 进程**才会生效（安装是复制而非软链）。
 
 注意：若 profile 中同时启用其它同样注册系统提示词段的破甲包，组装时会出现多份载荷叠加；
-如需本插件载荷独占生效，请二选一保留。
+如需本插件载荷独占生效，请二选一保留 —— 或者打开 `EXCLUSIVE_SECTION`（v0.12.0 起可选，默认关）。
