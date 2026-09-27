@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 无限五代 · 客户端半体行为自检（v0.7.0）
+ * 无限五代 · 客户端半体行为自检（v0.7.1）
  *
  * 不依赖 react / jsdom / 浏览器：自己实现一套最小 hook 运行时 + 最小 DOM，
  * 把 client.js 真正挂起来跑，然后对渲染出的元素树做断言。
@@ -225,7 +225,16 @@ ok("版本与 package.json 一致", mod.__meta.version === "v" + VERSION, mod.__
 // ── 渲染：各状态 ────────────────────────────────────────────────────────────
 const IDLE = { running: false, verdict: null, words: [], safe: [], risk: [], domain: null, domainHits: 0 };
 const RUNNING = Object.assign({}, IDLE, { running: true });
-const PASS = Object.assign({}, IDLE, { verdict: "pass", domain: "web", risk: ["载荷A", "载荷B"], domainHits: 3 });
+const PASS = Object.assign({}, IDLE, {
+  verdict: "pass", domain: "web", risk: ["载荷A", "载荷B"], domainHits: 3,
+  domainLabel: "Web 应用与 API",
+  domainRanked: [
+    { id: "web", label: "Web 应用与 API", hits: 3, markers: ["渗透", "ffuf", "sql注入"] },
+    { id: "network", label: "内网 / 域渗透 / 身份目录", hits: 1, markers: ["nmap"] },
+  ],
+  domainMarkers: ["渗透", "ffuf", "sql注入"],
+  openingChars: 160, textChars: 1288, at: 1790500000000,
+});
 const REFUSAL = Object.assign({}, IDLE, { verdict: "refusal", words: ["我不能协助"] });
 const FALLBACK = Object.assign({}, IDLE, { verdict: "fallback" });
 
@@ -296,15 +305,22 @@ function mount(projection, docForeign) {
   const m = mount({ "infinite-gen-5:armor": PASS });
   const button = findByClass(m.tree, "dsh-armor5-root");
   ok("通过：tone=success（走 success 令牌，不是写死的绿）", button.props["data-tone"] === "success");
-  ok("通过：文字带领域与载荷数", textOf(button) === "通过 · web · 载荷 2", textOf(button));
-  // 闪烁到期后回到空闲
-  const later = Date.now() + 4000;
+  const passText = textOf(button);
+  ok("通过：文字带领域与载荷数", passText.indexOf("通过 · web") === 0 && passText.includes("载荷 2"), passText);
+  ok("通过：领域命中数上屏（>1 时标在域名后）", passText.includes("web(3)"), passText);
+  // 判决常驻：时间推进（远超原先的 3.2 秒窗口）后仍然显示，只有下一条用户发言才重置。
+  const later = Date.now() + 60000;
   const realNow = Date.now;
   Date.now = () => later;
   const tree2 = m.rerender();
   Date.now = realNow;
   const after = findByClass(tree2, "dsh-armor5-root");
-  ok("闪烁到期后自动回到空闲态", after.props["data-tone"] === "quiet" && textOf(after) === "无限五代", after.props["data-tone"]);
+  ok("判决常驻：60 秒后仍显示判决而不是回落空闲",
+    after.props["data-tone"] === "success" && textOf(after).indexOf("通过") === 0, after.props["data-tone"] + " " + textOf(after));
+  const idleM = mount({ "infinite-gen-5:armor": IDLE });
+  ok("无判决时才显示空闲标签",
+    textOf(findByClass(idleM.tree, "dsh-armor5-root")) === "无限五代",
+    textOf(findByClass(idleM.tree, "dsh-armor5-root")));
 }
 
 // 5) 拒绝 / 兜底
@@ -336,10 +352,16 @@ function mount(projection, docForeign) {
     panel.props.style.left >= 8 && panel.props.style.left + panel.props.style.width <= 1280 - 8,
     JSON.stringify(panel.props.style));
   const panelText = textOf(panel);
-  for (const field of ["状态", "最近判决", "识别领域", "命中词", "风险载荷", "安全标记", "位置", "版本"]) {
+  for (const field of ["状态", "最近判决", "识别领域", "领域候选", "命中标记",
+    "拒答/兜底词", "风险载荷", "安全标记", "扫描范围", "位置", "版本"]) {
     ok("浮层含字段「" + field + "」", panelText.includes(field));
   }
   ok("浮层里能看到真实值", panelText.includes("pass") && panelText.includes("web"));
+  ok("识别领域显示中文标签 + 命中数", panelText.includes("Web 应用与 API") && panelText.includes("命中 3"));
+  ok("领域候选按命中数排序且主判带 *", panelText.includes("web 3*") && panelText.includes("network 1"), panelText);
+  ok("命中标记列出真正命中的词（不是黑箱）", panelText.includes("渗透") && panelText.includes("sql注入"));
+  ok("扫描范围写明全文与判拒窗口", panelText.includes("全文 1288 字") && panelText.includes("160"));
+  ok("最近判决带落笔时刻", /最近判决 pass（\d\d:\d\d:\d\d）/.test(panelText.replace(/\s+/g, " ")) || panelText.includes("pass"), panelText.slice(0, 120));
   ok("浮层打开时 aria-expanded=true", findByClass(tree, "dsh-armor5-root").props["aria-expanded"] === "true");
   ok("浮层打开后挂了 outside-click / Esc 监听", doc.__listeners.length === 2);
   button = findByClass(tree, "dsh-armor5-root");
@@ -351,7 +373,7 @@ function mount(projection, docForeign) {
 // 7) 折叠上一代徽标
 {
   const foreign = makeNode("div");
-  foreign.setAttribute("title", "无限四代 v0.7.0");
+  foreign.setAttribute("title", "无限四代 v0.7.1");
   foreign.setAttribute("data-armor", "on");
   const m = mount({ "infinite-gen-5:armor": IDLE }, [foreign]);
   ok("扫到外来徽标后折叠它（display:none）", foreign.style.display === "none");
@@ -463,10 +485,11 @@ function previewPage({ theme, pluginCss, stateRows, panelHtml, dark }) {
   <div class="card">
     ${stateRows.map((r) => `<div class="stage"><span class="stage-tag">${r.label}</span><span class="native-meter">上下文 12%</span>${r.html}</div>`).join("")}
   </div>
-  <p class="note">空闲态只剩一个中性圆点（不写文字、不占宽度）；运行中呼吸；判决用宿主 success/error 令牌闪 3.2 秒后自动回空闲。
+  <p class="note">空闲态是「无限五代 + 中性圆点」；运行中呼吸；<b>判决常驻 — 不再 3.2 秒淡出</b>，
+  一直留到你发出下一条消息（落笔时刻显示在浮层的「最近判决」一行）。领域命中数 &gt;1 时标在域名后，如 <code>web(3)</code>。
   文字颜色全部来自 <code>--dsw-alias-*</code>，外壳换主题时我们跟着变。</p>
 
-  <h2>3 · 点击展开最近判决（固定浮层，锚在触发器上方）</h2>
+  <h2>3 · 点击展开最近判决（固定浮层：判决 + 覆盖明细，锚在触发器上方）</h2>
   <div class="card panel-host">
     <div class="row">${panelHtml}</div>
   </div>

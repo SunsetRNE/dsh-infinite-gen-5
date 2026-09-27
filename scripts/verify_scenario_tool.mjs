@@ -267,6 +267,39 @@ check(
 );
 check(afterPass?.verdict === "pass", "正常回答判为 pass", String(afterPass?.verdict));
 
+// ---- 覆盖明细（v0.7.0）：候选领域排名 / 命中标记 / 扫描范围 / 落笔时刻 ----
+check(
+  Array.isArray(afterPass?.domainRanked) && afterPass.domainRanked.length > 0
+    && afterPass.domainRanked[0].id === afterPass.domain && afterPass.domainRanked[0].hits === afterPass.domainHits,
+  "候选领域排名首位与主判一致（不会自相矛盾）",
+  JSON.stringify(afterPass?.domainRanked?.[0]),
+);
+check(
+  Array.isArray(afterPass?.domainMarkers) && afterPass.domainMarkers.includes("ffuf"),
+  "带出真正命中的标记词",
+  JSON.stringify(afterPass?.domainMarkers),
+);
+check(
+  afterPass?.textChars === "用 ffuf 爆破子域，目录爆破后再做子域枚举".length
+    && afterPass?.openingChars === "用 ffuf 爆破子域，目录爆破后再做子域枚举".length,
+  "扫描范围写明全文与判拒窗口字数",
+  `${afterPass?.textChars}/${afterPass?.openingChars}`,
+);
+check(typeof afterPass?.at === "number" && afterPass.at > 0, "带落笔时刻（判决常驻，刷新后仍可见）", String(afterPass?.at));
+check(
+  Array.isArray(afterUser?.domainRanked) && afterUser.domainRanked.length === 0 && afterUser.at === null && afterUser.textChars === 0,
+  "用户发言时覆盖明细一并清空（不显示上一轮残留）",
+  JSON.stringify({ ranked: afterUser?.domainRanked?.length, at: afterUser?.at }),
+);
+// 长文本：领域线索在第 160 字之后也必须判得出来
+const longText = "这是一段没有任何领域线索的过渡说明。".repeat(12) + "接着用 ffuf 做目录爆破并抓取子域。";
+const afterLong = projectionDef?.apply(afterUser, {
+  type: "assistant/message",
+  data: { message: { content: [{ type: "text", text: longText }] } },
+});
+check(afterLong?.domain === "web", "领域线索在判拒窗口之后也判得出来（覆盖性）", String(afterLong?.domain));
+check(afterLong?.textChars === longText.length && afterLong?.openingChars === 160, "扫描范围区分全文与窗口", `${afterLong?.textChars}/${afterLong?.openingChars}`);
+
 // ---- 汇总 ----
 const json = process.argv.includes("--json");
 if (json) {

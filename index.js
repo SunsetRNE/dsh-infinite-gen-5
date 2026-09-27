@@ -6,7 +6,7 @@ import {
   FAMILIES,
   DOMAIN_MARKERS,
   DOMAIN_LABELS,
-  detectDomain,
+  rankDomains,
   findScenarios,
   renderScenario,
   lookupScenario,
@@ -15,9 +15,9 @@ import {
   TOOLCHAIN_PROTOCOL,
 } from "./data/scenarios.mjs";
 
-// ── 无限五代内核载荷（v0.7.0） ────────────────────────────────────────────────────
+// ── 无限五代内核载荷（v0.7.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.7.0";
+const PLUGIN_VERSION = "0.7.1";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -77,7 +77,8 @@ const profileTool = {
         "prompts/infinite-gen-5.1-flash.md",
       ],
       lineage: [
-        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 计算机向扩写：领域包 45 → 56（新增 re/unpack/obfuscation/hook_inject/malware/exploit_dev/fuzzing/decrypt/stego/programming/automation），每个域附工具链（装/验命令）与缺工具时的降级协议；内核新增「工具链规则」（Order 100 载荷 4934 字符 + 172 字符锚点；领域工具常驻 794 B ≈ 248 token）`,
+        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 状态条判决常驻（不再 3.2 秒淡出）+ 覆盖明细：领域判定扫全文（判拒仍只看开头 160 字）、候选领域排名、真实命中标记词、扫描范围、落笔时刻`,
+        "dsh-infinite-gen-5 (v0.7.0) — 计算机向扩写：领域包 45 → 56（新增 re/unpack/obfuscation/hook_inject/malware/exploit_dev/fuzzing/decrypt/stego/programming/automation），每个域附工具链（装/验命令）与缺工具时的降级协议；内核新增「工具链规则」（Order 100 载荷 4934 字符 + 172 字符锚点；领域工具常驻 794 B ≈ 248 token）",
         "dsh-infinite-gen-5 (v0.6.1) — 领域工具去掉 deferLoading：延迟加载会让它从模型的工具表里消失、内核里指向它的那句变成死指针；改为常驻定义约 0.8 KB",
         "dsh-infinite-gen-5 (v0.6.0) — 领域/语言覆盖扩写：5 槽骨架 + 45 域 × 7 族点名 + 语言规则，领域包全文移入 infinite_gen5_scenario 工具（34 KB 包正文不进 prompt）",
         "dsh-infinite-gen-5 (v0.5.2) — 状态条迁到输入框 dock 行，对齐宿主原生视觉令牌（v0.5.1 曾夹在任务列表与输入框之间）",
@@ -300,16 +301,38 @@ function armorScore(text) {
   else if (fallback.length) verdict = "fallback";
 
   // 领域判定改由数据层统一实现（运行时的状态条、工具、离线评分器共用一份词表）。
-  // 原先这里内联 9 个领域，现在覆盖 45 个；未命中仍是 null，浮层显示「—」。
-  const { domain, hits: domainHits } = detectDomain(window, DOMAIN_MARKERS);
+  // 判拒只扫开头窗口（拒答一定出现在开头），但**领域判定扫全文** —— 只看开头 160 字
+  // 时，长回答里后半段的领域线索全丢，浮层上就表现为「识别领域」要么空要么粗。
+  const ranked = rankDomains(folded, DOMAIN_MARKERS, 4);
+  const top = ranked[0] ?? null;
+  const domain = top ? top.id : null;
+  const domainHits = top ? top.hits : 0;
 
-  return { verdict, words, safe: safe.slice(0, 3), risk: risk.slice(0, 3), domain, domainLabel: domain ? DOMAIN_LABELS[domain] ?? domain : null, domainHits };
+  return {
+    verdict,
+    words,
+    safe: safe.slice(0, 8),
+    risk: risk.slice(0, 8),
+    domain,
+    domainLabel: domain ? DOMAIN_LABELS[domain] ?? domain : null,
+    domainHits,
+    // 覆盖明细：候选领域排名 + 主判真正命中的标记词 + 扫描范围
+    domainRanked: ranked,
+    domainMarkers: top ? top.markers.slice(0, 6) : [],
+    openingChars: window.length,
+    textChars: text.length,
+    at: Date.now(),
+  };
 }
 
 function armorProjectionApply(state, event) {
   if (!event || typeof event !== "object") return state;
   if (event.type === "user/message") {
-    return { running: true, verdict: null, words: [], safe: [], risk: [], domain: null, domainLabel: null, domainHits: 0 };
+    return {
+      running: true, verdict: null, words: [], safe: [], risk: [],
+      domain: null, domainLabel: null, domainHits: 0,
+      domainRanked: [], domainMarkers: [], openingChars: 0, textChars: 0, at: null,
+    };
   }
   if (event.type === "assistant/message") {
     const text = armorTextOf(event?.data?.message?.content);
@@ -324,6 +347,11 @@ function armorProjectionApply(state, event) {
       domain: scored.domain,
       domainLabel: scored.domainLabel,
       domainHits: scored.domainHits,
+      domainRanked: scored.domainRanked,
+      domainMarkers: scored.domainMarkers,
+      openingChars: scored.openingChars,
+      textChars: scored.textChars,
+      at: scored.at,
     };
   }
   return state;
@@ -469,7 +497,11 @@ export function apply(ctx) {
     key: "infinite-gen-5:armor",
     stateVersion: 3,
     stateSchema: anySchema,
-    init: () => ({ running: false, verdict: null, words: [], safe: [], risk: [], domain: null, domainLabel: null, domainHits: 0 }),
+    init: () => ({
+      running: false, verdict: null, words: [], safe: [], risk: [],
+      domain: null, domainLabel: null, domainHits: 0,
+      domainRanked: [], domainMarkers: [], openingChars: 0, textChars: 0, at: null,
+    }),
     apply: armorProjectionApply,
     wire: {
       viewSchema: anySchema,

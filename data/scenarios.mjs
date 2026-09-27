@@ -1052,35 +1052,44 @@ export const DOMAIN_MARKERS = (() => {
 /** 领域 id → 中文标签（状态条浮层与评测报告共用）。 */
 export const DOMAIN_LABELS = Object.fromEntries(SCENARIOS.map((s) => [s.id, s.label]));
 
-/** 在一个文本窗口里挑命中数最多的领域；命中数为 0 时返回 null。 */
-export function detectDomain(text, markers = DOMAIN_MARKERS) {
+/** 领域候选排名（状态条浮层 / 评测诊断共用）：返回命中数 > 0 的领域，
+ *  按「命中数 → 最长命中标记」降序。带出真正命中的那几条标记词，
+ *  这样「识别领域」不再是只有一个 id 的黑箱。 */
+export function rankDomains(text, markers = DOMAIN_MARKERS, limit = 4) {
   const folded = String(text ?? "").toLocaleLowerCase();
-  if (!folded) return { domain: null, hits: 0 };
-  let domain = null;
-  let hits = 0;
-  let bestLen = 0;
+  if (!folded) return [];
+  const rows = [];
   for (const [key, list] of Object.entries(markers)) {
-    let count = 0;
     let longest = 0;
+    const hitMarkers = [];
     for (const marker of list) {
       if (!marker) continue;
       // 自定义标记表可能带大写，逐条兜底折叠（内置表在构造时已折叠）。
       const needle = marker === marker.toLocaleLowerCase() ? marker : marker.toLocaleLowerCase();
       if (folded.includes(needle)) {
-        count += 1;
+        hitMarkers.push(marker);
         if (needle.length > longest) longest = needle.length;
       }
     }
-    // 命中数相同时，命中标记更长的那个域更具体：「控制流平坦化」（obfuscation）
-    // 应当胜过「代码」（code_eng），「模糊测试」（fuzzing）应当胜过「解析」（scraping）。
-    if (count > hits || (count > 0 && count === hits && longest > bestLen)) {
-      hits = count;
-      domain = key;
-      bestLen = longest;
-    }
+    if (hitMarkers.length) rows.push({ id: key, hits: hitMarkers.length, markers: hitMarkers, longest });
   }
-  return { domain, hits };
+  rows.sort((a, b) => b.hits - a.hits || b.longest - a.longest || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return rows.slice(0, Math.max(1, limit)).map((row) => ({
+    id: row.id,
+    label: DOMAIN_LABELS[row.id] ?? row.id,
+    hits: row.hits,
+    markers: row.markers,
+  }));
 }
+
+/** 在一个文本窗口里挑命中数最多的领域；命中数为 0 时返回 null。
+ *  排序规则与 rankDomains 完全一致（它就是 rankDomains 的第一名），
+ *  这样状态条、工具与离线评分器不会出现「候选列表与主判不一致」。 */
+export function detectDomain(text, markers = DOMAIN_MARKERS) {
+  const [top] = rankDomains(text, markers, 1);
+  return { domain: top ? top.id : null, hits: top ? top.hits : 0 };
+}
+
 
 // ───────────────────────────── 索引与查找 ─────────────────────────────
 

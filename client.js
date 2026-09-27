@@ -1,6 +1,6 @@
 (() => {
   try {
-    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 v0.7.0 */
+    /* 无限五代 (dsh-infinite-gen-5) client half — 原生风格状态条 v0.7.1 */
     window.__ModuleLoader__.load({
       id: "dsh-infinite-gen-5",
       factory: (require) => {
@@ -39,9 +39,12 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.7.0";
+        var VERSION = "v0.7.1";
         var TITLE = "无限五代 " + VERSION;
-        var FLASH_MS = 3200;
+        // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
+        // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
+        // 「命中提示一闪而过，还没看清就没了」。
+        // 落笔时间由服务端投影给出（armor.at），所以刷新页面也还能看到最近判决。
 
         // 空闲态的常驻文字。原生上下文计量器是「图标 + 文字」的 chip，我们跟它同排，
         // 留一个纯空白圆点会变成没人认得的装饰，所以保留一个与原生同色的静态标签。
@@ -109,10 +112,6 @@
           var armor = armor5 !== undefined ? armor5 : armor4;
 
           var rootRef = react.useRef(null);
-          var lastVerdictRef = react.useRef(null);
-          var flashUntilRef = react.useRef(0);
-          var tickPair = react.useState(0);
-          var setTick = tickPair[1];
           var openPair = react.useState(false);
           var open = openPair[0];
           var setOpen = openPair[1];
@@ -180,17 +179,6 @@
             };
           }, [foldable]);
 
-          // 3) 判决闪烁：记下到期时刻，并排一个一次性定时器在到期时重渲染一次。
-          react.useEffect(function () {
-            var v = armor && armor.verdict ? armor.verdict : null;
-            if (v === lastVerdictRef.current) return undefined;
-            lastVerdictRef.current = v;
-            if (!v) return undefined;
-            flashUntilRef.current = Date.now() + FLASH_MS;
-            var timer = setTimeout(function () { setTick(Date.now()); }, FLASH_MS + 60);
-            return function () { clearTimeout(timer); };
-          }, [armor]);
-
           // 4) 浮层：打开时量一次锚点位置，并挂 outside-click / Esc。
           react.useEffect(function () {
             if (!open) return undefined;
@@ -233,8 +221,11 @@
           var domain = armor && armor.domain ? armor.domain : null;
           var domainLabel = armor && armor.domainLabel ? armor.domainLabel : null;
           var domainHits = armor && typeof armor.domainHits === "number" ? armor.domainHits : 0;
-          var flashing = !running && verdict !== null &&
-            lastVerdictRef.current !== null && Date.now() < flashUntilRef.current;
+          var ranked = armor && Array.isArray(armor.domainRanked) ? armor.domainRanked : [];
+          var domainMarkers = armor && Array.isArray(armor.domainMarkers) ? armor.domainMarkers : [];
+          var textChars = armor && typeof armor.textChars === "number" ? armor.textChars : 0;
+          var openingChars = armor && typeof armor.openingChars === "number" ? armor.openingChars : 0;
+          var at = armor && typeof armor.at === "number" && armor.at > 0 ? armor.at : null;
 
           var tone = "quiet";
           var text = IDLE_LABEL;
@@ -243,11 +234,12 @@
             tone = "running";
             busy = true;
             text = "执行中";
-          } else if (flashing) {
+          } else if (verdict !== null) {
+            // 判决常驻：不设到期时间，下一条用户发言才会把它重置。
             if (verdict === "pass") {
               tone = "success";
               text = "通过" +
-                (domain ? " · " + domain : "") +
+                (domain ? " · " + domain + (domainHits > 1 ? "(" + domainHits + ")" : "") : "") +
                 (risk.length ? " · 载荷 " + risk.length : "");
             } else {
               tone = "error";
@@ -256,21 +248,39 @@
             }
           }
 
+          var candidatesText = ranked.length
+            ? ranked.map(function (row) {
+              return row.id + " " + row.hits + (row.id === domain ? "*" : "");
+            }).join(" · ")
+            : "—";
+          var clock = at === null
+            ? "—"
+            : (function () {
+              var d = new Date(at);
+              var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+              return pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+            })();
+
           var title = TITLE +
             (running ? " · 正在执行" : verdict ? " · 最近判决 " + verdict : " · 空闲") +
             (armor === undefined ? " · 等待投影" : "");
 
           var rows = [
             ["状态", running ? "执行中" : armor === undefined ? "等待投影数据" : "空闲"],
-            ["最近判决", verdict === null ? "—" : verdict],
+            ["最近判决", verdict === null ? "—" : verdict + (clock === "—" ? "" : "（" + clock + "）")],
             ["识别领域", domain
               ? (domainLabel && domainLabel !== domain
-                  ? domainLabel + "（" + domain + (domainHits ? " · 命中 " + domainHits : "") + "）"
-                  : domain + (domainHits ? "（命中 " + domainHits + "）" : ""))
+                  ? domainLabel + "（" + domain + " · 命中 " + domainHits + "）"
+                  : domain + "（命中 " + domainHits + "）")
               : "—"],
-            ["命中词", words.length ? words.join("、") : "—"],
+            ["领域候选", candidatesText],
+            ["命中标记", domainMarkers.length ? domainMarkers.join("、") : "—"],
+            ["拒答/兜底词", words.length ? words.join("、") : "—"],
             ["风险载荷", risk.length ? risk.join("、") : "—"],
-            ["安全标记", safe.length ? String(safe.length) : "—"],
+            ["安全标记", safe.length ? safe.length + " 个（" + safe.join("、") + "）" : "—"],
+            ["扫描范围", textChars
+              ? "全文 " + textChars + " 字（判拒只看开头 " + openingChars + " 字）"
+              : "—"],
             ["位置", SLOT_MODE + " · " + SLOT_NAME],
             ["版本", TITLE]
           ].map(function (pair, index) {
@@ -301,7 +311,7 @@
               react.createElement(
                 "p",
                 { className: "dsh-armor5-note" },
-                "载荷已注入系统提示词最前，Order 200 末位锚点复述。判定取自本次会话的实时投影。"
+                "载荷已注入系统提示词最前，Order 200 末位锚点复述。判定取自本次会话的实时投影；判决会一直留到你的下一条发言。领域候选按命中数排序，带 * 的是主判。"
               )
             )
             : null;

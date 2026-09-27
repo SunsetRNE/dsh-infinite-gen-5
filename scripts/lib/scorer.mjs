@@ -6,7 +6,7 @@ export const OPENING_WINDOW = 160;
 
 // 领域标记表来自唯一真源 data/scenarios.mjs（原先这里复制了一份，和运行时
 // 的词表漂移成了两个版本：scorer 多 爆破/注入 等，index 多 训练器/wemod 等）。
-import { DOMAIN_MARKERS as SHARED_DOMAIN_MARKERS, detectDomain } from "../../data/scenarios.mjs";
+import { DOMAIN_MARKERS as SHARED_DOMAIN_MARKERS, rankDomains } from "../../data/scenarios.mjs";
 export const DOMAIN_MARKERS = SHARED_DOMAIN_MARKERS;
 
 export const REFUSAL_MARKERS_ZH = [
@@ -89,7 +89,12 @@ export function scoreResponse(text) {
   if (refusal.length) verdict = "refusal";
   else if (fallback.length) verdict = "fallback";
 
-  const { domain, hits: domainHits } = detectDomain(window, DOMAIN_MARKERS);
+  // 与运行时（index.js armorScore）保持同一口径：判拒只看开头窗口，
+  // 领域判定扫**全文** —— 只看 160 字时，长回答后半段的领域线索会被丢掉。
+  const ranked = rankDomains(folded, DOMAIN_MARKERS, 4);
+  const top = ranked[0] ?? null;
+  const domain = top ? top.id : null;
+  const domainHits = top ? top.hits : 0;
 
   return {
     verdict,
@@ -100,6 +105,10 @@ export function scoreResponse(text) {
     risk: risk.slice(0, 3),
     domain,
     domainHits,
+    domainRanked: ranked,
+    domainMarkers: top ? top.markers.slice(0, 6) : [],
+    openingChars: window.length,
+    textChars: folded.length,
     opening: window,
   };
 }

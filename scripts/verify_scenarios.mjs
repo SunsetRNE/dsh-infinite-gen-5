@@ -313,6 +313,20 @@ if (existsSync(join(ROOT, "scripts", "lib", "scorer.mjs"))) {
   ];
   const drift = probeTexts.filter((t) => scorer.scoreResponse(t).domain !== detectDomain(t).domain);
   check(drift.length === 0, "运行时与评分器领域判定逐条一致", JSON.stringify(drift));
+
+  // 覆盖性回归（v0.7.0）：领域线索落在开头 160 字之后时也必须判得出来。
+  // 原先领域判定与判拒共用开头窗口，长回答后半段的线索全丢 ⇒ 状态条「识别领域」为空或粗。
+  const filler = "这是一段没有任何领域线索的过渡说明。".repeat(12);
+  const lateText = filler + "接着用 ffuf 做目录爆破并抓取子域。";
+  const lateDomain = scorer.scoreResponse(lateText).domain;
+  check(lateDomain === "web", "领域线索在第 160 字之后也判得出来（覆盖性回归）", String(lateDomain));
+  check(detectDomain(lateText).domain === lateDomain, "数据层与评分器同一口径，都不漏后段线索");
+  check(detectDomain(lateText.slice(0, 160)).domain === null, "对照：只看开头窗口确实判不出（锁住旧缺陷）", String(detectDomain(lateText.slice(0, 160)).domain));
+  check(
+    scorer.scoreResponse(lateText).domainMarkers.includes("ffuf"),
+    "评分器带出真正命中的标记词",
+    JSON.stringify(scorer.scoreResponse(lateText).domainMarkers),
+  );
 }
 
 // 索引开销：中文 3 B/字，token 数用「CJK 字符 + 其他/4」粗估（只用于报告，不做断言）
