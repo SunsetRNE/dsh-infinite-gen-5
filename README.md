@@ -1,4 +1,4 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.12.3
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.12.4
 
 <p align="center">
   <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
@@ -257,6 +257,11 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
     EXCLUSIVE_SECTION: true
 ```
 
+本机实测（2026-09-27，v0.12.3）：在 profile 的 `cordis.patch.yml` 里加这条 **只带 `config`** 的定向覆盖后，
+`dsh --profile web --dump-config` 显示本插件**仍然只有一条** `- id: dsh-infinite-gen-5`、`config.RUNTIME_ANCHOR_EVERY: 2`
+被合进同一条（不是新增第二条接线）；重启进程后运行时锚点序号按 `R#1 → R#2 → R#3` 递增（默认档是 `R#1 → R#4 → R#8`），
+证明「改配置 → 重启」这条路真的通了 —— 调档位不必再改代码、发版、等管理器更新。
+
 临时试一次也可以用环境变量（只影响这一次进程）：`IG5_EXCLUSIVE_SECTION=1 dsh web …`。
 注意档位键（`LAYER2_MODE` / `TAIL_MODE` / `RUNTIME_ANCHOR_MODE`）的取值是**字符串**：
 `"off"` 不会被当成布尔 `false` —— 自检专门锁了这条，否则 off 档会静默失效。
@@ -319,7 +324,7 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 │   │   ├── verify_dedupe.mjs       # 注入去重行为回归（同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍）
 │   │   ├── verify_injection.mjs     # 注入强度自检（真实宿主演习台：装配顺序 / 真末位位置 / 独占档 / 瀑布降级；无宿主时 SKIP）
 │   │   ├── verify_version.mjs      # 版本一致性自检（锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量）
-│   │   ├── verify_install.mjs      # 安装体检：盘上三处版本一致 / profile 接线 / 进程是否比副本更旧（缺 ~/.dsh 时 SKIP）
+│   │   ├── verify_install.mjs      # 安装体检：接线入口唯一 / 定向 config 覆盖识别 / 内容一致 / 进程新旧（缺 ~/.dsh 时 SKIP）
 │   │   ├── version-targets.mjs     # 「当前版本锚点」唯一真源（bump 与 verify 共用同一张表）
 │   │   ├── bump-version.mjs        # 发版改写器：只改锚点、历史叙述不动（--dry 可预演）
 │   │   ├── bump-version.sh         # 同上的 shell 薄包装：bash scripts/bump-version.sh X.Y.Z
@@ -454,7 +459,7 @@ chmod +x install.sh uninstall.sh
    node scripts/verify_dedupe.mjs        # 81 条：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本一致性
    node scripts/verify_injection.mjs     # 41 条：真实宿主演习台 —— 装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级（无宿主时 SKIP）
    node scripts/verify_version.mjs       # 22 条：版本锚点唯一且等于 package.json / 无超前版本号 / 无未登记字面量
-   node scripts/verify_install.mjs       # 10 条：盘上三处版本一致 / profile 接线 / 进程是否比副本更旧（缺 ~/.dsh 时 SKIP）
+   node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：单一接线入口 + 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
    node scripts/verify_ui.mjs            # 135 条：状态条行为 + 设置台（形态/位置偏好、持久化、侧栏开关、清理）
    node scripts/verify_env.mjs           # 149 条：探测纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算
    node scripts/verify_eval.mjs          # 81 条：评测计量（合成数据手算可核）+ CLI 退出码 0/1/3
@@ -496,6 +501,22 @@ npm run verify:install # 3) 体检：加载的是哪棵树、与仓库对不对�
 管理器式下有个坑值得记：插件的落点 `~/.dsh/plugin-src/dsh-infinite-gen-5` 必须是**实体副本**，不能是指向仓库的软链 —— 管理器的原位覆盖会失败（本机踩过：dev 热链接态下点「覆盖式更新」报错，只能卸载重装）。要用 dev 热链接开发，先 `npm run dev:restore` 把落点还原成实体。
 
 `verify:install` 专治两种「看着装了其实没生效」：**装了没重启**（dsh web 进程启动时间早于运行时文件 mtime → 警告）与**接线漂移**（patch insert 与 `bundles` 双接线、依赖目标解析不到、`node_modules` 与依赖声明不是同一棵树）。缺 `~/.dsh` 时它打印 SKIP 并退出 0，所以 CI 上不会误伤；本地想把它当门禁用就加 `--strict`（警告也算失败）。
+
+### 安装残留清理（clean:legacy）：把 ~/.dsh 里的备份一次列清
+
+安装链路的每次迭代都会留备份（install.sh 的 `dsh-infinite-gen-5.bak-<ts>-pre-v<版本>` 快照、profile 的
+`package.json.bak-<ts>`、dev-link 期的 `.bak-<ts>-pre-devlink`、仓库里验证热链接用的 `HOTLINK_PROOF.txt`）。
+`verify:install` 会把这些报成警告但不替你删，所以配一个**默认只列、`--yes` 才删**的清理器：
+
+```bash
+npm run clean:legacy          # 只列：哪几类残留、各占多少、删掉能释放多少
+npm run clean:legacy:force    # 真删（只删上面那几类）
+```
+
+安全边界（宁可少删）：profile 依赖解析到的那棵树、`~/.dsh/plugin-src/<插件>` 本体、
+profile 自己的 `package.json` / `cordis.patch.yml` / `node_modules` 都不在清理范围内；
+被 profile 依赖指向的落点只会被标成「跳过」。删完再跑一次 `npm run verify:install`，
+残留警告应当归零。
 
 ### 开发热链接（dev-link）：改一行立刻可见，不必重跑安装
 

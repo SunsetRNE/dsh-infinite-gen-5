@@ -11,6 +11,7 @@
  *   - 管理器式：profile 依赖 link:<dshHome>/plugin-src/<name> + dsh.profile.bundles 含有本插件
  *               （宿主插件管理器的「安装/更新」写成这样，更新由它负责）；
  *   - install.sh 式：依赖 file:../../plugins/<name> + profile cordis.patch.yml 里有 insert 条目
+ *   （patch 层顶层的 `- id: <name>` + `config:` 是给已接线插件改档位的「定向覆盖」，不带 insert，不算第二条接线 —— v0.12.3 运行期调参就用它）
  *               （本仓库 install.sh 写成这样，不需要 bits 也能装）；
  *   - dev 热链接：上述任一位置换成指向本仓库的软链（scripts/dev-link.mjs --link）。
  *
@@ -175,7 +176,32 @@ for (const prof of profileDirs) {
   const bundles = pkg?.dsh?.profile?.bundles || [];
   const patchPath = join(prof, "cordis.patch.yml");
   const patch = existsSync(patchPath) ? readFileSync(patchPath, "utf8") : "";
-  const inserted = new RegExp("^\\s*-\\s*id:\\s*" + NAME + "\\b", "m").test(patch);
+  // 区分「接线条目」与「定向 config 覆盖」：只有落在 insert 列表里的 - id 才是接线；
+  // 顶层 `- id: <name>` + `config:` 是给已接线插件改档位的覆盖，不带 insert，不算第二条接线。
+  let inserted = false;
+  let override = false;
+  {
+    let inInsert = false;
+    let insertIndent = -1;
+    for (const line of patch.split("\n")) {
+      const m = /^(\s*)-\s*(.*)$/.exec(line);
+      if (!m) continue;
+      const indent = m[1].length;
+      const body = m[2].trim();
+      if (body.startsWith("insert:")) {
+        inInsert = true;
+        insertIndent = indent;
+        continue;
+      }
+      if (inInsert && indent <= insertIndent) inInsert = false;
+      if (body.startsWith("id:")) {
+        const id = body.slice(3).trim().replace(/^["']|["']$/g, "");
+        if (id !== NAME) continue;
+        if (inInsert) inserted = true;
+        else override = true;
+      }
+    }
+  }
   const target = specTarget(prof, spec);
   const nm = join(prof, "node_modules", NAME);
   states.push({
@@ -184,6 +210,7 @@ for (const prof of profileDirs) {
     spec,
     inBundles: bundles.includes(NAME),
     inserted,
+    override,
     target,
     targetOk: !!(target && existsSync(join(target, "package.json"))),
     nm,
@@ -202,6 +229,9 @@ for (const s of states) {
     check(false, `${s.label} 有接线入口`, "cordis.patch.yml insert 与 dsh.profile.bundles 两处都没有，插件不会被加载");
   } else {
     check(true, `${s.label} 单一接线入口`, s.inserted ? "profile cordis.patch.yml insert" : "dsh.profile.bundles");
+  }
+  if (s.override && !s.inserted) {
+    check(true, `${s.label} patch 层只有定向 config 覆盖`, "顶层 - id + config 覆盖已接线插件，不带 insert，因此不算双接线");
   }
   if (s.spec.startsWith("link:") && !s.inBundles) {
     warn(`${s.label} link: 依赖但不在 bundles 里`, "宿主插件管理器的「已启用」集合取自 dsh.profile.bundles，它可能会把本插件当成没启用");
