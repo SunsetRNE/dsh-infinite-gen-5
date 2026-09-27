@@ -74,6 +74,30 @@ const linkTarget = (p) => {
     return null;
   }
 };
+// 只有「进程启动时会被读进内存」的文件才算「改了要重启」：
+// index.js / client.js / cordis.patch.yml + prompts/ + data/ 下的模块。
+// README、CHANGELOG、scripts/ 这些改完不需要重启，否则文档提交也会被误报成「装了没重启」。
+const RUNTIME_FILES = ["index.js", "client.js", "cordis.patch.yml"];
+const collectRuntimeFiles = (dir) => {
+  const found = [];
+  const walk = (rel) => {
+    const abs = join(dir, rel);
+    let st;
+    try {
+      st = statSync(abs);
+    } catch {
+      return;
+    }
+    if (st.isDirectory()) {
+      for (const entry of readdirSync(abs)) walk(join(rel, entry));
+    } else if (/\.(mjs|js|md|yml|json)$/.test(rel)) {
+      found.push({ path: abs, mtime: st.mtime });
+    }
+  };
+  for (const rel of RUNTIME_FILES) walk(rel);
+  for (const sub of ["prompts", "data"]) walk(sub);
+  return found;
+};
 
 const dshHome = resolve(argOf("--dsh-home", process.env.DSH_HOME || "/root/.dsh"));
 const pidFile = resolve(argOf("--pid-file", join(homedir(), ".dsha-web.pid")));
@@ -184,14 +208,15 @@ if (existsSync(pidFile)) {
     try {
       const started = new Date(execFileSync("ps", ["-o", "lstart=", "-p", pid], { encoding: "utf8" }).trim());
       proc = { pid, started: started.toISOString() };
-      const destMtime = destPkg ? statSync(join(dest, "index.js")).mtime : null;
+      const newest = collectRuntimeFiles(dest).sort((x, y) => y.mtime - x.mtime)[0] || null;
+      const destMtime = newest ? newest.mtime : null;
       if (destMtime && started < destMtime) {
         warn(
-          "进程比盘上副本更旧（装了没重启）",
-          `dsh web pid ${pid} 启动于 ${started.toISOString()}，副本更新于 ${destMtime.toISOString()} —— 这份改动还没生效`,
+          "进程比盘上副本更旧（改了没重启）",
+          `dsh web pid ${pid} 启动于 ${started.toISOString()}，${short(newest.path)} 更新于 ${destMtime.toISOString()} —— 这份改动还没进进程`,
         );
       } else if (destMtime) {
-        passes.push({ label: "运行进程不早于盘上副本", detail: `pid ${pid} 启动于 ${started.toISOString()}` });
+        passes.push({ label: "运行进程不早于运行时文件", detail: `pid ${pid} 启动于 ${started.toISOString()}，最新改动是 ${short(newest.path)}` });
       }
     } catch {
       warn("读不到 dsh web 进程启动时间", `pid 文件 ${short(pidFile)} 里的 ${pid} 不存在？`);
