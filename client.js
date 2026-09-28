@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.36.2";
+        var VERSION = "v0.36.3";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -216,6 +216,14 @@
           ".armor5-console-badge{display:inline-flex;align-items:center;gap:4px;color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:11px}",
           ".armor5-console-badge[data-kind=pass]{color:var(--dsw-alias-state-success-primary,#3fb950)}",
           ".armor5-console-rows,.armor5-task-list,.armor5-live-rows{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}",
+          // v0.36.3：旋钮分三组后每组两栏 —— 12 个键一列到底会把设置页拉成长卷。
+          ".armor5-knob-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}",
+          ".armor5-knob{display:flex;flex-direction:column;gap:3px;min-width:0}",
+          ".armor5-knob-head{display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0}",
+          ".armor5-knob-name{font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+          ".armor5-knob .armor5-console-choices{grid-template-columns:1fr 1fr;gap:4px}",
+          ".armor5-knob .armor5-console-choice{min-height:28px;padding:3px 6px}",
+          ".armor5-knob .armor5-console-choice-hint{display:none}",
           ".armor5-console-rows li,.armor5-task-list li,.armor5-live-rows li{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:baseline}",
           ".armor5-console-rows .k,.armor5-task-list .k,.armor5-live-rows .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px}",
           ".armor5-console-rows .v,.armor5-task-list .v,.armor5-live-rows .v{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:11px;overflow-wrap:anywhere}",
@@ -852,7 +860,9 @@
             { value: "light", label: "轻量", hint: "预算 3500 B，只回最相关的几章" },
             { value: "full", label: "全开", hint: "预算 16000 B，近于不惰性化" },
             { value: "off", label: "关闭", hint: "零拼回，最省上下文" }] },
-          { key: "LAZY_BYTES", kind: "number", min: 0, max: 40000, label: "惰性章节字节预算", hint: "硬上限：档位预算与本值取小；0 = 跟随档位预算（默认）" }
+          // LAZY_BYTES 上界跟守卫的 NUMERIC_RANGES 对齐（v0.36.3 前写 40000，比守卫的 16000 高，
+          // 接口不可用走兜底目录时这个旋钮给出的档位会被服务端拒收）。
+          { key: "LAZY_BYTES", kind: "number", min: 0, max: 16000, label: "惰性章节字节预算", hint: "硬上限：档位预算与本值取小；0 = 跟随档位预算（默认）" }
         ];
 
         // ── 面板的唯一数据来源：插件本体写好的统计数据库（v0.13.9） ──────────────
@@ -1199,10 +1209,52 @@
             " 次 · 运行时锚点已发 " + (live.anchorEmissions || 0) + " 版" + (state.note ? "　·　" + state.note : "");
         }
 
+        // 旋钮按「载荷 → 节拍 → 形态」三组排、每组两栏。顺序与内核注入面一致；
+        // 服务端将来加的新键自动落进「其他」组，不会静默漏渲染。
+        var TUNING_GROUPS = [
+          { title: "载荷与预算", keys: ["BOOST_MODE", "BOOST_BYTES", "LAZY_MODE", "LAZY_BYTES"] },
+          { title: "节拍与门", keys: ["RUNTIME_ANCHOR_MODE", "RUNTIME_ANCHOR_EVERY", "ASK_GATE_MODE", "ASK_GATE_EVERY"] },
+          { title: "形态与去重", keys: ["LAYER2_MODE", "TAIL_MODE", "DEDUPE_PAYLOAD", "EXCLUSIVE_SECTION"] }
+        ];
+        // 数字键的真档位：原来一律给 N=2/4/6/8，对 BOOST_BYTES（256–12000）与 LAZY_BYTES（0–40000）
+        // 全是越界值，点了必被 v0.36.1 的区间守卫拒收 —— 等于四个坏按钮。这里按键给可用档位。
+        var NUMERIC_STEPS = {
+          BOOST_BYTES: { steps: [1200, 2400, 4200, 8000], unit: " B" },
+          LAZY_BYTES: { steps: [3500, 6000, 12000, 16000], unit: " B" },
+          RUNTIME_ANCHOR_EVERY: { steps: [2, 4, 6, 8], unit: "" },
+          ASK_GATE_EVERY: { steps: [2, 4, 6, 8], unit: "" }
+        };
+
+        function numericOptions(item, value) {
+          var spec = NUMERIC_STEPS[item.key] || null;
+          var list = spec ? spec.steps.slice() : [2, 4, 6, 8];
+          var min = Number(item.min);
+          var max = Number(item.max);
+          if (isFinite(min) || isFinite(max)) {
+            list = list.filter(function (n) {
+              return (!isFinite(min) || n >= min) && (!isFinite(max) || n <= max);
+            });
+          }
+          if (list.length === 0) list = [isFinite(min) ? min : 0];
+          return list.map(function (n) {
+            return { value: n, label: String(n) + (spec ? spec.unit : ""), hint: Number(value) === n ? "当前" : "" };
+          });
+        }
+
         function tuningRows(state, tuner) {
           var catalog = state.data && state.data.catalog ? state.data.catalog : TUNING_CATALOG_FALLBACK;
           var sources = state.data && state.data.sources ? state.data.sources : {};
-          return catalog.map(function (item) {
+          var byKey = {};
+          var placed = {};
+          catalog.forEach(function (item) { byKey[item.key] = item; });
+          TUNING_GROUPS.forEach(function (g) { g.keys.forEach(function (k) { placed[k] = true; }); });
+          var groups = TUNING_GROUPS.map(function (g) {
+            return { title: g.title, items: g.keys.map(function (k) { return byKey[k]; }).filter(Boolean) };
+          }).filter(function (g) { return g.items.length > 0; });
+          var rest = catalog.filter(function (item) { return !placed[item.key]; });
+          if (rest.length > 0) groups.push({ title: "其他", items: rest });
+
+          function knob(item) {
             var value = state.draft ? state.draft[item.key] : undefined;
             var tag = react.createElement("span", {
               className: "armor5-console-tag",
@@ -1210,7 +1262,7 @@
               key: "tag:" + item.key
             }, TUNING_SOURCE_LABEL[sources[item.key]] || TUNING_SOURCE_LABEL.default);
             var options = item.kind === "number"
-              ? [2, 4, 6, 8].map(function (n) { return { value: n, label: "N=" + n, hint: n === Number(value) ? "当前" : "" }; })
+              ? numericOptions(item, value)
               : (item.options || []);
             var cells = options.map(function (opt) {
               return react.createElement(ArmorChoice, {
@@ -1222,10 +1274,18 @@
                 onPick: function () { tuner.stage(item.key, opt.value); }
               });
             });
-            return react.createElement("div", { className: "armor5-console-group", key: item.key },
-              react.createElement("div", { className: "armor5-console-group-title" }, item.label + "　", tag),
-              react.createElement("span", { className: "armor5-console-hint" }, item.hint),
+            return react.createElement("div", { className: "armor5-knob", key: item.key, title: item.hint },
+              react.createElement("div", { className: "armor5-knob-head" },
+                react.createElement("span", { className: "armor5-knob-name" }, item.label),
+                tag),
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-" + Math.min(cells.length, 4) }, cells)
+            );
+          }
+
+          return groups.map(function (g) {
+            return react.createElement("div", { className: "armor5-console-group", key: "grp:" + g.title },
+              react.createElement("div", { className: "armor5-console-group-title" }, g.title),
+              react.createElement("div", { className: "armor5-knob-grid" }, g.items.map(knob))
             );
           });
         }

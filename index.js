@@ -64,7 +64,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.36.2";
+const PLUGIN_VERSION = "0.36.3";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -651,8 +651,10 @@ const TUNING_CATALOG = [
   {
     key: "LAZY_BYTES",
     kind: "number",
+    // 上界必须与 NUMERIC_RANGES.LAZY_BYTES 一致：v0.36.3 前这里写 40000、守卫只放到 16000，
+    // 用户在设置页点 40000 只会被拒收（rejected 留痕），是个够不着的假旋钮。
     min: 0,
-    max: 40000,
+    max: 16000,
     label: "惰性章节字节预算",
     hint: "硬上限：档位预算与本值取小，超预算整章丢弃；0 = 跟随档位预算（默认），要停就关掉档位",
   },

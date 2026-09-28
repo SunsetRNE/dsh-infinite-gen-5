@@ -1324,6 +1324,25 @@ if (process.argv.includes("--emit-html")) {
     ["BOOST_MODE", "BOOST_BYTES", "LAZY_MODE", "LAZY_BYTES"].every((k) =>
       collectByClass(tree, "armor5-console-choice").some((b) => String(b.props["data-choice"] ?? "").startsWith(k + "="))),
     JSON.stringify(collectByClass(tree, "armor5-console-choice").map((b) => b.props["data-choice"])));
+  // v0.36.3：旋钮分三组、每组两栏 —— 12 个键一列到底会把设置页拉成长卷。
+  // 树里的 children 由宿主归一化，不保证留在 props.children 上 —— 按类名数节点更稳。
+  const knobGrids = collectByClass(tree, "armor5-knob-grid");
+  const knobs = collectByClass(tree, "armor5-knob");
+  ok("旋钮渲染成网格（三组网格、十二个旋钮各就各位）",
+    knobGrids.length === 3 && knobs.length === 12,
+    JSON.stringify({ grids: knobGrids.length, knobs: knobs.length }));
+  ok("三组标题按「载荷 / 节拍 / 形态」排",
+    ["载荷与预算", "节拍与门", "形态与去重"].every((t) => textOf(tree).includes(t)),
+    JSON.stringify(textOf(tree).slice(0, 160)));
+  // 数字键曾一律给 N=2/4/6/8：对 BOOST_BYTES(256–12000) 与 LAZY_BYTES(0–16000) 全是越界值，
+  // 点了必被区间守卫拒收 —— 四个坏按钮。这条把「档位落在真区间内」钉住。
+  const knobValues = collectByClass(tree, "armor5-console-choice").map((b) => String(b.props["data-choice"] ?? ""));
+  const ladderOf = (k) => knobValues.filter((c) => c.startsWith(k + "=")).map((c) => Number(c.slice(k.length + 1)));
+  ok("字节旋钮的档位落在守卫区间内（不再给 N=2/4/6/8 这种必被拒收的值）",
+    ladderOf("BOOST_BYTES").length >= 3 && ladderOf("BOOST_BYTES").every((n) => n >= 256 && n <= 12000) &&
+    ladderOf("LAZY_BYTES").length >= 3 && ladderOf("LAZY_BYTES").every((n) => n >= 0 && n <= 16000) &&
+    ladderOf("RUNTIME_ANCHOR_EVERY").includes(2),
+    JSON.stringify({ boost: ladderOf("BOOST_BYTES"), lazy: ladderOf("LAZY_BYTES"), every: ladderOf("RUNTIME_ANCHOR_EVERY") }));
   const tagSources = collectByClass(tree, "armor5-console-tag").map((t) => t.props["data-source"]);
   ok("来源标记如实反映服务端 sources（ui / config / default 都出现过）",
     tagSources.includes("ui") && tagSources.includes("config") && tagSources.includes("default"),

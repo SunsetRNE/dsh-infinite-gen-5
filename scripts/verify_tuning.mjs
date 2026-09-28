@@ -261,6 +261,25 @@ const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
   const rejected3 = clamp3.body?.rejected || [];
   check(rejected3.some((row) => String(row).includes("BOOST_BYTES=12001")) && rejected3.some((row) => String(row).includes("LAZY_BYTES=20000")) && rejected3.some((row) => String(row).includes("RUNTIME_ANCHOR_EVERY=0")), "三个越界值全部记进 rejected（含超出上界与 0 步节拍）", JSON.stringify(rejected3));
 
+  // ---- 5c. 旋钮广告的区间必须真被守卫接受 ----
+  // 真缺陷回归：LAZY_BYTES 旋钮的 max 曾写 40000，而 NUMERIC_RANGES 只放到 16000 ——
+  // 用户在设置页点到 40000 只会被拒收（rejected 留痕），是个够不着的假旋钮。
+  const numericKnobs = (got.body?.catalog || []).filter((item) => item.kind === "number");
+  check(numericKnobs.length === 4, "catalog 里带出全部四个数字旋钮（供区间断言）", JSON.stringify(numericKnobs.map((k) => k.key)));
+  for (const knob of numericKnobs) {
+    const probe = await callRoute(r.route.handler, {
+      token,
+      method: "POST",
+      body: JSON.stringify({ overrides: { [knob.key]: knob.max } }),
+    });
+    const probeRejected = probe.body?.rejected || [];
+    check(
+      probe.body?.effective?.[knob.key] === knob.max && !probeRejected.some((row) => String(row).includes(`${knob.key}=${knob.max}`)),
+      `${knob.key} 旋钮上界 ${knob.max} 被守卫接受（广告区间 = 可用区间）`,
+      `rejected=${JSON.stringify(probeRejected)} effective=${String(probe.body?.effective?.[knob.key])}`,
+    );
+  }
+
   // ---- 6. reset 复位 ----
   const reset = await callRoute(r.route.handler, { token, method: "POST", body: JSON.stringify({ reset: true }) });
   const afterReset = await r.names();
