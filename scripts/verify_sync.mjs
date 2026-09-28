@@ -63,6 +63,32 @@ const w = (path, content, mode = 0o644) => {
 const dshHome = resolve(argOf("--dsh-home", process.env.DSH_HOME || join(homedir(), ".dsh")));
 let oracle = 0;
 let oracleChecked = 0;
+let oracleStale = 0;
+
+/**
+ * 这棵安装树里最新的改动时间（排除根 node_modules 与 .dsha-dependencies.json）。
+ * 宿主记录的指纹是「它加载那一刻」的树；只有记完之后树没再改过，它才配当标准答案。
+ */
+const newestMtimeMs = (root) => {
+  let newest = 0;
+  const visit = (base, isRoot) => {
+    for (const d of readdirSync(base, { withFileTypes: true })) {
+      if (isRoot && (d.name === "node_modules" || d.name === ".dsha-dependencies.json")) continue;
+      const path = join(base, d.name);
+      let info;
+      try {
+        info = statSync(path); // 跟随软链：链接目标变了也算树变了
+      } catch {
+        continue;
+      }
+      if (info.mtimeMs > newest) newest = info.mtimeMs;
+      if (d.isDirectory() && !d.isSymbolicLink()) visit(path, false);
+    }
+  };
+  visit(root, true);
+  return newest;
+};
+
 try {
   const act = JSON.parse(readFileSync(join(dshHome, "plugin-activations.json"), "utf8"));
   for (const [name, rec] of Object.entries(act.entries ?? {})) {
@@ -77,6 +103,18 @@ try {
     }
     oracle += 1;
     if (String(pkg.version ?? "") !== String(rec.version ?? "")) continue; // 装过又改过，指纹本来就该不同
+    // 记录只有「记完之后这棵树没再改过」才配当标准答案：否则它描述的是旧的树，
+    // 拿它比对当前树只会得到假红灯（与 verify_install 的「改了没重启」同因）。
+    const stampedAt = Number(rec.loadedAt ?? rec.confirmedAt ?? 0) * 1000;
+    const newest = newestMtimeMs(dir);
+    if (stampedAt > 0 && newest > stampedAt) {
+      oracleStale += 1;
+      warn(
+        `宿主记录早于最后一次改动（${name}）`,
+        `记录于 ${new Date(stampedAt).toISOString()} · 树最新改动 ${new Date(newest).toISOString()} —— 重启 dsh web 让宿主重记后再验`,
+      );
+      continue;
+    }
     oracleChecked += 1;
     check(
       treeFingerprint(dir) === rec.fingerprint,
@@ -88,7 +126,9 @@ try {
   // 没有真实 ~/.dsh 或格式不对：不做交叉验证，交给下面的冻值兜底
 }
 if (oracle === 0) warn("没有可用的宿主指纹做交叉验证", "跳过（CI 或没装插件）");
-else if (oracleChecked === 0) warn("宿主记录都在「装过又改过」状态", `跳过 ${oracle} 条`);
+else if (oracleChecked === 0) {
+  warn("宿主记录都不可用作当前树的标准答案", `共 ${oracle} 条：改过树 ${oracleStale} 条 / 「装过又改过」${oracle - oracleStale} 条`);
+}
 
 // ---------- fixture：确定性内容（不依赖 umask） ----------
 const root = mkdtempSync(join(tmpdir(), "ig5-sync-"));
@@ -266,6 +306,73 @@ check(
   "热链接态识别为空操作",
   `hotlink=${hot?.targets?.[0]?.hotlink}`,
 );
+
+// ---------- 3) 宿主记录当标准答案：三种走法都要锁住 ----------
+// 本组要再跑一次本脚本自身（子进程）才能验 oracle 走法；子进程带 IG5_SYNC_NO_SELFTEST=1
+// 关掉本组，否则会一层层递归下去。
+if (process.env.IG5_SYNC_NO_SELFTEST !== "1") {
+// 记录只有在「记完之后这棵树没再改过」时才配当答案；下面三条把「仍然硬判」「过期降级」都钉死，
+// 免得守卫被顺手写成「永远跳过」——那等于把闸门关掉。
+const oracleHome = join(root, "oracle-home");
+const oracleTree = join(oracleHome, "plugin-src", NAME);
+cpSync(fakeRepo, oracleTree, {
+  recursive: true,
+  filter: (src) => !/[/\\](node_modules|\.git|ui-preview)$/.test(src),
+});
+fixDirModes(oracleTree);
+const oracleAct = (rec) =>
+  w(
+    join(oracleHome, "plugin-activations.json"),
+    JSON.stringify({ format: 1, entries: { [NAME]: rec } }, null, 2) + "\n",
+  );
+const runSelf = (dshHome) => {
+  try {
+    const out = execFileSync(process.execPath, [fileURLToPath(import.meta.url), `--dsh-home=${dshHome}`], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      env: { ...process.env, IG5_SYNC_NO_SELFTEST: "1" },
+    });
+    return { code: 0, out };
+  } catch (error) {
+    return { code: error.status ?? 1, out: String(error.stdout ?? "") };
+  }
+};
+const fpNow = treeFingerprint(oracleTree);
+const freshRec = {
+  status: "loaded",
+  fingerprint: fpNow,
+  version: "9.9.9",
+  confirmedAt: Math.floor(Date.now() / 1000) + 60,
+  startup: "u-1",
+  loadedAt: Math.floor(Date.now() / 1000) + 60,
+};
+
+oracleAct(freshRec);
+const freshOk = runSelf(oracleHome);
+check(
+  freshOk.code === 0 && freshOk.out.includes(`✓ 指纹算法 = 宿主记录（${NAME}）`),
+  "记录不旧于树 → 仍按硬判据比对（一致即通过）",
+  `exit=${freshOk.code}`,
+);
+
+oracleAct({ ...freshRec, fingerprint: "0".repeat(64) });
+const freshBad = runSelf(oracleHome);
+check(
+  freshBad.code === 1 && freshBad.out.includes(`✗ 指纹算法 = 宿主记录（${NAME}）`),
+  "记录不旧于树 + 指纹不符 → 照样判红（守卫没关闸门）",
+  `exit=${freshBad.code}`,
+);
+
+oracleAct({ ...freshRec, loadedAt: 1, confirmedAt: 1 });
+const staleRec = runSelf(oracleHome);
+check(
+  staleRec.code === 0 &&
+    staleRec.out.includes(`⚠ 宿主记录早于最后一次改动（${NAME}）`) &&
+    !staleRec.out.includes(`✗ 指纹算法 = 宿主记录`),
+  "记录早于树改动 → 警告而非假红灯",
+  `exit=${staleRec.code}`,
+);
+}
 
 rmSync(root, { recursive: true, force: true });
 
