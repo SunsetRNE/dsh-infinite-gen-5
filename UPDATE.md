@@ -11,6 +11,22 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.36.3
+
+**主题：设置台旋钮重排（可见重绘）+ 把「旋钮广告区间」与「守卫可用区间」对齐 + 一次缓存/新鲜度排查。**
+
+① 旋钮从「一排 12 个平铺」改成**三组两栏网格**（`client.js`）：新增 `TUNING_GROUPS` = 载荷与预算 `BOOST_MODE`·`BOOST_BYTES`·`LAZY_MODE`·`LAZY_BYTES` / 节拍与门 `RUNTIME_ANCHOR_MODE`·`RUNTIME_ANCHOR_EVERY`·`ASK_GATE_MODE`·`ASK_GATE_EVERY` / 形态与去重 `LAYER2_MODE`·`TAIL_MODE`·`DEDUPE_PAYLOAD`·`EXCLUSIVE_SECTION`；服务端将来新增的键自动落进末尾「其他」组，**不会静默少渲染**。`tuningRows()` 重写为「分组 → `div.armor5-knob-grid` → 若干 `div.armor5-knob`」，每个旋钮 = 名称行（`span.armor5-knob-name` + 来源标记）+ 两栏档位按钮；选项说明搬进 `title` 属性并由 CSS 隐藏（`.armor5-knob .armor5-console-choice-hint{display:none}`），高度省下来。`client.js` 109577 → 113080 字符（+3503，含 7 条新 CSS 规则）。
+
+② 数字档位改**真区间**（同一处真缺陷的客户端一半）：旧代码对所有 `kind === "number"` 的键一律发 `2 / 4 / 6 / 8` —— 对 `BOOST_BYTES`（256–12000）与 `LAZY_BYTES`（0–16000）全是**越界值**，点了必被 v0.36.1 的区间守卫拒收，等于四个够不着的坏按钮。新增 `NUMERIC_STEPS`（`BOOST_BYTES` 1200·2400·4200·8000「 B」/ `LAZY_BYTES` 3500·6000·12000·16000「 B」/ `RUNTIME_ANCHOR_EVERY` 与 `ASK_GATE_EVERY` 2·4·6·8）与 `numericOptions(item, value)`，后者再按服务端给的 `min`/`max` 过滤、阶梯为空时退到下界。
+
+③ `LAZY_BYTES` 的**广告区间与服务端守卫不一致**（真缺陷）：守卫 `NUMERIC_RANGES.LAZY_BYTES = [0, 16000]`（`index.js:429-434`，注释写明 0 = 跟随档位预算、不是关闭），但旋钮元数据 `TUNING_OPTIONS` 与客户端 `TUNING_CATALOG_FALLBACK` 都广告 `0–40000` —— 用户拖到 40000 只会被拒收（v0.36.1 语义：越界 = 不采纳，且 `rejected` 里留痕）。两处一律改成 **16000** 并加注释「上界必须与 `NUMERIC_RANGES` 一致」；顺带核对 `BOOST_BYTES` 三处一致（256–12000）、两个节拍键旋钮 max 12 落在守卫 [1,64] 内。**上一条 v0.36.2 段里写的「`LAZY_BYTES` 0–40000」由此作废**。
+
+④ 自检：`verify_ui` **199 → 202 通过 · 0 失败**（新增：`armor5-knob-grid` 恰 3 / `armor5-knob` 恰 12、三个组标题在文本里、各数字阶梯落在真区间）；`verify_tuning` **56 → 61 通过 · 0 失败**（新增 5c 组：取 `catalog` 里 4 个数字键，逐个 POST 它的 `max`，断言被采纳且不出现在 `rejected` 里 —— 即「旋钮广告区间 = 守卫可用区间」）。**踩坑**：`verify_ui` 首版用 `g.props.children.length` 数栏数 → 实跑 `[0,0,0]`，宿主把 children 归一化了、不留在 `props.children` 上；改成按类名数节点即通过。`verify:version` 27/0（锚点 9 处 / 扫描 142 个文件）。
+
+⑤ 一次「改完刷新看不到」的排查（留给以后的判据）：页面拿到的插件前端包就是 `client.js` 本体（`package.json:129-133` 的 `dsh.client = { platform: "web", immediately: true }`，无显式路径 → 默认同目录），中间没有构建产物。DSH 侧 `@deepseek-ai/dsh-client-modules/lib/index.js` 的 `artifactRevision(baseline)` = `framedHash("plugin-artifact", [mtimeMs, ctimeMs, size])`（`:194-200`），combo URL 带 `&rev=`（`:204`），且响应头是 `public, max-age=31536000, immutable`（`:160`）—— 也就是说 **rev 不变时浏览器有权永不重取**。所以「改了 `client.js` 但 `mtime`/`size` 没变」会看起来像没改；`touch client.js` 换掉 rev 即可让 WebView 重取（本次已 touch，size/md5 未变，两树一致性检查不受影响）。另查明服务端进程（19:34:35 起）晚于文件改动（19:31:55），不存在陈旧的服务端副本；容器内拿不到 web 访问令牌（`/root/.dsha-web.identity` 的 8 位数字不是 token，`?token=` / `?t=` / `Bearer` 一律 401「dsh web authentication required」），所以没能直接抓 combo bundle —— 判别退化为**看一眼设置页头部的版本徽标**（新包应显示 `v0.36.3`）。
+
+⑥ 顺序坑（同 v0.36.2）：`bump-version` → 提交 → `node scripts/changelog.mjs` 重生成 → 再提交 → `verify:all`。先跑 `verify:all` 会红 `verify:notes` 两条。
+
 ## v0.36.2
 
 **主题：设置台重绘 —— 压字号尺寸、补齐兜底目录缺键、把两个「默认」按钮的语义在文案上拉开。**
