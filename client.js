@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.36.3";
+        var VERSION = "v0.36.4";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -217,12 +217,17 @@
           ".armor5-console-badge[data-kind=pass]{color:var(--dsw-alias-state-success-primary,#3fb950)}",
           ".armor5-console-rows,.armor5-task-list,.armor5-live-rows{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}",
           // v0.36.3：旋钮分三组后每组两栏 —— 12 个键一列到底会把设置页拉成长卷。
-          ".armor5-knob-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}",
+          // v0.36.4：两栏只在宽屏成立；手机（<560px）改单栏，否则来源标记与档位按钮会被挤到换行。
+          ".armor5-knob-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}",
+          "@media (max-width:560px){.armor5-knob-grid{grid-template-columns:minmax(0,1fr)}}",
           ".armor5-knob{display:flex;flex-direction:column;gap:3px;min-width:0}",
           ".armor5-knob-head{display:flex;align-items:center;justify-content:space-between;gap:4px;min-width:0}",
-          ".armor5-knob-name{font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+          ".armor5-knob-name{flex:1 1 auto;min-width:0;font-size:11.5px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
+          // 来源标记是 flex 项：不给 flex:0 0 auto + nowrap，中文会在 13px 高的胶囊里折成两行溢出来。
+          ".armor5-knob-head .armor5-console-tag{flex:0 0 auto;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:13px}",
           ".armor5-knob .armor5-console-choices{grid-template-columns:1fr 1fr;gap:4px}",
-          ".armor5-knob .armor5-console-choice{min-height:28px;padding:3px 6px}",
+          ".armor5-knob .armor5-console-choice{min-height:26px;padding:2px 6px}",
+          ".armor5-knob .armor5-console-choice-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
           ".armor5-knob .armor5-console-choice-hint{display:none}",
           ".armor5-console-rows li,.armor5-task-list li,.armor5-live-rows li{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:baseline}",
           ".armor5-console-rows .k,.armor5-task-list .k,.armor5-live-rows .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px}",
