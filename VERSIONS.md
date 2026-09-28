@@ -22,9 +22,15 @@
 | 领域包 | **107** 个（7 族） | `node scripts/verify_scenarios.mjs` |
 | 领域索引 | 20017 B（≈5.4–5.5 K token —— 两个自检脚本口径 5410 / 5487，按需取用，不进 system prompt） | 同上 |
 | 单个领域包 | 639–4540 B（107 包合计 317484 B） | 同上 |
-| 版本锚点 | 8 处 / 扫描 101 个文件（随新增文件变化，以 `verify_version` 实测输出为准） | `node scripts/verify_version.mjs` |
+| 版本锚点 | 9 处 / 扫描 115 个文件（随新增文件变化，以 `verify_version` 实测输出为准） | `node scripts/verify_version.mjs` |
 
 ---
+
+## v0.35 线
+
+| 版本 | 日期 | 关键变更 | 提交 |
+| --- | --- | --- | --- |
+| v0.35.0 | 2026-09-28 | **附件注入语料训练成插件可加载的增强资产**（Order 150 段 · 按本轮需求编译 · 受字节预算硬约束）。① 提取器 `scripts/extract-boost-corpus.mjs`：语料 **20602 B** / sha256 前缀 `f4cd463d37d78e17` / 495 换行 / 52 节 / 171 段按四态拆分（`take` 20 · `redact` 19 · `internal` 1 · `kept-out` 131），10 个单元的 `from` 全部与来源节对账；缺语料打印 SKIP 并 exit 0。② 编译层 `data/boost-corpus.mjs`：10 单元 **1774 B** / 96 触发词，常驻 G1 G4；四档 `off` 0 · `light` 1200 · `standard` 2400 · `full` 4200（`full × 2 ≤ 20500` 有断言兜底），**整条进整条丢**、预算不足宁可 0 B 不注入；档位优先级 = 显式指令 > 强信号自动档 > 设置页。③ 接线 `index.js` **六处**：import / `BOOST_SECTION` + `BOOST_ORDER=150` / `registerSection` / `system-prompt/assemble` 瀑布 `refreshBoost` / `BOOST_MODE`+`BOOST_BYTES`（256–12000，env `IG5_BOOST_MODE`·`IG5_BOOST_BYTES`）/ `profile.boost`。④ 自检 `scripts/verify_boost.mjs` **87 通过 · 0 失败**，`scripts/verify_injection.mjs` **65 通过 · 0 失败**（装配顺序 `[100,118,150,200,10150]`）。⑤ 版本号单点化：`BOOST_VERSION` 是 `data/boost-corpus.mjs` 里的唯一版本字面量（`BOOST_HEADER` 与 `boostStats()` 从它派生），登记进 `version-targets.mjs`（锚点 **9 处** / 扫描 115 个文件），`verify:version` **27 通过 · 0 失败**。⑥ 文档 `docs/BOOST_CORPUS.md`（三态口径 / 单元表 / 编译矩阵 / 复现命令 / 边界，含「未做真实会话 A/B 量化」） | 本版提交 |
 
 ## v0.34 线
 

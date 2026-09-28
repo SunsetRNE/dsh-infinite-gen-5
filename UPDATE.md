@@ -11,6 +11,26 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.35.0
+
+**主题：把一份 20602 B 的注入提示词附件训练成插件可加载的增强资产 —— 提取器切三态、编译层按本轮需求选条款、挂在 Order 150、受字节预算硬约束。**
+
+**一、为什么不是「整份抄进内核」。** 附件 20602 B，而内核载荷硬上限 `PAYLOAD_BUDGET_BYTES = 20500` 已经是整块载荷的天花板（内核自身 20438 B × 3 份）。整份注进去等于把预算挤爆，还会与内核既有条款正面打架（附件 8.3 的禁用词表恰好与内核「截至 … 已验证」四行校准收尾冲突）。所以走「提取 → 编译 → 按需注入」：附件只当语料，进上下文的永远是一份 0–4200 B 的编译产物。
+
+**二、提取器 `scripts/extract-boost-corpus.mjs`。** 按节切段（`HEADING` 认中文序号与 `1.` / `3.2` 两种编号），`RULES` 规则表把每段判进四态：`take` 20 / `redact` 19 / `internal` 1 / `kept-out` 131（合计 171 段）。只留工程记录、永不注入的五条记在 `INTERNAL_ONLY` 里并写明理由（X2 禁用词表与校准四行冲突、X3 保密规则与注入可审计冲突、X1 无拒绝原则属元条款…）—— 这是**设计决定**，不是漏掉。实测：语料 20602 B / sha256 前缀 `f4cd463d37d78e17` / 495 换行 / 52 节，10 个单元的 `from` 字段全部能在语料里定位到来源节（对账通过）。缺语料时打印 SKIP 并 exit 0，所以离线 `verify:all` 不会被它卡住。
+
+**三、编译层 `data/boost-corpus.mjs`。** 10 个单元（G1–G10）合计 1774 B / 96 个触发词，G1（先查后写）与 G4（状态延续）常驻。四档 `off` 0 / `light` 1200 / `standard` 2400 / `full` 4200，`full × 2 ≤ 20500` 有断言兜底。策略是**整条进、整条丢**：超预算从尾部丢整条，绝不截半句；预算小到放不下一条时宁可 0 B 不注入（预算 64 B 实测输出 0 B）。档位优先级：显式指令（`@boost:off` / `@boost:full` / 增强开 / 增强关）> 强信号自动档 > 用户设置页档位。
+
+**四、接线（`index.js` 六处）+ 三个坑。** ① import；② 常量 `BOOST_SECTION = "infinite-gen-5:boost-corpus"` / `BOOST_ORDER = 150`；③ `mountInjection()` 里 `registerSection`；④ 装配瀑布 `ctx.effect(() => ctx.on("system-prompt/assemble", refreshBoost))`；⑤ 调参键 `BOOST_MODE` / `BOOST_BYTES`（256–12000）与 env `IG5_BOOST_MODE` / `IG5_BOOST_BYTES`；⑥ `profile` 输出 `boost` 块。三个坑都是实跑报出来的：
+
+- `ctx.systemPrompt.assemble(...)` 与包在 `ctx.effect` 里的同款写法，在假宿主里都报 `TypeError: ctx.systemPrompt.assemble is not a function`；只有事件瀑布 `ctx.on("system-prompt/assemble", fn)` 有效（与内核热加载同挂法）。假宿主的 `systemPrompt` 服务只暴露 `section()`。
+- `registerSection` 会读 `spec.text` 做同源比对（`DEDUPE_PAYLOAD`），注册时必须传**字符串**；早期传 getter 会被去重逻辑判成同源段丢掉。
+- 编译层早期 `inferMode()` 对「今天天气不错」返回 `standard`，会把用户在设置页选的 `light` / `full` 悄悄压回 2400 B —— 改成无强信号时返回 `null`，交回设置页档位。
+
+**五、版本号单点化与自检。** `data/boost-corpus.mjs` 只有一处版本字面量 `BOOST_VERSION`，`BOOST_HEADER` 与 `boostStats().version` 都从它派生，并登记进 `scripts/version-targets.mjs`（锚点 8 → 9 处）。自检 `scripts/verify_boost.mjs` **87 条**：单元成形 / 档位与预算 / 命中可解释（5 条固定用例逐条比对命中集合）/ 指令与自动档 / **与内核不同源**（10 个单元逐字不得出现在 `prompts/infinite-gen-5.md`）/ 统计与真源一致 / 接线口径。`scripts/verify_injection.mjs` 同步到 **65 条**（装配顺序 `[100,118,150,200,10150]`）。`package.json` 新增 `verify:boost` 并接进 `verify:all`，`files` 白名单补 `data/boost-corpus.mjs`（漏了它发布包会缺文件、`index.js` 的 import 直接断）。
+
+**六、文档。** 新增 `docs/BOOST_CORPUS.md`：三态拆分口径、10 单元表（含实测字节）、编译矩阵、接线位置、复现命令、边界与缺口 —— 明确写了「只做了确定性编译回归，未做真实会话 A/B 效果量化」。
+
 ## v0.34.0
 
 **主题：把安装树里那套「分发内核」并回主干 —— 代码进 git、工具进插件、条款进内核，都只留一份。**
