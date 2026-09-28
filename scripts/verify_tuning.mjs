@@ -234,6 +234,33 @@ const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
   check(junk2.body?.effective?.ASK_GATE_EVERY === 3, "询问闸门间隔同样按数字 coerce", String(junk2.body?.effective?.ASK_GATE_EVERY));
   check(junk2.body?.effective?.ASK_GATE_MODE === "auto", "档位字符串原样保留（不做布尔化）", String(junk2.body?.effective?.ASK_GATE_MODE));
 
+  // ---- 5b. 数值键越界回落（真缺陷回归：BOOST_BYTES=4 曾把增强集整条掐死） ----
+  const clamp = await callRoute(r.route.handler, {
+    token,
+    method: "POST",
+    body: JSON.stringify({ overrides: { BOOST_BYTES: 4, LAZY_BYTES: 0 } }),
+  });
+  check(clamp.body?.effective?.BOOST_BYTES === 2400, "BOOST_BYTES=4 越界 → 回落文件默认 2400（不是静默采纳）", String(clamp.body?.effective?.BOOST_BYTES));
+  check(clamp.body?.effective?.LAZY_BYTES === 0, "LAZY_BYTES=0 属合法值（0 = 跟随档位预算，不是关闭）", String(clamp.body?.effective?.LAZY_BYTES));
+  const rejectedNow = r.profile()?.tuning?.rejected;
+  check(Array.isArray(rejectedNow) && rejectedNow.some((row) => String(row).includes("BOOST_BYTES=4")), "被拒原值记进 tuning.rejected，不再静默", JSON.stringify(rejectedNow));
+  const clamp2 = await callRoute(r.route.handler, {
+    token,
+    method: "POST",
+    body: JSON.stringify({ overrides: { BOOST_BYTES: 256, LAZY_BYTES: 16000 } }),
+  });
+  check(clamp2.body?.effective?.BOOST_BYTES === 256, "BOOST_BYTES 下界 256 取用", String(clamp2.body?.effective?.BOOST_BYTES));
+  check(clamp2.body?.effective?.LAZY_BYTES === 16000, "LAZY_BYTES 上界 16000 取用", String(clamp2.body?.effective?.LAZY_BYTES));
+  const clamp3 = await callRoute(r.route.handler, {
+    token,
+    method: "POST",
+    body: JSON.stringify({ overrides: { BOOST_BYTES: 12001, LAZY_BYTES: 20000, RUNTIME_ANCHOR_EVERY: 0 } }),
+  });
+  // 越界写入的语义是「不采纳」，不是「回落默认」：前一步已存 256，这一步应当保持 256 不动。
+  check(clamp3.body?.effective?.BOOST_BYTES === 256, "上界越界写入不采纳（保持上一步已存的 256，而不是静默回落默认）", String(clamp3.body?.effective?.BOOST_BYTES));
+  const rejected3 = clamp3.body?.rejected || [];
+  check(rejected3.some((row) => String(row).includes("BOOST_BYTES=12001")) && rejected3.some((row) => String(row).includes("LAZY_BYTES=20000")) && rejected3.some((row) => String(row).includes("RUNTIME_ANCHOR_EVERY=0")), "三个越界值全部记进 rejected（含超出上界与 0 步节拍）", JSON.stringify(rejected3));
+
   // ---- 6. reset 复位 ----
   const reset = await callRoute(r.route.handler, { token, method: "POST", body: JSON.stringify({ reset: true }) });
   const afterReset = await r.names();

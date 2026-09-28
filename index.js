@@ -64,7 +64,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.36.0";
+const PLUGIN_VERSION = "0.36.1";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -423,18 +423,30 @@ const ENV_OF_KEY = {
 // 只有真布尔键走 true/false 转换；档位键（LAYER2_MODE / TAIL_MODE / RUNTIME_ANCHOR_MODE /
 // ASK_GATE_MODE）的 "off"/"auto"/"on" 是字符串取值，不能被布尔化，否则 off 档会静默失效。
 const BOOL_KEYS = new Set(["DEDUPE_PAYLOAD", "EXCLUSIVE_SECTION"]);
+// 数值键的合法区间。越界值不是「更省」，而是静默把功能掐死：实测 BOOST_BYTES=4 会让
+// 增强集每个单元都超预算 → 整条丢弃 → 段内 0 B、hits 空（重启后 profile 才看出来）。
+// 因此越界一律判为「本次不使用」，回落到下一来源，最终落到文件默认值。
+const NUMERIC_RANGES = Object.freeze({
+  RUNTIME_ANCHOR_EVERY: [1, 64],
+  ASK_GATE_EVERY: [1, 64],
+  BOOST_BYTES: [256, 12000],
+  LAZY_BYTES: [0, 16000], // 0 = 跟随档位预算（不是关闭；关闭用 LAZY_MODE=off）
+});
 const coerce = (key, raw) => {
+  const range = NUMERIC_RANGES[key];
+  if (range) {
+    const n = typeof raw === "number" ? raw : Number(String(raw).trim());
+    if (!Number.isFinite(n)) return undefined;
+    const v = Math.floor(n);
+    if (v < range[0] || v > range[1]) return undefined;
+    return v;
+  }
   if (typeof raw === "boolean" || typeof raw === "number") return raw;
   const s = String(raw).trim();
   if (BOOL_KEYS.has(key)) {
     if (s === "true" || s === "on" || s === "1") return true;
     if (s === "false" || s === "off" || s === "0") return false;
     return Boolean(s);
-  }
-  if (key === "RUNTIME_ANCHOR_EVERY" || key === "ASK_GATE_EVERY" || key === "BOOST_BYTES" || key === "LAZY_BYTES") {
-    const n = Number(s);
-    if (Number.isFinite(n) && n > 0) return Math.floor(n);
-    return raw;
   }
   return s;
 };
@@ -459,25 +471,27 @@ const SOURCE_LABEL = { ui: "设置页 UI", config: "profile config", env: "env",
 const resolveTuning = (config, persisted) => {
   const values = { ...IG5_DEFAULTS };
   const sources = {};
+  const rejected = [];
+  // 每个来源都按「越界即不采用」处理，并把被拒的原值记下来 —— 静默回落最难查的就是这一步。
+  const attempt = (key, raw, label) => {
+    const v = coerce(key, raw);
+    if (v === undefined) {
+      rejected.push(`${key}=${JSON.stringify(raw)}（越界或非数，回落到下一来源）`);
+      return false;
+    }
+    values[key] = v;
+    sources[key] = label;
+    return true;
+  };
   for (const key of TUNABLE_KEYS) {
-    let picked = "default";
+    sources[key] = "default";
     const envKey = ENV_OF_KEY[key];
     const rawEnv = envKey ? process.env[envKey] : undefined;
-    if (rawEnv !== undefined && rawEnv !== "") {
-      const v = coerce(key, rawEnv);
-      if (v !== undefined) { values[key] = v; picked = "env"; }
-    }
-    if (config && typeof config === "object" && config[key] !== undefined) {
-      const v = coerce(key, config[key]);
-      if (v !== undefined) { values[key] = v; picked = "config"; }
-    }
-    if (persisted && typeof persisted === "object" && persisted[key] !== undefined) {
-      const v = coerce(key, persisted[key]);
-      if (v !== undefined) { values[key] = v; picked = "ui"; }
-    }
-    sources[key] = picked;
+    if (rawEnv !== undefined && rawEnv !== "") attempt(key, rawEnv, "env");
+    if (config && typeof config === "object" && config[key] !== undefined) attempt(key, config[key], "config");
+    if (persisted && typeof persisted === "object" && persisted[key] !== undefined) attempt(key, persisted[key], "ui");
   }
-  return { values, sources };
+  return { values, sources, rejected };
 };
 // 就地写回 IG5_CONFIG：profile 工具读的就是它，实况报告因此天然等于生效值。
 const applyResolved = (resolved) => {
@@ -1064,6 +1078,7 @@ const profileTool = {
       tuning: {
         effective: { ...runtime.tuning.effective },
         sources: { ...runtime.tuning.sources },
+        rejected: [...(runtime.tuning.rejected || [])],
         persisted: { ...runtime.tuning.persisted },
         store: { ...runtime.tuning.store },
         at: runtime.tuning.at,
@@ -1716,6 +1731,7 @@ export function apply(ctx, config) {
   runtime.tuning = {
     effective: { ...initialResolved.values },
     sources: { ...initialResolved.sources },
+    rejected: [...initialResolved.rejected],
     persisted: { ...initialTuning.overrides },
     store: { file: initialTuning.file, updatedAt: initialTuning.updatedAt, error: initialTuning.error },
     at: null,
@@ -2194,6 +2210,9 @@ export function apply(ctx, config) {
       version: PLUGIN_VERSION,
       effective: { ...resolved.values },
       sources: { ...resolved.sources },
+      // 越界/非数原值一律留痕（最近一次写入被拒的 + 落盘文件里已存在的），
+      // 让设置页与自检都能看见「这个值没被采纳」，而不是静默回落。
+      rejected: [...new Set([...(runtime.tuning?.rejected || []), ...resolved.rejected])],
       persisted: { ...persisted },
       store: store
         ? { file: store.file, updatedAt: store.updatedAt, error: store.error }
@@ -2344,12 +2363,18 @@ export function apply(ctx, config) {
     const store = readTuning();
     const next = options.reset ? {} : { ...store.overrides };
     const touched = [];
+    // 设置页送来的越界值在这里就被拦下：不落盘、不生效，只记一行「谁被拒了」——
+    // 静默丢弃会让用户以为改成功了（BOOST_BYTES=4 就是这么把增强集掐死的）。
+    const rejectedWrites = [];
     for (const [key, value] of Object.entries(patch && typeof patch === "object" ? patch : {})) {
       if (!TUNABLE_KEYS.includes(key)) continue;
       touched.push(key);
       if (value === null || value === undefined || value === "") { delete next[key]; continue; }
       const coerced = coerce(key, value);
-      if (coerced === undefined) continue;
+      if (coerced === undefined) {
+        rejectedWrites.push(`${key}=${JSON.stringify(value)}（越界或非数，未落盘）`);
+        continue;
+      }
       next[key] = coerced;
     }
     let wrote = null;
@@ -2367,6 +2392,7 @@ export function apply(ctx, config) {
     runtime.tuning = {
       effective: { ...resolved.values },
       sources: { ...resolved.sources },
+      rejected: [...rejectedWrites, ...resolved.rejected],
       persisted: { ...next },
       store: { file: tuningFile(), updatedAt: new Date().toISOString(), error: null },
       at: new Date().toISOString(),

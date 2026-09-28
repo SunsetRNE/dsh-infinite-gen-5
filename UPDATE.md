@@ -11,6 +11,24 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.36.1
+
+**主题：修掉「设置页越界数值被静默采纳」—— 一个把增强集整条掐死的真缺陷（重启后真机验证时抓到）。**
+
+① 现象：重启后 `infinite_gen5_profile` 里 `tuning.effective.BOOST_BYTES = 4`（来源 **ui**，落盘文件 `/root/.dsh/infinite-gen-5-tuning.json` 里确实写着 4），增强集当轮 `chars 0 / bytes 0 / hits []`。增强集的编译语义是「整条进 / 整条丢、绝不截半句」，预算小到装不下任何一条（单元 130–213 B）时正确行为就是一条都不注入 —— 编译器没做错，错在**没人拦下这个装不下任何东西的预算**。旧 `coerce` 只判 `n > 0`，无区间守卫；而 `typeof raw === "number"` 的早返回位置更靠前，落盘文件里的数字直接绕过守卫。
+
+② 修法三处（`index.js`）：新增 `NUMERIC_RANGES = { RUNTIME_ANCHOR_EVERY: [1,64], ASK_GATE_EVERY: [1,64], BOOST_BYTES: [256,12000], LAZY_BYTES: [0,16000] }`（`LAZY_BYTES = 0` 是合法值：0 = 跟随档位预算，停用请把 `LAZY_MODE` 设 off）；`coerce` 重写为「数值键先判区间，非数/越界返回 `undefined`」，并把数字早返回移到区间判断**之后**；`resolveTuning` 内部 `attempt(key, raw, label)` 把被拒原值记进 `rejected[]`，`applyTuning` 对设置页送来的越界值同样留痕（`${key}=${JSON.stringify(value)}（越界或非数，未落盘）`），`runtime.tuning`、`profile.tuning`、`/infinite-gen-5/tuning` 的 GET/POST 响应都带这份名单。
+
+③ 语义确认（写进断言）：越界写入的语义是「**不采纳**」，不是「回落默认」—— 前一步已存 256 时再送 12001，生效值保持 256。
+
+④ 自检：`scripts/verify_tuning.mjs` 新增第 5b 组「数值键越界回落」6 条断言，**49 → 56 通过 · 0 失败**。
+
+⑤ 现场清理（可回滚）：落盘文件里的 `BOOST_BYTES: 4` 已删除（回落默认 2400），备份 `/root/.dsh/infinite-gen-5-tuning.json.bak-20260928-boost4`，其余八个覆盖项原样保留。
+
+⑥ 文档 `docs/TUNING_GUARD.md`（缺陷现象与链路 / 区间表与理由 / 回归断言 / 现场清理 / 为什么必须重启 / 边界与四态断言表）；版本锚点 0.36.0 → 0.36.1（9 处），`verify:version` 27 通过 · 0 失败。
+
+**生效条件**：`index.js` 改动只在进程启动时加载（内核热加载只覆盖 `prompts/*.md`），越界守卫与留痕要**重启 DSH 进程 / 管理器更新重装**才上线。
+
 ## v0.36.0
 
 **主题：把内核拆成「常驻骨架 + 按需章节」—— 正文一个字不改地搬家，常驻从 20438 B 降到 15287 B，每轮静态少载 5151 B。**

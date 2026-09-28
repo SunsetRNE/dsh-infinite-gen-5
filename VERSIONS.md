@@ -22,7 +22,7 @@
 | 领域包 | **107** 个（7 族） | `node scripts/verify_scenarios.mjs` |
 | 领域索引 | 20017 B（≈5.4–5.5 K token —— 两个自检脚本口径 5410 / 5487，按需取用，不进 system prompt） | 同上 |
 | 单个领域包 | 639–4540 B（107 包合计 317484 B） | 同上 |
-| 版本锚点 | 9 处 / 扫描 115 个文件（随新增文件变化，以 `verify_version` 实测输出为准） | `node scripts/verify_version.mjs` |
+| 版本锚点 | 9 处 / 扫描 143 个文件（随新增文件变化，以 `verify_version` 实测输出为准） | `node scripts/verify_version.mjs` |
 
 ---
 
@@ -30,6 +30,7 @@
 
 | 版本 | 日期 | 关键变更 | 提交 |
 | --- | --- | --- | --- |
+| v0.36.1 | 2026-09-28 | **修「设置页越界数值被静默采纳」真缺陷**（重启后真机验证抓到）：`BOOST_BYTES = 4`（来源 ui）→ 增强集每个单元（130–213 B）都超预算 → 整条丢弃 → `hits []`。① 区间守卫 `NUMERIC_RANGES`：`RUNTIME_ANCHOR_EVERY`/`ASK_GATE_EVERY` [1,64] · `BOOST_BYTES` [256,12000] · `LAZY_BYTES` [0,16000]（0 = 跟随档位预算，合法）；`coerce` 先判区间再判类型，非数/越界返回 `undefined`（回落下一来源），落盘数字不再绕过守卫。② 留痕：`resolveTuning` 的 `attempt()` 与 `applyTuning` 的 `rejectedWrites` 记录被拒原值，`runtime.tuning.rejected` / `profile.tuning.rejected` / `/infinite-gen-5/tuning` GET·POST 都带出。③ 语义：越界写入 = **不采纳**（不是回落默认），前一步已存 256 时送 12001 保持 256。④ 自检 `verify_tuning` **49 → 56 通过 · 0 失败**（新增 5b 组 6 条）。⑤ 现场清理：落盘文件删掉 `BOOST_BYTES: 4`（回落默认 2400），备份 `~/.dsh/infinite-gen-5-tuning.json.bak-20260928-boost4`。⑥ 文档 `docs/TUNING_GUARD.md`。**生效需重启进程**（`index.js` 不参与内核热加载） | 本版提交 |
 | v0.36.0 | 2026-09-28 | **内核拆成「常驻骨架 + 按需章节」**（正文一字不改地搬家）。① 拆分器 `scripts/kernel-lazy-split.mjs`（`--dry`/`--force`/`--restore`）：整节搬 7 + 半节移 2（Named coverage 域清单、Format examples 三条示例），原地留一行带摘要指针；三条硬校验（搬走正文必须是原文连续片段 · 常驻无残留 · 三份内核逐字同步且覆盖前校验来源）。② 体积：常驻 **10913 字符 / 15287 B**（原 15057 / 20438 B，降幅 **25.2%**）· 惰性 `prompts/infinite-gen-5-lazy.md` **8618 B**（9 单元 · 6870 B 正文）· 快照 `prompts/infinite-gen-5.full.md` 20438 B。③ 编译层 `data/lazy-sections.mjs`：档位 off 0 / light 3500 / standard 6000 / full 16000（字节），`@lazy:` 六值 + 中文同义，**整条进整条丢**；`bytes` = 硬上限（档位预算与之取小，0 = 跟随档位），默认 `LAZY_DEFAULT_BYTES = 0`。④ 接线 `index.js`：`LAZY_ORDER=160`、`TUNABLE_KEYS` **10 → 12**、env `IG5_LAZY_MODE`/`IG5_LAZY_BYTES`、装配瀑布 `refreshLazy`、`profile.lazy`；装配顺序 `[100,118,150,160,200,10150]`。⑤ 自检：`verify_lazy` **105/0** · `verify_density` **19/0**（四类轮次 15704 / 16061 / 15912 / 16172 B，均 < 原文 20438 B）· `verify_prompt_gen5` **274/0**（原 203/33，口径改「常驻 ∪ 惰性」）· `verify_injection` 65/0 · `verify_dedupe` 88/0 · `verify_tuning` 49/0 · `verify_boost` 87/0 · `verify:version` 27/0（锚点 9 处 / 扫描 130 个文件）。⑥ 文档 `docs/CONTEXT_DENSITY.md`（拆分口径 / 单元表 / 每轮成本表 / 编译语义四条 / 三个坑 / 四态断言表） | 本版提交 |
 
 ## v0.35 线
