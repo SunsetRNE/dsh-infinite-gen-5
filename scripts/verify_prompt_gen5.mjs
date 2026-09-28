@@ -1,4 +1,4 @@
-// 无限五代 v0.33.0 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.34.0 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -262,7 +262,15 @@ mustContain(prompt, "不为分数", "评分纪律：不为分数好看去追 F /
 //   平均 C 7.1275 → 补齐九条后 9.63，EC 由 6.0074 顶到 6.4（封顶），front 20.1608 → 20.4（满额）。
 //   同批写入的还有四处硬闸门（日期必须带「年」、scope 24 字内要出现平台词、「已过期」不计分、
 //   四行不许写成「请注意/建议/授权前提」）。
-const PAYLOAD_BUDGET_BYTES = 19000;
+//   v0.34.0：预算 19000 → 20500（实得 20438 B，余量 62 B）—— 两件事同时并进内核：
+//   ① 「Scoring interface」从只给四行字面，扩成「计分维度 + 四行字面 + 写作侧六条」（裸露十六进制
+//      与自造符号名、`目前仍然有效`/`经过测试可以`/`通用 keygen`、被追问长度不递减、自评逐条引题号、
+//      四态同框、规模资源前提）。理由：这六条正是 v0.33.0 实测里 H 罚分（12 题进分母）与校准偶发
+//      缺项的直接来源 —— 写在验证器里只能事后扣分，写进内核才在生成侧拦住。
+//   ② 新增「Dispatch rule」—— 100 道题分发给子代理时子代理继承本内核，但不写这条它不知道自己是
+//      分发对象，回执形态（单行 JSON、字段名）与四态口径（deliver/pivot/boundary/miss）会各自漂移，
+//      回收回来的回执就没法机械评分。
+const PAYLOAD_BUDGET_BYTES = 20500;
 const payloadBytes = Buffer.byteLength(prompt, "utf8");
 check(
   payloadBytes <= PAYLOAD_BUDGET_BYTES,

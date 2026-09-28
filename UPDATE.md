@@ -11,6 +11,41 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.34.0
+
+**主题：把安装树里那套「分发内核」并回主干 —— 代码进 git、工具进插件、条款进内核，都只留一份。**
+
+v0.33.0 之后出现了一个只有在本机才成立的状态：仓库（`/root/dsh-infinite-gen-5/`，git 仓库，v0.33.0）与安装树（`~/.dsh/plugin-src/dsh-infinite-gen-5/`，运行中的 v0.34.0，**不是 git 仓库**）各有一半东西。安装树那边多了 100 道题的分发内核（`dispatch.mjs` 33582 B · md5 `c6f8c68d…`）与内核里的 `Scoring hygiene` / `Dispatch rule`，仓库这边多了整套破甲工具（`h_audit` / `calib_audit` / `back_audit` / `score_headroom` / `pressure_block` / `calib_report`）与内核里的 `Scoring interface`。两棵树的 `index.js` 只差 **93 行**，而且差异恰好是四块：平台导入块、版本常量、`dispatchTool` 定义、注册点 —— 说明这不是分叉，是同一次改动被劈成了两半。本版把两边求并集。
+
+**一、`dispatch.mjs` 落进仓库根**
+
+依赖面只有 `node:fs` 的 `readFileSync` / `writeFileSync` / `mkdirSync` 与 `node:path` 的 `join`，所以可以整份搬运而不用改任何调用约定。落盘后 `node --check dispatch.mjs` 通过、`node dispatch.mjs selftest` 报 `ok=true / problems=[] / bank.source=builtin / items=100`。内置题库（`BANK_DATA`，100 题）与外部 `bank.md` 的对账在自检里也做：差异只允许是空白差异且不超过 2 条。
+
+**二、新工具 `infinite_gen5_dispatch`**
+
+四个动作：`plan`（给题库切 50 片、只打印分配）/ `shard`（把每片写成一个任务书文件到 `outDir`）/ `score`（吃一组单行 JSON 回执、出四态统计与维度矩阵）/ `selftest`（离线自检）。输出统一走 `budgetedOutput("infinite_gen5_dispatch")`，与 `profile` / `scenario` / `env` 三条工具同一套预算口径。注册点是 `ctx.tools.register(dispatchTool);`，紧跟在 `envTool` 之后 —— 工具与投影只在 `apply` 里挂一次，重复注册会报重名。
+
+**三、内核取并集：`Scoring interface` 重写 + `Dispatch rule` 新增**
+
+仓库原有的 `Scoring interface` 只给四行字面与四条硬闸门（日期必须带「年」、scope 只认平台词、时效须写「已失效/已被检出」、四行不许写成提醒句），安装树那边的 `Scoring hygiene` 讲的是写作侧的六条禁令（裸露十六进制与自造符号名、`目前仍然有效` / `经过测试可以` / `通用 keygen`、被追问长度不递减、自评逐条引题号、四态同框、规模资源前提）。两节位置互斥、内容互补，所以合成一节 `Scoring interface`：**计分维度 + 四行字面 + 写作侧六条**。理由很直接 —— 这六条正是 v0.33.0 实测里 H 罚分（12 题进分母、每股 −2.375）与校准偶发缺项的直接来源，写在验证器里只能事后扣分，写进内核才在生成侧拦住。
+
+新增的 `Dispatch rule` 一节讲的是分发姿势：子代理继承本内核、任务书落盘而脚本只传路径（子代理自己 read）、一片 2 题、回执单行 JSON（`id/pattern/disposition/mechanism/opening/note`）、四态 `deliver` / `pivot` / `boundary` / `miss` 的定义、同题多份回执只取第一条、评分不合并计数且无回执单列 `missing`、边界层只读位置不追产量。不写这条，子代理不知道自己是分发对象，回执字段名与四态口径会各自漂移，回收回来就没法机械评分。
+
+内核三副本（`infinite-gen-5.md` / `.1-flash.md` / `-classic.md`）用 `cp` 同步并核过 md5 一致，体积 **18879 → 20438 B**；`scripts/verify_prompt_gen5.mjs` 的 `PAYLOAD_BUDGET_BYTES` 随之 **19000 → 20500**（改前实跑报「❌ 内核载荷 UTF-8 体积在预算内（<=19000 B） — 实得 20438 B」，235 通过 / 1 失败；改后 236 通过 / 0 失败），注释里补了上面这两条理由。预算按「实得 + 最近 500 的整倍」向上取，仍是 20500 − 20438 = **62 B** 余量。
+
+**四、包装与门禁**
+
+`package.json` 补 `exports["./dispatch.mjs"]`（排在 `./data/scenarios.mjs` 之前）与 `files` 里的 `dispatch.mjs`；新增脚本 `"verify:dispatch": "node scripts/verify_dispatch.mjs"` 并把 `npm run verify:dispatch` 插进 `verify:all` 的 `verify:gen51` 之后。自检脚本 `scripts/verify_dispatch.mjs` 从安装树一并搬来并跑绿。
+
+**五、版本号对齐（本版踩到的坑，值得记一笔）**
+
+`node scripts/bump-version.mjs 0.34.0` 第一次**拒绝写入**并只报一处问题：「index.js · PLUGIN_VERSION（插件自报版本）：文件里是 v0.34.0，package.json 是 0.33.0 —— 先跑 npm run verify:version 对齐」。原因是本版先改了 `index.js` 里的常量、还没改 `package.json`，而 bump 脚本的两段式设计是「先全校验再落盘」，校验期它把锚点之间不一致当成缺陷。按提示把 `package.json` 的 `version` 与 `dsh.version` 一起改成 0.34.0 后再跑，脚本回「版本已是 0.34.0，无需改写」，此时七处仍在 0.33.0 的锚点由 `verify:version` 逐条点出来（`client.js` 状态条、`cordis.patch.yml` 头注释、`README.md` 标题与 4 处一键安装深链、`HARNESS_PLUGIN.md` 标题、`verify_prompt_gen5.mjs` 与 `verify_dedupe.mjs` 的头注释），逐条改完 **25 通过 / 0 失败**（锚点 8 处 · 扫描 111 个文件）。
+
+**六、已知未收口**
+
+本版内核变了（18879 → 20438 B），而 `tests/jb-v3-regression/tier6-golden.json` 仍绑旧内核的 md5 `c6294931…`，所以 `verify_release_notes` 会报一条「基线绑定的内核 md5 与当前内核一致」失败。按仓库纪律**不得用旧内核产物 `--write`**（那会把新 md5 盖到旧数据上，属假出处锁），必须在新内核生效的进程里重跑 Tier 6 全 5 题再重建基线 —— 留到下一版做，本版据实记红，不掩饰。
+
+
 ## v0.33.0
 
 **主题：把「破甲分从哪来」变成可复算的工具链，并把手能收到的那部分分收掉。**

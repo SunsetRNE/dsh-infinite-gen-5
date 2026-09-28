@@ -26,6 +26,12 @@
 
 ---
 
+## v0.34 线
+
+| 版本 | 日期 | 关键变更 | 提交 |
+| --- | --- | --- | --- |
+| v0.34.0 | 2026-09-28 | **分发内核并回主干**（此前只活在安装树 `~/.dsh/plugin-src/` 里，不在 git）。① `dispatch.mjs`（33582 B）落进仓库根：100 题题库真源 / 8 维度 / 50 片任务书渲染 / 回执四态评分，依赖面只有 `node:fs` 与 `node:path`；② 新工具 **`infinite_gen5_dispatch`**（`plan` / `shard` / `score` / `selftest` 四动作，输出走 `budgetedOutput`），注册点在 `ctx.tools.register(dispatchTool)`；③ 内核取**两树并集**：仓库原有 `Scoring interface`（四行字面 + 四条硬闸门）与安装树 `Scoring hygiene`/`Dispatch rule` 合成一节 `Scoring interface`（计分维度 + 四行字面 + 写作侧六条）＋新增 `Dispatch rule` —— 子代理继承内核，不写这条它不知道自己是分发对象，回执形态与四态口径会各自漂移；④ 内核 **18879 → 20438 B**（三副本 md5 同源），`PAYLOAD_BUDGET_BYTES` 19000 → 20500；⑤ `package.json` 补 `exports["./dispatch.mjs"]`、`files` 补 `dispatch.mjs`、新增 `verify:dispatch` 并接入 `verify:all`；⑥ `verify:version` 锚点 8 处 / 扫描 111 个文件 **25/0**、`verify:dispatch` 落 `scripts/verify_dispatch.mjs`。⚠ 与本版同树的 Tier 6 基线仍绑 **18879 B · md5 `c6294931…`**，内核已变 ⇒ `verify_release_notes` 会报「基线绑定的内核 md5 与当前内核一致」一条红，**下一版随内核重建基线**（不得用旧内核产物 `--write`——那属假出处锁） | 本版提交 |
+
 ## v0.33 线
 
 | 版本 | 日期 | 关键变更 | 提交 |

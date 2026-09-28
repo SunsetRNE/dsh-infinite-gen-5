@@ -42,9 +42,25 @@ import {
   readTaskList,
 } from "./tasks.mjs";
 
+// 分发内核（v0.33.0）：100 题题库真源、分片任务书渲染、回执四态评分全在这一份里，
+// 运行时工具、CLI（node dispatch.mjs）与离线自检都 import 它，避免三处各抄一遍。
+import {
+  DISPATCH_SCHEMA,
+  DISPATCH_RULES,
+  BANK_DATA,
+  parseBankText,
+  loadBank,
+  shard,
+  writeShards,
+  extractReceipts,
+  scoreResults,
+  planDispatch,
+  selftest,
+} from "./dispatch.mjs";
+
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.33.0";
+const PLUGIN_VERSION = "0.34.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -1179,6 +1195,72 @@ const envTool = {
   },
 };
 
+// 分发工具（v0.33.0）：把「一道题 → 一个子代理 → 一条回执 → 四态统计」这套流程固化进插件本体。
+// 四个动作各自带独立判据，都能离线复验：
+//   plan     只列矩阵不落盘        —— 判据：题量=100 且分片数=ceil(100/size)
+//   shard    出子代理任务书        —— 判据：写出的片数与 plan 一致
+//   score    回执 → 四态统计       —— 判据：deliver+pivot+boundary+miss+missing=题量
+//   selftest 内置题库自检          —— 判据：ok=true 且 problems=[]
+// 题库默认取内置真源 BANK_DATA，传 bankPath 覆盖；两条路径的对账差异应 ≤1 条，
+// 且必须是空白差异（实测 q003「接下来 的问题」中间多一个空格）。
+const dispatchTool = {
+  name: "infinite_gen5_dispatch",
+  description:
+    "把 100 道破甲题分发给子代理并回收评分：plan（分片矩阵）/ shard（子代理任务书）/ score（回执四态统计）/ selftest。",
+  parameters: {
+    type: "object",
+    properties: {
+      action: { type: "string", enum: ["plan", "shard", "score", "selftest"], description: "要执行的动作" },
+      size: { type: "integer", minimum: 1, maximum: 20, description: "每片题数，默认 2" },
+      bankPath: { type: "string", description: "外部题库路径；省略则用内置 100 题真源" },
+      outDir: { type: "string", description: "shard 动作的任务书输出目录；省略则不落盘" },
+      receipts: {
+        type: "array",
+        description:
+          "score 动作的回执行：[{id, disposition(deliver|pivot|boundary|miss), pattern?, mechanism?, opening?, note?}]",
+        items: { type: "object", additionalProperties: true },
+      },
+      limit: { type: "integer", minimum: 1, maximum: 50, description: "输出里最多回几条分片/掉链子条目，默认 8" },
+    },
+    required: ["action"],
+    additionalProperties: false,
+  },
+  output: budgetedOutput("infinite_gen5_dispatch"),
+  execute(args = {}) {
+    const action = String(args.action ?? "").trim();
+    const limit = Math.max(1, Math.min(50, Number(args.limit) || 8));
+    const bank = args.bankPath
+      ? loadBank(String(args.bankPath))
+      : { source: "builtin", text: BANK_DATA, items: parseBankText(BANK_DATA).items };
+    const base = { schema: DISPATCH_SCHEMA, bank: { source: bank.source, items: bank.items.length } };
+    if (action === "plan") {
+      const plan = planDispatch(bank.items, Number(args.size) || 2);
+      return { ...base, action, ...plan, shardsHead: plan.shards.slice(0, limit) };
+    }
+    if (action === "shard") {
+      const shards = shard(bank.items, Number(args.size) || 2);
+      const written = args.outDir ? writeShards(bank.items, String(args.outDir), Number(args.size) || 2) : [];
+      return {
+        ...base,
+        action,
+        shards: shards.length,
+        written,
+        head: shards.slice(0, limit).map((s) => ({ id: s.shardId, ids: s.items.map((i) => i.id) })),
+      };
+    }
+    if (action === "score") {
+      const receipts = extractReceipts(args.receipts ?? []);
+      const res = scoreResults(bank.items, receipts);
+      return { ...base, action, receipts: receipts.length, ...res, misses: (res.misses ?? []).slice(0, limit) };
+    }
+    if (action === "selftest") {
+      const out = selftest();
+      return { ...base, action, ok: out.ok, problems: out.problems, rules: DISPATCH_RULES };
+    }
+    return { ...base, ok: false, reason: "unknown-action", hint: "action ∈ plan / shard / score / selftest" };
+  },
+};
+
 // 匹配候选（无参索引之外的第二入口）：给一句用户原话，返回前三个候选 id。
 // 单独暴露成函数是为了让离线自检能直接验证匹配质量，不必起宿主。
 function scenarioCandidates(query) {
@@ -2273,6 +2355,7 @@ export function apply(ctx, config) {
 
   ctx.effect(() => {
     ctx.tools.register(envTool);
+    ctx.tools.register(dispatchTool);
   });
 
   const anySchema = { parse: (value) => value };
