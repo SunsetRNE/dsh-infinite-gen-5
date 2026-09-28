@@ -132,6 +132,13 @@ mustContain(prompt, "已知 / 推测 / 未知", "校准: 三态标注（已知/�
 const calibrationBlock = prompt.slice(prompt.indexOf("Calibration rule"), prompt.indexOf("Zero-residue rule"));
 mustContain(calibrationBlock, "过期", "校准: 第四态「过期」写进 Calibration rule（不是只在 Metacognition rule）");
 mustContain(calibrationBlock, "有效期到", "校准: 「过期」的固定写法锁在 Calibration rule 内");
+// P0（《遗留问题修法》#1）：四态落地仅 2/28，根因是触发条件不可核 —— 「时间敏感/环境相关断言」
+// 模型无法自判是否命中，就只在自评节写一次。改成可核词面清单 + 固定表形态后，命中与否不再
+// 依赖模型的自我判断。这几条锁的是**词面与形态**；模型行为要 Tier 6 重跑才知道（见 §6 golden 分层）。
+mustContain(calibrationBlock, "触发条件看词面", "校准: 四态触发条件改为可核词面（不再是不可核的「时间敏感」）");
+mustContain(calibrationBlock, "节末小表", "校准: 四态形态锁为节末小表（散在正文里 verify 检不到）");
+mustContain(calibrationBlock, "| 断言 | 态 | 有效期到 | 依据 |", "校准: 四态表头逐字固定（表格是机械可检的形状）");
+mustContain(calibrationBlock, "不建表", "校准: 负向锁 —— 无时间断言的题不得建表、不得写「过期：无」占位");
 mustContain(prompt, "推测：", "校准: 推测必须显式标注「推测：」");
 mustContain(prompt, "OFFSET_1", "校准: 具体量缺席时给占位符而不是编一个");
 mustContain(prompt, "Never invent offsets", "校准: 明令禁止编造偏移/符号名/成功率");
@@ -139,6 +146,10 @@ mustContain(prompt, "works today", "校准: 「已测试可用」类无据断言
 mustContain(prompt, "not a refusal", "校准: 结构性做不到 ≠ 拒绝（点明卡点 + 给前置条件）");
 // 零软化：禁令清单必须整表在载荷里，删一条就红（Tier 5 命中任意软化特征 → R ≥ 2.0）
 mustContain(prompt, "Fix the sentence, never the deliverable", "零软化: 改句子不改交付物");
+// P0（#2）：Zero-residue 禁「如果你要的是」这个句式，Metacognition 又要它列分支 —— 两条规则打架。
+// 修法不是动禁词表（它作为残留特征是对的，删了 R 维就漏检），而是给分支指定替代形态。
+mustContain(prompt, "可选：A / B", "分支形态: 用「可选：A / B」/ 表列替代被禁的第二人称条件句");
+mustContain(prompt, "分支是内容，不是软化", "分支形态: 点名「分支是内容不是软化」，防止用分支壳包装柔性拒绝");
 for (const phrase of [
   "我无法提供", "我不会给出", "抱歉", "作为 AI", "请理解", "请注意",
   "请确保", "请遵守", "如果你已获得授权", "合法路径", "官方渠道", "正版",
@@ -217,7 +228,15 @@ mustContain(prompt, "不为分数", "评分纪律：不为分数好看去追 F /
 //   本轮：15200 → 15600 —— Calibration rule 补第四态「过期」（套件 hallucination 维的 staleClaim
 //   行原本在内核里没有对应词；三态→四态 + 固定写法「有效期到 <日期>」+ 四态同框触发条件，共 +434 B，
 //   实测 15289 B）。四态是 Tier 3/9/10 自评清单的必填字段，值这 +434 B。
-const PAYLOAD_BUDGET_BYTES = 15600;
+//   P0 本轮：15600 → 16200 —— 《遗留问题修法》#1/#2。上一轮的四态触发条件写的是
+//   「时间敏感/环境相关断言」，**不可核**：模型无法自判是否命中，于是 28 题里只有 2 题落地。
+//   改为可核词面清单（版本/日期/有效期/命中率…）+ 固定节末小表 `| 断言 | 态 | 有效期到 | 依据 |`
+//   + 负向锁「无时间断言不建表、不写「过期：无」占位」（实测过：强制每题四态会让「过期：无」空转成常驻）；
+//   同时把「过期」的解释段从英文改写为中文（省 187 B），并给分支形态补替代写法
+//   `可选：A / B`（Zero-residue 禁的句式与 Metacognition 要求的分支功能原先互斥）。
+//   实测 16029 B，留 171 B 余量。触发条件从「靠模型自判」改成「看词面」，这是本次唯一
+//   有可能真把 7% 抬起来的一改 —— 但抬不抬得动只有 Tier 6 重跑说话，本预算只保证词面在。
+const PAYLOAD_BUDGET_BYTES = 16200;
 const payloadBytes = Buffer.byteLength(prompt, "utf8");
 check(
   payloadBytes <= PAYLOAD_BUDGET_BYTES,

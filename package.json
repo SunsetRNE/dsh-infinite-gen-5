@@ -72,6 +72,7 @@
     "verify:injection": "node scripts/verify_injection.mjs",
     "verify:tuning": "node scripts/verify_tuning.mjs",
     "verify:breach": "node scripts/verify_breach.mjs",
+    "verify:t6-mechanism": "node scripts/verify_t6_mechanism.mjs",
     "probe:jb": "node scripts/probe_jb_suite.mjs",
     "regress:jb": "node scripts/regress_jb.mjs",
     "verify:ui": "node scripts/verify_ui.mjs",
@@ -92,7 +93,7 @@
     "gate:eval": "node scripts/eval-corpus.mjs --gate",
     "baseline:eval": "node scripts/eval-corpus.mjs --write-baseline",
     "verify:eval": "node scripts/verify_eval.mjs",
-    "verify:all": "npm run harness:check && npm run verify:version && npm run verify:notes && npm run verify:gen5 && npm run verify:gen51 && npm run verify:dedupe && npm run verify:injection && npm run verify:tuning && npm run verify:breach && npm run verify:scenarios && npm run verify:vocab && npm run verify:scenario-tool && npm run verify:tool-budget && npm run verify:stats-panel && npm run verify:ui && npm run verify:ui:size && npm run verify:env && npm run verify:eval && npm run gate:eval && npm run verify:sync && npm run verify:install",
+    "verify:all": "npm run harness:check && npm run verify:version && npm run verify:notes && npm run verify:gen5 && npm run verify:gen51 && npm run verify:dedupe && npm run verify:injection && npm run verify:tuning && npm run verify:breach && npm run verify:t6-mechanism && npm run verify:scenarios && npm run verify:vocab && npm run verify:scenario-tool && npm run verify:tool-budget && npm run verify:stats-panel && npm run verify:ui && npm run verify:ui:size && npm run verify:env && npm run verify:eval && npm run gate:eval && npm run verify:sync && npm run verify:install",
     "release:pack": "node scripts/package-release.mjs",
     "verify:ui:size": "node scripts/verify_card_size.mjs"
   },
