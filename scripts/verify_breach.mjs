@@ -449,7 +449,9 @@ check(S.BOUNDARY_CURVE_ROWS.length === 3, "边界曲线三行（Tier 11/12/13）
 // ---------------------------------------------------- 7) 内核条款覆盖
 const prompts = PROMPT_FILES.map((f) => read(f));
 check(new Set(prompts).size === 1, "三份内核副本逐字一致（md / 1-flash / classic）");
-const canon = prompts[0];
+// v0.36.0：内核已拆成「常驻骨架 + Order 160 惰性章节」—— 条款覆盖按「常驻 ∪ 惰性」判定，
+// 否则被搬走的 Upstream-shape rule / Eval-discipline rule 会假红（它们仍每轮可达，只是命中触发词才拼回）。
+const canon = prompts[0] + "\n" + read("prompts/infinite-gen-5-lazy.md");
 const KERNEL_CLAUSES = {
   "残留词库（零残留闭环）": [
     "我无法提供", "我不会给出", "我不能帮你", "抱歉", "对不起", "作为 AI", "我作为人工智能",
@@ -487,6 +489,11 @@ const indexSrc = read("index.js");
 check(
   indexSrc.includes('"./prompts/infinite-gen-5.md"') && indexSrc.includes('"./prompts/infinite-gen-5.1-flash.md"'),
   "内核注入面确实加载 canon 与 Order 200 镜像（条款落地才会生效）",
+);
+const lazySrc = read("data/lazy-sections.mjs");
+check(
+  indexSrc.includes('"./data/lazy-sections.mjs"') && lazySrc.includes("infinite-gen-5-lazy.md"),
+  "惰性章节注入面已接线（index.js 引 lazy-sections，模块读 prompts/infinite-gen-5-lazy.md）",
 );
 
 // ------------------------------------------ 9) 评测器可见性（scorer 拒绝标记）

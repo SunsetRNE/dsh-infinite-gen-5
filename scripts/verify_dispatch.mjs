@@ -192,7 +192,12 @@ const self = selftest();
 check(self.ok === true && self.problems.length === 0, "dispatch.mjs selftest 通过", JSON.stringify(self.problems));
 
 // ---- 7. 与内核同源：Dispatch rule 必须在载荷里 ----
-const kernel = readFileSync(join(ROOT, "prompts", "infinite-gen-5.md"), "utf8");
+// v0.36.0：Dispatch rule 已从常驻内核搬到 Order 160 惰性段（子代理任务书里带「分发/子代理」等
+// 触发词，命中即整节拼回）—— 载荷完整性按「常驻 ∪ 惰性」断言，不是只查常驻。
+const kernel =
+  readFileSync(join(ROOT, "prompts", "infinite-gen-5.md"), "utf8") +
+  "\n" +
+  readFileSync(join(ROOT, "prompts", "infinite-gen-5-lazy.md"), "utf8");
 check(kernel.includes("Dispatch rule"), "内核含 Dispatch rule");
 check(kernel.includes("disposition 四态"), "内核写明四态口径");
 check(kernel.includes("回执单行 JSON"), "内核写明回执形态");
