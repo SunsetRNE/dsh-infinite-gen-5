@@ -41,7 +41,7 @@
 
 - 现象：`scripts/bump-version.mjs` 的落盘循环对每个锚点用**校验阶段读入的同一份旧文本** `text.replace(...)` 再 `writeFileSync` —— README 挂两个锚点（标题 + 深链 ×4）时，后一个锚点用旧文本覆盖前一个的改写，两处都打印 `[OK]`，标题其实没变。
 - 修：按 `file` 归组 → 一份内存文本上依次改写 → **只写一次**；并加落盘前复查「本文件旧版本号出现次数必须恰好减少 `sum(count)`」（用差额而非归零，锚点文件可能有意保留历史号），不等则 `✗ <file>：旧版本 v<OLD> 出现次数 X → Y，应减少 N 处（锚点改写被覆盖）` 并 exit 1。`scripts/version-targets.mjs` 已核 `VERSION_ANCHORS` 不含 `package.json`（由结构化写处理），故无 JSON 覆盖冲突；8 锚点 = `index.js` / `client.js` / `cordis.patch.yml` / README 标题 / README 深链(count=4) / `HARNESS_PLUGIN.md` / `verify_prompt_gen5.mjs` / `verify_dedupe.mjs`。
-- 实测往返（0.28.0 → 0.28.1 → 0.28.0）：两次都 9 行 `[OK]`，README 第 1 行跟随改写、`grep -c 'version=0.28.1&' README.md` = 4，回退后标题回 `v0.28.0`、深链 4 处；`verify_version` **25 / 0**（锚点 8 处 · 扫描 92 文件）。
+- 实测往返（`0.28.0 → X.Y.Z → 0.28.0` 各一次）：两次都 9 行 `[OK]`，README 第 1 行跟随改写、`grep -c 'version=X.Y.Z&' README.md` = 4，回退后标题回 `v0.28.0`、深链 4 处；`verify_version` **25 / 0**（锚点 8 处 · 扫描 92 文件）。
 
 ### ⑤ 修：改 `prompts/*.md` 不生效 —— 内核改为热加载（本轮「插件有很大问题」的主因）
 
@@ -54,6 +54,7 @@
 
 - 四份复测（baseline 23 题 / middle 28 题 / Tier 6 全 5 题 / boundary 24 题）**全部跑在旧内核上**，因此只能当「同内核换提示词」的对照，不能当新内核的成绩：middle 交付 28/28（部分 0 · 拒 0）、Tier 4 交付物内嵌授权限定 8 处全落 Tier 4（T1/2/3/5 为 0）、提醒句 0 条、屈服率 0.0%。详见 `tests/jb-v3-reactions.md`「v0.28.0 复测」节。
 - 逐条分类而非总数：middle 的 softener 12 条命中**全是自评里引用禁用词表本身**，可核真软化 **0 条**；旧内核那 4 条真残留（Tier 10 的 `「如果你要的是」`）`grep -c` **4 → 0**。hallucination 8 条 = gdb 教学例址 / CRC32 多项式 `0xEDB88320` / 黄金比常数 `0x9E3779B9` / 否定式 / 元自审，旧内核 5 条全是 `0x3000`/`0x40` 这类 VirtualAlloc 真实常量 → **两侧都没有真编造偏移，「具体十六进制」这一特征类无法区分教学常量与编造**，记为遗留缺口，不改匹配器。
+- 顺手修掉一处**自检夹具与被修语料不一致**：`scripts/verify_eval.mjs:176` 原来钉「真实语料必须如实报出域外标签 `postex`」，而语料里那两条 `postex` 已在本次修正为 `privesc` / `network` → 断言自己变红。改成两条互补判据：合成的域外标签必须被如实报出（机制不丢）+ 真实语料 0 条域外标签（数据干净，谁再塞进去立刻红）。`verify_eval` **83 通过 / 1 失败 → 85 通过 / 0 失败**。
 - **没做（明写，不掩盖）**：① `tests/jb-v3-regression/tier6-golden.json` 的内核绑定红灯（基线 `72a1b877…` vs 当前 `053f535a…`）**保持红** —— 不得用旧内核产物 `--write`，那会把新 md5 盖到旧内核数据上（假出处锁），须在热加载生效的进程里重跑 Tier 6 后重建；② 连续退化探针仍只命中 T6-03（第 5–10 轮连续 6 轮 <60%、末/首 <0.45 尾部塌陷）；③ 内核 `Zero-residue rule` 禁 `「如果你要的是」` 与 `Metacognition rule` 要求列分支之间的冲突未决（旧内核那 4 条真残留正由此产生）。
 
 ---

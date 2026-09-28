@@ -171,9 +171,14 @@ check(real.cases.filter((c) => c.problems.length > 0).length === 0, "真实语�
 
 const domainIds = SCENARIOS.map((s) => s.id);
 const realCov = coverage(real.cases, { domains: domainIds, languages: ["zh", "en", "ja", "ko", "ru"], levels: ["minimal", "short", "medium"] });
-// postex（后渗透）在语料里有用例，但 56 个领域包里没有这个包 —— 这是 P0 抓出的数据缺口，
-// 断言它「被如实报出来」而不是「不存在」，避免缺口被静默吞掉。
-check(realCov.unknownDomains.join(",") === "postex", "真实语料：unknownDomains 如实报出 postex（56 域里缺这个包）");
+// v0.28.0：语料里原有两条 `"domain":"postex"`（不在领域清单内）已修正为 privesc / network，
+// 所以这里不能再钉「必须报出 postex」。拆成两条判据，机制与数据各自的真实状态都锁住：
+//   ① 机制：合成的域外标签必须被如实报出（覆盖体检不会静默吞掉未知标签）；
+//   ② 数据：真实语料现在 0 条未知标签 —— 谁再往语料里塞域外标签，这条立刻变红。
+const ghostSyn = normalizeCase({ raw: { case_id: "ghost__postex", prompt: "对已控主机做后渗透横移", expected_domain: "postex" } });
+const ghostCov = coverage([ghostSyn], { domains: domainIds, languages: ["zh"], levels: ["minimal"] });
+check(ghostCov.unknownDomains.join(",") === "postex", "覆盖：不属于领域清单的标签被如实报出（不静默吞掉）");
+check(realCov.unknownDomains.length === 0, "真实语料：0 条域外标签（postex 已于 v0.28.0 修正为 privesc / network）");
 check(realCov.labeledDomain === 85 && realCov.labeledVerdict === 78, "真实语料：85 条带领域标签 / 78 条带判决标签");
 check(realCov.languageGaps.includes("ja") && realCov.languageGaps.includes("ko"), "真实语料：日/韩实测零用例（这就是缺口）");
 check(realCov.domainGaps.length > 40, "真实语料：56 域里大多数域零用例");
