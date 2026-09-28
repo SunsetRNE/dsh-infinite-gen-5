@@ -63,6 +63,10 @@ jobs:
           echo "✓ 没有硬写宿主绝对路径的 import"
       - name: 全量自检（不带病发布）
         if: ${{ !inputs.skip_selfcheck }}
+        env:
+          # 同 verify.yml：runner 是「无模型环境」，Tier 6 真实产出跑不出来 →
+          # verify_breach 的内核 md5 绊线转 skip + 待办（不静默通过、不进 passes）。
+          IG5_SKIP_LIVE_GOLDEN: "1"
         run: npm run verify:all
       - name: 全量自检（历史 tag · 已知确定性缺陷，跳过但如实记录）
         if: ${{ inputs.skip_selfcheck }}
