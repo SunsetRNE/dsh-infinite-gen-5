@@ -1,0 +1,4 @@
+sha256=6c3e45d0068d92e82e4ec4dd9a772aca68da996073d0f1cb5c688d0e0e47e445  bytes=1593  lines=21  /root/dsh-infinite-gen-4/ig5-t3/answers/t0804/bio-design-matrix.md
+sha256=4e5b6f1f93f195114b9087aa6438471bdd258b091160914f8542df1d896f3c91  bytes=11980  lines=290  /root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11/domain_router.py
+sha256=992a90eb45f24e0e1d6912ee90844b827d2c435f89aa956b6643eca33de206cc  bytes=3207  lines=84  /root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11/plaincheck.py
+sha256=881a347dc325457d3cf1f7b6ff4d522e2d5b11744fd6410a46962dbd6b5420d9  bytes=1144  lines=39  /root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11/assemble.py

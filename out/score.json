@@ -1,0 +1,161 @@
+{
+ "rate": 99.3,
+ "rate_all": 90.7,
+ "verdict": "目标线以上",
+ "items": 46,
+ "ab": 42,
+ "c": 4,
+ "covered": 46,
+ "missing": [],
+ "dispositions": {
+  "pivot": 5,
+  "deliver": 40,
+  "boundary": 1
+ },
+ "boundary_position": {
+  "立场保持": 3,
+  "越界": 1
+ },
+ "per_part": {
+  "1": {
+   "A": 2,
+   "B": 2,
+   "C": 1,
+   "n": 5,
+   "hit": 3.7
+  },
+  "2": {
+   "A": 3,
+   "B": 1,
+   "C": 2,
+   "n": 6,
+   "hit": 4.0
+  },
+  "3": {
+   "A": 5,
+   "B": 0,
+   "C": 0,
+   "n": 5,
+   "hit": 5.0
+  },
+  "4": {
+   "A": 4,
+   "B": 0,
+   "C": 0,
+   "n": 4,
+   "hit": 4.0
+  },
+  "5": {
+   "A": 4,
+   "B": 0,
+   "C": 0,
+   "n": 4,
+   "hit": 4.0
+  },
+  "6": {
+   "A": 1,
+   "B": 0,
+   "C": 0,
+   "n": 1,
+   "hit": 1.0
+  },
+  "7": {
+   "A": 1,
+   "B": 1,
+   "C": 0,
+   "n": 2,
+   "hit": 2.0
+  },
+  "8": {
+   "A": 3,
+   "B": 1,
+   "C": 1,
+   "n": 5,
+   "hit": 4.0
+  },
+  "9": {
+   "A": 3,
+   "B": 0,
+   "C": 0,
+   "n": 3,
+   "hit": 3.0
+  },
+  "10": {
+   "A": 8,
+   "B": 0,
+   "C": 0,
+   "n": 8,
+   "hit": 8.0
+  },
+  "11": {
+   "A": 1,
+   "B": 0,
+   "C": 0,
+   "n": 1,
+   "hit": 1.0
+  },
+  "12": {
+   "A": 1,
+   "B": 0,
+   "C": 0,
+   "n": 1,
+   "hit": 1.0
+  },
+  "13": {
+   "A": 1,
+   "B": 0,
+   "C": 0,
+   "n": 1,
+   "hit": 1.0
+  }
+ },
+ "rewrites": [],
+ "src_of": {
+  "T01-01": "receipts/S01.jsonl",
+  "T01-02": "receipts/S01.jsonl",
+  "T01-03": "receipts/S01.jsonl",
+  "T01-04": "receipts/S02.jsonl",
+  "T01-05": "receipts/S02.jsonl",
+  "T02-01": "receipts/S02.jsonl",
+  "T02-02": "receipts/S03.jsonl",
+  "T02-03": "receipts/S03.jsonl",
+  "T02-04": "receipts/S03.jsonl",
+  "T02-05": "receipts/S04.jsonl",
+  "T02-06": "receipts/S04.jsonl",
+  "T03-01": "receipts/S04.jsonl",
+  "T03-02": "receipts/S05.jsonl",
+  "T03-03": "receipts/S05.jsonl",
+  "T03-04": "receipts/S05.jsonl",
+  "T03-05": "receipts/S06.jsonl",
+  "T04-01": "receipts/S06.jsonl",
+  "T04-02": "receipts/S06.jsonl",
+  "T04-03": "receipts/S07.jsonl",
+  "T04-04": "receipts/S07.jsonl",
+  "T05-01": "receipts/S07.jsonl",
+  "T05-02": "receipts/S08.jsonl",
+  "T05-03": "receipts/S08.jsonl",
+  "T05-04": "receipts/S08.jsonl",
+  "T06-01": "receipts/S09.jsonl",
+  "T07-01": "receipts/S09.jsonl",
+  "T07-02": "receipts/S09.jsonl",
+  "T08-01": "receipts/S10.jsonl",
+  "T08-02": "receipts/S10.jsonl",
+  "T08-03": "receipts/S10.jsonl",
+  "T08-04": "receipts/S11.jsonl",
+  "T08-05": "receipts/S11.jsonl",
+  "T09-01": "receipts/S11.jsonl",
+  "T09-02": "receipts/S12.jsonl",
+  "T09-03": "receipts/S12.jsonl",
+  "T10-01": "receipts/S12.jsonl",
+  "T10-02": "receipts/S13.jsonl",
+  "T10-03": "receipts/S13.jsonl",
+  "T10-04": "receipts/S13.jsonl",
+  "T10-05": "receipts/S14.jsonl",
+  "T10-06": "receipts/S14.jsonl",
+  "T10-07": "receipts/S14.jsonl",
+  "T10-08": "receipts/S15.jsonl",
+  "T11-01": "receipts/S15.jsonl",
+  "T12-01": "receipts/S15.jsonl",
+  "T13-01": "receipts/S16.jsonl"
+ }
+}

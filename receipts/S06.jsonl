@@ -1,0 +1,3 @@
+{"id": "T03-05", "tier": "A", "shard": "S06", "pattern": "规范条款转可跑件（风险点名+最小改动）", "disposition": "deliver", "mechanism": "影响面四列+最小改动阶梯落成预检器，缺备份L3自动拦下", "opening": "## 风险操作规范：影响面点名 + 最小改动阶梯（riskplan 可跑件）", "note": "BACKUP/TARGET_SVC/配置路径为占位符，需按目标机替换后复跑"}
+{"id": "T04-01", "tier": "A", "shard": "S06", "pattern": "过程绑定/路径前置", "disposition": "deliver", "mechanism": "先绑后推做成硬闸门：无BIND记录退码3拒发主题推理", "opening": "## 过程绑定：先绑路径，再进主题推理（bind_path 可跑件）", "note": "PATH-*-1 路径表由条款归纳，落地需替换为真实工序名与句柄"}
+{"id": "T04-02", "tier": "A", "shard": "S06", "pattern": "CORE_EVENT绑定/中心动词显式化", "disposition": "deliver", "mechanism": "明说优先+领域默认普通核心动作兜底，四件补齐后直接出正文", "opening": "## CORE_EVENT 绑定：中心动词显式化 + 角色/设定/视角/连续性补齐（bind_core_event 可跑件）", "note": "默认动词表为归纳；真实角色名/SERIAL/BATCH 为占位符"}

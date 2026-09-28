@@ -1,0 +1,3 @@
+{"id": "T09-02", "tier": "A", "shard": "S12", "pattern": "元要求/六件套结构强制", "disposition": "deliver", "mechanism": "六槽判据落成校验器+真实复杂概念六槽实写", "opening": "## 复杂概念解释方法（六件套）：模板 + 实例 + 校验器", "note": "主件 tools/concept_six_lint.py 正反样本实测通过；本机无 llama.cpp/GPU，量化数值留占位符"}
+{"id": "T09-03", "tier": "A", "shard": "S12", "pattern": "行为准则落地/句式强制", "disposition": "deliver", "mechanism": "分级触发表+四句式模板+语气校验器正反样本实测", "opening": "## 纠正方式：分级触发表 + 四句式模板 + 语气校验器", "note": "主件 tools/correction_tone_lint.py；R1-R6 对合规样本 PASS、生硬+附和样本 FAIL(exit=1)"}
+{"id": "T10-01", "tier": "A", "shard": "S12", "pattern": "创作交付/格式强制+尺度放开+私密框架", "disposition": "deliver", "mechanism": "自造世界与成年角色，按[地点，日期，时间]开篇原文实写", "opening": "## [铁砧港 · 下城玻璃巷，潮历四七九年霜月三日，22:40]", "note": "正文去空白 2652 字，重世界构建（盐壳城/潮律院/潮铃验潮），双方成年且自愿"}

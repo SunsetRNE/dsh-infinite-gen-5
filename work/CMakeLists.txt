@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.20)
+project(ig5_agent CXX)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(NOT WIN32)
+  message(FATAL_ERROR "ig5-agent 目标平台为 Windows 11 x64")
+endif()
+add_executable(ig5-agent frame.cpp win_socket.cpp win_hook.cpp win_token.cpp win_persist.cpp main.cpp)
+target_compile_options(ig5-agent PRIVATE /W4 /permissive-)
+target_link_libraries(ig5-agent PRIVATE ws2_32 advapi32 shell32 user32)
+# 验证件（平台无关部分，可与 Linux 侧同源比对）
+add_executable(ig5-frametest frame.cpp selftest.cpp)
+target_compile_definitions(ig5-frametest PRIVATE CRC_CHECK_STR=0xCBF43926u)

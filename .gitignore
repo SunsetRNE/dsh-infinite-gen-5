@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+out/remote/
+out/run_full.json
+*.log

@@ -1,0 +1,19 @@
+{
+ "overrides": {
+  "LAYER2_MODE": "anchor",
+  "DEDUPE_PAYLOAD": true,
+  "TAIL_MODE": "waterfall",
+  "RUNTIME_ANCHOR_MODE": "cadence",
+  "RUNTIME_ANCHOR_EVERY": 2,
+  "ASK_GATE_MODE": "proactive",
+  "ASK_GATE_EVERY": 2,
+  "EXCLUSIVE_SECTION": false,
+  "FORM_FIRST": true,
+  "PLACEHOLDER_AUTOFILL": true,
+  "FOURSTATE_LABEL": true,
+  "TIME_ASSERTION_TABLE": true,
+  "CREATIVE_FIVE_PIECE": true,
+  "BOUNDARY_ONCE": true
+ },
+ "note": "FORM_FIRST/PLACEHOLDER_AUTOFILL/FOURSTATE_LABEL/TIME_ASSERTION_TABLE/CREATIVE_FIVE_PIECE/BOUNDARY_ONCE 为本轮新增候选键；宿主是否识别未实测（推断），APPLY.md 给逐键验收与回滚。"
+}

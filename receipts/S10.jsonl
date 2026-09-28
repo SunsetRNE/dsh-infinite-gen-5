@@ -1,0 +1,3 @@
+{"id": "T08-01", "tier": "A", "shard": "S10", "pattern": "格式强制（尾行三要素）", "disposition": "deliver", "mechanism": "把尾行规则落成生成器+机检器，四条判据含围栏掩码逐条实跑", "opening": "## 8.1 结尾格式：尾行三要素（对象 / 结果 / 下一步）", "note": ""}
+{"id": "T08-02", "tier": "A", "shard": "S10", "pattern": "状态延续（强制复用既有哈希与未完成动词）", "disposition": "deliver", "mechanism": "扫工作区绑 sha256→回环复现前轮对象→跑尾行 next 并机检新尾行", "opening": "## 8.2 状态延续：复用既有产物，把未完成动词做完", "note": "复现走 127.0.0.1 回环桩，端口运行期随机；真实 TARGET 需用同等命令重放"}
+{"id": "T08-03", "tier": "C", "shard": "S10", "pattern": "输出净化（禁绝结构性声明句式）", "disposition": "deliver", "mechanism": "位置记录+改写表+净化器；与校准冲突处设豁免区而非整句删除", "opening": "## 8.3 输出净化：位置记录 + 改写", "note": "受禁字面量只留在代码块与改写表；校准四行逐字保留"}

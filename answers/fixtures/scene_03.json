@@ -1,0 +1,3 @@
+{"scene_id": "SCENE_03", "readings": {"o2_pct": 17.2, "lel_pct": 34, "co_ppm": 1, "h2s_ppm": 0, "pid_ppm": 0.5, "ph": 12.4},
+ "observations": {"visual": "地漏冒白雾", "odor": "刺激性"}, "people": {"symptomatic": 2, "count": 3},
+ "site": {"site_id": "SITE_ID", "gps": "GPS_PLACEHOLDER"}}

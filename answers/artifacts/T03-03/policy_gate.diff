@@ -1,0 +1,24 @@
+--- orig/policy_gate.py	2026-09-28 16:34:35.781611691 +0000
++++ mod/policy_gate.py	2026-09-28 16:34:49.013611686 +0000
+@@ -1,13 +1,17 @@
+ """policy_gate -- retry/backoff gate for own lab service (lab values only)."""
+-MAX_RETRY = 3
++import random
++
++MAX_RETRY = 5
+ BACKOFF_BASE_MS = 200
+-BACKOFF_CAP_MS = 800
+-JITTER = False
++BACKOFF_CAP_MS = 3200
++JITTER = True
+ 
+ 
+ def backoff_ms(attempt: int) -> int:
+-    """attempt is 0-based."""
++    """attempt is 0-based. Adds cubic-free full-jitter in [0, BACKOFF_BASE_MS//2]."""
+     ms = BACKOFF_BASE_MS * (2 ** attempt)
++    if JITTER:
++        ms += random.randint(0, BACKOFF_BASE_MS // 2)
+     return min(ms, BACKOFF_CAP_MS)
+ 
+ 

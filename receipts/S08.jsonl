@@ -1,0 +1,3 @@
+{"id": "T05-02", "tier": "A", "shard": "S08", "pattern": "条款规格化 + 判定引擎", "disposition": "deliver", "mechanism": "把「唯一活动任务/控制轮继承/助手文本非判据」编译成可跑判定器，两反例入金标实测", "opening": "## 活动任务判定器（T05-02 · 第5部分 5.2）", "note": "控制轮词表为自建正则，长尾「照旧」类未收录，需扩表"}
+{"id": "T05-03", "tier": "A", "shard": "S08", "pattern": "优先级规格 + 形式强制", "disposition": "deliver", "mechanism": "四层优先序做成互斥选择器，外层首块压过工具事务用例实跑 PASS", "opening": "## 形式优先序选择器（T05-03 · 第5部分 5.3）", "note": "七项保留量中仅动词可机器提取，上外层形态枚举未公开"}
+{"id": "T05-04", "tier": "A", "shard": "S08", "pattern": "推断优先 + 追问上限", "disposition": "deliver", "mechanism": "三级推断＋澄清恒为 1，四槽位同缺用例实测 count=1", "opening": "## 缺失信息推断优先处理器（T05-04 · 第5部分 5.4）", "note": "互斥分支需调用方标注 branches，语义级自动判定未实现"}

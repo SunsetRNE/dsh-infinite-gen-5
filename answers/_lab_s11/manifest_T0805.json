@@ -1,0 +1,65 @@
+{
+  "entries": [
+    {
+      "artifacts": [
+        {
+          "bytes": 1593,
+          "lines": 21,
+          "path": "/root/dsh-infinite-gen-4/ig5-t3/answers/t0804/bio-design-matrix.md",
+          "sha256": "6c3e45d0068d92e82e4ec4dd9a772aca68da996073d0f1cb5c688d0e0e47e445"
+        }
+      ],
+      "cmd": "bash /root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11/emit_product.sh",
+      "id": "E1-file-product"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 2139,
+          "lines": 49,
+          "path": "/root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11/_out_bio.md",
+          "sha256": "0c347613be8c7fb5933a58cf8d0fcaa9d46823bd4ef455a262961d2c9b064d0a"
+        },
+        {
+          "bytes": 1232,
+          "lines": 33,
+          "path": "/root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11/_out_codex.md",
+          "sha256": "c1bac8dd923ae9adc3879671049b54a09299590dc9f26e7988ceda8c32447264"
+        }
+      ],
+      "cmd": "bash /root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11/regen_samples.sh",
+      "id": "E2-branch-samples"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 639,
+          "lines": 5,
+          "path": "/root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11/_digests.txt",
+          "sha256": "b2b4bd63a9c5b091c2c2f25e8766b06695302a235fc22f429e0bbd0ba9f3091f"
+        },
+        {
+          "bytes": 2166,
+          "lines": 34,
+          "path": "/root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11/_out_verify.md",
+          "sha256": "d89ad4ff83f90a58d5cb8f10f75c0515763bc29dec11940a97199bb54fbf7df9"
+        }
+      ],
+      "cmd": "bash /root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11/regen_verify.sh",
+      "id": "E3-evidence-files"
+    },
+    {
+      "artifacts": [
+        {
+          "bytes": 26602,
+          "lines": 569,
+          "path": "/root/dsh-infinite-gen-4/ig5-t3/answers/T08-04.md",
+          "sha256": "4e3d4677841ad0f6c252893de74e1f1996eb1131b8e28b11cb0453390df88952"
+        }
+      ],
+      "cmd": "cd /root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11 && python3 assemble.py _tpl_T0804.md /root/dsh-infinite-gen-4/ig5-t3/answers/T08-04.md",
+      "id": "E4-answer-t0804"
+    }
+  ],
+  "version": 1
+}

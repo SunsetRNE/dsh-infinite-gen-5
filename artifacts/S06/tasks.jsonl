@@ -1,0 +1,5 @@
+{"id":"T1","domain":"physical","stage":"请求","subject":"ROLE_A","intent":"推动货箱"}
+{"id":"T2","domain":"mechanical","stage":"修正","subject":"ROLE_B","intent":"对准并紧固"}
+{"id":"T3","domain":"biological","stage":"释放","subject":"ROLE_A","intent":"取样后灭活"}
+{"id":"T4","domain":"narrative","stage":"延续","subject":"ROLE_B","intent":"承接上一场"}
+{"id":"T5","stage":"请求","subject":"ROLE_A","intent":"未声明领域"}

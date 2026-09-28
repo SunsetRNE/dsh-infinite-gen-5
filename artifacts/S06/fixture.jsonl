@@ -1,0 +1,3 @@
+{"id":"OP1","kind":"change_config","target":"/etc/TARGET/app.conf","scope":"service"}
+{"id":"OP2","kind":"delete_data","target":"/var/lib/TARGET/queue","data_root":"/var/lib/TARGET/raw","backup":"/srv/bak/queue.tgz","scope":"dir"}
+{"id":"OP3","kind":"downgrade","target":"TARGET_SVC","scope":"device"}

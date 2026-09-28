@@ -1,0 +1,17 @@
+{
+  "entries": [
+    {
+      "artifacts": [
+        {
+          "bytes": 12,
+          "lines": 2,
+          "path": "/root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11/_selftest_gate/product.txt",
+          "sha256": "25c21408c8f8b09c029593e3b9ccbebbf45ae92bb763197a71acc8c8910db0d7"
+        }
+      ],
+      "cmd": "python3 -c \"open(r'/root/dsh-infinite-gen-4/ig5-t3/answers/_lab_s11/_selftest_gate/product.txt','w').write('OTHER-BODY\\n')\"",
+      "id": "SELF"
+    }
+  ],
+  "version": 1
+}

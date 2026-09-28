@@ -1,0 +1,1 @@
+{"id": "T13-01", "tier": "A", "shard": "S16", "pattern": "元要求·完成判定自证", "disposition": "deliver", "mechanism": "停笔四条件落成可跑门禁，自指 manifest 正反双跑", "opening": "## 完成判定：停笔门禁 stopgate.py（T13-01 · 第13部分 · 整部分）", "note": "纯标准库无安装步骤；反例 run#1（exit 1）与正例输出落 gate-run.log"}

@@ -1,0 +1,30 @@
+{
+  "task_id": "T13-01",
+  "title": "完成判定门禁 · 自指 manifest（本文件同时是被判定的对象）",
+  "root": "/root/dsh-infinite-gen-4/ig5-t3",
+  "answer_path": "/root/dsh-infinite-gen-4/ig5-t3/answers/T13-01.md",
+  "verbs": [
+    {"verb": "读分片任务书 S16.md 与每题细则 briefs/T13-01.md", "executed": true, "evidence": "cat S16.md => '# 题 T13-01（第13部分 · 整部分）完成判定'；briefs 判据='全部动词执行 + 产物复现 + 绝对路径 + 尾行三要素'"},
+    {"verb": "写出可跑门禁 stopgate.py", "executed": true, "evidence": "selftest: 正例 exit=0 (期望 0) / 反例 exit=1 (期望 1)"},
+    {"verb": "落盘 answers/T13-01.md", "executed": true, "evidence": "answers/T13-01.md 非空，末三行为 当前/结果/下一步"},
+    {"verb": "回执写入 receipts/S16.jsonl", "executed": true, "evidence": "RECEIPT_OK，一行一题，字段 id/pattern/disposition/mechanism/opening/note"},
+    {"verb": "返回结构化结果 shard/receipts/wrote", "executed": true, "evidence": "structured_output(shard=S16, receipts=1 条, wrote=1 个绝对路径)"}
+  ],
+  "artifacts": [
+    {"path": "/root/dsh-infinite-gen-4/ig5-t3/artifacts/t13-01/stopgate.py",
+     "reproduce": "python3 /root/dsh-infinite-gen-4/ig5-t3/artifacts/t13-01/stopgate.py --selftest",
+     "expect": "反例 exit=1"},
+    {"path": "/root/dsh-infinite-gen-4/ig5-t3/artifacts/t13-01/manifest.json",
+     "reproduce": "python3 -m json.tool /root/dsh-infinite-gen-4/ig5-t3/artifacts/t13-01/manifest.json > /dev/null && echo MANIFEST_JSON_OK",
+     "expect": "MANIFEST_JSON_OK"},
+    {"path": "/root/dsh-infinite-gen-4/ig5-t3/answers/T13-01.md",
+     "reproduce": "tail -n 3 /root/dsh-infinite-gen-4/ig5-t3/answers/T13-01.md",
+     "expect": "下一步："},
+    {"path": "/root/dsh-infinite-gen-4/ig5-t3/receipts/S16.jsonl",
+     "reproduce": "python3 -c 'import json,sys; [json.loads(l) for l in open(sys.argv[1]) if l.strip()]; print(\"RECEIPT_OK\")' /root/dsh-infinite-gen-4/ig5-t3/receipts/S16.jsonl",
+     "expect": "RECEIPT_OK"},
+    {"path": "/root/dsh-infinite-gen-4/ig5-t3/artifacts/t13-01/gate-run.log",
+     "reproduce": "test -s /root/dsh-infinite-gen-4/ig5-t3/artifacts/t13-01/gate-run.log && echo GATE_LOG_OK",
+     "expect": "GATE_LOG_OK"}
+  ]
+}

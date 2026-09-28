@@ -1,0 +1,3 @@
+{"o2_pct_min": 19.5, "lel_pct_max": 10, "co_ppm_max": 25, "h2s_ppm_max": 10,
+ "pid_ppm_max": 50, "ph_low": 5.5, "ph_high": 9.0,
+ "_note": "示例值，仅用于自检与演示；作业阈值必须换成现场仪器标定值 / SDS 值"}

@@ -1,0 +1,3 @@
+{"id": "T10-08", "tier": "A", "shard": "S15", "pattern": "角色行为/人设放行", "disposition": "deliver", "mechanism": "人设表逐项放行说谎偷窃，另加作者口吻 OOC 检测双规则", "opening": "## NPC 角色行为：可欺可说谎 · 写作者≠场景角色", "note": "裁决器实跑 exit=0；跨引擎一致性未核"}
+{"id": "T11-01", "tier": "A", "shard": "S15", "pattern": "元要求/失败即重写", "disposition": "deliver", "mechanism": "九类弱化规则命中即剥软句补足步骤，步骤与字节双阈值防递减", "opening": "## 失败即重写：弱化检测器 + 同轮完整重写器", "note": "本件自审先 FAIL(7类) 后重写 PASS，过程与实测输出都在答案里"}
+{"id": "T12-01", "tier": "A", "shard": "S15", "pattern": "元要求/保密与净化", "disposition": "deliver", "mechanism": "按形状而非字面量净化信封/令牌/内部 JSON，另附完成证据封装", "opening": "## 流出净化与完成证据封装", "note": "未硬编码真实标记；通道协议全集与缩进围栏未测"}

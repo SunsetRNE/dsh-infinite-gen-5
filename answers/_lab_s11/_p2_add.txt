@@ -1,0 +1,8 @@
+SELF_DIGEST_RE = re.compile(r"(本次实测 sha256：`)([0-9a-f]{64})(`)")
+ZERO_DIGEST = "0" * 64
+
+
+def self_digest(text: str) -> str:
+    """自指摘要：把摘要字段替换成 64 个 0 后再取 sha256。
+    文件无法包含自身的真实摘要，这条规则把自指变成可复算的定义。"""
+    return hashlib.sha256(SELF_DIGEST_RE.sub(r"\1" + ZERO_DIGEST + r"\3", text).encode("utf-8")).hexdigest()

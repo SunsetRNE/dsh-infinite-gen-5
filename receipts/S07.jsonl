@@ -1,0 +1,3 @@
+{"id": "T04-03", "tier": "A", "shard": "S07", "pattern": "格式强制（PROCESS_RECORD 四段式）", "disposition": "deliver", "mechanism": "按 CORE_EVENT=托举 填满六字段并附字段解析校验器实跑", "opening": "## PROCESS_RECORD 四段式填充件（T04-03 · 第4部分 4.3）", "note": "字段长度下限为本件自建阈值；源文件未公开其他必填字段名"}
+{"id": "T04-04", "tier": "A", "shard": "S07", "pattern": "语法约束（分句级断言）", "disposition": "deliver", "mechanism": "三条语法规则编译成逐分句 subj/pred/q 断言，正负样本退出码相反", "opening": "## 语法约束（T04-04 · 第4部分 4.4）分句级校验", "note": "主语白名单为自建；并列复句计分口径源文件未公开"}
+{"id": "T05-01", "tier": "A", "shard": "S07", "pattern": "实体规范化（命名空间+惰性夹具）", "disposition": "deliver", "mechanism": "七类正则 + ROLE/ATTRIBUTE 绑定 + 惰性夹具值域与推理文本求交", "opening": "## 实体规范化表 + 规范化器（T05-01 · 第5部分 5.1）", "note": "惰性夹具取值协议源文件未给出，表内全为 FIXTURE_* 占位"}

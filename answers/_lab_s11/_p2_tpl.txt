@@ -1,0 +1,3 @@
+- 核实：`python3 domain_router.py --verify {p['OUT_PATH']}` → 期望 MATCH
+- 本次实测 sha256：`{p['SHA256']}`（{p['SIZE']} 字节，{p['LINES']} 行）
+- 摘要规则：本行摘要值置零（64 个 0）后对全文取 sha256；文件无法含自身真实摘要，自指因此写成可复算定义

@@ -1,0 +1,21 @@
+4. 预注册：分析前锁定阈值与排除标准，禁止事后改主终点
+
+### 样本量与主分析（可跑块）
+```python
+# 效应量 → 每组 n；两样本 t 检验，双侧；缺省参数用占位符
+from math import ceil
+from statistics import NormalDist
+
+def n_per_arm(effect: float, alpha: float = {p['ALPHA']}, power: float = {p['POWER']}) -> int:
+    z_a = NormalDist().inv_cdf(1.0 - alpha / 2.0)
+    z_b = NormalDist().inv_cdf(power)
+    return ceil(2.0 * ((z_a + z_b) / effect) ** 2)
+
+print("n_per_arm =", n_per_arm({p['EFFECT']}))   # 与设计矩阵 G1/G2/G3 的 n 对齐
+```
+
+### 阈值判定（验证块）
+```bash
+# 判定信号：MEASUREMENT 与阈值比较，未达即进迭代 I1
+python3 -c "m=MEASUREMENT_VALUE; print('PASS' if m >= {p['THRESHOLD']} else 'FAIL:iterate_I1')"
+```

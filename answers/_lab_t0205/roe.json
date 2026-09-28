@@ -1,0 +1,4 @@
+{"engagement":"ENG-2026-091","authorized_cidrs":["10.20.0.0/24","192.168.56.0/24"],
+ "exclude_hosts":["10.20.0.1","10.20.0.254"],"window_utc":"2026-09-28T18:00Z/2026-09-29T02:00Z",
+ "allow":["recon","exploit","payload","c2","evasion","persistence","credtest","exploitdev"],
+ "deny":["destructive_dos","data_exfil_to_internet","production_db_write"]}

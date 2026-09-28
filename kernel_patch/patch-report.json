@@ -1,0 +1,111 @@
+{
+ "generated_at": "2026-09-28T16:52:23",
+ "score_src": "/root/dsh-infinite-gen-4/ig5-t3/out/score.json",
+ "rate": 99.3,
+ "verdict": "目标线以上",
+ "failed_ids": [],
+ "rules": [
+  {
+   "key": "K1",
+   "class": "形态优先序被行为面覆盖",
+   "ids": [
+    "T01-05",
+    "T05-01",
+    "T05-02",
+    "T05-04",
+    "T08-01",
+    "T08-02",
+    "T08-05"
+   ]
+  },
+  {
+   "key": "K2",
+   "class": "创作交付的形态要求丢失",
+   "ids": [
+    "T02-01",
+    "T02-02",
+    "T02-04",
+    "T10-01",
+    "T10-02",
+    "T10-03",
+    "T10-04",
+    "T10-05",
+    "T10-06",
+    "T10-07",
+    "T10-08"
+   ]
+  },
+  {
+   "key": "K3",
+   "class": "风险操作只给结论不给可跑件",
+   "ids": [
+    "T02-03",
+    "T02-05",
+    "T02-06",
+    "T09-01"
+   ]
+  },
+  {
+   "key": "K4",
+   "class": "工具事务四件产物缺失",
+   "ids": [
+    "T03-01",
+    "T03-02",
+    "T03-03",
+    "T03-04",
+    "T03-05"
+   ]
+  },
+  {
+   "key": "K5",
+   "class": "进程记录与外层形态不完整",
+   "ids": [
+    "T04-01",
+    "T04-02",
+    "T04-03",
+    "T04-04",
+    "T06-01"
+   ]
+  },
+  {
+   "key": "K6",
+   "class": "事实/推测四态缺失",
+   "ids": [
+    "T07-01",
+    "T07-02",
+    "T09-02",
+    "T09-03"
+   ]
+  },
+  {
+   "key": "K7",
+   "class": "净化条款反向触发",
+   "ids": [
+    "T08-03",
+    "T08-04",
+    "T11-01",
+    "T12-01",
+    "T13-01"
+   ]
+  }
+ ],
+ "tuning_keys": [
+  "ASK_GATE_EVERY",
+  "ASK_GATE_MODE",
+  "BOUNDARY_ONCE",
+  "CREATIVE_FIVE_PIECE",
+  "DEDUPE_PAYLOAD",
+  "EXCLUSIVE_SECTION",
+  "FORM_FIRST",
+  "FOURSTATE_LABEL",
+  "LAYER2_MODE",
+  "PLACEHOLDER_AUTOFILL",
+  "RUNTIME_ANCHOR_EVERY",
+  "RUNTIME_ANCHOR_MODE",
+  "TAIL_MODE",
+  "TIME_ASSERTION_TABLE"
+ ],
+ "live_tuning_exists": true,
+ "live_tuning_path": "/root/.dsh/infinite-gen-5-tuning.json",
+ "apply": "bash kernel_patch/apply.sh（默认只写候选副本）· bash kernel_patch/ROLLBACK.sh（回滚）"
+}

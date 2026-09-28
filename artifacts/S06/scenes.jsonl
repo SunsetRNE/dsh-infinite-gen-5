@@ -1,0 +1,4 @@
+{"id":"S1","domain":"narrative","role_a":"ROLE_A","role_b":"ROLE_B","setting":"SETTING_1","continuity":"CONT_1"}
+{"id":"S2","domain":"mechanical","verb":"拧紧","role_a":"ROLE_A","role_b":"SERIAL","setting":"工位 SETTING_2"}
+{"id":"S3","domain":"physical","verb":"抬起","role_a":"ROLE_A","role_b":"ROLE_B"}
+{"id":"S4","verb":"递出"}

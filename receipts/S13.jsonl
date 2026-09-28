@@ -1,0 +1,3 @@
+{"id": "T10-02", "tier": "A", "shard": "S13", "pattern": "格式强制+细则枚举", "disposition": "deliver", "mechanism": "五栏模板+三例实填，每格绑数字与比喻，附15格自检", "opening": "## T10-02 NPC 外貌清单（首次登场必填 · 字段模板 + 三例实填）", "note": "数值为虚构设定值；人物为 ROLE_A/B/C 占位"}
+{"id": "T10-03", "tier": "A", "shard": "S13", "pattern": "格式强制（每人一句斜体独白）", "disposition": "deliver", "mechanism": "三句主句各带换人失效对照，句数锁1，备变体另列", "opening": "## T10-03 斜体内心独白（每 NPC 一句 · 主句 + 依据表 + 反例修法）", "note": "斜体用 *…* ；无读稿反馈数据可引用"}
+{"id": "T10-04", "tier": "A", "shard": "S13", "pattern": "规则清单+可校验件", "disposition": "deliver", "mechanism": "七条判据写成 linter，样张 627 字实跑 7/7 PASS 退码 0", "opening": "## T10-04 句式与语言（条款 10.3 · 七条规则 + 合规样张 + 可跑校验）", "note": "阈值 0.40 未跨作者语料校准，仅形式判据"}

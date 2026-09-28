@@ -1,0 +1,3 @@
+{"id": "T10-05", "tier": "A", "shard": "S14", "pattern": "情色场景规范（内容体裁强制）", "disposition": "deliver", "mechanism": "粗俗术语与临床参数同位并置＋逐 beat 位置记账，配机械校验器", "opening": "## 情色场景规范 EST-1.0（粗俗解剖术语 × 临床精确性 × 逐动作位置记账）", "note": "示范片段为成年虚构角色；正样本 7/7 PASS，负控制存在空集通过缺口"}
+{"id": "T10-06", "tier": "A", "shard": "S14", "pattern": "场景规范（体裁模板强制）", "disposition": "deliver", "mechanism": "杂谈话题脱离剧情＋泛泛词黑名单，锚点按温度/气味/时间三类计数", "opening": "## 场景规范 SCENE-2.0（背景杂谈 × 具体感官锚点）", "note": "正样本 6/6 PASS；豁免标记存在误命中，占比为话轮近似算法"}
+{"id": "T10-07", "tier": "A", "shard": "S14", "pattern": "命名规范（词表约束）", "disposition": "deliver", "mechanism": "双文化码标注＋通用名黑名单整 token 判定＋同规则生成器", "opening": "## NPC 命名规范 NAMING-3.0（多文化混名 × 反通用名）", "note": "正样本 6/6 PASS；中文双字名漏检，需改前缀匹配后复验"}

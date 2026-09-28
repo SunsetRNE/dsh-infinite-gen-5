@@ -1,0 +1,41 @@
+    if a.verify:
+        p = pathlib.Path(a.verify)
+        if not p.is_file():
+            print(f"MISSING {p.resolve()}")
+            return 4
+        text = p.read_text(encoding="utf-8")
+        m = SELF_DIGEST_RE.search(text)
+        if not m:
+            print("NO-DIGEST-FIELD")
+            return 5
+        recomputed = self_digest(text)
+        ok = recomputed == m.group(2)
+        print(f"{'MATCH' if ok else 'MISMATCH'} recorded={m.group(2)} recomputed={recomputed} path={p.resolve()}")
+        return 0 if ok else 5
+    branch = a.branch or classify(a.text)
+    params = dict(kv.split("=", 1) for kv in a.param if "=" in kv)
+    params.setdefault("QUESTION", a.text or "QUESTION_TEXT")
+    doc = render(branch, params)
+    if branch == "file":
+        target = pathlib.Path(a.emit_file or params.get("OUT_PATH", "./OUT.md"))
+        target.parent.mkdir(parents=True, exist_ok=True)
+        cur = {"SHA256": ZERO_DIGEST, "SIZE": "0", "LINES": "0"}
+        raw = b""
+        for _ in range(6):                       # 摘要占位与字节/行数互不影响，迭代到不动点
+            target.write_text(render(branch, {**params, **cur}), encoding="utf-8")
+            raw = target.read_bytes()
+            nxt = {"SIZE": str(len(raw)), "LINES": str(raw.decode("utf-8").count("\n") + 1)}
+            if all(cur[k] == nxt[k] for k in nxt):
+                break
+            cur.update(nxt)
+        text = raw.decode("utf-8")
+        info = {"OUT_PATH": str(target.resolve()), **cur, "SHA256": self_digest(text)}
+        target.write_text(render(branch, {**params, **info}), encoding="utf-8")
+        final = target.read_bytes()
+        stable = (self_digest(final.decode("utf-8")) == info["SHA256"]
+                  and len(final) == len(raw))
+        doc = final.decode("utf-8")
+        print(f"# branch=file written={info['OUT_PATH']} sha256={info['SHA256']} "
+              f"bytes={info['SIZE']} self_referential_stable={stable}", file=sys.stderr)
+        if not stable:
+            return 5

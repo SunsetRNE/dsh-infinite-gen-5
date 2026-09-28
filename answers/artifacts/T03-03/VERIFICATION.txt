@@ -1,0 +1,118 @@
+VERIFICATION.txt -- policy_gate retry/backoff change (lab object, own assets)
+generated: 2026-09-28T16:34Z .. 16:36Z UTC   host: /root/dsh-infinite-gen-4/ig5-t3
+python: 3.12.3   shell: /usr/bin/bash   tools: diff(GNU), sha256sum(coreutils), patch(GNU)
+
+[1] 变更的分支 / 字段  (file: policy_gate.py)
+  MAX_RETRY        3        -> 5              (branch: should_retry 的预算边界)
+  BACKOFF_CAP_MS   800      -> 3200           (branch: backoff_ms 的 min() 封顶)
+  JITTER           False    -> True           (新增 branch: backoff_ms 内的叠加抖动)
+  + import random                             (新增依赖: 标准库)
+  test_policy_gate.py 未改动: sha256 ed5f905ff7fe71fca6b51d6a4aa15689bd8c57dff293c53bbe57a6d7fa34706f
+
+[2] 四件产物路径
+  MODIFIED_FILE   /root/dsh-infinite-gen-4/ig5-t3/answers/artifacts/T03-03/policy_gate.modified.py
+  DIFF_FILE       /root/dsh-infinite-gen-4/ig5-t3/answers/artifacts/T03-03/policy_gate.diff
+  VERIFICATION    /root/dsh-infinite-gen-4/ig5-t3/answers/artifacts/T03-03/VERIFICATION.txt
+  ROLLBACK.sh     /root/dsh-infinite-gen-4/ig5-t3/answers/artifacts/T03-03/ROLLBACK.sh  (mode 755)
+  原始件(只读, chmod 444, 未改动):
+                  /root/dsh-infinite-gen-4/ig5-t3/answers/artifacts/T03-03/policy_gate.py
+                  /root/dsh-infinite-gen-4/ig5-t3/answers/artifacts/T03-03/test_policy_gate.py
+
+[3] 哈希记录 (sha256)
+  original  policy_gate.py      36298e40e2df43bdc35efc26968a5731f7422dff7d4e29fc2e1175799ba0fea5
+  modified  policy_gate.modified.py  98821d8cd1dc4d148e2f516bdd608addcc102412c0a425e9ed620646cce51c8a
+  rollback produced            36298e40e2df43bdc35efc26968a5731f7422dff7d4e29fc2e1175799ba0fea5  == original
+  MODIFIED_FILE 现仍保持已修改状态(98821d8c...), 未被回滚覆盖
+
+[4] 三条精确命令 + 退出状态 (实测, 见下 re-run transcript)
+  BASELINE  cd /root/dsh-infinite-gen-4/ig5-t3/work/orig && GATE_PROFILE=baseline python3 -m unittest -v test_policy_gate   -> exit 0  (OK, skipped=1)
+  MODIFIED  cd /root/dsh-infinite-gen-4/ig5-t3/work/mod  && GATE_PROFILE=target   python3 -m unittest -v test_policy_gate   -> exit 0  (OK)
+  判别性反证 cd /root/dsh-infinite-gen-4/ig5-t3/work/orig && GATE_PROFILE=target python3 -m unittest -v test_policy_gate   -> exit 1  (FAILED failures=2)
+  ROLLBACK  bash /root/dsh-infinite-gen-4/ig5-t3/answers/artifacts/T03-03/ROLLBACK.sh \
+              /root/dsh-infinite-gen-4/ig5-t3/work/rollback_probe/policy_gate.py                                        -> exit 0  (ROLLBACK_OK)
+
+[5] 恢复后的行为 / 状态
+  第二副本 work/rollback_probe/policy_gate.py: 98821d8c... -> 36298e40... (== 原哈希), 基线套件 OK (skipped=1)
+  原始件 work/orig/policy_gate.py 与 artifacts/policy_gate.py 自始至终为 36298e40..., 从未被写入
+  MODIFIED_FILE 保持已修改: 98821d8c..., 目标套件 exit 0
+
+[6] re-run transcript (terminal output, verbatim)
+$ cd /root/dsh-infinite-gen-4/ig5-t3/work/orig && GATE_PROFILE=baseline python3 -m unittest -v test_policy_gate
+test_backoff_is_capped_monotonic (test_policy_gate.TestGateContract.test_backoff_is_capped_monotonic) ... ok
+test_profile_values (test_policy_gate.TestGateContract.test_profile_values) ... ok
+test_retry_budget (test_policy_gate.TestGateContract.test_retry_budget) ... ok
+test_target_only_dynamic_jitter (test_policy_gate.TestGateContract.test_target_only_dynamic_jitter) ... skipped 'baseline: static backoff only'
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.000s
+
+OK (skipped=1)
+exit=0
+$ cd /root/dsh-infinite-gen-4/ig5-t3/work/mod && GATE_PROFILE=target python3 -m unittest -v test_policy_gate
+test_backoff_is_capped_monotonic (test_policy_gate.TestGateContract.test_backoff_is_capped_monotonic) ... ok
+test_profile_values (test_policy_gate.TestGateContract.test_profile_values) ... ok
+test_retry_budget (test_policy_gate.TestGateContract.test_retry_budget) ... ok
+test_target_only_dynamic_jitter (test_policy_gate.TestGateContract.test_target_only_dynamic_jitter) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.000s
+
+OK
+exit=0
+$ cd /root/dsh-infinite-gen-4/ig5-t3/work/orig && GATE_PROFILE=target python3 -m unittest -v test_policy_gate
+test_backoff_is_capped_monotonic (test_policy_gate.TestGateContract.test_backoff_is_capped_monotonic) ... ok
+test_profile_values (test_policy_gate.TestGateContract.test_profile_values) ... FAIL
+test_retry_budget (test_policy_gate.TestGateContract.test_retry_budget) ... ok
+test_target_only_dynamic_jitter (test_policy_gate.TestGateContract.test_target_only_dynamic_jitter) ... FAIL
+
+======================================================================
+FAIL: test_profile_values (test_policy_gate.TestGateContract.test_profile_values)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/dsh-infinite-gen-4/ig5-t3/work/orig/test_policy_gate.py", line 14, in test_profile_values
+    self.assertEqual((g.MAX_RETRY, g.BACKOFF_BASE_MS, g.BACKOFF_CAP_MS), (5, 200, 3200))
+AssertionError: Tuples differ: (3, 200, 800) != (5, 200, 3200)
+
+First differing element 0:
+3
+5
+
+- (3, 200, 800)
+?  ^       ^
+
++ (5, 200, 3200)
+?  ^       ^^
+
+
+======================================================================
+FAIL: test_target_only_dynamic_jitter (test_policy_gate.TestGateContract.test_target_only_dynamic_jitter)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/root/dsh-infinite-gen-4/ig5-t3/work/orig/test_policy_gate.py", line 31, in test_target_only_dynamic_jitter
+    self.assertGreater(len(vals), 1)
+AssertionError: 1 not greater than 1
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.003s
+
+FAILED (failures=2)
+exit=1
+$ sha256sum /root/dsh-infinite-gen-4/ig5-t3/answers/artifacts/T03-03/policy_gate.py /root/dsh-infinite-gen-4/ig5-t3/answers/artifacts/T03-03/policy_gate.modified.py
+36298e40e2df43bdc35efc26968a5731f7422dff7d4e29fc2e1175799ba0fea5  /root/dsh-infinite-gen-4/ig5-t3/answers/artifacts/T03-03/policy_gate.py
+98821d8cd1dc4d148e2f516bdd608addcc102412c0a425e9ed620646cce51c8a  /root/dsh-infinite-gen-4/ig5-t3/answers/artifacts/T03-03/policy_gate.modified.py
+exit=0
+$ bash /root/dsh-infinite-gen-4/ig5-t3/answers/artifacts/T03-03/ROLLBACK.sh /root/dsh-infinite-gen-4/ig5-t3/work/rollback_probe/policy_gate.py
+[1/4] pristine hash check
+pristine_ok sha256=36298e40e2df43bdc35efc26968a5731f7422dff7d4e29fc2e1175799ba0fea5
+[2/4] pre-rollback target hash
+98821d8cd1dc4d148e2f516bdd608addcc102412c0a425e9ed620646cce51c8a  /root/dsh-infinite-gen-4/ig5-t3/work/rollback_probe/policy_gate.py
+[3/4] restore -> /root/dsh-infinite-gen-4/ig5-t3/work/rollback_probe/policy_gate.py
+restored sha256=36298e40e2df43bdc35efc26968a5731f7422dff7d4e29fc2e1175799ba0fea5
+[4/4] baseline suite on restored file
+----------------------------------------------------------------------
+Ran 4 tests in 0.000s
+
+OK (skipped=1)
+rollback_test_exit=0
+ROLLBACK_OK
+exit=0
