@@ -130,13 +130,32 @@ export function normalizeCase(entry, meta = {}) {
   };
 }
 
+/**
+ * 评测语料的显式清单：只有这 5 份参与离线评测闭环（32 + 21 + 17 + 294 + 40 = 404 条）。
+ * 目录里后来新增的题库（oneshot-bank / lazy-coverage 等）不参与 —— 兜底扫描会把它们
+ * 当成用例吸进仪器，让 404 条的基线数字无声变形，且实验台题库的形状（text/expect）
+ * 与评测用例（prompt/expected_domain）根本不是一回事。
+ */
+export const CORPUS_FILES = [
+  "prompt-bank.jsonl",
+  "prompt-bank-gen5.jsonl",
+  "prompt-bank-gen51.jsonl",
+  "prompt-bank-coverage.jsonl",
+  "v4pro-benchmark.jsonl",
+];
+
 /** 读整个用例目录（*.jsonl，跳过子目录），返回统一形状的 cases + 体检信息。 */
-export function loadCorpus(dir) {
-  const out = { dir, files: [], cases: [], bad: [], duplicates: [], comments: 0, blanks: 0 };
+export function loadCorpus(dir, opts = {}) {
+  const out = { dir, files: [], cases: [], bad: [], duplicates: [], comments: 0, blanks: 0, skipped: [] };
   const seen = new Map();
   let entries = [];
   try {
-    entries = readdirSync(dir).filter((f) => f.endsWith(".jsonl")).sort();
+    const all = readdirSync(dir).filter((f) => f.endsWith(".jsonl")).sort();
+    const allow = opts.files || CORPUS_FILES;
+    const known = all.filter((f) => allow.includes(f));
+    // 显式清单只在目录里真有评测语料时生效；自检用的临时目录（good.jsonl 之类）仍走全量扫描。
+    entries = known.length ? known : all;
+    if (known.length) out.skipped = all.filter((f) => !allow.includes(f));
   } catch (err) {
     out.error = String((err && err.message) || err);
     return out;

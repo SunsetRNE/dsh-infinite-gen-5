@@ -81,7 +81,7 @@
     "verify:boost": "node scripts/verify_boost.mjs",
     "verify:lazy": "node scripts/verify_lazy.mjs",
     "verify:lazy:coverage": "node scripts/lazy_coverage.mjs --gate",
-    "verify:oneshot": "node scripts/oneshot_harness.mjs --selftest && node scripts/score_oneshot.mjs --selftest",
+    "verify:oneshot": "node scripts/oneshot_harness.mjs --selftest && node scripts/score_oneshot.mjs --selftest && node scripts/oneshot_report.mjs --selftest",
     "verify:runtime": "node scripts/verify_runtime_sync.mjs --self-test && node scripts/verify_runtime_sync.mjs",
     "verify:density": "node scripts/verify_density.mjs",
     "verify:tuning": "node scripts/verify_tuning.mjs",

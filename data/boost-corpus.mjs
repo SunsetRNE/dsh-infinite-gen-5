@@ -12,6 +12,8 @@
 // 预算是 20500 字节，余量约 5.4 KB；本层按字节预算在装配时择优拼装，默认不会
 // 把余量吃光，也不会与内核已有的 Rule 逐句重复。
 
+import { readFileSync } from "node:fs";
+
 // ── 10 个可编译单元 ────────────────────────────────────────────────────────────
 // id        稳定标识（报告 / 断言 / 面板都用它）
 // from      附件里的来源节（可回到原文件核对）
@@ -141,7 +143,23 @@ export const DIRECTIVES = [
 export const BOOST_VERSION = "0.36.6";
 
 // 段首标头：让模型知道这一段是「编译出来的增强集」，而不是内核重述。
-export const BOOST_HEADER = `[无限五代 · 增强训练集 v${BOOST_VERSION} · 按本轮需求编译]`;
+// 版本号在**编译时**现读 package.json：长驻进程里 ES 模块常量随进程寿命固定，
+// 只认 BOOST_VERSION 会让发版后的注入头继续报旧版本（子代理回灌实测到的显示漂移）。
+// 修法是不重启也自愈，而不是要求「改完必须重启插件进程」。
+export function livePluginVersion() {
+  try {
+    const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+    return String(pkg.version || BOOST_VERSION);
+  } catch {
+    return BOOST_VERSION;
+  }
+}
+
+export function boostHeader() {
+  return `[无限五代 · 增强训练集 v${livePluginVersion()} · 按本轮需求编译]`;
+}
+
+export const BOOST_HEADER = boostHeader();
 
 // 强信号：命中即把档位抬到该单元（口径见 README 的「训练集」节）。
 export const HEAVY_SIGNALS = [
@@ -185,6 +203,8 @@ export const readDirective = (lastUserText) => {
 //   { emit, mode, effectiveMode, directive, budget, bytes, text, hits, dropped }
 // emit=false 表示这一轮不注入（档位 off / 预算为 0 / 没有可用单元）。
 export const compileBoost = ({ text = "", mode = "standard", bytes = null } = {}) => {
+  // 每次编译现取标头：版本号跟着 package.json 走，长驻进程里发版后不再停在旧版本。
+  const HDR = boostHeader();
   const directive = readDirective(text);
   const effectiveMode = directive ?? (BOOST_MODES[mode] === undefined ? "standard" : mode);
   const budget = Number.isFinite(bytes) && bytes >= 0 ? Math.floor(bytes) : BOOST_MODES[effectiveMode] ?? BOOST_MODES.standard;
@@ -225,7 +245,7 @@ export const compileBoost = ({ text = "", mode = "standard", bytes = null } = {}
   for (const row of scored) push(row.unit);
 
   const body = picked.map((unit) => unit.text).join("\n");
-  const raw = `${BOOST_HEADER}\n${body}`;
+  const raw = `${HDR}\n${body}`;
   if (Buffer.byteLength(BOOST_HEADER, "utf8") > budget) return empty;
   if (Buffer.byteLength(raw, "utf8") <= budget) {
     return { ...empty, emit: true, bytes: Buffer.byteLength(raw, "utf8"), text: raw, hits };
@@ -234,7 +254,7 @@ export const compileBoost = ({ text = "", mode = "standard", bytes = null } = {}
   let kept = picked.slice();
   while (kept.length > 1) {
     kept = kept.slice(0, -1);
-    const candidate = `${BOOST_HEADER}\n${kept.map((u) => u.text).join("\n")}`;
+    const candidate = `${HDR}\n${kept.map((u) => u.text).join("\n")}`;
     if (Buffer.byteLength(candidate, "utf8") <= budget) {
       const keptIds = new Set(kept.map((u) => u.id));
       return {
@@ -247,7 +267,7 @@ export const compileBoost = ({ text = "", mode = "standard", bytes = null } = {}
       };
     }
   }
-  const minimal = trimBytes(`${BOOST_HEADER}\n${picked[0].text}`, budget);
+  const minimal = trimBytes(`${HDR}\n${picked[0].text}`, budget);
   return {
     ...empty,
     emit: true,

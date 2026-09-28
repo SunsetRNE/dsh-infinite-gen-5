@@ -168,6 +168,8 @@ check(real.comments === 9, "真实语料：v4pro 的 9 行注释被识别为注�
 check(real.duplicates.length === 0, "真实语料：case_id 无重复");
 check(real.files.some((f) => f.rows === 40 && f.comments === 9), "真实语料：v4pro 40 条 + 9 注释");
 check(real.cases.filter((c) => c.problems.length > 0).length === 0, "真实语料：没有缺 prompt / 未知判决的用例");
+// 显式清单：实验台题库（oneshot-bank / lazy-coverage）不得被兜底扫描吸进评测仪器
+check(real.skipped.includes("oneshot-bank.jsonl") && real.skipped.includes("lazy-coverage.jsonl"), "真实语料：实验台题库按显式清单排除（评测数字不被新题库变形）");
 
 const domainIds = SCENARIOS.map((s) => s.id);
 const realCov = coverage(real.cases, {
