@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.34.3";
+        var VERSION = "v0.34.4";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -161,6 +161,15 @@
           ".dsh-armor5-hit-main[data-verdict=fallback]{color:var(--dsw-alias-state-warning-primary,#d29922)}",
           ".dsh-armor5-hit-main[data-verdict=empty]{color:var(--dsw-alias-text-tertiary,rgba(127,127,127,.85))}",
           ".dsh-armor5-hit-sub{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;overflow-wrap:anywhere}",
+          // IG5-PANEL-STREAM C1：实时流 —— 新到的那一条闪一下并上移半像素，让「刚长出来」看得见。
+          ".dsh-armor5-live{display:flex;flex-direction:column;gap:4px}",
+          ".dsh-armor5-live-head{display:flex;justify-content:space-between;gap:6px;font-size:10px;",
+          "color:var(--dsw-alias-label-caption,#8b8b8b);font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-stream{max-height:96px}",
+          ".dsh-armor5-stream li{position:relative}",
+          ".dsh-armor5-stream li[data-fresh='1']{animation:dsh-armor5-flash 1.6s ease-out}",
+          "@keyframes dsh-armor5-flash{0%{background:var(--dsw-alias-bg-layer-3,rgba(127,127,127,.22));",
+          "transform:translateY(-2px)}100%{background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08));transform:none}}",
           // v0.16.5：字段铺成「田字格」—— 最窄 286px 的卡片里，竖排一行一字段会连成一堵灰字墙；
           // 两列 tile（上标签、下值）让同一屏的信息量翻倍，视线的落点也从「找行」变成「数格子」。
           ".dsh-armor5-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}",
@@ -381,6 +390,38 @@
             };
           }, [open]);
 
+          // IG5-PANEL-STREAM C3a：库里那份实时流是服务端每个事件/每条判决都重写的，比投影 state 更勤；
+          // 最新一条流判决若比投影新（多步任务里每一步都有一条），就先按它画田字格 —— 面板一步一长。
+          var streamDoc = liveState && liveState.liveDoc ? liveState.liveDoc : null;
+          var streamRaw = open && streamDoc && streamDoc.hits && Array.isArray(streamDoc.hits.stream)
+            ? streamDoc.hits.stream : [];
+          var streamNewest = streamRaw.length ? streamRaw[streamRaw.length - 1] : null;
+          var streamNewestMs = streamNewest && streamNewest.at ? Date.parse(streamNewest.at) : 0;
+          var streamArmorMs = armor && typeof armor.at === "number" && armor.at > 0 ? armor.at : 0;
+          var streamFresh = streamNewestMs > 0 && (Date.now() - streamNewestMs) < 2500;
+          if (streamNewest && streamNewestMs > streamArmorMs) {
+            armor = Object.assign({}, armor, {
+              verdict: streamNewest.verdict,
+              emptyKind: streamNewest.emptyKind || null,
+              domain: streamNewest.domain || null,
+              domainLabel: streamNewest.domainLabel || null,
+              domainHits: streamNewest.domainHits || 0,
+              domainMarkers: Array.isArray(streamNewest.markers) ? streamNewest.markers : [],
+              risk: Array.isArray(streamNewest.risk) ? streamNewest.risk : [],
+              safe: Array.isArray(streamNewest.safe) ? streamNewest.safe : [],
+              words: Array.isArray(streamNewest.words) ? streamNewest.words : [],
+              openingChars: streamNewest.openingChars || 0,
+              textChars: streamNewest.textChars || 0,
+              at: streamNewestMs
+            });
+          }
+          var streamRows = streamRaw.length ? hitRows({ recent: streamRaw }) : [];
+          var streamTick = open && streamDoc && streamDoc.ticks ? streamDoc.ticks : null;
+          var streamHeadText = "实时流" + (streamRows.length ? " · " + streamRows.length + " 条判决" : "");
+          var streamTickText = streamTick && streamTick.lastKind
+            ? String(streamTick.lastKind).replace(/^.*\//, "") + " · " + clockOf(streamTick.lastAt)
+              + (streamTick.count ? " · " + streamTick.count + " 事件" : "")
+            : "待命";
           var running = !!(armor && armor.running);
           var verdict = armor && armor.verdict ? armor.verdict : null;
           var words = armor && Array.isArray(armor.words) ? armor.words : [];
@@ -590,6 +631,26 @@
                 tile("空答类型", textValue(emptyKind || "—"), "empty", 1)
               ], "fields"),
               section("实时", tileGrid(liveTiles, "live"), "live"),
+              // IG5-PANEL-STREAM C3b：实时流区块 —— 服务端每个会话事件重写 live.ticks、每条判决追加
+              // live.hits.stream；推送帧一响面板就回读 /stats，于是这里是一句句长出来的（刷新即清空）。
+              section(streamHeadText, react.createElement("div", { className: "dsh-armor5-live" },
+                react.createElement("div", { className: "dsh-armor5-live-head" },
+                  react.createElement("span", null, streamHeadText),
+                  react.createElement("span", null, streamTickText)),
+                streamRows.length
+                  ? react.createElement("ul", { className: "dsh-armor5-hits dsh-armor5-stream" },
+                    streamRows.map(function (row, index) {
+                      return react.createElement("li", {
+                        key: "stream-" + index,
+                        title: row.title,
+                        "data-fresh": index === 0 && streamFresh ? "1" : "0"
+                      },
+                        react.createElement("span",
+                          { className: "dsh-armor5-hit-main", "data-verdict": row.verdict }, row.main),
+                        react.createElement("span", { className: "dsh-armor5-hit-sub" }, row.sub));
+                    }))
+                  : react.createElement("span", { className: "dsh-armor5-sec-title" },
+                    "流待命：本轮还没有判决落下")), "stream"),
               section(hitList.length ? "最近命中（本进程最近 " + hitList.length + " 次判决）" : "最近命中",
                 hitList.length
                   ? react.createElement("ul", { className: "dsh-armor5-hits" },

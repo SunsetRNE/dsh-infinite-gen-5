@@ -60,7 +60,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.34.3";
+const PLUGIN_VERSION = "0.34.4";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -651,6 +651,16 @@ const TURN_IDLE_MS = 5000;
 // 只留最近几次（够看清「这一轮比上一轮是变重了还是变轻了」），每条只放面板真会显示的几个字段。
 const HIT_RING_SIZE = 6;
 const HIT_MARKER_KEEP = 4;
+// IG5-PANEL-STREAM S1：实时流（面板的「这一刻正在发生什么」）—— 只在内存，不落盘、不进统计库的指纹。
+// 会话来一条事件攒一个 tick、出一条判决攒一条命中，两者都随 /stats 的 live 分区一起发出去；
+// 推送帧只当闹钟（面板一响就回读 /stats），正文永远只有统计库这一个来源。
+const TICK_RING_SIZE = 40;
+const STREAM_HIT_KEEP = 8;
+const tickRing = [];
+const streamHits = [];
+// 判决那一层（armorProjectionApply）是模块级函数，拿不到 apply 作用域里的 publishLive，
+// 用一个模块级句柄接上 live 发布口：判决一落定就发布一次，面板不必等 1 秒的兜底定时器。
+let streamPublish = () => {};
 const toolRing = [];
 const eventRing = [];
 const hitRing = [];
@@ -1467,7 +1477,27 @@ function armorProjectionApply(state, event) {
         id: row.id, hits: row.hits, markers: row.markers.slice(0, 2),
       })),
     });
+    // IG5-PANEL-STREAM S2：同一份判决再进一条实时流 —— 面板不等整轮结束就能看到这一条长出来。
+    const streamHit = {
+      at: new Date(scored.at).toISOString(),
+      verdict: scored.verdict,
+      emptyKind: scored.emptyKind,
+      domain: scored.domain,
+      domainLabel: scored.domainLabel,
+      domainHits: scored.domainHits,
+      markers: scored.domainMarkers.slice(0, HIT_MARKER_KEEP),
+      risk: scored.risk.slice(0, HIT_MARKER_KEEP),
+      riskCount: scored.risk.length,
+      safe: scored.safe.slice(0, 6),
+      words: scored.words.slice(0, 2),
+      openingChars: scored.openingChars,
+      textChars: scored.textChars,
+    };
+    streamHits.push(streamHit);
+    if (streamHits.length > STREAM_HIT_KEEP) streamHits.splice(0, streamHits.length - STREAM_HIT_KEEP);
     if (hitRing.length > HIT_RING_SIZE) hitRing.splice(0, hitRing.length - HIT_RING_SIZE);
+    // 判决一落定就发布 live —— 面板这一步的延迟 = 一次 flush(250ms) + 一次回读。
+    streamPublish();
     return {
       running: false,
       emptyKind: scored.emptyKind, // IG5-PANEL-TUNE P1：投影多带一个字段，客户端才画得出「空答类型」
@@ -1688,6 +1718,19 @@ export function apply(ctx, config) {
       if (liveState.firstEventMs === undefined) liveState.firstEventMs = nowMs;
       eventRing.push({ ms: nowMs, kind: liveState.lastKind });
       if (eventRing.length > EVENT_RING_SIZE) eventRing.splice(0, eventRing.length - EVENT_RING_SIZE);
+      // IG5-PANEL-STREAM S3：会话事件也进实时流 —— 面板看得到「正在发生什么」一句句滚出来。
+      // 收尾那次事件必定写进环；中间连发的事件按类型合并，避免一次工具调用把环刷满。
+      const tickKind = liveState.lastKind;
+      const tickLast = tickRing[tickRing.length - 1];
+      if (!tickLast || tickLast.kind !== tickKind) {
+        tickRing.push({ at: liveState.lastEventAt, kind: tickKind });
+      } else {
+        tickLast.at = liveState.lastEventAt;
+        tickLast.n = (tickLast.n || 1) + 1;
+      }
+      if (tickRing.length > TICK_RING_SIZE) tickRing.splice(0, tickRing.length - TICK_RING_SIZE);
+      // 事件一到就发布 live —— 正在发生的这一步不必等 1 秒的兜底定时器。
+      publishLive();
       // v0.17.0：记下最近一条真正的用户输入，运行时锚点按它认域（域包不是常驻的）。
       if (event.type === "user/message") {
         const userText = eventTextOf(event).slice(0, 600);
@@ -2031,7 +2074,14 @@ export function apply(ctx, config) {
       },
       tools: { recent: toolRing.slice(-TOOL_RING_SIZE), lastAt: liveState.lastToolAt ?? null },
       // 最近几次命中/风险载荷（浮层卡片的「最近命中」）：新判决一进环就换指纹，卡片立刻刷新。
-      hits: { recent: hitRing.slice(-HIT_RING_SIZE) },
+      hits: { recent: hitRing.slice(-HIT_RING_SIZE), stream: streamHits.slice(-STREAM_HIT_KEEP) },
+      // IG5-PANEL-STREAM S5：实时流随库一起发（面板读的仍旧只有 /stats 这一条路）。
+      ticks: {
+        recent: tickRing.slice(-TICK_RING_SIZE),
+        count: tickRing.length,
+        lastKind: liveState.lastKind,
+        lastAt: liveState.lastEventAt,
+      },
     };
   };
   let liveJson = "";
@@ -2402,6 +2452,10 @@ export function apply(ctx, config) {
   publishStats();
   // live 也先发布一次：面板首帧就该看到「空闲」而不是「没有实时分区」。
   publishLive();
+  // IG5-PANEL-STREAM S4：把 live 发布口接到模块级句柄上 —— 投影（判决）那一层是模块级函数、
+  // 拿不到 apply 作用域，判决一落定就顺手发布一次。帧本身仍不带正文：面板收到任何一帧都只是
+  // 「去读库」的闹钟，前端不解析任何推送负载（v0.34.x 的边界不动）。
+  streamPublish = () => { publishLive(); };
   stats.flush(true);
 
   // ── 实时化接线（v0.15.0）──────────────────────────────────────────────────
