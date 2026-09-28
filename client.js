@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.34.4";
+        var VERSION = "v0.34.5";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -162,12 +162,10 @@
           ".dsh-armor5-hit-main[data-verdict=empty]{color:var(--dsw-alias-text-tertiary,rgba(127,127,127,.85))}",
           ".dsh-armor5-hit-sub{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;overflow-wrap:anywhere}",
           // IG5-PANEL-STREAM C1：实时流 —— 新到的那一条闪一下并上移半像素，让「刚长出来」看得见。
-          ".dsh-armor5-live{display:flex;flex-direction:column;gap:4px}",
-          ".dsh-armor5-live-head{display:flex;justify-content:space-between;gap:6px;font-size:10px;",
-          "color:var(--dsw-alias-label-caption,#8b8b8b);font-variant-numeric:tabular-nums}",
-          ".dsh-armor5-stream{max-height:96px}",
-          ".dsh-armor5-stream li{position:relative}",
-          ".dsh-armor5-stream li[data-fresh='1']{animation:dsh-armor5-flash 1.6s ease-out}",
+          // IG5-PANEL-STREAM-MERGE M1：实时流不再单开一个列表（与「最近命中」是同一批行），
+          // 新到的那条并入同一个列表的第一行，闪一下并上移半像素，让「刚长出来」看得见。
+          ".dsh-armor5-hits li{position:relative}",
+          ".dsh-armor5-hits li[data-fresh='1']{animation:dsh-armor5-flash 1.6s ease-out}",
           "@keyframes dsh-armor5-flash{0%{background:var(--dsw-alias-bg-layer-3,rgba(127,127,127,.22));",
           "transform:translateY(-2px)}100%{background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08));transform:none}}",
           // v0.16.5：字段铺成「田字格」—— 最窄 286px 的卡片里，竖排一行一字段会连成一堵灰字墙；
@@ -415,13 +413,8 @@
               at: streamNewestMs
             });
           }
-          var streamRows = streamRaw.length ? hitRows({ recent: streamRaw }) : [];
-          var streamTick = open && streamDoc && streamDoc.ticks ? streamDoc.ticks : null;
-          var streamHeadText = "实时流" + (streamRows.length ? " · " + streamRows.length + " 条判决" : "");
-          var streamTickText = streamTick && streamTick.lastKind
-            ? String(streamTick.lastKind).replace(/^.*\//, "") + " · " + clockOf(streamTick.lastAt)
-              + (streamTick.count ? " · " + streamTick.count + " 事件" : "")
-            : "待命";
+          // IG5-PANEL-STREAM-MERGE M2：原先这里给「实时流」区块备料（另一个列表），已删 ——
+          // 流的内容改由两处吃：最新一条填田字格（上面那段），其余并进「最近命中」（hitRows 内合并）。
           var running = !!(armor && armor.running);
           var verdict = armor && armor.verdict ? armor.verdict : null;
           var words = armor && Array.isArray(armor.words) ? armor.words : [];
@@ -631,31 +624,17 @@
                 tile("空答类型", textValue(emptyKind || "—"), "empty", 1)
               ], "fields"),
               section("实时", tileGrid(liveTiles, "live"), "live"),
-              // IG5-PANEL-STREAM C3b：实时流区块 —— 服务端每个会话事件重写 live.ticks、每条判决追加
-              // live.hits.stream；推送帧一响面板就回读 /stats，于是这里是一句句长出来的（刷新即清空）。
-              section(streamHeadText, react.createElement("div", { className: "dsh-armor5-live" },
-                react.createElement("div", { className: "dsh-armor5-live-head" },
-                  react.createElement("span", null, streamHeadText),
-                  react.createElement("span", null, streamTickText)),
-                streamRows.length
-                  ? react.createElement("ul", { className: "dsh-armor5-hits dsh-armor5-stream" },
-                    streamRows.map(function (row, index) {
-                      return react.createElement("li", {
-                        key: "stream-" + index,
-                        title: row.title,
-                        "data-fresh": index === 0 && streamFresh ? "1" : "0"
-                      },
-                        react.createElement("span",
-                          { className: "dsh-armor5-hit-main", "data-verdict": row.verdict }, row.main),
-                        react.createElement("span", { className: "dsh-armor5-hit-sub" }, row.sub));
-                    }))
-                  : react.createElement("span", { className: "dsh-armor5-sec-title" },
-                    "流待命：本轮还没有判决落下")), "stream"),
+              // IG5-PANEL-STREAM-MERGE M3：这里原来挂着一个「实时流」列表，与下面的「最近命中」同一批行，
+              // 已删 —— 判决只在一个列表里长出来。
               section(hitList.length ? "最近命中（本进程最近 " + hitList.length + " 次判决）" : "最近命中",
                 hitList.length
                   ? react.createElement("ul", { className: "dsh-armor5-hits" },
                     hitList.map(function (hit) {
-                      return react.createElement("li", { key: hit.key, title: hit.title },
+                      return react.createElement("li", {
+                        key: hit.key,
+                        title: hit.title,
+                        "data-fresh": hit.fresh ? "1" : undefined
+                      },
                         react.createElement("span",
                           { className: "dsh-armor5-hit-main", "data-verdict": hit.verdict }, hit.main),
                         react.createElement("span", { className: "dsh-armor5-hit-sub" }, hit.sub));
@@ -1470,6 +1449,13 @@
             rows.push(["事件速率", events
               ? events.count + " 次 / " + Math.round(spanMs / 1000) + " 秒 · " + (events.perSecond || 0) + "/s"
               : "—"]);
+            // IG5-PANEL-STREAM-MERGE M7：事件心跳 —— live.turn.lastKind 由每个会话事件重写
+            // （老服务端也有这个字段），于是这一格会随事件一句句换字，不用另开列表。
+            rows.push(["最近事件", turn && turn.lastKind
+              ? (compact
+                ? String(turn.lastKind).replace(/^.*\//, "")
+                : String(turn.lastKind) + " · " + fmtAgo(turn.lastEventAt))
+              : "等第一条事件"]);
             var recent = (tools && tools.recent) || [];
             rows.push(["最近工具", recent.length
               ? (compact
@@ -1494,7 +1480,23 @@
          */
         function hitRows(hits) {
           var recent = hits && Array.isArray(hits.recent) ? hits.recent : [];
-          return recent.slice().reverse().map(function (hit, index) {
+          // IG5-PANEL-STREAM-MERGE M4：判决只在一个列表里，来源合流 ——
+          // live.hits.stream 是服务端本轮刚落的尾巴（新服务端才有），live.hits.recent 是最近几次判决，
+          // 按 at|verdict 去重后一起倒序显示；缺 stream 的老服务端行为与以前完全一致。
+          var stream = hits && Array.isArray(hits.stream) ? hits.stream : [];
+          var seen = {};
+          var merged = [];
+          var pushRow = function (row, fresh) {
+            if (!row) return;
+            var rowKey = String(row.at) + "|" + (row.verdict || "");
+            if (seen[rowKey]) return;
+            seen[rowKey] = true;
+            merged.push({ row: row, fresh: fresh === true });
+          };
+          for (var si = stream.length - 1; si >= 0; si -= 1) pushRow(stream[si], merged.length === 0);
+          for (var ri = recent.length - 1; ri >= 0; ri -= 1) pushRow(recent[ri], false);
+          return merged.map(function (entry) {
+            var hit = entry.row;
             var verdict = hit && hit.verdict ? hit.verdict : "—";
             var domain = hit && hit.domain
               ? hit.domain + (hit.domainHits > 1 ? "(" + hit.domainHits + ")" : "")
@@ -1514,7 +1516,8 @@
               safeWords.length ? "安全 " + safeWords.join("、") : "",
               rangeText].filter(Boolean).join("\n");
             return {
-              key: index,
+              key: String(hit && hit.at) + "|" + verdict,
+              fresh: entry.fresh,
               verdict: verdict,
               title: titleText,
               main: clockOf(hit && hit.at) + " · " + verdict + " · " + domain + " · 载荷 " + riskCount,

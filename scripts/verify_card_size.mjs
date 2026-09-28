@@ -10,7 +10,8 @@
  * 定稿历史（唯一真源就是下面这两个常数）：
  *   v0.19.0：高 353px · 宽 264px（`--window-size=470,760` 下的实测值），把卡片从 487px 压下来。
  *   v0.34.3：田字格 7 → 9 格（+候选明细 / +空答类型），判决数据一屏可见，高度按实测改锚 448px（宽度仍 264px）。
- *   v0.34.4：卡片新增「实时流」区块（事件/判决一条条长出来），高度按实测改锚 509px（宽度仍 264px）。
+ *   v0.34.4：新增「实时流」区块，高度按实测改锚 509px（宽度仍 264px）。
+ *   v0.34.5：删掉那个与「最近命中」重复的「实时流」列表（判决只在一个列表里长出来），高度回到 448px。
  * 带宽 ±约 4%：字体/抗锯齿的细微差异放行，回退到压缩前的任一版（398 / 487）照样红。
  *
  * 浏览器查找顺序：`IG5_CHROME` > playwright 缓存 > PATH 里的 chromium / chrome。
@@ -25,8 +26,8 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const H_MIN = 489;
-const H_MAX = 529;
+const H_MIN = 428;
+const H_MAX = 468;
 const W_MIN = 250;
 const W_MAX = 292;
 const CARD_SECTIONS = 2;
@@ -117,7 +118,7 @@ function measure(chrome, htmlPath) {
 	return title ? { h: Number(title[1]), w: Number(title[2]) } : null;
 }
 
-console.log("浮层卡片整体尺寸锚点（v0.34.4 定稿：高 509px / 宽 264px）");
+console.log("浮层卡片整体尺寸锚点（v0.34.5 定稿：高 448px / 宽 264px）");
 const chrome = findChrome();
 if (!chrome) {
 	console.log("⚠ 本机没找到 Chromium（设 IG5_CHROME 或让 playwright 缓存就位），跳过尺寸量测 —— 不是排版回归，但这次没量到。");
@@ -133,7 +134,7 @@ if (!box) {
 	process.exit(1);
 }
 ok(`能测到卡片渲染尺寸（h=${box.h} w=${box.w}）`, box.h > 0 && box.w > 0);
-ok(`面板高度在 [${H_MIN}, ${H_MAX}] 内（定稿 509px）`, box.h >= H_MIN && box.h <= H_MAX, `实测 ${box.h}px`);
+ok(`面板高度在 [${H_MIN}, ${H_MAX}] 内（定稿 448px）`, box.h >= H_MIN && box.h <= H_MAX, `实测 ${box.h}px`);
 ok(`面板宽度不超过 ${W_MAX}px（窄屏靠 min() 自适应）`, box.w > 0 && box.w <= W_MAX, `实测 ${box.w}px`);
 ok(`面板宽度不小于 ${W_MIN}px（别压到内容折行）`, box.w >= W_MIN, `实测 ${box.w}px`);
 console.log(`尺寸锚点：${checks - failures} 通过 / ${failures} 失败`);
