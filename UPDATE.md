@@ -11,6 +11,20 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.36.4
+
+**主题：修掉用户圈出来的「来源标记溢出」+ 旋钮网格改响应式（手机单栏）+ 补一套能看见溢出的量测台。**
+
+① 现象（用户 m02297 截图圈点）：三组旋钮上线后，每个旋钮名右边的**来源标记胶囊**（「文件默认」/「设置页」）在窄列里折成两行、文字溢出胶囊的 13px 边框，第二列在手机上还会被裁掉右边缘。根因两条，都在 `client.js` 的 CSS 里：**(a)** `.armor5-console-tag{display:inline-flex;align-items:center;height:13px;…;font-size:10px}`（改前 `client.js:254`）作为 `.armor5-knob-head` 这个 flex 容器的**子项**，既没写 `flex:0 0 auto` 也没写 `white-space:nowrap` —— 中文逐字可断行，于是胶囊的 min-content 被算成「一个字宽」，胶囊被压扁、文字折两行往上往下溢出；**(b)** `.armor5-knob-grid{grid-template-columns:1fr 1fr}`（改前 `client.js:220`）里的 `1fr` 等价于 `minmax(auto,1fr)`，轨道下限取的是内容最小宽度，窄屏下被内容顶宽 → 第二列跑出可视区。
+
+② 修法（**纯 CSS，一个字文案、一条断言都没动**）：网格改 `repeat(2,minmax(0,1fr))` 并加 `@media (max-width:560px){.armor5-knob-grid{grid-template-columns:minmax(0,1fr)}}` —— 宽屏两栏、手机单栏；`.armor5-knob-name` 补 `flex:1 1 auto;min-width:0`（名字让位给标记，超出打省略号，完整文案仍在 `title`）；新增 `.armor5-knob-head .armor5-console-tag{flex:0 0 auto;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:13px}`（标记不再被压缩、永远单行、行高与定高一致）；档位按钮 `.armor5-knob .armor5-console-choice{min-height:26px;padding:2px 6px}` 并把 `.armor5-knob .armor5-console-choice-label` 设为单行省略。`client.js` 113080 → 113968 字符（+888，含 2 条新规则 + 1 条媒体查询 + 3 行注释与版本号锚点）。
+
+③ **量测台（本次新增的三个工具，留作以后「肉眼才看得见」的排版问题的判据）**：`verify_ui --emit-html` 的预览页在宿主**没注入调参接口**时只渲染兜底 YAML、根本不渲染旋钮，所以那条路径量不到这次溢出 —— 于是另起三个脚本：`/tmp/ig5-knob-harness.mjs`（从 `client.js` 里抽出 `STYLE_TEXT` 的**真 CSS**，配上手写的真类名/真文案旋钮网格，生成可渲染的页）、`/tmp/ig5-shot.mjs`（用 playwright 缓存里的 chromium（`~/.cache/ms-playwright/chromium-1148/chrome-linux/chrome`）在指定宽度截图）、`/tmp/ig5-overflow-probe.mjs`（`--dump-dom` 读回写进 `<title>` 的溢出清单：`scrollWidth > clientWidth`、子元素越过父容器右边界等）。
+
+④ 复验读数：**296px（手机实宽）单栏渲染、标记单行右对齐、无任何元素越过容器**（对照图见交付说明）；**720px 仍是两栏且标记不溢出**；`verify_ui` **202 通过 / 0 失败**（与 v0.36.3 同数 —— 纯 CSS 改动不加断言，但重跑确认没把已经钉住的类名/数量断言弄坏）；`verify_version` **27 通过 / 0 失败**（锚点 9 处 / 扫描 142 个文件，版本 0.36.4）。
+
+⑤ 与 v0.36.3 的关系：v0.36.3 的「两栏」只在宽屏成立，本次把它写成了**条件**；v0.36.3 段里 `LAZY_BYTES` 的区间结论（0–16000）不变。
+
 ## v0.36.3
 
 **主题：设置台旋钮重排（可见重绘）+ 把「旋钮广告区间」与「守卫可用区间」对齐 + 一次缓存/新鲜度排查。**
