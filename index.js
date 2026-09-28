@@ -60,7 +60,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.34.2";
+const PLUGIN_VERSION = "0.34.3";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -1381,6 +1381,8 @@ function matchedIn(text, markers) {
   return found;
 }
 
+// IG5-PANEL-TUNE P1：浮层显示密度 —— 上限集中一处，收放只改这一行
+const MARKER_KEEP = 12, RISK_KEEP = 16, SAFE_KEEP = 16, WORD_KEEP = 6, RANK_KEEP = 8;
 function armorScore(text, promptText = "") {
   const folded = text.toLocaleLowerCase();
   const window = folded.slice(0, OPENING_WINDOW);
@@ -1407,7 +1409,7 @@ function armorScore(text, promptText = "") {
   // 领域判定改由数据层统一实现（运行时的状态条、工具、离线评分器共用一份词表）。
   // 判拒只扫开头窗口（拒答一定出现在开头），但**领域判定扫全文** —— 只看开头 160 字
   // 时，长回答里后半段的领域线索全丢，浮层上就表现为「识别领域」要么空要么粗。
-  const ranked = rankDomains(folded, DOMAIN_MARKERS, 4);
+  const ranked = rankDomains(folded, DOMAIN_MARKERS, RANK_KEEP);
   const top = ranked[0] ?? null;
   const domain = top ? top.id : null;
   const domainHits = top ? top.hits : 0;
@@ -1415,15 +1417,15 @@ function armorScore(text, promptText = "") {
   return {
     verdict,
     emptyKind,
-    words,
-    safe: safe.slice(0, 8),
-    risk: risk.slice(0, 8),
+    words: words.slice(0, WORD_KEEP), // IG5-PANEL-TUNE P1
+    safe: safe.slice(0, SAFE_KEEP),
+    risk: risk.slice(0, RISK_KEEP),
     domain,
     domainLabel: domain ? DOMAIN_LABELS[domain] ?? domain : null,
     domainHits,
     // 覆盖明细：候选领域排名 + 主判真正命中的标记词 + 扫描范围
     domainRanked: ranked,
-    domainMarkers: top ? top.markers.slice(0, 6) : [],
+    domainMarkers: top ? top.markers.slice(0, MARKER_KEEP) : [],
     openingChars: window.length,
     textChars: text.length,
     at: Date.now(),
@@ -1457,10 +1459,18 @@ function armorProjectionApply(state, event) {
       riskCount: scored.risk.length,
       risk: scored.risk.slice(0, HIT_MARKER_KEEP),
       words: scored.words.slice(0, 2),
+      // IG5-PANEL-TUNE P2：当前轮已有、流水缺的字段；liveKey 指纹只取 4 键，扩条目不增落盘次数
+      safe: scored.safe.slice(0, 6),
+      openingChars: scored.openingChars,
+      textChars: scored.textChars,
+      domainRanked: scored.domainRanked.slice(0, RANK_KEEP).map((row) => ({
+        id: row.id, hits: row.hits, markers: row.markers.slice(0, 2),
+      })),
     });
     if (hitRing.length > HIT_RING_SIZE) hitRing.splice(0, hitRing.length - HIT_RING_SIZE);
     return {
       running: false,
+      emptyKind: scored.emptyKind, // IG5-PANEL-TUNE P1：投影多带一个字段，客户端才画得出「空答类型」
       verdict: scored.verdict,
       words: scored.words,
       safe: scored.safe,

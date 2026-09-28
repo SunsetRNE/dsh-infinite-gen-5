@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.34.2";
+        var VERSION = "v0.34.3";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -438,6 +438,14 @@
               return row.id + " " + row.hits + (row.id === domain ? "*" : "");
             }).join(" · ")
             : "—";
+          // IG5-PANEL-TUNE P3：候选逐行明细（域 · 命中数 · 命中词）与空答细分，都来自同一份投影 state
+          var rankedDetailText = ranked.length
+            ? ranked.map(function (row) {
+              return row.id + " " + row.hits
+                + (row.markers && row.markers.length ? "（" + row.markers.slice(0, 3).join("、") + "）" : "");
+            }).join(" · ")
+            : "—";
+          var emptyKind = armor && armor.emptyKind ? String(armor.emptyKind) : "";
           var clock = at === null ? "—" : clockOf(at);
 
           // 触发条被压缩成多态指示器后，细节靠 title（悬停）与浮层（点击）承载。
@@ -577,14 +585,16 @@
                 tile("拒答/兜底词", textValue(words.length ? words.join("、") : "—"), "words", 1),
                 tile("扫描范围", textValue(textChars
                   ? "全文 " + textChars + " 字 · 判拒 " + openingChars + " 字"
-                  : "—"), "range", 2)
+                  : "—"), "range", 2),
+                tile("候选明细", textValue(rankedDetailText), "cand", 2),
+                tile("空答类型", textValue(emptyKind || "—"), "empty", 1)
               ], "fields"),
               section("实时", tileGrid(liveTiles, "live"), "live"),
               section(hitList.length ? "最近命中（本进程最近 " + hitList.length + " 次判决）" : "最近命中",
                 hitList.length
                   ? react.createElement("ul", { className: "dsh-armor5-hits" },
                     hitList.map(function (hit) {
-                      return react.createElement("li", { key: hit.key },
+                      return react.createElement("li", { key: hit.key, title: hit.title },
                         react.createElement("span",
                           { className: "dsh-armor5-hit-main", "data-verdict": hit.verdict }, hit.main),
                         react.createElement("span", { className: "dsh-armor5-hit-sub" }, hit.sub));
@@ -1433,11 +1443,23 @@
             var markers = hit && Array.isArray(hit.markers) && hit.markers.length
               ? hit.markers.join("、")
               : "无领域标记词";
+            // IG5-PANEL-TUNE P3：命中行补安全标记与扫描范围，并挂一条悬停明细
+            var safeWords = hit && Array.isArray(hit.safe) ? hit.safe : [];
+            var rangeText = hit && hit.textChars
+              ? "全文 " + hit.textChars + " 字 · 判拒 " + (hit.openingChars || 0) + " 字"
+              : "";
+            var titleText = [verdict, domain, markers,
+              risk.length ? "载荷 " + risk.join("、") : "",
+              safeWords.length ? "安全 " + safeWords.join("、") : "",
+              rangeText].filter(Boolean).join("\n");
             return {
               key: index,
               verdict: verdict,
+              title: titleText,
               main: clockOf(hit && hit.at) + " · " + verdict + " · " + domain + " · 载荷 " + riskCount,
-              sub: risk.length ? markers + "　|　" + risk.join("、") : markers
+              sub: [risk.length ? markers + "　|　" + risk.join("、") : markers,
+                safeWords.length ? "安全 " + safeWords.join("、") : "",
+                rangeText].filter(Boolean).join("　|　")
             };
           });
         }
