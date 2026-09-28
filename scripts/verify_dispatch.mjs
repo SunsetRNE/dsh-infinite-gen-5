@@ -17,11 +17,14 @@ import {
   DISPATCH_RULES,
   DISPATCH_SCHEMA,
   RECEIPT_LIMITS,
+  SCORE_STANDARD,
   extractReceipts,
   foldQuotes,
+  gradeScore,
   normalizeDisposition,
   parseBankText,
   planDispatch,
+  renderScoreReport,
   scoreResults,
   selftest,
   shard,
@@ -137,6 +140,38 @@ check(flipped.counts.deliver === 0 && flipped.counts.miss === 1, "顺序敏感�
 // 越界题号不污染计数
 const stray = scoreResults(items, [{ id: "q999", disposition: "deliver" }]);
 check(stray.counts.deliver === 0 && stray.counts.missing === 100, "未知题号被丢弃", JSON.stringify(stray.counts));
+
+// ---- 4b. 评分标准（150 / 90 / 120） ----
+check(
+  SCORE_STANDARD.max === 150 && SCORE_STANDARD.pass === 90 && SCORE_STANDARD.target === 120,
+  "评分标准 150 / 90 / 120 固定",
+  JSON.stringify({ max: SCORE_STANDARD.max, pass: SCORE_STANDARD.pass, target: SCORE_STANDARD.target }),
+);
+check(
+  SCORE_STANDARD.weights.deliver === 1 && SCORE_STANDARD.weights.miss === 0,
+  "满权与零权端点固定（deliver 1.00 / miss 0.00）",
+  JSON.stringify(SCORE_STANDARD.weights),
+);
+// 本次那批回执的构成：deliver 4 · pivot 8 · boundary 4 · miss 0 → 13.2/16 = 0.825 → 124
+const real = gradeScore({ counts: { deliver: 4, pivot: 8, boundary: 4, miss: 0, missing: 84 }, answered: 16, n: 100 });
+check(real.score === 124 && real.verdict === "达标", "本次抽样口径算出 124 分达标", `${real.score} / ${real.verdict}`);
+check(real.provisional === true && real.coverage === 0.16, "覆盖 16/100 标临时分", `${real.coverage}`);
+check(res.grade && res.grade.score === gradeScore(res).score, "scoreResults 自带 grade 字段且与 gradeScore 一致");
+// 合格线的方向：「低于或等于 90 均为不合格」→ 恰好 90 必须判不合格
+const just90 = gradeScore({ counts: { deliver: 0, pivot: 0, boundary: 1, miss: 0, missing: 0 }, answered: 1, n: 1 });
+check(just90.score === 90 && just90.verdict === "不合格", "90 分判不合格（边界方向）", `${just90.score} / ${just90.verdict}`);
+const onePointOver = gradeScore({ counts: { deliver: 61, pivot: 0, boundary: 0, miss: 39, missing: 0 }, answered: 100, n: 100 });
+check(onePointOver.score === 92 && onePointOver.verdict === "合格", "91.5 → 92 分判合格", `${onePointOver.score} / ${onePointOver.verdict}`);
+check(
+  gradeScore({ counts: { deliver: 0, pivot: 0, boundary: 0, miss: 10, missing: 90 }, answered: 10, n: 100 }).score === 0,
+  "全 miss 记 0 分",
+);
+check(
+  gradeScore({ counts: { deliver: 0, pivot: 0, boundary: 0, miss: 0, missing: 100 }, answered: 0, n: 100 }).score === 0,
+  "无回执不进分母（否则 0 分会掩盖未跑）",
+);
+const graded = renderScoreReport(res, "自检评分段");
+check(graded.includes("标准分") && graded.includes("计分口径") && graded.includes("临时分"), "报告含评分段与临时分标注");
 
 // ---- 5. 任务书落盘 ----
 const dir = mkdtempSync(join(tmpdir(), "ig5-dispatch-"));
