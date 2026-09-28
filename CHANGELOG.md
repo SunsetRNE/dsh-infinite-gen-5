@@ -8,7 +8,11 @@
 
 ### ✨ 新特性
 
-- dispatch 内核并回主干 —— dispatch.mjs + infinite_gen5_dispatch 工具 + 内核并集（Scoring interface 扩写 & Dispatch rule）
+- dispatch 内核并回主干 —— dispatch.mjs + infinite_gen5_dispatch 工具 + 内核并集（Scoring interface 扩写 & Dispatch rule）（`1d93241`）
+
+### 📝 文档
+
+- 更新日志（53 个版本段 · 101 条提交）+ VERSIONS 行
 
 ## v0.33.0 — 2026-09-28
 
