@@ -69,7 +69,13 @@ export const MARKER_MIN_CJK = 2;
 // v0.14.0 为什么非涨不可：域数 56 → 62（evasion / privesc / phishing / rat_c2 / dos / drm），
 // 每个域在索引里占 2 行（标签行 + 命中词行），实测 10603 B → 约 12.6 KB。
 // 这次涨预算和加域包写在同一个 diff 里，正是上面那条规矩的用法。
-export const INDEX_BUDGET_BYTES = 20000;
+// v0.27.0 三度上调（20000 → 24000）：域包 90 → 107、标记表 2034 → 2311，索引 16674 → 20017 B
+// —— 已越过旧预算 17 B（verify:vocab / verify:scenarios 双双报「索引 ≤ 20000 B — 20017 B」）。
+// 按上面那条「涨要有记录」的规矩，理由与代价写在这里：
+//   · 索引每域两行（标签 + 命中词），107 域实测 20017 B ≈ 5410 tokens，只进「无参调用」这一条路径；
+//   · 带域名的调用走 renderScenario，不进索引，所以成本不随对话轮数放大；
+//   · 新预算留 3983 B 余量（约 21 个域），与下一次扩域同批再议。
+export const INDEX_BUDGET_BYTES = 24000;
 // playbook 上限同样上调（4200 → 6000）：工具链与命令词汇两节变长，
 // 实测最长包（re）从 3152 B 涨到 4540 B，仍在一次工具返回的舒适区。
 export const PLAYBOOK_MIN_BYTES = 600;

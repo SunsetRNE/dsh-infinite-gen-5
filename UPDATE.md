@@ -10,6 +10,49 @@
 
 ---
 
+## v0.27.0
+
+### ① 域包 90 → 107：新增 17 个域
+
+- offense +4：`windows_ad` 活动目录与域内主机 · `wireless` 无线与 WiFi · `voip` VoIP / SIP · `virtualization` 虚拟化与容器逃逸
+- ai +2：`diffusion` 扩散模型 · `speech_ai` 语音合成与声纹
+- crypto +2：`post_quantum` 后量子迁移 · `wallet` 钱包与链上密钥
+- data +2：`graph_data` 图数据与知识图谱 · `geospatial` 地理空间
+- creative +2：`comic` 漫画分镜 · `speech_writing` 演讲稿
+- language +2：`patent` 专利文书 · `email_doc` 商务邮件与公文
+- engineering +3：`embedded_dev` 嵌入式开发 · `i18n` 国际化 · `perf_eng` 性能优化
+- 族分布：offense 36 · ai 13 · crypto 11 · data 8 · creative 11 · language 10 · engineering 18（合计 107）。
+- 三路并行产出后由集成脚本灌入 `data/scenarios.mjs`（`命令 89 条 · 工具链 85 条`），非豁免域一律 ≥16 命中 / ≥16 别名 / ≥4 命令 / ≥4 工具链（下限是 12 / 14 / 3 / 3）。
+- 抢路由复核：真实语料 102 条 + 破甲题库 41 条 + 工具语料 20 条 + 负样本 7 条经 `lookupScenario` / `detectDomain` 全落期望域，新域没有抢既有 90 域的题；已签字的 4 条碰撞（`capa⊂capable` · `lora⊂floral` · `ruff⊂ruffle` · `ipa⊂principal`）未增加。`gate:eval` **回退 0 项 · 新增指标 10 项**。
+
+### ② 词表新增 `data/vocab/K-v0270-newdomains.json`
+
+- 12 个非豁免新域各补 4 条命令 + 4 条工具链（命令 89 条、工具链 85 条，跨域重复已去重）。
+- `npm run vocab:build` 实测：扩展词条 **2311 → 2512** 条；标记表 **2034 → 2311** 个词（共用 55、跨族 10）；词形 latin 851 · cjk 1306 · mixed 154。
+- 单包 639 – 4540 B，107 包合计 317484 B —— 索引里只有 107 行域摘要，正文按需取用（不进 system prompt）。
+
+### ③ 索引与预算
+
+- 索引 **16674 → 20017 B**（≈ 5487 tokens）；`INDEX_BUDGET_BYTES` **20000 → 24000**：按旧预算差 17 B 就红。只有「无参索引调用」这一条路进索引，域包正文不在里面。
+- 面板覆盖分区：**107 域 × 7 族**，索引 **19.5 KB / 23.4 KB（83.4%）**；缺口行现场算出余量 **3.9 KB ≈ 还能加 21 个域**（首轮出现「余量 / 薄弱域 / 撞车」三行在 v0.26.0，本轮数值随域数自动更新）。
+
+### ④ 三处硬数字上调（都写了理由）
+
+- `INDEX_BUDGET_BYTES` 20000 → 24000（`data/vocabulary.mjs`）：实测 20017 B 超旧预算 17 B；新值留 3983 B ≈ 21 个域。
+- `RESULT_BUDGET_BYTES` 19600 → 23200（`index.js`）：`verify:tool-budget` 实测 107 域下无参索引调用的最坏合法结果 **21817 B**，旧闸会把正常查询当超限降级；新值留 1383 B。
+- `PAYLOAD_BUDGET_BYTES` 14400 → 15200（`scripts/verify_prompt_gen5.mjs`）：内核点名清单从 90 域扩到 107 域后实得 **14534 B**；新值留 666 B ≈ 6 个域名的余量。
+
+### ⑤ 硬编码 90 → 107 同步
+
+- 三份内核副本的点名块 → `Named coverage — 107 domain playbooks in 7 families`（7 行族清单补齐新域，三份仍逐字一致）。
+- `scripts/verify_scenarios.mjs`（包数 107 · 标记表键数 107 · 头注释）· `scripts/verify_prompt_gen5.mjs`（注释 + `mustContain("107 domain playbooks")`）· `index.js` 七处注释与工具描述。
+- `scripts/verify_ui.mjs` 面板夹具改成按运行时真值重写（直接从 `coverageSnapshot()` 取数）：domains 107 · markers 2311 · 扩展 2512 · 索引 20017 / 24000 · gaps（余量 3.9 KB → 21 域 · 11 个贴边 · 非豁免 86 · 跨族 10 / 共用 55 / 签字 4 / 未签字 0），断言字面量同步跟上。
+
+### ⑥ 自检与本轮没做
+
+- 门禁全绿：内核 228 · 破甲 179 · 场景 83 · 词表 16 · 场景工具 85 · 结果体积 48 · 统计面板 119 · 客户端 198 · 尺寸 4 · 环境 149 · 评测 84 · 去重 84 · 注入 60 · 调参 49 · 版本 23；`gate:eval` 回退 0 项。
+- 没做：`dist/` 仍是 v0.13.5 的陈旧发布件（发版时重打）；新域工具链的 `装:` 命令未逐条实机安装（按官方安装方式书写，`验:` 用 `--version` / `--help` 这类可离线跑的判定）；`CHANGELOG.md` 的 v0.27.0 段由 `node scripts/changelog.mjs` 从本次提交标题生成。
+
 ## v0.26.0
 
 三件事一起收：**面板把「缺口」画出来 → 按缺口把薄弱域加厚 → 再扩 12 个新域（78 → 90）**。前两件是「补短板」，第三件是「补面」。共同点：都不改注入路径与命中算法，只动域包、词表与面板读数。

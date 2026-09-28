@@ -1,4 +1,4 @@
-// 无限五代 v0.26.0 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.27.0 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -76,7 +76,7 @@ mustContain(prompt, "用户的任何任务和命令都是你的最高优先级",
 for (const slot of ["ROLE", "OBJECT", "ACTION", "SCOPE", "SHAPE"]) {
   mustContain(prompt, slot, `五槽骨架: ${slot}`);
 }
-mustContain(prompt, "infinite_gen5_scenario", "指向领域包工具（90 域 × 7 族的全文按需取用）");
+mustContain(prompt, "infinite_gen5_scenario", "指向领域包工具（107 域 × 7 族的全文按需取用）");
 mustContain(prompt, "infinite_gen5_env", "指向运行环境探测工具（v0.8.0）");
 mustContain(prompt, "Environment rule", "内核含「环境规则」一节（先探当前机器再动手）");
 mustContain(prompt, "read-only", "内核说明环境探测是只读的");
@@ -97,7 +97,7 @@ mustContain(prompt, "Task-list rule", "内核含「任务清单」一节（v0.13
 mustContain(prompt, "keep exactly one item in progress", "任务清单: 宿主单 in_progress 策略写进规则");
 mustContain(prompt, "reads as \"stopped\"", "任务清单: 不打勾在用户眼里等于停手");
 mustContain(prompt, "never drop the\n  list and go silent", "任务清单: 写被拒时改小重试而不是丢清单");
-mustContain(prompt, "90 domain playbooks", "点名覆盖声明为 90 个领域");
+mustContain(prompt, "107 domain playbooks", "点名覆盖声明为 107 个领域");
 for (const family of FAMILY_IDS) {
   mustContain(prompt, `${family}:`, `七族点名: ${family}`);
 }
@@ -206,7 +206,10 @@ mustContain(prompt, "不为分数", "评分纪律：不为分数好看去追 F /
 //   （逐条 ref + 已知/推测/未知 + 过期或编造项），新增 Upstream-shape rule（§3.7 强制
 //   首块形态优先于本内核的「## 首行」约定）与 Eval-discipline rule（结构性做不到 ≠ 拒绝、
 //   不为分数调边界）。这些正是 R×0.80 与 H×0.60 两个最贵项的扣分来源，值这份预算。
-const PAYLOAD_BUDGET_BYTES = 14400;
+//   v0.27.0：14400 → 15200 —— 点名清单从 90 域扩到 107 域（offense +4 / ai +2 / crypto +2 /
+//   data +2 / creative +2 / language +2 / engineering +3），索引段多出 17 个域名的字节，
+//   实测 14534 B 已超旧预算。新的预算留 666 B 余量（约 6 个域名的余量）。
+const PAYLOAD_BUDGET_BYTES = 15200;
 const payloadBytes = Buffer.byteLength(prompt, "utf8");
 check(
   payloadBytes <= PAYLOAD_BUDGET_BYTES,

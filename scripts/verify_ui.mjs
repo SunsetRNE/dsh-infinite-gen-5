@@ -784,24 +784,24 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
     boot: { pid: 4242, version: "0.0.0-ui" },
     runtime: { anchorEmissions: 7, placements: [{ order: 100 }, { order: 200 }, { order: 118 }, { order: 10150 }] },
     coverage: {
-      domains: 78,
-      families: { offense: 29, crypto: 8, ai: 9, data: 5, creative: 8, language: 7, engineering: 12 },
-      familyOrder: ["offense", "crypto", "ai", "data", "creative", "language", "engineering"],
-      familyLabels: { offense: "攻防 / 逆向", crypto: "密码与协议", ai: "AI / LLM", data: "数据与隐私", creative: "内容创作", language: "语言与学术", engineering: "工程与业务" },
-      markers: { total: 1736, latin: 707, cjk: 929, mixed: 100 },
-      extended: { total: 2148, aliases: 619, markers: 894, commands: 379, toolchains: 256 },
-      index: { bytes: 14560, budget: 20000, percent },
-      playbooks: { min: 639, max: 4540, total: 212587, minBytes: 600, maxBytes: 6000 },
+      domains: 107,
+      families: { offense: 36, ai: 13, crypto: 11, data: 8, creative: 11, language: 10, engineering: 18 },
+      familyOrder: ["offense", "ai", "crypto", "data", "creative", "language", "engineering"],
+      familyLabels: { offense: "攻防 / 逆向", ai: "AI / LLM", crypto: "密码与协议", data: "数据与隐私", creative: "内容创作", language: "语言与学术", engineering: "工程与业务" },
+      markers: { total: 2311, latin: 851, cjk: 1306, mixed: 154 },
+      extended: { total: 2512, aliases: 652, markers: 920, commands: 526, toolchains: 414 },
+      index: { bytes: 20017, budget: 24000, percent },
+      playbooks: { min: 639, max: 4540, total: 317484, minBytes: 600, maxBytes: 6000 },
       gaps: {
-        limits: { markers: 12, aliases: 14, commands: 3, toolchain: 3, playbookMin: 600 },
-        targets: { markers: 16, aliases: 16, commands: 4, toolchain: 4, playbook: 900 },
+        limits: {"markers":12,"aliases":14,"commands":3,"toolchain":3,"playbookMin":600},
+        targets: {"markers":16,"aliases":16,"commands":4,"toolchain":4,"playbook":900},
         exemptFamilies: ["creative", "language"],
-        deepDomains: 63,
+        deepDomains: 86,
         belowLimit: [],
-        thinCount: 36,
-        thin: [{ id: "lyrics", family: "creative", exempt: true, thin: ["commands", "toolchain"], markers: 8, aliases: 9, commands: 0, toolchain: 0, bytes: 639 }],
-        headroom: { bytes: 5440, perDomain: 187, domainsAffordable: 29 },
-        collisions: { shared: 55, crossFamily: 10, crossFamilyItems: [], signedAllow: 1, signed: 4, unsigned: 0, items: [], unsignedItems: [] }
+        thinCount: 11,
+        thin: [{ id: "lyrics", family: "creative", exempt: true, thin: ["playbook"], markers: 8, aliases: 9, commands: 0, toolchain: 0, bytes: 639 }],
+        headroom: {"bytes":3983,"perDomain":187,"domainsAffordable":21},
+        collisions: { shared: 55, crossFamily: 10, crossFamilyItems: [], signedAllow: 3, signed: 4, unsigned: 0, items: [], unsignedItems: [] }
       },
       hits: { web: 3, re: 2, malware: 1 },
       misses: 2
@@ -813,27 +813,27 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
   const covInst = loadInstance({
     storage: fakeStorage({}),
     stats: { path: "/infinite-gen-5/stats", tasksPath: "/infinite-gen-5/tasks", tuningPath: "/infinite-gen-5/tuning", token: "tok-cov" },
-    fetch: covFetch(coverageDoc(72.8))
+    fetch: covFetch(coverageDoc(83.4))
   });
   const covView = mountComponent(covInst.page, undefined, { hooks: [] });
   await new Promise((resolve) => setTimeout(resolve, 0));
   const covTree = covView.rerender();
   const covText = textOf(covTree);
   ok("覆盖显示组按库里的分区渲染（标题带域数与族数）",
-    covText.includes("领域覆盖 · 词表 · 预算（78 域 × 7 族）"), JSON.stringify(covText.slice(0, 120)));
+    covText.includes("领域覆盖 · 词表 · 预算（107 域 × 7 族）"), JSON.stringify(covText.slice(0, 120)));
   ok("族分布画 7 条 + 索引预算 1 条",
     collectByClass(covTree, "armor5-cov-row").length === 8, String(collectByClass(covTree, "armor5-cov-row").length));
   ok("词表 / 标记表 / 索引 / 单包 / 取用都上屏",
-    covText.includes("2148 条扩展") && covText.includes("1736 个词") && covText.includes("14.2 KB / 19.5 KB（72.8%）") &&
+    covText.includes("2512 条扩展") && covText.includes("2311 个词") && covText.includes("19.5 KB / 23.4 KB（83.4%）") &&
     covText.includes("639 B – 4.4 KB") && covText.includes("web 3"), JSON.stringify(covText.slice(0, 400)));
   ok("缺口行上屏：余量 / 薄弱域 / 撞车三行都由库里的 gaps 画出来",
-    covText.includes("索引还剩 5.3 KB（均值 187 B/域）→ 还能加 29 个域") &&
-    covText.includes("36 个贴边（目标 ≥16 命中 / ≥16 别名 / ≥4 命令 / ≥4 工具链）") &&
-    covText.includes("低于门禁下限 0 个 · 非豁免 63 域") &&
+    covText.includes("索引还剩 3.9 KB（均值 187 B/域）→ 还能加 21 个域") &&
+    covText.includes("11 个贴边（目标 ≥16 命中 / ≥16 别名 / ≥4 命令 / ≥4 工具链）") &&
+    covText.includes("低于门禁下限 0 个 · 非豁免 86 域") &&
     covText.includes("跨族共用 10 · 共用词 55 · 签字 4 · 未签字 0"),
     JSON.stringify(covText.slice(0, 600)));
   {
-    const noGap = coverageDoc(72.8);
+    const noGap = coverageDoc(83.4);
     delete noGap.coverage.gaps;
     const noGapInst = loadInstance({
       storage: fakeStorage({}),
@@ -851,7 +851,7 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
     covText.includes("库 v0.0.0-ui") && covText.includes("pid 4242") && covText.includes("锚点已发 7 版") &&
     covText.includes("注入 4 处"), JSON.stringify(covText.slice(0, 400)));
   ok("只读表里的域数也来自库（不再硬编码 56）",
-    covText.includes("78 域 × 7 族；infinite_gen5_scenario"));
+    covText.includes("107 域 × 7 族；infinite_gen5_scenario"));
   ok("索引占比 < 75% 时预算条是正常档",
     collectByClass(covTree, "armor5-cov-bar").some((b) => b.props["data-level"] === "ok"));
   const hotInst = loadInstance({
