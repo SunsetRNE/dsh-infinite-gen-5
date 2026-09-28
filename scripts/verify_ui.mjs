@@ -606,6 +606,40 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
   ok("紧凑比例锚点齐全（面板 / 徽标 / 分区 / chip / 命中流水 / tile / 注脚 全部按定稿值）",
     compactFailures.length === 0,
     compactFailures.join(" · ") || cssText.length + " 字符");
+  // v0.22.0：浮层卡片里新增「用户向选择」循环切档按钮（设置页之外的第二处入口，用户抱怨「浮层里看不到开关」）。
+  // 三态文案 + 胶囊样式都必须落在盘上：只在源码里留个 className 不算数，样式漏一处就退化成裸文字按钮。
+  const gateBtn = findByClass(tree, "dsh-armor5-cycle");
+  ok("浮层卡片里有「用户向选择」切档按钮（不用跑去设置页找）", gateBtn !== null);
+  ok("切档按钮带当前档位 data-mode（CSS 靠它给 off 档褪色）",
+    gateBtn !== null && ["proactive", "auto", "on", "off"].indexOf(String(gateBtn.props["data-mode"])) >= 0,
+    gateBtn && String(gateBtn.props["data-mode"]));
+  ok("切档按钮写清「当前档 → 下一档」（就绪 / 读档 / 未就绪 三态之一）",
+    gateBtn !== null && /^(选择：.+ → .+|读取档位…|档位未就绪（刷新页面）)$/.test(textOf(gateBtn)),
+    gateBtn && textOf(gateBtn));
+  ok("切档按钮的 title 交代当前档与下一档的含义（不用猜档位在干什么）",
+    gateBtn !== null && String(gateBtn.props.title || "").indexOf("点一下切到") >= 0,
+    gateBtn && String(gateBtn.props.title || "").slice(0, 90));
+  ok("切档按钮样式齐全（胶囊圆角 / 禁用态 / off 档褪色）",
+    /\.dsh-armor5-cycle\{[^}]*border-radius:999px/.test(cssText) &&
+    cssText.indexOf(".dsh-armor5-cycle:disabled{") >= 0 &&
+    cssText.indexOf(".dsh-armor5-cycle[data-mode=off]{") >= 0);
+  // v0.22.0：按钮并进「位置」那一行（另起一节会把卡片高度从 353px 顶回 399px，撞 verify_card_size 的带宽）。
+  ok("切档按钮与「位置」同一行（caprow：左位置可省略号、右按钮不伸缩，不新增分区）",
+    cssText.indexOf(".dsh-armor5-caprow{display:flex;align-items:center;gap:6px}") >= 0 &&
+    cssText.indexOf(".dsh-armor5-caprow .dsh-armor5-cap{flex:1 1 auto;min-width:0;overflow:hidden;") >= 0 &&
+    cssText.indexOf(".dsh-armor5-caprow .dsh-armor5-cycle{flex:0 0 auto;max-width:62%}") >= 0 &&
+    panelText.indexOf("用户向选择 · ") < 0,
+    panelText.slice(0, 60));
+  ok("浮层切档与设置页同一条写通道（statsStore.stage + save，没有第二套 POST）",
+    CLIENT_SRC.indexOf('statsStore.stage("ASK_GATE_MODE", gateNext.value)') >= 0 &&
+    CLIENT_SRC.indexOf("statsStore.save(false)") >= 0);
+  ok("浮层切档只写 ASK_GATE_MODE 一个键（不把 effective 里每个键都提升成持久化 override）",
+    CLIENT_SRC.indexOf('statsStore.stage("ASK_GATE_MODE"') >= 0 &&
+    CLIENT_SRC.indexOf("Object.keys(base).forEach") < 0);
+  ok("四档顺序真源在源码里（proactive 打头、off 收尾）且按钮接进了「位置」行",
+    /var GATE_MODES = \[[\s\S]{0,40}\{ value: "proactive"/.test(CLIENT_SRC) &&
+    CLIENT_SRC.indexOf('{ value: "off"') >= 0 &&
+    CLIENT_SRC.indexOf("gateButton()),") >= 0);
   // v0.16.1：浮层卡片自己也订一份统计库（与设置页那组同源），卡片没拿到桥时至少要有「信号 / 本轮」两行。
   ok("浮层卡片带「实时」行（卡片自己订阅统计库）",
     panelText.includes("信号") && panelText.includes("本轮"), panelText.slice(-160));
@@ -1246,9 +1280,12 @@ if (process.argv.includes("--emit-html")) {
   ok("调参面板按注入的路径 + token 拉取（GET）",
     calls.length >= 1 && calls[0].path === TUNE_PATH && calls[0].method === "GET" &&
     calls[0].init.headers["x-ig5-token"] === "tok-abc", JSON.stringify(calls[0] && calls[0].init.headers));
-  ok("六个开关各渲染一行来源标记（服务端 catalog 缺失时用兜底目录）",
-    collectByClass(tree, "armor5-console-tag").length === 6,
+  ok("八个开关各渲染一行来源标记（服务端 catalog 缺失时用兜底目录）",
+    collectByClass(tree, "armor5-console-tag").length === 8,
     String(collectByClass(tree, "armor5-console-tag").length));
+  ok("兜底目录里带了询问/阶段闸门两个键",
+    collectByClass(tree, "armor5-console-choice").some((b) => String(b.props["data-choice"] ?? "").startsWith("ASK_GATE_MODE=")),
+    JSON.stringify(collectByClass(tree, "armor5-console-choice").map((b) => b.props["data-choice"]).slice(-6)));
   const tagSources = collectByClass(tree, "armor5-console-tag").map((t) => t.props["data-source"]);
   ok("来源标记如实反映服务端 sources（ui / config / default 都出现过）",
     tagSources.includes("ui") && tagSources.includes("config") && tagSources.includes("default"),
@@ -1275,7 +1312,7 @@ if (process.argv.includes("--emit-html")) {
   saveBtn.props.onClick();
   await new Promise((resolve) => setTimeout(resolve, 0));
   const posted = calls.filter((c) => c.method === "POST");
-  ok("点「保存并生效」把整份草稿 POST 给服务端（一次请求带全部六键）",
+  ok("点「保存并生效」把整份草稿 POST 给服务端（一次请求带全部八键）",
     posted.length === 1 && posted[0].init.headers["x-ig5-token"] === "tok-abc" &&
     JSON.parse(posted[0].init.body).overrides.LAYER2_MODE === "off" &&
     JSON.parse(posted[0].init.body).overrides.RUNTIME_ANCHOR_EVERY === 2,

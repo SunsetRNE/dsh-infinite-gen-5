@@ -144,7 +144,7 @@ const tokenOf = (rows) => {
 };
 
 const countOf = (list, name) => list.filter((n) => n === name).length;
-const TMP_ENV_KEYS = ["IG5_LAYER2_MODE", "IG5_TAIL_MODE", "IG5_RUNTIME_ANCHOR_MODE", "IG5_RUNTIME_ANCHOR_EVERY", "IG5_DEDUPE_PAYLOAD", "IG5_EXCLUSIVE_SECTION"];
+const TMP_ENV_KEYS = ["IG5_LAYER2_MODE", "IG5_TAIL_MODE", "IG5_RUNTIME_ANCHOR_MODE", "IG5_RUNTIME_ANCHOR_EVERY", "IG5_ASK_GATE_MODE", "IG5_ASK_GATE_EVERY", "IG5_DEDUPE_PAYLOAD", "IG5_EXCLUSIVE_SECTION"];
 const ENV_BACKUP = Object.fromEntries(TMP_ENV_KEYS.map((k) => [k, process.env[k]]));
 const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
 
@@ -168,15 +168,15 @@ const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
   const got = await callRoute(r.route.handler, { token });
   check(got.status === 200 && got.body?.ok === true, "GET 回 200 + ok:true", `${got.status} ${JSON.stringify(got.body).slice(0, 120)}`);
   const keys = Object.keys(got.body?.effective ?? {});
-  check(keys.length === 6, "effective 六个开关都在", JSON.stringify(keys));
+  check(keys.length === 8, "effective 八个开关都在", JSON.stringify(keys));
   const sources = got.body?.sources ?? {};
   check(
     Object.values(sources).every((v) => v === "default"),
-    "没有覆盖时六键来源都是文件默认",
+    "没有覆盖时八键来源都是文件默认",
     JSON.stringify(sources),
   );
   check(got.body?.effective?.RUNTIME_ANCHOR_EVERY === DEFAULTS.RUNTIME_ANCHOR_EVERY, "GET 的生效值等于文件默认", String(got.body?.effective?.RUNTIME_ANCHOR_EVERY));
-  check(Array.isArray(got.body?.catalog) && got.body.catalog.length === 6, "控件目录随响应下发（六项）", String(got.body?.catalog?.length));
+  check(Array.isArray(got.body?.catalog) && got.body.catalog.length === 8, "控件目录随响应下发（八项）", String(got.body?.catalog?.length));
 
   // ---- 3. 自守 ----
   const badToken = await callRoute(r.route.handler, { token: "0".repeat(32) });
@@ -194,7 +194,7 @@ const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
   const post = await callRoute(r.route.handler, {
     token,
     method: "POST",
-    body: JSON.stringify({ overrides: { LAYER2_MODE: "off", RUNTIME_ANCHOR_MODE: "off", RUNTIME_ANCHOR_EVERY: 2 } }),
+    body: JSON.stringify({ overrides: { LAYER2_MODE: "off", RUNTIME_ANCHOR_MODE: "off", RUNTIME_ANCHOR_EVERY: 2, ASK_GATE_MODE: "off", ASK_GATE_EVERY: 2 } }),
   });
   check(post.status === 200 && post.body?.ok === true, "POST 改档位回 200", `${post.status} ${JSON.stringify(post.body).slice(0, 140)}`);
   const after = await r.names();
@@ -209,11 +209,14 @@ const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
   check(liveProfile?.rebuilds >= 1, "记了重装次数", String(liveProfile?.rebuilds));
   const onDisk = JSON.parse(readFileSync(STORE, "utf8"));
   check(
-    onDisk.overrides.LAYER2_MODE === "off" && onDisk.overrides.RUNTIME_ANCHOR_EVERY === 2 && Object.keys(onDisk.overrides).length === 3,
+    onDisk.overrides.LAYER2_MODE === "off" && onDisk.overrides.RUNTIME_ANCHOR_EVERY === 2 && Object.keys(onDisk.overrides).length === 5,
     "档位落盘（重启后照旧生效）",
     JSON.stringify(onDisk.overrides),
   );
   check(IG5_CONFIG.LAYER2_MODE === "off" && IG5_CONFIG.RUNTIME_ANCHOR_EVERY === 2, "IG5_CONFIG 就地写成生效值", JSON.stringify({ L: IG5_CONFIG.LAYER2_MODE, E: IG5_CONFIG.RUNTIME_ANCHOR_EVERY }));
+  // 档位键不是布尔键：ASK_GATE_MODE="off" 必须原样是字符串 "off"，被布尔化成 false 就是静默失效（v0.12.x 的老坑）。
+  check(IG5_CONFIG.ASK_GATE_MODE === "off" && IG5_CONFIG.ASK_GATE_EVERY === 2, "询问闸门两个键就地写成生效值", JSON.stringify({ M: IG5_CONFIG.ASK_GATE_MODE, E: IG5_CONFIG.ASK_GATE_EVERY }));
+  check(liveProfile?.sources?.ASK_GATE_MODE === "ui" && liveProfile?.sources?.ASK_GATE_EVERY === "ui", "询问闸门键的来源也标成设置页 UI", JSON.stringify(liveProfile?.sources));
 
   // ---- 5. 未知键与非法值 ----
   const junk = await callRoute(r.route.handler, {
@@ -223,6 +226,13 @@ const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
   });
   check(junk.status === 200 && JSON.parse(readFileSync(STORE, "utf8")).overrides.NOPE_KEY === undefined, "未知键被忽略且不落盘", JSON.stringify(JSON.parse(readFileSync(STORE, "utf8")).overrides));
   check(junk.body?.effective?.RUNTIME_ANCHOR_EVERY === 4, "字符串数字被 coerce 成数字", String(junk.body?.effective?.RUNTIME_ANCHOR_EVERY));
+  const junk2 = await callRoute(r.route.handler, {
+    token,
+    method: "POST",
+    body: JSON.stringify({ overrides: { ASK_GATE_EVERY: "3", ASK_GATE_MODE: "auto" } }),
+  });
+  check(junk2.body?.effective?.ASK_GATE_EVERY === 3, "询问闸门间隔同样按数字 coerce", String(junk2.body?.effective?.ASK_GATE_EVERY));
+  check(junk2.body?.effective?.ASK_GATE_MODE === "auto", "档位字符串原样保留（不做布尔化）", String(junk2.body?.effective?.ASK_GATE_MODE));
 
   // ---- 6. reset 复位 ----
   const reset = await callRoute(r.route.handler, { token, method: "POST", body: JSON.stringify({ reset: true }) });

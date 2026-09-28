@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.19.0";
+        var VERSION = "v0.22.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -127,6 +127,19 @@
           "border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.16))}",
           ".dsh-armor5-sec-title{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:10px;",
           "line-height:13px;letter-spacing:.02em}",
+          // v0.22.0：浮层卡片里的「用户向选择」循环切档按钮（复用宿主色板，尺寸压到卡片字号）。
+          ".dsh-armor5-cycle{align-self:flex-start;max-width:100%;padding:1px 7px;border:0;cursor:pointer;",
+          "border-radius:999px;font-size:10.5px;line-height:15px;white-space:nowrap;overflow:hidden;",
+          "text-overflow:ellipsis;background:rgba(77,107,254,.16);",
+          "color:var(--dsw-alias-state-business-primary,#4d6bfe)}",
+          ".dsh-armor5-cycle:disabled{opacity:.5;cursor:default}",
+          ".dsh-armor5-cycle[data-mode=off]{background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.14));",
+          "color:var(--dsw-alias-label-caption,#8b8b8b)}",
+          // 「位置」那一行改成 flex：左位置、右切档按钮；左边允许省略号，整行不换行（保住 v0.19.0 的高度预算）。
+          ".dsh-armor5-caprow{display:flex;align-items:center;gap:6px}",
+          ".dsh-armor5-caprow .dsh-armor5-cap{flex:1 1 auto;min-width:0;overflow:hidden;",
+          "text-overflow:ellipsis;white-space:nowrap}",
+          ".dsh-armor5-caprow .dsh-armor5-cycle{flex:0 0 auto;max-width:62%}",
           ".dsh-armor5-chips{display:flex;flex-wrap:wrap;gap:2px}",
           ".dsh-armor5-chip{display:inline-flex;align-items:center;max-width:100%;padding:0.5px 5px;border-radius:4px;",
           "font-size:10.5px;line-height:13px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.12));",
@@ -488,6 +501,48 @@
           });
           var hitList = open ? hitRows(liveState.liveDoc && liveState.liveDoc.hits) : [];
 
+          // v0.22.0：浮层卡片里直接切「用户向选择」档。复用同一个统计库订阅（卡片关着不连流、不回读），
+          // 写入走 statsStore.stage + save —— 与设置页那条 POST 通道完全同源，不存在第二套写路径。
+          var GATE_MODES = [
+            { value: "proactive", label: "主动", hint: "任务输入 + 多步任务的每一步都给可点选择" },
+            { value: "auto", label: "按节拍", hint: "每 ASK_GATE_EVERY 步才可能出现一次，最省" },
+            { value: "on", label: "强制开", hint: "每步都可能出现；拿不到提问工具时降级成正文选项" },
+            { value: "off", label: "关闭", hint: "锚点里永不出现询问与阶段条款" }
+          ];
+          var gateLive = (liveState.data && liveState.data.effective) || {};
+          var gateDraft = liveState.draft || {};
+          var gateMode = String(
+            gateDraft.ASK_GATE_MODE !== undefined ? gateDraft.ASK_GATE_MODE
+              : gateLive.ASK_GATE_MODE !== undefined ? gateLive.ASK_GATE_MODE : "proactive");
+          var gateAt = 0;
+          for (var gm = 0; gm < GATE_MODES.length; gm += 1) {
+            if (GATE_MODES[gm].value === gateMode) gateAt = gm;
+          }
+          var gateNow = GATE_MODES[gateAt];
+          var gateNext = GATE_MODES[(gateAt + 1) % GATE_MODES.length];
+          var gateReady = liveState.phase === "ready";
+          var gateCycle = function () {
+            // 只写 ASK_GATE_MODE 这一个键。v0.22.0 初版把 effective 里每个键都 stage 一遍，结果点一下
+            // 浮层按钮就把 profile config 的 RUNTIME_ANCHOR_EVERY=2 顺手提升成持久化 override（写进
+            // ~/.dsh/infinite-gen-5-tuning.json），等于浮动按钮偷偷替用户改了别的档位。
+            statsStore.stage("ASK_GATE_MODE", gateNext.value);
+            statsStore.save(false);
+          };
+          // 只回一个按钮：它被并进「位置」那一行（v0.19.0 把卡片压到 353px，另起一节会把高度顶回 399px）。
+          var gateButton = function () {
+            return react.createElement("button", {
+              type: "button",
+              className: "dsh-armor5-cycle",
+              "data-mode": gateMode,
+              disabled: liveState.busy === true || !gateReady,
+              title: "用户向选择（询问闸门）：当前「" + gateNow.label + "」—— " + gateNow.hint +
+                "。点一下切到「" + gateNext.label + "」：" + gateNext.hint,
+              onClick: gateCycle
+            }, gateReady
+              ? "选择：" + gateNow.label + " → " + gateNext.label
+              : liveState.phase === "loading" ? "读取档位…" : "档位未就绪（刷新页面）");
+          };
+
           var panel = open
             ? react.createElement(
               "div",
@@ -507,7 +562,9 @@
                   react.createElement("span", null, clock === "—" ? "本次会话" : clock),
                   react.createElement("span", null, VERSION))
               ),
-              react.createElement("div", { className: "dsh-armor5-cap" }, "位置 " + slotText),
+              react.createElement("div", { className: "dsh-armor5-caprow" },
+                react.createElement("span", { className: "dsh-armor5-cap" }, "位置 " + slotText),
+                gateButton()),
               tileGrid([
                 tile("命中标记" + (domainMarkers.length ? " · " + domainMarkers.length : ""),
                   chipList(domainMarkers, "hit", "无"), "hit", 2),
@@ -738,6 +795,12 @@
             { value: "every", label: "每步都发", hint: "最贵" },
             { value: "off", label: "关闭", hint: "不注入运行时锚点" }] },
           { key: "RUNTIME_ANCHOR_EVERY", kind: "number", label: "节拍间隔 N", hint: "第 1 步 + 每 N 步重发" },
+          { key: "ASK_GATE_MODE", label: "用户向选择（询问闸门）", hint: "只在闸门成立的那一步拼进运行时锚点", options: [
+            { value: "proactive", label: "主动", hint: "任务输入 + 多步任务每一步都带合同：必问时刻做成可点按钮（默认）" },
+            { value: "auto", label: "按节拍", hint: "能力位 + 节拍，用户说「别问」即静默" },
+            { value: "on", label: "强制开", hint: "无提问通道时降级为写在正文里" },
+            { value: "off", label: "关闭", hint: "永不出现询问/阶段条款" }] },
+          { key: "ASK_GATE_EVERY", kind: "number", label: "询问闸门间隔 N", hint: "每 N 步才可能出现一次询问条款" },
           { key: "DEDUPE_PAYLOAD", kind: "bool", label: "同源让位", hint: "宿主已有同源载荷时内核让位", options: [
             { value: true, label: "开", hint: "让位（默认）" },
             { value: false, label: "关", hint: "永远注入自己的载荷" }] },

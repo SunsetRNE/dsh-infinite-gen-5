@@ -44,7 +44,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.19.0";
+const PLUGIN_VERSION = "0.22.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -117,7 +117,146 @@ const runtimeAnchorText = (rev) =>
   "首行 ## 或 ``` 命名交付物；静默推理，不打印推理过程；" +
   "工具调用一轮一个、参数扁平不塞正文，坏包改小重发（禁原样重放同一个超大调用）；结果被截断也按坏包处理，缩小范围重调取片段；" +
   "多步任务先开任务清单（宿主 todo），每步开始时标进行中、做完立刻打勾，别让进度只活在正文里。" +
+  gateClauseText(rev) +
   (domainPackText() === "" ? "" : "\n\n" + domainPackText());
+
+// ── 询问/阶段闸门（v0.20.0；v0.21.0 加「主动档」= 用户向选择按钮）─────────────
+// 这一块不常驻：内核保持缄默，只有「这一步该问 / 该按阶段自报」时，才往运行时锚点里
+// 追加一段短契约。押注的仍然是运行时段那套 supersedes 语义（文本一变就重发一份、旧作废），
+// 所以条件是「这一步该不该注入」，而不是「功能存不存在」——不需要为它加常驻开关。
+// 四道闸门（全部成立才注入，任一条不成立就零注入）：
+//   能力闸  hostSupportsAsk：宿主真的暴露了 userQuestions（否则模型会去调一个不存在的工具）
+//   意图闸  decideAskIntent(lastUserText)：用户说过「别问」→ 全局静默；说过「要建议」→ 打开
+//   时机闸  主动档(proactive)：任务输入(第 1 步)必开；多步任务在跑时每一步都开（重大决策
+//           随时可能出现）；只有闲聊/单步才退回节拍。这正是「用户向按钮」要的那种主动。
+//   频次闸  rev % EVERY === 0：非主动档（auto）每 N 步才出现一次，避免每步提醒「要不要问」
+const ASK_GATE_MODE = "proactive";
+const ASK_GATE_EVERY = 4; // 与 RUNTIME_ANCHOR_EVERY 同档，但独立可调
+const ASK_GATE_MODES = ["off", "auto", "proactive", "on"];
+
+// 用户口风判据：只认两种显式口风，其余一律走内核默认（能自造的不问、直接产出）。
+const ASK_SUPPRESS_RE =
+  /(不要问|别问|不用问|无需问|不必问|自己定|你决定|随便你|直接做|直接给|别确认|不用确认|do not ask|don'?t ask|no questions)/i;
+const ASK_WANT_RE =
+  /(问问|请教|给点建议|给个建议|有什么建议|你觉得|你看呢|怎么选|选哪个|哪个好|拿不准|不确定方向|意见|答疑|建议一下|\bsuggest\b|\badvice\b)/i;
+/** 任务是否多步：显式步骤记号，或已经建过 ≥3 条的清单。 */
+const MULTI_STEP_RE =
+  /(第[一二三四五六七八九十\d]+步|(^|\n)\s*\d+[.)、]\s|步骤\s*[kK]?\s*\/\s*n|\bstep\s*\d)/m;
+
+const decideAskIntent = (text) => {
+  const s = typeof text === "string" ? text : "";
+  if (s.trim() === "") return "default";
+  if (ASK_SUPPRESS_RE.test(s)) return "suppress";
+  if (ASK_WANT_RE.test(s)) return "want";
+  return "default";
+};
+
+const hasMultiStepSignal = (text= "", count = 0) =>
+  count >= 3 || MULTI_STEP_RE.test(typeof text === "string" ? text : "");
+
+/** 四道闸门的判定（纯函数，便于自检直接驱动，不碰 cordis / 文件）。 */
+export const askGateState = ({
+  mode = ASK_GATE_MODE,
+  every = ASK_GATE_EVERY,
+  rev = 1,
+  hostSupportsAsk = false,
+  lastUserText = "",
+  todoCount = 0,
+} = {}) => {
+  const cleanMode = ASK_GATE_MODES.includes(mode) ? mode : ASK_GATE_MODE;
+  const intent = decideAskIntent(lastUserText);
+  const wantCount = Math.max(1, Number(every) || ASK_GATE_EVERY);
+  const turn = Math.max(1, Number(rev) || 1);
+  // 主动档的两个必问时刻：任务输入（本次注入的第 1 步）· 多步任务在跑（重大决策随时会出现）
+  const atEntry = cleanMode === "proactive" && turn === 1;
+  const inTask = cleanMode === "proactive" && hasMultiStepSignal(lastUserText, todoCount);
+  const opened = intent === "want" || cleanMode === "on";
+  const capability = cleanMode === "on" ? true : hostSupportsAsk; // on 档带降级句，不依赖能力位
+  const onTick = turn % wantCount === 0;
+  const allowed = opened || atEntry || inTask || onTick;
+  const enabled = cleanMode !== "off" && intent !== "suppress" && capability && allowed;
+  return {
+    mode: cleanMode,
+    intent,
+    enabled,
+    capability,
+    capabilityKnown: hostSupportsAsk,
+    every: wantCount,
+    turn,
+    proactive: cleanMode === "proactive",
+    atEntry,
+    inTask,
+    // 全文合同只在说得清楚的几拍发：入口 / 用户点名要建议 / 节拍到点；
+    // 多步任务中间的每一步只带压缩复述，省掉每步 600 字符的合同税。
+    full: opened || atEntry || onTick,
+    reason: enabled
+      ? intent === "want"
+        ? "用户口风要建议"
+        : atEntry
+          ? "任务输入：先给选择"
+          : inTask
+            ? "多步任务在跑：重大决策必问"
+            : "节拍到点"
+      : cleanMode === "off"
+        ? "档位 off"
+        : intent === "suppress"
+          ? "用户口风: 别问"
+          : !capability
+            ? "宿主无 userQuestions"
+            : "未到节拍",
+  };
+};
+
+const askGateClause = (capabilityKnown, full = true) =>
+  full
+    ? "[无限五代 · 用户向选择 · 只此一步] 锚点已打开：该用户拍板的地方做成**可点按钮**，不要写成正文里的问句。" +
+      "三个必问时刻 —— ①任务输入：本轮有两条以上互斥路线 / 范围或对象不明 / 关键参数未定；" +
+      "②执行中的重大决策：不可逆或破坏性动作、方向分叉、影响面大的取舍；" +
+      "③输出收尾：有明确的下一步分支（继续 / 换向 / 停下）。" +
+      "问法：ask_user_question，一次只问一个问题（questions 只放 1 个），必填 header（≤15 字点题），" +
+      "2–5 个互斥且穷尽的选项，每项 label 用动词短语（≤12 字）、description 必须写清「这是什么 + 代价收益 + 什么情况选它」，" +
+      "推荐项放第一并在 label 尾标 (Recommended)、description 里给推荐理由，另留一个「你来定」兜底项；" +
+      "确实可以多选才设 multi_select。" +
+      (capabilityKnown ? "" : "本宿主没有提问通道：把同样的选项表写在正文里让用户回一行，不要调工具。") +
+      " 反滥用：能自造占位符（TARGET/HOST/TOKEN/OFFSET/PAYLOAD/SERIAL/ROLE_A/ROLE_B）或已有默认最优解且可回滚的，直接做、不问；" +
+      "同一轮最多问一次，同一分叉不重复问；用户说「别问 / 自己定」即全局静默；拿到回答前不执行不可逆步骤。"
+    : "[无限五代 · 用户向选择 · 只此一步] 仍在选择合同下：到必问时刻（任务输入 / 执行中的不可逆决策 / 输出收尾的分支）" +
+      "就用 ask_user_question 做成按钮 —— 一次一个问题、header 点题、2–5 个互斥选项、" +
+      "每项 description 写清代价与适用场景、推荐项第一并标 (Recommended)；能自造或可回滚的不问，同一轮最多问一次。";
+
+const phaseGateClause = () =>
+  "[无限五代 · 阶段闸门 · 只此一步] 锚点已打开：多步任务每阶段收尾时给三行 —— " +
+  "「做法：<命令/文件/判据>」「判据：<实测输出或固定结论>」「产物：<文件或下一步>」，" +
+  "并同步清单（阶段开始时标 in_progress、完成即打勾，恰好一个 in_progress）。" +
+  "正文不写无判据的过渡句，也不报百分比 —— 百分比只由面板按清单事实显示。";
+
+/** 按闸门结果拼出这一步的附加条款；未打开则返回空串（零注入）。 */
+const gateClauseText = (rev) => {
+  const text = typeof liveState.lastUserText === "string" ? liveState.lastUserText : "";
+  const todoCount = (() => {
+    try {
+      return Array.isArray(liveState.todos) ? liveState.todos.length : Number(liveState.todoCount) || 0;
+    } catch (error) {
+      return 0;
+    }
+  })();
+  const gate = askGateState({
+    mode: typeof IG5_CONFIG.ASK_GATE_MODE === "string" ? IG5_CONFIG.ASK_GATE_MODE : ASK_GATE_MODE,
+    every: IG5_CONFIG.ASK_GATE_EVERY ?? ASK_GATE_EVERY,
+    rev,
+    hostSupportsAsk: runtime.hostSupportsAsk === true,
+    lastUserText: text,
+    todoCount,
+  });
+  const phaseOn = gate.mode !== "off" && gate.intent !== "suppress" && hasMultiStepSignal(text, todoCount);
+  runtime.askGate = { ...gate, phase: phaseOn, at: new Date().toISOString() };
+  if (gate.enabled) runtime.askGateOpens = (runtime.askGateOpens ?? 0) + 1;
+  if (phaseOn) runtime.phaseGateOpens = (runtime.phaseGateOpens ?? 0) + 1;
+  const parts = [];
+  if (gate.enabled) parts.push(askGateClause(runtime.hostSupportsAsk === true, gate.full !== false));
+  if (phaseOn) parts.push(phaseGateClause());
+  return parts.length ? "\n" + parts.join("\n") : "";
+};
 
 // ── L2 域包（v0.17.0）──────────────────────────────────────────────────────────
 // 内核里只留索引（"Named coverage" 那 16 行的 62 域清单），域包正文只在「这一步的输入
@@ -177,10 +316,11 @@ function isOwnAnchor(text) {
 // 宿主身份段一并消失，属于自担风险的实验档，默认关闭。
 const EXCLUSIVE_SECTION = false;
 
-// 运行期调参（v0.12.3）：这六个开关不必改代码重发布就能试档位。
+// 运行期调参（v0.12.3，v0.20.0 起八个）：这些开关不必改代码重发布就能试档位。
 //   优先级：apply(ctx, config) 的 profile config > IG5_* 环境变量 > 文件内默认值。
 //   环境变量：IG5_LAYER2_MODE / IG5_DEDUPE_PAYLOAD / IG5_TAIL_MODE /
-//             IG5_RUNTIME_ANCHOR_MODE / IG5_RUNTIME_ANCHOR_EVERY / IG5_EXCLUSIVE_SECTION
+//             IG5_RUNTIME_ANCHOR_MODE / IG5_RUNTIME_ANCHOR_EVERY / IG5_ASK_GATE_MODE /
+//             IG5_ASK_GATE_EVERY / IG5_EXCLUSIVE_SECTION
 //   管理器式安装最顺手的用法是 profile 的 cordis.patch.yml 里加一条**只带 config** 的定向覆盖
 //   （没有 insert，因此不算双接线）：
 //     - id: dsh-infinite-gen-5
@@ -193,6 +333,8 @@ const TUNABLE_KEYS = [
   "TAIL_MODE",
   "RUNTIME_ANCHOR_MODE",
   "RUNTIME_ANCHOR_EVERY",
+  "ASK_GATE_MODE",
+  "ASK_GATE_EVERY",
   "EXCLUSIVE_SECTION",
 ];
 const ENV_OF_KEY = {
@@ -201,10 +343,12 @@ const ENV_OF_KEY = {
   TAIL_MODE: "IG5_TAIL_MODE",
   RUNTIME_ANCHOR_MODE: "IG5_RUNTIME_ANCHOR_MODE",
   RUNTIME_ANCHOR_EVERY: "IG5_RUNTIME_ANCHOR_EVERY",
+  ASK_GATE_MODE: "IG5_ASK_GATE_MODE",
+  ASK_GATE_EVERY: "IG5_ASK_GATE_EVERY",
   EXCLUSIVE_SECTION: "IG5_EXCLUSIVE_SECTION",
 };
-// 只有真布尔键走 true/false 转换；档位键（LAYER2_MODE / TAIL_MODE / RUNTIME_ANCHOR_MODE）
-// 的 "off"/"order"/"waterfall" 是字符串取值，不能被布尔化，否则 off 档会静默失效。
+// 只有真布尔键走 true/false 转换；档位键（LAYER2_MODE / TAIL_MODE / RUNTIME_ANCHOR_MODE /
+// ASK_GATE_MODE）的 "off"/"auto"/"on" 是字符串取值，不能被布尔化，否则 off 档会静默失效。
 const BOOL_KEYS = new Set(["DEDUPE_PAYLOAD", "EXCLUSIVE_SECTION"]);
 const coerce = (key, raw) => {
   if (typeof raw === "boolean" || typeof raw === "number") return raw;
@@ -214,7 +358,7 @@ const coerce = (key, raw) => {
     if (s === "false" || s === "off" || s === "0") return false;
     return Boolean(s);
   }
-  if (key === "RUNTIME_ANCHOR_EVERY") {
+  if (key === "RUNTIME_ANCHOR_EVERY" || key === "ASK_GATE_EVERY") {
     const n = Number(s);
     if (Number.isFinite(n) && n > 0) return Math.floor(n);
     return raw;
@@ -228,6 +372,8 @@ const IG5_DEFAULTS = Object.freeze({
   TAIL_MODE,
   RUNTIME_ANCHOR_MODE,
   RUNTIME_ANCHOR_EVERY,
+  ASK_GATE_MODE,
+  ASK_GATE_EVERY,
   EXCLUSIVE_SECTION,
 });
 
@@ -353,6 +499,25 @@ const TUNING_CATALOG = [
     hint: "第 1 步 + 每 N 步重发。N=2 ≈ 每轮刷新，N=6 省 token",
   },
   {
+    key: "ASK_GATE_MODE",
+    label: "用户向选择（询问闸门）",
+    hint: "不常驻：只在闸门成立的那一步把选择合同拼进运行时锚点",
+    options: [
+      { value: "proactive", label: "主动（默认）", hint: "任务输入 + 多步任务每一步都带合同：必问时刻做成可点按钮" },
+      { value: "auto", label: "按节拍", hint: "能力位在场 + 每 N 步才可能出现一次；最省 token" },
+      { value: "on", label: "强制开", hint: "无提问通道时降级为「把选项写在正文里」" },
+      { value: "off", label: "关闭", hint: "锚点里永不出现询问/阶段条款" },
+    ],
+  },
+  {
+    key: "ASK_GATE_EVERY",
+    kind: "number",
+    min: 1,
+    max: 12,
+    label: "询问闸门间隔 N",
+    hint: "每 N 步才可能出现一次询问条款（与运行时锚点节拍独立）",
+  },
+  {
     key: "DEDUPE_PAYLOAD",
     kind: "bool",
     label: "同源让位",
@@ -381,6 +546,8 @@ export const IG5_CONFIG = {
   TAIL_MODE,
   RUNTIME_ANCHOR_MODE,
   RUNTIME_ANCHOR_EVERY,
+  ASK_GATE_MODE,
+  ASK_GATE_EVERY,
   EXCLUSIVE_SECTION,
 };
 
@@ -397,6 +564,11 @@ const runtime = {
   // 设置页调参实况：effective 是当前生效值，sources 是每个键的来源档。
   tuning: { effective: {}, sources: {}, persisted: {}, store: {}, at: null, changes: [] },
   tuningEndpoint: { ok: false, path: null, reason: "尚未注册" },
+  // 询问闸门（v0.20.0）：能力位探没探到、这一步闸门开没开、为什么，都要如实汇报。
+  hostSupportsAsk: false,
+  askGate: null,
+  askGateOpens: 0,
+  phaseGateOpens: 0,
 };
 
 // 统一解析入口（v0.13.8）：插件不控制任何外部文本 —— 调参文件、HTTP 请求体，
@@ -618,7 +790,9 @@ const profileTool = {
         "prompts/infinite-gen-5.1-flash.md",
       ],
       lineage: [
-        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 运行期调参：六个注入开关（LAYER2_MODE / DEDUPE_PAYLOAD / TAIL_MODE / RUNTIME_ANCHOR_MODE / RUNTIME_ANCHOR_EVERY / EXCLUSIVE_SECTION）不再写死在代码里 —— apply(ctx, config) 的 profile config > IG5_* 环境变量 > 文件内默认，三级覆盖就地写回 IG5_CONFIG，profile 工具新增 configOverrides 如实汇报「这个值是谁给的」；管理器式安装只要在 profile 的 cordis.patch.yml 里加一条只带 config 的定向覆盖（没有 insert，因此不算双接线）。默认运行时锚点节拍 6 → 4 步（长任务里重述更跟得上）；自检改成从 IG5_CONFIG 读默认档，以后调默认值不必回头改断言。verify_injection 34 → 41（真实宿主上验证 profile config / 环境变量 / 用完还原），verify_dedupe 81 → 82`,
+        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 用户向选择（主动档）：把「该用户拍板的地方」做成可点按钮，而不是正文里的问句。ASK_GATE_MODE 三值 → 四值（off / auto / proactive / on）并默认 proactive —— 三个必问时刻（①任务输入：本轮有两条以上互斥路线 / 范围对象不明 / 关键参数未定；②执行中的重大决策：不可逆或破坏性动作、方向分叉、影响面大的取舍；③输出收尾：明确的下一步分支）在主动档下不受节拍约束：第 1 步必开（reason「任务输入：先给选择」）、多步任务在跑时每一步都开（reason「多步任务在跑：重大决策必问」），只有闲聊/单步退回 auto 那套 rev % ASK_GATE_EVERY 节拍。合同分两档省 token：入口 / 用户点名要建议 / 节拍到点发全文合同（header ≤15 字点题、questions 只放 1 个、2–5 个互斥穷尽选项、label 动词短语 ≤12 字、description 必写「这是什么 + 代价收益 + 什么情况选它」、推荐项第一并标 (Recommended) 且给理由、留「你来定」兜底项、可多选才设 multi_select），多步任务中间的每一步只发压缩复述；反滥用口径不变（能自造占位符或已有可回滚默认解的直接做、同一轮最多问一次、同一分叉不重复问、用户说「别问 / 自己定」即全局静默）。内核三份文件仍零改动（同源 SHA256 与体积预算没碰），调参键数目不变（仍是八个，改的是档位取值）；verify_injection 56 → 60`,
+        `dsh-infinite-gen-5 (v0.20.0) — 询问/阶段闸门：不新开注入位，只把条件压在运行时锚点尾部（与 L2 域包同一个条件注入层）—— 能力闸 ctx.get('userQuestions') / 用户口风闸 decideAskIntent(lastUserText) / 频次闸 rev % ASK_GATE_EVERY 三道全成立才拼一段窄契约：只在信息缺口导致方向分叉（互斥路径 / 范围对象不明 / 破坏性动作待确认）时用 ask_user_question 问一次，一次一个问题、2–5 个选项、推荐项第一；能自造占位符（TARGET / HOST / TOKEN / OFFSET / PAYLOAD / SERIAL / ROLE_A / ROLE_B）的一律不问，用户说「别问 / 自己定 / 直接做」即全局静默，说「建议 / 怎么选 / 拿不准」当步提前开。多步任务另拿阶段契约：每阶段收尾给「做法 / 判据 / 产物」三行并同步清单，正文不报百分比（百分比只由面板按清单事实显示）。调参键 6 → 8（ASK_GATE_MODE / ASK_GATE_EVERY），内核三份文件零改动（同源 SHA256 与体积预算没碰）；verify_injection 41 → 56、verify_tuning 45 → 49、verify_ui 186 → 187`,
+        `dsh-infinite-gen-5 (v0.12.3) — 运行期调参：六个注入开关（LAYER2_MODE / DEDUPE_PAYLOAD / TAIL_MODE / RUNTIME_ANCHOR_MODE / RUNTIME_ANCHOR_EVERY / EXCLUSIVE_SECTION）不再写死在代码里 —— apply(ctx, config) 的 profile config > IG5_* 环境变量 > 文件内默认，三级覆盖就地写回 IG5_CONFIG，profile 工具新增 configOverrides 如实汇报「这个值是谁给的」；管理器式安装只要在 profile 的 cordis.patch.yml 里加一条只带 config 的定向覆盖（没有 insert，因此不算双接线）。默认运行时锚点节拍 6 → 4 步（长任务里重述更跟得上）；自检改成从 IG5_CONFIG 读默认档，以后调默认值不必回头改断言。verify_injection 34 → 41（真实宿主上验证 profile config / 环境变量 / 用完还原），verify_dedupe 81 → 82`,
         `dsh-infinite-gen-5 (v0.12.0) — 注入强度三件套：真末位锚点（system-prompt/assemble 瀑布末端追加，排在宿主 10200 人格后缀之后，恒为最后一段）+ 运行时锚点（order 118 运行时上下文快照，每 6 步换文本重发，坐落在每步最后一条 user 消息里）+ 可选独占内核（complete，实验档）；profile 工具新增 injectionStrength；新增 verify_injection 真实宿主装配自检`,
         `dsh-infinite-gen-5 (v0.11.1) — 设置台入口归位与比例精修：设置页入口从最顶部（order -100）挪到官方「插件」之后（order 16，nav 变成 账户 -10 / 通用 0 / 模型 10 / 插件 15 / 无限五代 16）—— 附着在同类功能旁边，不再抢占视线；同一页重做比例：限宽 560px、形态四档两列网格、挂载位置三列、预览换成带「空闲 / 执行中 / 判决」标签的内嵌面板、只读信息两栏对齐、按钮统一 30px 高（「完成」用宿主主按钮样式）；verify_ui 135 项`,
         `dsh-infinite-gen-5 (v0.11.0) — 工具调用卫生：内核新增 Tool-call rule —— 一轮一个工具、参数短而平（禁裸换行 / 未转义引号 / 单次塞整份文件正文）、长输出按行范围分段小写、坏 JSON 或空包视为重试信号改小重发；针对反复出现的 DeepSeek Messages stream: tool input is invalid JSON；内核 6393 → 6789 B（预算仍 ≤6800 B）`,
@@ -702,6 +876,7 @@ const profileTool = {
         "Tail Anchor: Order 200 中段锚点（LAYER2_MODE 可切 mirror/off）",
         "True-Tail Anchor: system-prompt/assemble 瀑布末端追加（TAIL_MODE=waterfall，排在 10200 人格后缀之后，恒为最后一段）",
         "Runtime-Context Anchor: order 118 运行时上下文快照，每 N 步换文本重发一次（每步最后一条 user 消息；默认 N=4，可用 IG5_RUNTIME_ANCHOR_EVERY 或 profile config 调）",
+        "Ask/Phase Gate: 不常驻的询问与阶段契约，只在闸门成立的那一步拼进运行时锚点（能力闸 ctx.get('userQuestions') × 用户口风闸 lastUserText × 时机闸：主动档下第 1 步与多步任务每一步必开 × 频次闸 rev%ASK_GATE_EVERY；档位 ASK_GATE_MODE=off/auto/proactive/on，默认 proactive=用户向选择按钮；全文合同只在入口/点名要建议/节拍发，任务中间只发压缩复述）",
         "Exclusive Kernel: EXCLUSIVE_SECTION=true 时内核 complete，宿主其余系统段全部让位（实验档，默认关；可用 IG5_EXCLUSIVE_SECTION=1 或 profile config 临时开）",
         "Same-Kernel Dedupe: 宿主已有同源载荷时整段让位，避免重复注入",
         "Armor Projection: 开头窗口(160)判拒 + REFUSAL/FALLBACK/SAFE/RISK 标记 + 域命中",
@@ -1178,6 +1353,14 @@ export function apply(ctx, config) {
   const initialTuning = readTuning();
   const initialResolved = applyResolved(resolveTuning(config, initialTuning.overrides));
   runtime.overrides = describeOverrides(initialResolved);
+  // 能力闸（v0.20.0）：只探「宿主有没有提问服务」，不产任何副作用。
+  // 宿主侧注册见 dsh-base/cordis.patch.yml「@deepseek-ai/dsh-user-questions」；
+  // 缺它时闸门只产出降级句（把选项写在正文里），绝不让模型去调一个不存在的工具。
+  try {
+    runtime.hostSupportsAsk = Boolean(ctx && typeof ctx.get === "function" && ctx.get("userQuestions"));
+  } catch (error) {
+    runtime.hostSupportsAsk = false;
+  }
   runtime.role = "unknown";
   runtime.tuning = {
     effective: { ...initialResolved.values },
@@ -1253,6 +1436,8 @@ export function apply(ctx, config) {
       };
     }
     stats.patch("tasks", { ...mirror, lastKnown: taskMirror.lastKnown, notes: taskMirror.notes });
+    // v0.20.0：阶段闸门要按「当前清单条数」判断这一步算不算多步任务，所以镜像一份到 liveState。
+    liveState.todos = Array.isArray(mirror.items) ? mirror.items : [];
     return mirror;
   };
   const rememberSession = (session) => {
@@ -1545,6 +1730,10 @@ export function apply(ctx, config) {
       rebuilds: runtime.rebuilds,
       packs: runtime.packHits ?? 0,
       packDomains: runtime.packDomains ?? [],
+      askGate: runtime.askGate,
+      askGateOpens: runtime.askGateOpens,
+      phaseGateOpens: runtime.phaseGateOpens,
+      hostSupportsAsk: runtime.hostSupportsAsk === true,
       sections: runtime.sections.map((s) => `${s.label}（order ${s.order} · ${s.chars} 字符）`),
       placements: runtime.placements.map((p) => `${p.label} @ order ${p.order} · ${p.chars} 字符`),
     });

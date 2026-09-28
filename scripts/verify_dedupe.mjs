@@ -1,4 +1,4 @@
-// 无限五代 v0.19.0 注入去重行为回归（离线、确定性、无需 API Key）
+// 无限五代 v0.22.0 注入去重行为回归（离线、确定性、无需 API Key）
 //
 // 针对的缺陷：v0.5.0 的 Order 100 与 Order 200 载入的是逐字同源的两个文件，
 // 于是同一份 3010 字节内核每轮被注入两遍；与同机在线的上一代破甲插件叠加时
@@ -6,11 +6,17 @@
 //
 // 用假宿主把 apply() 真跑一遍，断言「实际注册了什么」，而不是 grep 源码。
 // 用法：node scripts/verify_dedupe.mjs [--json]
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 // 自检不碰用户真实统计库（v0.13.9）：给统计库指一个 /tmp 落点，跑完即弃。
 process.env.IG5_STATS_FILE = "/tmp/ig5-stats-dedupe.json";
+// 自检也不读用户真实的调参档（v0.22.0 回归）：调参档落点由 IG5_HOME ?? DSH_HOME ?? ~/.dsh 决定
+// （index.js 的 tuningHome()），不隔离的话，开发机上「在设置页 / 浮层点一下档位」就会把
+// RUNTIME_ANCHOR_EVERY 从默认 4 写成 ui override，本节拍断言于是在有使用痕迹的机器上红、
+// 在干净机器上绿。这里先清掉临时 home 再导入插件，保证每次都是「没有调参档」的初始态。
+process.env.IG5_HOME = "/tmp/ig5-home-dedupe";
+rmSync("/tmp/ig5-home-dedupe", { recursive: true, force: true });
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const passes = [];

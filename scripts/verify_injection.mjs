@@ -13,12 +13,18 @@
 //
 // 找不到宿主（裸机 / CI 容器）时打印 SKIP 并 exit 0：缺宿主是环境限制，不是回归。
 // 用法：node scripts/verify_injection.mjs [--json] [--host=/path/to/dsh]
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 // 自检不碰用户真实统计库（v0.13.9）：给统计库指一个 /tmp 落点，跑完即弃。
 process.env.IG5_STATS_FILE = "/tmp/ig5-stats-injection.json";
+// 也不读用户真实调参档（v0.22.0）：调参档落点 = IG5_HOME ?? DSH_HOME ?? ~/.dsh，
+// 而「设置页 / 浮层 UI」来源优先级高于环境变量与 config —— 本脚本有一半断言是靠
+// IG5_*_MODE / IG5_EXCLUSIVE_SECTION 环境变量摆姿势的，只要开发机上点过一次档位面板
+// （文件里落了 override），这些断言就会集体变红。先清一个临时 home 再导入插件。
+process.env.IG5_HOME = "/tmp/ig5-home-injection";
+rmSync("/tmp/ig5-home-injection", { recursive: true, force: true });
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const passes = [];
@@ -80,13 +86,13 @@ const promptModule = await import(pathToFileURL(host.prompt).href);
 const SystemPrompt = promptModule.default;
 const { renderPrompt, joinContextSections, renderContextSections } = promptModule;
 const plugin = await import(new URL("../index.js", import.meta.url).href);
-const { IG5_CONFIG } = plugin;
+const { IG5_CONFIG, askGateState } = plugin;
 
 const DEFAULTS = { ...IG5_CONFIG };
 const restore = () => Object.assign(IG5_CONFIG, DEFAULTS);
 
 // ── 演习台：真服务 + 模拟宿主自己的段位；apply() 用真 ctx（effect/on/tools 都是真的）──
-async function rig({ config = {}, hostSections = null } = {}) {
+async function rig({ config = {}, hostSections = null, userQuestions = false } = {}) {
   const app = new Context();
   await app.plugin(SystemPrompt, {});
   const sp = app.get("systemPrompt");
@@ -95,6 +101,8 @@ async function rig({ config = {}, hostSections = null } = {}) {
   }
   const tools = [];
   app.provide("tools", { register: (tool) => tools.push(tool) });
+  // 能力闸探针（v0.20.0）：只有宿主真的注册了 userQuestions 服务，询问闸门才允许注入。
+  if (userQuestions) app.provide("userQuestions", { ask: async () => ({ answers: [] }) });
   for (const section of hostSections ?? HOST_SECTIONS) {
     sp.section(section);
   }
@@ -104,7 +112,7 @@ async function rig({ config = {}, hostSections = null } = {}) {
   const assemble = () => sp.assemble({ agent: {}, scope: {} });
   // profile 是运行期快照：必须等装配完再读，否则拿到的是注册那一瞬间的实况。
   const profile = () => tools.find((tool) => tool.name === "infinite_gen5_profile")?.execute();
-  return { app, sp, tools, assemble, profile };
+  return { app, sp, tools, assemble, profile, ctx: app };
 }
 
 const names = (assembly) => assembly.sections.map((s) => s.name);
@@ -195,6 +203,74 @@ const last = (arr) => arr[arr.length - 1];
   check(last(names(assembly)) === TAIL, "关掉运行时锚点不影响真末位锚点");
 }
 
+// ---- 3a. 询问/阶段闸门：纯判定边界（能力闸 × 用户口风闸 × 频次闸）----
+{
+  const gOk = askGateState({ mode: "auto", every: 4, rev: 4, hostSupportsAsk: true });
+  check(gOk.enabled && gOk.reason === "节拍到点", "auto 档：能力位在场且到节拍时开闸", JSON.stringify(gOk));
+  const gOffBeat = askGateState({ mode: "auto", every: 4, rev: 3, hostSupportsAsk: true });
+  check(!gOffBeat.enabled && gOffBeat.reason === "未到节拍", "auto 档：没到节拍不开闸", JSON.stringify(gOffBeat));
+  const gOff = askGateState({ mode: "off", every: 1, rev: 1, hostSupportsAsk: true });
+  check(!gOff.enabled && gOff.reason === "档位 off", "off 档是下界：再快也不注入", JSON.stringify(gOff));
+  const gSuppress = askGateState({ mode: "auto", every: 1, hostSupportsAsk: true, lastUserText: "别问，直接做" });
+  check(!gSuppress.enabled && gSuppress.intent === "suppress", "用户说「别问」时即使到点也不注入", JSON.stringify(gSuppress));
+  const gWant = askGateState({ mode: "auto", every: 4, rev: 1, hostSupportsAsk: true, lastUserText: "方向拿不准，给点建议？" });
+  check(gWant.enabled && gWant.intent === "want", "用户口风要建议时立刻开闸，不等节拍", JSON.stringify(gWant));
+  const gNoCap = askGateState({ mode: "auto", every: 1, hostSupportsAsk: false });
+  check(!gNoCap.enabled && gNoCap.reason === "宿主无 userQuestions", "宿主没有提问服务时 auto 档不注入", JSON.stringify(gNoCap));
+  const gForce = askGateState({ mode: "on", hostSupportsAsk: false, rev: 1 });
+  check(gForce.enabled && gForce.capability === true, "on 档带降级句强行注入", JSON.stringify(gForce));
+  // 主动档（v0.21.0 用户向选择）：任务输入必开 + 多步任务每一步都开，闲聊退回节拍。
+  const gProEntry = askGateState({ mode: "proactive", every: 4, rev: 1, hostSupportsAsk: true });
+  check(
+    gProEntry.enabled && gProEntry.atEntry && gProEntry.full === true && gProEntry.reason === "任务输入：先给选择",
+    "主动档：第 1 步（任务输入）无条件开闸并给全文合同",
+    JSON.stringify(gProEntry),
+  );
+  const gProTask = askGateState({ mode: "proactive", every: 4, rev: 3, hostSupportsAsk: true, lastUserText: "第1步 装工具，第2步 跑，第3步 复验" });
+  check(
+    gProTask.enabled && gProTask.inTask && gProTask.full === false,
+    "主动档：多步任务在跑时每一步都开闸，非节拍只给压缩复述",
+    JSON.stringify(gProTask),
+  );
+  const gProIdle = askGateState({ mode: "proactive", every: 4, rev: 3, hostSupportsAsk: true, lastUserText: "顺便看看这个压缩包多大" });
+  check(!gProIdle.enabled && gProIdle.reason === "未到节拍", "主动档：闲聊/单步仍退回节拍，不变成每步必问", JSON.stringify(gProIdle));
+  const gProNoCap = askGateState({ mode: "proactive", every: 1, rev: 1, hostSupportsAsk: false });
+  check(!gProNoCap.enabled && gProNoCap.reason === "宿主无 userQuestions", "主动档也受能力闸约束：无提问服务不注入", JSON.stringify(gProNoCap));
+}
+
+// ---- 3b. 询问/阶段闸门 E2E：真装配下的文本增删 ----
+{
+  const every = () => Math.max(1, IG5_CONFIG.ASK_GATE_EVERY);
+  const userMsg = (text) => ({ type: "user/message", data: { content: [{ type: "text", text }] } });
+  const runtimeTextOf = (assembly) => assembly.contexts.find((c) => c.name === RUNTIME)?.text ?? "";
+  const rideCadence = async (r) => {
+    let assembly = await r.assemble();
+    for (let i = 1; i < every(); i += 1) assembly = await r.assemble();
+    return assembly;
+  };
+  const noCap = await rig({ userQuestions: false });
+  check(
+    !runtimeTextOf(await rideCadence(noCap)).includes("用户向选择"),
+    "宿主无 userQuestions 时撑到节拍也不注入询问条款",
+  );
+  const withCap = await rig({ userQuestions: true });
+  const opened = runtimeTextOf(await rideCadence(withCap));
+  check(opened.includes("用户向选择"), "宿主有 userQuestions 且到节拍时锚点出现询问条款", opened.slice(0, 60));
+  check(/ask_user_question/.test(opened), "条款点名宿主工具名，不发明新工具");
+  withCap.ctx.emit("session/event", {}, userMsg("别问，直接做"));
+  check(
+    !runtimeTextOf(await rideCadence(withCap)).includes("用户向选择"),
+    "用户说「别问」后，下一拍不再注入询问条款",
+  );
+  withCap.ctx.emit("session/event", {}, userMsg("第1步 探测环境，第2步 装工具，第3步 复验"));
+  // 条款只在锚点换文本的那一拍重算（cadence 语义：文本不变则快照不重发），所以撑满一拍再读。
+  const phased = runtimeTextOf(await rideCadence(withCap));
+  check(phased.includes("阶段闸门"), "多步任务时锚点出现阶段契约", phased.slice(0, 60));
+  check(/做法：/.test(phased) && /判据：/.test(phased) && /产物：/.test(phased), "阶段契约给出三行骨架");
+  check(/百分比只由面板/.test(phased), "阶段契约不发明百分比，指向面板单一真源");
+  withCap.ctx.emit("session/event", {}, userMsg("今天几号"));
+  check(!runtimeTextOf(await rideCadence(withCap)).includes("阶段闸门"), "单步任务不注入阶段契约");
+}
 // ---- 4. TAIL_MODE="order"：普通段排在 10150，会被 10200 人格后缀压住（这就是默认走瀑布的理由）----
 {
   const r = await rig({ config: { TAIL_MODE: "order" } });

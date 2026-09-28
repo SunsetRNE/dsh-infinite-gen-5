@@ -1,4 +1,4 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.19.0
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.22.0
 
 <p align="center">
   <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
@@ -101,17 +101,19 @@ v0.12.0 起把载荷铺到四处，越靠后权威度越高：
 | `order 100` | `systemPrompt.section()` | 常开 | 通用内核（5600+ 字符），载荷本体 |
 | `order 200` | `systemPrompt.section()` | `LAYER2_MODE = "anchor"` | 中段锚点（约 200 字节），途中复述一次 |
 | `order 10150` | `system-prompt/assemble` **瀑布末端** | `TAIL_MODE = "waterfall"` | 真末位锚点：追加到装配结果数组最后一项，排在 `10200` 人格后缀之后，恒为整份系统提示的最后一段；不占 section 命名空间 |
-| `order 118` | `systemPrompt.context()` **运行时槽** | `RUNTIME_ANCHOR_MODE = "cadence"` | 运行时锚点：随运行时上下文快照发在**每步最后一条 user 消息**里（快照头写明取代早前快照）。宿主只在文本变化时重发，所以「每 4 步换一次文本」= 每 4 步重述一次（默认 N=4，可调） |
+| `order 118` | `systemPrompt.context()` **运行时槽** | `RUNTIME_ANCHOR_MODE = "cadence"` | 运行时锚点：随运行时上下文快照发在**每步最后一条 user 消息**里（快照头写明取代早前快照）。宿主只在文本变化时重发，所以「每 4 步换一次文本」= 每 4 步重述一次（默认 N=4，可调）。锚点尾部另按步拼**询问/阶段闸门**条款（v0.20.0，见下）|
 
 ```js
 // index.js 顶部 IG5_CONFIG —— 唯一的注入档位开关（改完重启 session 生效）
 TAIL_MODE: "waterfall"      // "waterfall" | "order"（降级为普通段）| "off"
 RUNTIME_ANCHOR_MODE: "cadence"  // "cadence"（每 RUNTIME_ANCHOR_EVERY 步）| "once" | "every" | "off"
 RUNTIME_ANCHOR_EVERY: 4      // 节拍：默认 4 步重述一次
+ASK_GATE_MODE: "proactive"   // "proactive"（默认：任务输入 + 多步任务每一步都给可点选择按钮）| "auto"（只认节拍，最省）| "on"（强制开，带降级句）| "off"
+ASK_GATE_EVERY: 4            // 非主动档：每 N 步才可能出现一次询问条款
 EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系统段全部让位（实验档）
 ```
 
-#### 运行期调参：六个开关不必改代码重发布
+#### 运行期调参：八个开关不必改代码重发布
 
 优先级 **设置页（v0.13.0 起）> profile config > `IG5_*` 环境变量 > 文件内默认值**，各级覆盖就地写回
 `IG5_CONFIG`，`infinite_gen5_profile` 工具新增 `configOverrides`，如实汇报每个生效值是哪来的。
@@ -123,6 +125,8 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 | `TAIL_MODE` | `IG5_TAIL_MODE` | `waterfall` / `order` / `off` |
 | `RUNTIME_ANCHOR_MODE` | `IG5_RUNTIME_ANCHOR_MODE` | `cadence` / `once` / `every` / `off` |
 | `RUNTIME_ANCHOR_EVERY` | `IG5_RUNTIME_ANCHOR_EVERY` | 正整数（默认 4） |
+| `ASK_GATE_MODE` | `IG5_ASK_GATE_MODE` | `proactive`（默认）/ `auto` / `on` / `off` |
+| `ASK_GATE_EVERY` | `IG5_ASK_GATE_EVERY` | 正整数（默认 4） |
 | `EXCLUSIVE_SECTION` | `IG5_EXCLUSIVE_SECTION` | `true` / `false` |
 
 管理器式安装下试档位最省事：profile 的 `cordis.patch.yml` 里加一条**只带 `config`、不带 `insert`**
@@ -141,13 +145,46 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 证明「改配置 → 重启」这条路真的通了 —— 调档位不必再改代码、发版、等管理器更新。
 
 临时试一次也可以用环境变量（只影响这一次进程）：`IG5_EXCLUSIVE_SECTION=1 dsh web …`。
-注意档位键（`LAYER2_MODE` / `TAIL_MODE` / `RUNTIME_ANCHOR_MODE`）的取值是**字符串**：
+注意档位键（`LAYER2_MODE` / `TAIL_MODE` / `RUNTIME_ANCHOR_MODE` / `ASK_GATE_MODE`）的取值是**字符串**：
 `"off"` 不会被当成布尔 `false` —— 自检专门锁了这条，否则 off 档会静默失效。
+
+#### 用户向选择 / 阶段闸门（v0.21.0）：不常驻，只在该注入的那一步拼进运行时锚点
+
+内核口径与「提问」天生对冲（缺参数自造占位符并继续、不要求用户自证授权），所以这里**不加常驻开关**，
+而是把条件压在运行时锚点尾部（与 L2 域包同一个条件注入层）：文本一变就重发、旧快照作废，条件天然是
+「这一步该不该注入」。**能力闸 × 意图闸是前置，时机闸与频次闸二者之一成立即注入**：
+
+- **能力闸**：`ctx.get("userQuestions")` 探针（宿主没暴露提问服务时永不注入，免得模型去调不存在的工具）。
+- **意图闸**：用户说过「不要问 / 别问 / 自己定 / 直接做」→ 全局静默（连阶段条款一起）；说过「问问 / 建议 /
+  怎么选 / 拿不准 / 意见」→ 当步立即开闸，不等节拍。
+- **时机闸**（`proactive` 档，默认）：任务输入第 1 步必开（先给选择）；多步任务在跑时**每一步**都开
+  （不可逆动作 / 方向分叉 / 影响面大的取舍随时可能出现）。`auto` 档关掉时机闸、只认节拍。
+- **频次闸**：`rev % ASK_GATE_EVERY === 0`（默认 4）。闲聊与单步任务退回节拍，不会变成「每步提醒模型考虑要不要问」。
+
+打开时给的是**可点按钮合同**，分两档发：入口 / 用户点名要建议 / 节拍到点发**全文**（三个必问时刻 ——
+任务输入、执行中重大决策、输出收尾 —— 加问法：一次只问一个问题、`header` ≤15 字点题、2–5 个互斥且穷尽的
+选项、`label` 用动词短语、`description` 写「是什么 + 代价收益 + 什么情况选它」、推荐项放第一并标
+`(Recommended)`、留一个「你来定」兜底、确需多选才 `multi_select`）；多步任务**中间的每一步**只发一行压缩
+复述，省掉约 600 字符的合同税。反滥用：能自造占位符（TARGET / HOST / TOKEN / OFFSET / PAYLOAD / SERIAL /
+ROLE_A / ROLE_B）或已有可回滚默认最优解的直接做、不问；同一轮最多问一次；同一分叉不重复问。
+多步任务另外拿到**阶段契约**：每阶段收尾给「做法 / 判据 / 产物」三行并同步清单，正文不报百分比（百分比只由
+面板按清单事实显示）。阶段闸门不走频次闸（否则「每步自报」会退化成「每 4 步才自报」）。
+
+档位按钮有两处，走的是**同一条写通道**（`statsStore.stage` + `save` → POST `/infinite-gen-5/tuning`）：
+
+- **浮层卡片**（v0.22.0）：点状态条弹出的判决卡片里，「位置 <槽位>」那一行右端一个胶囊按钮
+  「选择：<当前档> → <下一档>」，点一下循环切档（主动 → 按节拍 → 强制开 → 关闭 → 主动）；`title` 交代两档含义。
+  （并进「位置」行而不是新起一节 —— 另起一节会把卡片高度从 353px 顶回 399px，撞尺寸回归。）
+- **设置页** →「插件」→「无限五代」→「注入档位」区的「用户向选择（询问闸门）」：
+  `主动`（默认）/ `按节拍` / `强制开` / `关闭`。
+
+改完**刷新页面**即可看到；重启进程后旧页面会因 token 失效而 401 → 设置页退化成一行 YAML 提示、
+浮层按钮显示「档位未就绪（刷新页面）」并禁用，**一个开关都不显示**（不是功能没了）。
 
 #### 设置面板里直接调档位（v0.13.0）：点一下就重装，不必重启进程
 
 上面那条「改配置 → 重启」还得手工敲。v0.13.0 起插件在自己的设置页里长出一个**注入档位**面板
-（设置 → 无限五代那一页，就在官方「插件」之后），六个开关与节拍间隔 N 都能点。
+（设置 → 无限五代那一页，就在官方「插件」之后），八个开关与节拍间隔 N 都能点。
 
 - 服务端在宿主 `webServer` 上挂四条精确路由：`/infinite-gen-5/tuning`（读档位 / 改档位）、
   `/infinite-gen-5/stats`（只读统计库快照）、`/infinite-gen-5/tasks`（把清单镜像写回宿主）、
