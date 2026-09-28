@@ -11,6 +11,36 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.32.1
+
+### ① 补 dsh 兼容声明：`peerDependencies['@deepseek-ai/dsh'] = ">=0.1.7-rc.2"`
+
+- 现象：插件卡片报「作者未声明 dsh 兼容范围；当前：0.1.7-rc.2。兼容性需要确认」。
+- 取字段链（读码，非推测）：`~/.dsh/plugin-lifecycle.py:109` → `requirement = (pkg.peerDependencies or {}).get('@deepseek-ai/dsh') or (pkg.engines or {}).get('dsh') or ''`；`:113` → `accepted = accepts_version(installed, requirement)`；`:33-34` → `semver_request('satisfies', installed, requirement)`（随包 npm SemVer，非法/未知范围返回 `None` → `unknown`）；`:114-120` → `compatible / incompatible / unknown` 三态与对应文案。
+- 为什么范围写成 `>=0.1.7-rc.2` 而不是 `>=0.1.7`（实测，`node plugin-semver.cjs` + `accepts_version('0.1.7-rc.2', …)` 同结果）：**npm semver 的预发布规则** —— 范围里不含预发布标识时，预发布版本一律不满足。
+
+| 范围 | `0.1.7-rc.2` 是否满足 | 面板会显示 |
+|---|---|---|
+| `>=0.1.7-rc.2` | **true** | compatible（适用 dsh：>=0.1.7-rc.2） |
+| `>=0.1.7` | false | incompatible（版本不匹配） |
+| `^0.1.7` | false | incompatible |
+| `>=0.1.0-0` | false | incompatible |
+| `*` | false | incompatible |
+
+- 该范围同时接受 `0.1.7` 及以后正式版；但**同为预发布的其他元组**（如 `0.2.0-rc.1`）仍判不兼容 —— 这是 semver 本身的语义，换范围不能既覆盖预发布又覆盖任意元组，故保留显式真源写法，后续内核预发布升版时同步改这一处。
+
+### ② 补 `author` 字段：`SunsetRNE`
+
+- `plugin-lifecycle.py:106-108` 取 `pkg.author`（字典取 `.name`），空则面板显示「作者未注明」；本版补上，面板来源信息齐全。
+
+### ③ 不引入依赖面变化
+
+- `~/.dsh/plugin-dependencies.py:233-237` 只读 `dependencies` / `optionalDependencies`（并按 `workspace:` / `link:` / `file:` 前缀拦截本地引用），`:250` 判定 `state = 'bundled-verified' if dependencies else 'no-dependencies'` —— `peerDependencies` **不参与**该判定，安装预览仍应是 `no-dependencies`，不会触发 pnpm 安装。
+
+### ④ 发版与验线
+
+- `node scripts/bump-version.mjs 0.32.1`（9/9 `[OK]`）→ 本段与 `VERSIONS.md` 行 → `npm run changelog` → `verify:version` / `verify:notes` → 提交推送 → `node scripts/release.mjs --yes --release`（tag `v0.32.1` + GitHub Release）→ 宿主 `prepare-update` 后在插件界面确认安装 → 复验 `verify:install` / `verify:sync` 与兼容文案。
+
 ## v0.32.0
 
 ### ① 包版本号追平内核 edition：`0.28.0 → 0.32.0`
