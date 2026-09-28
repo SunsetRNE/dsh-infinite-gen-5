@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.36.1";
+        var VERSION = "v0.36.2";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -189,83 +189,65 @@
           // 令牌全部取自设置页自己用的那一套（bg-layer-2 / border-l2 / label-* / business-primary），
           // 每个都带兜底色。比例按设置页的节奏调：可选块用两/三列网格，预览块是一块内嵌面板，
           // 只读块两栏对齐，按钮统一 30px 高。
-          ".armor5-console{box-sizing:border-box;display:flex;flex-direction:column;gap:20px;",
-          "min-width:0;max-width:560px;padding:0 0 20px;color:var(--dsw-alias-label-secondary,#b4b4b4);",
-          "font-size:var(--dsh-content-font-size-secondary,13px);line-height:20px}",
-          ".armor5-console-head{display:flex;flex-direction:column;gap:3px}",
-          ".armor5-console-title{display:flex;align-items:center;gap:8px}",
-          ".armor5-console-title b{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:15px;font-weight:600}",
-          ".armor5-console-ver{display:inline-flex;align-items:center;height:17px;padding:0 7px;border-radius:999px;",
-          "background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08));color:var(--dsw-alias-label-tertiary,#8b8b8b);",
-          "font-size:11px;font-variant-numeric:tabular-nums}",
-          ".armor5-console-hint{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:12px}",
-          ".armor5-console-group{display:flex;flex-direction:column;gap:8px}",
-          ".armor5-console-group-title{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:12px;font-weight:600}",
-          ".armor5-console-choices{display:grid;gap:8px}",
+          ".armor5-console{box-sizing:border-box;display:flex;flex-direction:column;gap:12px;min-width:0;max-width:460px;padding:0 0 12px;color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:var(--dsh-content-font-size-secondary,12px);line-height:17px}",
+          ".armor5-console-head{display:flex;flex-direction:column;gap:2px}",
+          ".armor5-console-title{display:flex;align-items:center;gap:6px}",
+          ".armor5-console-title b{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:13.5px;font-weight:600}",
+          ".armor5-console-ver{display:inline-flex;align-items:center;height:15px;padding:0 6px;border-radius:999px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08));color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:10.5px;font-variant-numeric:tabular-nums}",
+          ".armor5-console-hint{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px}",
+          ".armor5-console-group{display:flex;flex-direction:column;gap:6px}",
+          ".armor5-console-group-title{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:11.5px;font-weight:600}",
+          ".armor5-console-choices{display:grid;gap:6px}",
           ".armor5-console-choices-2{grid-template-columns:repeat(2,minmax(0,1fr))}",
           ".armor5-console-choices-3{grid-template-columns:repeat(3,minmax(0,1fr))}",
           ".armor5-console-choices-1{grid-template-columns:minmax(0,1fr)}",
-          ".armor5-console-choice{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;",
-          "min-height:54px;padding:9px 11px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
-          "border-radius:var(--dsw-radius-lg,12px);background:0 0;color:inherit;font:inherit;cursor:pointer;",
-          "transition:background-color .12s ease,border-color .12s ease}",
+          ".armor5-console-choice{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;min-height:38px;padding:6px 8px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));border-radius:var(--dsw-radius-lg,10px);background:0 0;color:inherit;font:inherit;cursor:pointer;transition:background-color .12s ease,border-color .12s ease}",
           ".armor5-console-choice:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12))}",
           ".armor5-console-choice:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary,#4d6bfe);outline-offset:2px}",
           ".armor5-console-choice.is-active{border-color:var(--dsw-alias-state-business-primary,#4d6bfe);",
           "background:var(--dsw-alias-interactive-bg-hover-accent,rgba(77,107,254,.10))}",
-          ".armor5-console-choice-label{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:13px}",
-          ".armor5-console-choice-hint{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11.5px;line-height:16px}",
-          ".armor5-console-previews{display:flex;flex-direction:column;gap:2px;padding:8px 10px;",
-          "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.20));",
-          "border-radius:var(--dsw-radius-lg,12px);background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.06))}",
-          ".armor5-console-preview{display:flex;align-items:center;gap:10px;height:28px}",
-          ".armor5-console-preview-tag{flex:none;width:42px;color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11.5px}",
-          ".armor5-console-dock{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-width:0;",
-          "padding:3px 6px 3px 0}",
-          ".armor5-console-meter{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:12px;",
-          "font-variant-numeric:tabular-nums}",
-          ".armor5-console-badge{display:inline-flex;align-items:center;gap:6px;color:var(--dsw-alias-label-tertiary,#8b8b8b);",
-          "font-size:12px}",
+          ".armor5-console-choice-label{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:12px}",
+          ".armor5-console-choice-hint{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10.5px;line-height:14px}",
+          ".armor5-console-previews{display:flex;flex-direction:column;gap:1px;padding:5px 7px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.20));border-radius:var(--dsw-radius-lg,10px);background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.06))}",
+          ".armor5-console-preview{display:flex;align-items:center;gap:8px;height:22px}",
+          ".armor5-console-preview-tag{flex:none;width:36px;color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10.5px}",
+          ".armor5-console-dock{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;padding:2px 4px 2px 0}",
+          ".armor5-console-meter{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:11px;font-variant-numeric:tabular-nums}",
+          ".armor5-console-badge{display:inline-flex;align-items:center;gap:4px;color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:11px}",
           ".armor5-console-badge[data-kind=pass]{color:var(--dsw-alias-state-success-primary,#3fb950)}",
-          ".armor5-console-rows,.armor5-task-list,.armor5-live-rows{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}",
-          ".armor5-console-rows li,.armor5-task-list li,.armor5-live-rows li{display:grid;grid-template-columns:84px minmax(0,1fr);gap:10px;align-items:baseline}",
-          ".armor5-console-rows .k,.armor5-task-list .k,.armor5-live-rows .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:12px}",
-          ".armor5-console-rows .v,.armor5-task-list .v,.armor5-live-rows .v{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:12px;overflow-wrap:anywhere}",
+          ".armor5-console-rows,.armor5-task-list,.armor5-live-rows{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}",
+          ".armor5-console-rows li,.armor5-task-list li,.armor5-live-rows li{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:baseline}",
+          ".armor5-console-rows .k,.armor5-task-list .k,.armor5-live-rows .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px}",
+          ".armor5-console-rows .v,.armor5-task-list .v,.armor5-live-rows .v{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:11px;overflow-wrap:anywhere}",
           // 任务清单进度：一条进度条 + 状态字形 + 内容。字形列窄，内容可折行。
-          ".armor5-task-bar{height:6px;border-radius:999px;background:var(--dsw-alias-fill-l2,rgba(127,127,127,.22));overflow:hidden}",
+          ".armor5-task-bar{height:5px;border-radius:999px;background:var(--dsw-alias-fill-l2,rgba(127,127,127,.22));overflow:hidden}",
           ".armor5-task-bar-fill{height:100%;border-radius:999px;background:var(--dsw-alias-state-success-primary,#3fb950);transition:width .25s ease}",
-          ".armor5-task-list li{grid-template-columns:18px minmax(0,1fr)}",
+          ".armor5-task-list li{grid-template-columns:16px minmax(0,1fr)}",
           ".armor5-task-list li[data-status=inProgress] .k{color:var(--dsw-alias-state-warning-primary,#d29922)}",
           ".armor5-task-list li[data-status=completed] .v{color:var(--dsw-alias-label-caption,#8b8b8b);text-decoration:line-through}",
           // 领域覆盖 · 词表 · 预算（v0.14.1）：族条形 + 预算进度条。条形颜色按占比分档，
           // 75% 起转黄、90% 起转红 —— 预算见底是「该加预算或减词」的信号，得让人一眼看见。
-          ".armor5-cov-rows{display:flex;flex-direction:column;gap:6px}",
-          ".armor5-cov-row{display:grid;grid-template-columns:84px minmax(0,1fr) auto;gap:10px;align-items:center}",
-          ".armor5-cov-row .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:12px}",
-          ".armor5-cov-row .n{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:12px;font-variant-numeric:tabular-nums}",
-          ".armor5-cov-bar{height:6px;border-radius:999px;background:var(--dsw-alias-fill-l2,rgba(127,127,127,.22));overflow:hidden}",
+          ".armor5-cov-rows{display:flex;flex-direction:column;gap:4px}",
+          ".armor5-cov-row{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:8px;align-items:center}",
+          ".armor5-cov-row .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px}",
+          ".armor5-cov-row .n{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:11px;font-variant-numeric:tabular-nums}",
+          ".armor5-cov-bar{height:5px;border-radius:999px;background:var(--dsw-alias-fill-l2,rgba(127,127,127,.22));overflow:hidden}",
           ".armor5-cov-bar-fill{height:100%;border-radius:999px;background:var(--dsw-alias-state-success-primary,#3fb950);transition:width .25s ease}",
           ".armor5-cov-bar[data-level=warn] .armor5-cov-bar-fill{background:var(--dsw-alias-state-warning-primary,#d29922)}",
           ".armor5-cov-bar[data-level=danger] .armor5-cov-bar-fill{background:#d05a5a}",
-          ".armor5-console-foot{display:flex;gap:8px;padding-top:2px}",
-          ".armor5-console-btn{height:30px;padding:0 13px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
-          "border-radius:var(--dsw-radius-sm,6px);background:0 0;color:var(--dsw-alias-label-secondary,#b4b4b4);",
-          "font:inherit;font-size:12.5px;cursor:pointer;transition:background-color .12s ease,color .12s ease}",
+          ".armor5-console-foot{display:flex;gap:6px;padding-top:0}",
+          ".armor5-console-btn{height:24px;padding:0 10px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));border-radius:var(--dsw-radius-sm,6px);background:0 0;color:var(--dsw-alias-label-secondary,#b4b4b4);font:inherit;font-size:11.5px;cursor:pointer;transition:background-color .12s ease,color .12s ease}",
           ".armor5-console-btn:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12));",
           "color:var(--dsw-alias-label-primary,#e6e6e6)}",
           ".armor5-console-btn.is-primary{border-color:transparent;",
           "background:var(--dsw-alias-button-primary-fill,#4d6bfe);color:var(--dsw-alias-label-primary-foreground,#fff)}",
           ".armor5-console-btn.is-primary:hover{background:var(--dsw-alias-button-primary-hover,#3d5bee);",
           "color:var(--dsw-alias-label-primary-foreground,#fff)}",
-          ".armor5-console-tag{display:inline-flex;align-items:center;height:15px;padding:0 6px;border-radius:999px;",
-          "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));color:var(--dsw-alias-label-caption,#8b8b8b);",
-          "font-size:10.5px;font-weight:400;vertical-align:middle}",
+          ".armor5-console-tag{display:inline-flex;align-items:center;height:13px;padding:0 5px;border-radius:999px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;font-weight:400;vertical-align:middle}",
           ".armor5-console-tag[data-source=ui]{border-color:var(--dsw-alias-state-business-primary,#4d6bfe);",
           "color:var(--dsw-alias-state-business-primary,#4d6bfe)}",
           ".armor5-console-choices-4{grid-template-columns:repeat(4,minmax(0,1fr))}",
-          ".armor5-console-yaml{margin:0;padding:8px 10px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
-          "border-radius:6px;background:var(--dsw-alias-bg-layer-1,rgba(127,127,127,.06));color:var(--dsw-alias-label-secondary,#b4b4b4);",
-          "font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;line-height:17px;white-space:pre-wrap;overflow-wrap:anywhere}"
+          ".armor5-console-yaml{margin:0;padding:5px 7px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));border-radius:6px;background:var(--dsw-alias-bg-layer-1,rgba(127,127,127,.06));color:var(--dsw-alias-label-secondary,#b4b4b4);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;line-height:15px;white-space:pre-wrap;overflow-wrap:anywhere}"
         ].join("");
 
         function sameNode(a, b) {
@@ -856,7 +838,21 @@
             { value: false, label: "关", hint: "永远注入自己的载荷" }] },
           { key: "EXCLUSIVE_SECTION", kind: "bool", label: "独占系统段", hint: "开了会丢弃宿主其余系统段，属危险档", options: [
             { value: false, label: "关", hint: "与其他系统段共存（默认）" },
-            { value: true, label: "开", hint: "内核 complete" }] }
+            { value: true, label: "开", hint: "内核 complete" }] },
+          // v0.36.2：兜底目录补齐服务端 TUNING_CATALOG 的四个后加键，否则接口拿不到时
+          // 设置页会静默少掉增强集 / 惰性章节两组旋钮（服务端在时不受影响）。
+          { key: "BOOST_MODE", label: "增强训练集（Order 150）", hint: "附件语料拆出的可编译单元，按本轮需求信号拼装；口风 @boost:full / @boost:off 可临时改档", options: [
+            { value: "standard", label: "标准（默认）", hint: "常驻两条 + 命中项，预算 2400 B" },
+            { value: "light", label: "轻量", hint: "预算 1200 B，长会话省 token" },
+            { value: "full", label: "上限档", hint: "预算 4200 B，把余量吃满" },
+            { value: "off", label: "关闭", hint: "零增强注入" }] },
+          { key: "BOOST_BYTES", kind: "number", min: 256, max: 12000, label: "增强集字节预算", hint: "封顶值，超预算整条丢弃（绝不截半句）" },
+          { key: "LAZY_MODE", label: "惰性章节（Order 160）", hint: "内核里只在特定场景才需要的章节按触发词拼回；命中不了就只留一行指针", options: [
+            { value: "standard", label: "标准（默认）", hint: "命中即拼回，预算 6000 B" },
+            { value: "light", label: "轻量", hint: "预算 3500 B，只回最相关的几章" },
+            { value: "full", label: "全开", hint: "预算 16000 B，近于不惰性化" },
+            { value: "off", label: "关闭", hint: "零拼回，最省上下文" }] },
+          { key: "LAZY_BYTES", kind: "number", min: 0, max: 40000, label: "惰性章节字节预算", hint: "硬上限：档位预算与本值取小；0 = 跟随档位预算（默认）" }
         ];
 
         // ── 面板的唯一数据来源：插件本体写好的统计数据库（v0.13.9） ──────────────
@@ -1561,12 +1557,14 @@
             return function () { writePrefs(patch); };
           }
 
+          // 只读块只留一眼看不出来的东西：形态与位置的选择就在上面两组按钮里，再抄一遍只是占高度
+          // （v0.36.2 起合成一行）。另两行此前是旧口径 —— 注入面早已是六段瀑布，判定源的投影键
+          // 也是内核自己那把（`armor` 是留给四代的旧键，见 PROJ_KEY 上方注释）。
           var rows = [
             ["版本", TITLE],
-            ["形态", mode + "（" + TRIGGER_MODES.length + " 档：glyph 记号 / compact 短词 / full 长文 / dot 纯圆点）"],
-            ["位置", prefs.slotMode + " → " + (SLOT_MODES[prefs.slotMode] || SLOT_MODES.composer)],
-            ["内核载荷", "Order 100 单段载荷 + Order 200 末位锚点，同源命中自动让位"],
-            ["判定源", "本次会话的实时投影（key armor），判决一直留到你的下一条发言"],
+            ["上屏·位置", mode + " · " + prefs.slotMode + " → " + (SLOT_MODES[prefs.slotMode] || SLOT_MODES.composer)],
+            ["注入面", "Order 100 常驻内核 + 118 运行时锚点 / 150 增强集 / 160 惰性章节 / 200 中段锚点 / 10150 末位锚点"],
+            ["判定源", "本次会话的实时投影（key infinite-gen-5:armor），判决一直留到你的下一条发言"],
             // 域数不再写死：读本体 coverage 分区（库还没发布时显示占位，不谎报数字）。
             ["领域与工具", ((tuner.state.database && tuner.state.database.coverage && tuner.state.database.coverage.domains) || "—") +
               " 域 × 7 族；infinite_gen5_scenario 取领域包，infinite_gen5_env 看本机环境"],
@@ -1645,7 +1643,7 @@
                   type: "button",
                   className: "armor5-console-btn armor5-tune-btn",
                   onClick: function () { tuner.save(true); }
-                }, "复位到默认"),
+                }, "档位复位到默认"),
                 react.createElement("button", {
                   type: "button",
                   className: "armor5-console-btn armor5-tune-btn",

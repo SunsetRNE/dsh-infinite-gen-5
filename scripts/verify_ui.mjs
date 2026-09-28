@@ -763,7 +763,7 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
   ok("有「恢复默认」按钮（偏好复位，与调参复位分开）",
     collectByClass(view.tree, "armor5-console-btn").filter((b) => textOf(b) === "恢复默认").length === 1,
     JSON.stringify(collectByClass(view.tree, "armor5-console-btn").map((b) => textOf(b))));
-  ok("设置台有调参按钮（保存并生效 / 复位到默认 / 重新读取 / 恢复上次清单 / 刷新统计库）",
+  ok("设置台有调参按钮（保存并生效 / 档位复位到默认 / 重新读取 / 恢复上次清单 / 刷新统计库）",
     collectByClass(view.tree, "armor5-tune-btn").length === 5,
     JSON.stringify(collectByClass(view.tree, "armor5-tune-btn").map((b) => textOf(b))));
   ok("没有 __IG5_TUNING__ 时降级成只读提示 + YAML 片段（不联网、不白屏）",
@@ -1312,12 +1312,18 @@ if (process.argv.includes("--emit-html")) {
   ok("调参面板按注入的路径 + token 拉取（GET）",
     calls.length >= 1 && calls[0].path === TUNE_PATH && calls[0].method === "GET" &&
     calls[0].init.headers["x-ig5-token"] === "tok-abc", JSON.stringify(calls[0] && calls[0].init.headers));
-  ok("八个开关各渲染一行来源标记（服务端 catalog 缺失时用兜底目录）",
-    collectByClass(tree, "armor5-console-tag").length === 8,
+  ok("十二个开关各渲染一行来源标记（服务端 catalog 缺失时用兜底目录）",
+    collectByClass(tree, "armor5-console-tag").length === 12,
     String(collectByClass(tree, "armor5-console-tag").length));
   ok("兜底目录里带了询问/阶段闸门两个键",
     collectByClass(tree, "armor5-console-choice").some((b) => String(b.props["data-choice"] ?? "").startsWith("ASK_GATE_MODE=")),
     JSON.stringify(collectByClass(tree, "armor5-console-choice").map((b) => b.props["data-choice"]).slice(-6)));
+  // v0.36.2：兜底目录曾比服务端 TUNING_CATALOG 少 BOOST_*/LAZY_* 四键，接口拿不到时
+  // 设置页会静默少掉增强集与惰性章节两组旋钮 —— 这条把「兜底 >= 服务端全集」钉住。
+  ok("兜底目录补齐增强集/惰性章节四键（接口不可用也不缺旋钮）",
+    ["BOOST_MODE", "BOOST_BYTES", "LAZY_MODE", "LAZY_BYTES"].every((k) =>
+      collectByClass(tree, "armor5-console-choice").some((b) => String(b.props["data-choice"] ?? "").startsWith(k + "="))),
+    JSON.stringify(collectByClass(tree, "armor5-console-choice").map((b) => b.props["data-choice"])));
   const tagSources = collectByClass(tree, "armor5-console-tag").map((t) => t.props["data-source"]);
   ok("来源标记如实反映服务端 sources（ui / config / default 都出现过）",
     tagSources.includes("ui") && tagSources.includes("config") && tagSources.includes("default"),
@@ -1344,7 +1350,7 @@ if (process.argv.includes("--emit-html")) {
   saveBtn.props.onClick();
   await new Promise((resolve) => setTimeout(resolve, 0));
   const posted = calls.filter((c) => c.method === "POST");
-  ok("点「保存并生效」把整份草稿 POST 给服务端（一次请求带全部八键）",
+  ok("点「保存并生效」把整份草稿 POST 给服务端（一次请求带全部已改键）",
     posted.length === 1 && posted[0].init.headers["x-ig5-token"] === "tok-abc" &&
     JSON.parse(posted[0].init.body).overrides.LAYER2_MODE === "off" &&
     JSON.parse(posted[0].init.body).overrides.RUNTIME_ANCHOR_EVERY === 2,
@@ -1354,11 +1360,11 @@ if (process.argv.includes("--emit-html")) {
     textOf(afterSave).includes("已生效") && textOf(afterSave).includes("LAYER2_MODE"),
     JSON.stringify(textOf(afterSave).slice(0, 200)));
 
-  const resetBtn = collectByClass(afterSave, "armor5-tune-btn").find((b) => textOf(b).includes("复位到默认"));
+  const resetBtn = collectByClass(afterSave, "armor5-tune-btn").find((b) => textOf(b).includes("档位复位到默认"));
   resetBtn.props.onClick();
   await new Promise((resolve) => setTimeout(resolve, 0));
   const allPosted = calls.filter((c) => c.method === "POST");
-  ok("「复位到默认」发的是 {reset:true}，不是把当前值再发一遍",
+  ok("「档位复位到默认」发的是 {reset:true}，不是把当前值再发一遍",
     allPosted.length === 2 && JSON.parse(allPosted[1].init.body).reset === true,
     JSON.stringify(allPosted[1] && allPosted[1].init.body));
   const afterReset = view.rerender();

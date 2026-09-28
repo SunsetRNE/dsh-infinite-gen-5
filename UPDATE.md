@@ -11,6 +11,22 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.36.2
+
+**主题：设置台重绘 —— 压字号尺寸、补齐兜底目录缺键、把两个「默认」按钮的语义在文案上拉开。**
+
+① CSS 压缩（`client.js` 设置台那一段）：33 条规则**整条改写**，`client.js` 92539 → 92282 字符（-257）。改动锚在 `.类名{` 上，所以 `:hover` / `.is-primary` / `[data-*]` 规则不受牵连；每条规则必须恰好命中 1 次，否则整批不写盘。关键值：容器正文 `13px/20px → 12px/17px`、`max-width 560 → 460`、组间距 `20 → 12px`；档位卡 `min-height 54 → 38px`、`padding 9px 11px → 6px 8px`、圆角 12 → 10px、标签 `13 → 12px`、提示 `11.5/16 → 10.5/14`；预览行高 `28 → 22px`、标签列 `42 → 36px`；行栅格标签列 `84 → 62px`；按钮 `height 30 → 24px`、`font-size 12.5 → 11.5px`；来源标记 `height 15 → 13px`、`10.5 → 10px`；进度条 `6 → 5px`；YAML 片段 `11.5/17 → 10.5/15px`。
+
+② 只读区 7 行 → 6 行：删掉与上面两组按钮重复的「形态」「位置」两行，合成一行「上屏·位置」（`glyph · composer → conversation.composer.dock`）；「内核载荷 Order 100 + Order 200」这条**已过期**的文案换成「注入面 Order 100 常驻内核 + 118 运行时锚点 / 150 增强集 / 160 惰性章节 / 200 中段锚点 / 10150 末位锚点」；「判定源（key armor）」改成真实主键 `infinite-gen-5:armor`（`armor` 是留给四代的兜底投影键，见 `client.js:282-284`）。6 行仍满足自检的「只读信息 >= 6 行」。
+
+③ 兜底目录补齐四键（真缺陷）：服务端 `TUNING_CATALOG` 有 12 键，客户端 `TUNING_CATALOG_FALLBACK` 只有 8 键 —— 调参接口拿不到时（`catalog: null` 走兜底），设置页会**静默少掉** `BOOST_MODE` / `BOOST_BYTES` / `LAZY_MODE` / `LAZY_BYTES` 四个旋钮，用户看不到也改不了增强集与惰性章节的档位。补齐时 label / hint / `min` / `max` 与服务端逐字对齐（`BOOST_BYTES` 256–12000、`LAZY_BYTES` 0–40000）。
+
+④ 改名消除歧义：调参按钮「复位到默认」→「档位复位到默认」（POST `{reset:true}`，复位服务端注入档位），与页脚「恢复默认」（复位本机 UI 偏好）在文案上分开；自检早已断言两者是两件事，这次把标签也拉开。
+
+⑤ 一条被推翻的「死 CSS」判定：清点子代理报 `armor5-console-choices-1` / `-4` 无渲染点、可直接删；实测 `client.js:1232` 是 `"armor5-console-choices armor5-console-choices-" + Math.min(cells.length, 4)` —— 两个类都动态可达，**保留**。教训：CSS 类的可达性要在渲染侧按字符串拼接查，不能只按整串字面量 grep。
+
+⑥ 自检：`verify_ui` **198 → 199 通过 · 0 失败**（新增「兜底目录补齐增强集/惰性章节四键」一条，「八个开关各渲染一行来源标记」改为 12 行）；`verify:version` 27/0（锚点 9 处 / 扫描 143 个文件）。顺序坑：bump 完版本号若先跑 `verify:all`，`verify:notes` 会红两条（「CHANGELOG 有当前版本段」「当前版本能压出正文」）—— 正确次序是提交 → `node scripts/changelog.mjs` 重生成 → 再提交 → 最后 `verify:all`。
+
 ## v0.36.1
 
 **主题：修掉「设置页越界数值被静默采纳」—— 一个把增强集整条掐死的真缺陷（重启后真机验证时抓到）。**
