@@ -1957,6 +1957,22 @@ export const DOMAIN_MARKERS = (() => {
   return table;
 })();
 
+/** 通用实现词 / 基础设施词：登记后**只影响平局**（见 rankDomains 的 spec 键）。
+ *
+ *  为什么需要：`hits` 平局时旧代码按 `longest` 定序，而 `longest` 数的是字符数 ——
+ *  通用实现词往往比专用技术词更长，于是把专用词顶掉。实测（verify:vocab 的
+ *  BREACH_FIXTURES）：「怎么撞库攻击写个 Python 脚本」三路各 1 分（web/撞库攻击、
+ *  automation/脚本、programming/python），`python`(6) > `撞库攻击`(4) → 判成
+ *  programming；「写个 Python 代理池，扫端口用的」同样三路平局，`python`(6) 胜出。
+ *  这两条都不是「哪个域词多」，而是「通用词把技术词顶掉」。
+ *
+ *  为什么不改 `hits` 语义：`hits` 是「命中了几个词」，要如实报给状态条与评测；
+ *  而且 `python` 单独出现时仍须能路由到 programming —— 所以只在平局时降权。
+ *  为什么不走 IDF：marker 表内 df 恒为 1（每个词只登记在一个域），算出来权重相同；
+ *  改按领域记录文本算 df 也只能修第一条（`代理池` / `扫端口` 的 df 同为 2）。
+ *  登记必须给证据：只有「实测顶掉过专用词」的通用词才进这张表。 */
+export const GENERIC_MARKERS = new Set(["python", "脚本", "代理池"]);
+
 /** 领域 id → 中文标签（状态条浮层与评测报告共用）。 */
 export const DOMAIN_LABELS = Object.fromEntries(SCENARIOS.map((s) => [s.id, s.label]));
 
@@ -2032,11 +2048,19 @@ export function rankDomains(text, markers = DOMAIN_MARKERS, limit = 4, frames = 
         if (!dominated) kept.push(hitMarkers[i]);
       }
       let longest = 0;
-      for (const m of kept) { const n = m === m.toLocaleLowerCase() ? m : m.toLocaleLowerCase(); if (n.length > longest) longest = n.length; }
-      rows.push({ id: key, hits: kept.length, markers: kept, longest });
+      // 特异性分（spec）：专用技术词 1 分、GENERIC_MARKERS 里的通用词 0.25 分。
+      // 它**不是**第二套命中数 —— 只排在 `hits` 之后当平局键，非平局决策一律不变，
+      // 所以 Top-1 只可能持平或上升，不会出现「拿总分换标签」。
+      let spec = 0;
+      for (const m of kept) {
+        const n = m === m.toLocaleLowerCase() ? m : m.toLocaleLowerCase();
+        if (n.length > longest) longest = n.length;
+        spec += GENERIC_MARKERS.has(n) ? 0.25 : 1;
+      }
+      rows.push({ id: key, hits: kept.length, markers: kept, longest, spec });
     }
   }
-  rows.sort((a, b) => b.hits - a.hits || b.longest - a.longest || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  rows.sort((a, b) => b.hits - a.hits || b.spec - a.spec || b.longest - a.longest || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
   const framedIds = [];
   for (const frame of frames ?? []) {
