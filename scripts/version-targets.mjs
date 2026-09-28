@@ -61,6 +61,13 @@ export const VERSION_ANCHORS = [
     name: "scripts/verify_dedupe.mjs · 头注释",
     re: /^\/\/ 无限五代 v(\d+\.\d+\.\d+)/m,
   },
+  {
+    // 增强集（boost corpus）自报版本：BOOST_HEADER 与 boostStats() 都从它派生，
+    // 所以这一处是本文件唯一的版本号字面量 —— 断言见 scripts/verify_boost.mjs。
+    file: "data/boost-corpus.mjs",
+    name: "data/boost-corpus.mjs · BOOST_VERSION（增强集自报版本）",
+    re: /export const BOOST_VERSION = "(\d+\.\d+\.\d+)"/,
+  },
 ];
 
 // 允许「散见叙述」当前版本号、但不作为锚点的文件：

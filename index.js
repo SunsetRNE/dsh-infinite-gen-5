@@ -30,6 +30,9 @@ import {
   TOOLCHAIN_EXTRA,
 } from "./data/vocabulary-data.mjs";
 import { probeEnv, renderEnvSummary, ENV_SCHEMA } from "./data/probe.mjs";
+// 增强训练集（v0.35.0）：附件注入语料拆出的可编译单元 + 需求信号编译器的唯一真源。
+// 运行时、提取脚本与离线自检都 import 这一份，避免三处各抄一遍漂移。
+import { BOOST_UNITS, BOOST_HEADER, boostStats, compileBoost, inferMode, readDirective } from "./data/boost-corpus.mjs";
 // 统计数据库：插件本体单写、前端面板单读。面板不参与任何计算，也不认识插件内部形态。
 import { createStatsStore, emptyStats, statsFile, STATS_SCHEMA } from "./stats-store.mjs";
 // DSH 自身任务清单（宿主 todo 投影）的读/写规则：读走投影，写走官方 `todo/write` 事件。
@@ -60,7 +63,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.34.5";
+const PLUGIN_VERSION = "0.35.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -354,16 +357,31 @@ function isOwnAnchor(text) {
 // 宿主身份段一并消失，属于自担风险的实验档，默认关闭。
 const EXCLUSIVE_SECTION = false;
 
-// 运行期调参（v0.12.3，v0.20.0 起八个）：这些开关不必改代码重发布就能试档位。
+// ── 增强训练集（v0.35.0）─────────────────────────────────────────────────────────
+// 来源：《模型越狱注入提示词3.txt》逐节拆出的 10 个可编译单元（真源 data/boost-corpus.mjs）。
+// 这一层不是把附件整份抄进内核（内核 15057 字符 / 预算 20500 字节，余量要留给域包），
+// 而是按「本轮需求信号」在装配时择优拼装：命中越多单元越多，字节预算封顶，超预算整条丢弃。
+//   standard（默认）= 常驻两条 + 命中项，预算 2400 字节
+//   light          = 更省的预算，适合长会话
+//   full           = 上限档，改件/红队类重活才用
+//   off            = 不注入（等价于回到 v0.34.5 的单内核 + 锚点三件套）
+// 用户口风优先级最高：正文里写 @boost:full / @boost:off / 增强关 可直接改本轮档位。
+const BOOST_MODE = "standard";
+const BOOST_BYTES = 2400;
+const BOOST_SECTION = "infinite-gen-5:boost-corpus";
+const BOOST_ORDER = 150; // 内核之后（100）、中段锚点之前（200）：贴着实操条款，不进末位。
+
+// 运行期调参（v0.12.3，v0.20.0 起八个，v0.35.0 起十个）：这些开关不必改代码重发布就能试档位。
 //   优先级：apply(ctx, config) 的 profile config > IG5_* 环境变量 > 文件内默认值。
 //   环境变量：IG5_LAYER2_MODE / IG5_DEDUPE_PAYLOAD / IG5_TAIL_MODE /
 //             IG5_RUNTIME_ANCHOR_MODE / IG5_RUNTIME_ANCHOR_EVERY / IG5_ASK_GATE_MODE /
-//             IG5_ASK_GATE_EVERY / IG5_EXCLUSIVE_SECTION
+//             IG5_ASK_GATE_EVERY / IG5_EXCLUSIVE_SECTION / IG5_BOOST_MODE / IG5_BOOST_BYTES
 //   管理器式安装最顺手的用法是 profile 的 cordis.patch.yml 里加一条**只带 config** 的定向覆盖
 //   （没有 insert，因此不算双接线）：
 //     - id: dsh-infinite-gen-5
 //       config:
 //         RUNTIME_ANCHOR_EVERY: 2
+//         BOOST_MODE: full
 //         EXCLUSIVE_SECTION: true
 const TUNABLE_KEYS = [
   "LAYER2_MODE",
@@ -374,6 +392,8 @@ const TUNABLE_KEYS = [
   "ASK_GATE_MODE",
   "ASK_GATE_EVERY",
   "EXCLUSIVE_SECTION",
+  "BOOST_MODE",
+  "BOOST_BYTES",
 ];
 const ENV_OF_KEY = {
   LAYER2_MODE: "IG5_LAYER2_MODE",
@@ -384,6 +404,8 @@ const ENV_OF_KEY = {
   ASK_GATE_MODE: "IG5_ASK_GATE_MODE",
   ASK_GATE_EVERY: "IG5_ASK_GATE_EVERY",
   EXCLUSIVE_SECTION: "IG5_EXCLUSIVE_SECTION",
+  BOOST_MODE: "IG5_BOOST_MODE",
+  BOOST_BYTES: "IG5_BOOST_BYTES",
 };
 // 只有真布尔键走 true/false 转换；档位键（LAYER2_MODE / TAIL_MODE / RUNTIME_ANCHOR_MODE /
 // ASK_GATE_MODE）的 "off"/"auto"/"on" 是字符串取值，不能被布尔化，否则 off 档会静默失效。
@@ -396,7 +418,7 @@ const coerce = (key, raw) => {
     if (s === "false" || s === "off" || s === "0") return false;
     return Boolean(s);
   }
-  if (key === "RUNTIME_ANCHOR_EVERY" || key === "ASK_GATE_EVERY") {
+  if (key === "RUNTIME_ANCHOR_EVERY" || key === "ASK_GATE_EVERY" || key === "BOOST_BYTES") {
     const n = Number(s);
     if (Number.isFinite(n) && n > 0) return Math.floor(n);
     return raw;
@@ -413,6 +435,8 @@ const IG5_DEFAULTS = Object.freeze({
   ASK_GATE_MODE,
   ASK_GATE_EVERY,
   EXCLUSIVE_SECTION,
+  BOOST_MODE,
+  BOOST_BYTES,
 });
 
 // 三档来源：设置页 UI（持久化）> profile config > 环境变量 > 文件默认。
@@ -566,6 +590,25 @@ const TUNING_CATALOG = [
     ],
   },
   {
+    key: "BOOST_MODE",
+    label: "增强训练集（v0.35.0）",
+    hint: "附件语料拆出的 10 个可编译单元，按本轮需求信号拼装；用户口风 @boost:full / @boost:off 可临时改档",
+    options: [
+      { value: "standard", label: "标准（默认）", hint: "常驻两条 + 命中项，预算 2400 B；改件/红队类活自动抬档" },
+      { value: "light", label: "轻量", hint: "预算 1200 B，长会话省 token 用" },
+      { value: "full", label: "上限档", hint: "预算 4200 B，把余量吃满，适合一次性重活" },
+      { value: "off", label: "关闭", hint: "回到单内核 + 锚点三件套，零增强注入" },
+    ],
+  },
+  {
+    key: "BOOST_BYTES",
+    kind: "number",
+    min: 256,
+    max: 12000,
+    label: "增强集字节预算",
+    hint: "封顶值，超预算整条丢弃（绝不截半句）",
+  },
+  {
     key: "EXCLUSIVE_SECTION",
     kind: "bool",
     label: "独占系统段",
@@ -587,6 +630,8 @@ export const IG5_CONFIG = {
   ASK_GATE_MODE,
   ASK_GATE_EVERY,
   EXCLUSIVE_SECTION,
+  BOOST_MODE,
+  BOOST_BYTES,
 };
 
 
@@ -996,6 +1041,18 @@ const profileTool = {
         enabled: IG5_CONFIG.DEDUPE_PAYLOAD,
         role: runtime.role,
         skipped: runtime.skipped,
+      },
+      // v0.35.0：增强训练集实况 —— 这一轮按需求编译出了哪些单元、用了多少字节、谁被预算丢掉。
+      boost: {
+        enabled: IG5_CONFIG.BOOST_MODE !== "off",
+        configured: { mode: IG5_CONFIG.BOOST_MODE, bytes: IG5_CONFIG.BOOST_BYTES },
+        ...(runtime.boost ?? { mode: "unknown", chars: 0, bytes: 0, hits: [], dropped: [] }),
+        corpus: boostStats(),
+        units: BOOST_UNITS.map((unit) => ({ id: unit.id, from: unit.from, kind: unit.kind, tone: unit.tone, bytes: unit.bytes })),
+        header: BOOST_HEADER,
+        section: BOOST_SECTION,
+        order: BOOST_ORDER,
+        directive: readDirective(typeof liveState.lastUserText === "string" ? liveState.lastUserText : ""),
       },
       mode: "armor — 单内核 + 中段锚点 + 真末位锚点 + 运行时锚点，同源载荷自动让位，零工具面纯净直出",
       payloadSections: [
@@ -1889,6 +1946,50 @@ export function apply(ctx, config) {
       exclusive ? "系统提示唯一段（complete: true，其余系统段被宿主丢弃）" : undefined,
     );
     runtime.role = primaryOk ? "primary" : "yielded";
+
+    // 增强训练集（v0.35.0）：Order 150，紧跟内核之后。与前几层不同的地方只有一处 ——
+    // 它按「本轮用户输入里的需求信号」编译，命中多少单元就注入多少，字节预算封顶。
+    // 预算内整条进、超预算整条丢，绝不截半句；档位 off 或没命中任何需求时零注入。
+    // 装配文本在下面的 assemble 瀑布里逐轮重算：注册时刻的用户输入还不是「本轮」，
+    // 所以注册只用当前编译结果占位（也顺带跑一次重复载荷检查），真文本每轮现算。
+    const boostLive = () => {
+      const userText = typeof liveState.lastUserText === "string" ? liveState.lastUserText : "";
+      const mode = readDirective(userText) ? IG5_CONFIG.BOOST_MODE : inferMode(userText) ?? IG5_CONFIG.BOOST_MODE;
+      return compileBoost({ text: userText, mode, bytes: IG5_CONFIG.BOOST_BYTES });
+    };
+    const boostOk = registerSection(
+      { name: BOOST_SECTION, order: BOOST_ORDER, text: boostLive().text },
+      "Order 150 增强训练集（按需求编译）",
+      "命中需求信号才拼装：常驻两条 + 命中项，字节预算封顶，超预算整条丢弃",
+    );
+    if (boostOk) {
+      // 与内核热加载同一个挂法：走事件瀑布 system-prompt/assemble（ctx.on + ctx.effect 可撤销），
+      // 不是 ctx.systemPrompt.assemble —— 假宿主里那条路径不存在（实测报
+      // "ctx.systemPrompt.assemble is not a function"）。
+      const refreshBoost = async (_assembly, _context, next) => {
+        const out = await next();
+        if (!out || !Array.isArray(out.sections)) return out;
+        const at = out.sections.findIndex((section) => section && section.name === BOOST_SECTION);
+        if (at < 0) return out;
+        const live = boostLive();
+        if (out.sections[at].text === live.text) return out;
+        const sections = out.sections.slice();
+        sections[at] = { ...out.sections[at], text: live.text };
+        runtime.boost = { mode: live.effectiveMode, chars: live.text.length, bytes: live.bytes, hits: live.hits, dropped: live.dropped };
+        const row = (runtime.sections || []).find((s) => s && s.section === BOOST_SECTION);
+        if (row && row.chars !== live.text.length) row.chars = live.text.length;
+        return { ...out, sections };
+      };
+      try {
+        injectionHandles.push(ctx.effect(() => ctx.on("system-prompt/assemble", refreshBoost)));
+      } catch (error) {
+        console.warn(
+          `[infinite-gen-5] 无法挂载增强集装配瀑布（${String(error?.message ?? error)}）；` +
+            `增强集将停在注册那一刻编译出的版本。`,
+        );
+      }
+    }
+    runtime.boost = { mode: boostLive().effectiveMode, chars: boostLive().text.length, bytes: boostLive().bytes, hits: boostLive().hits, dropped: boostLive().dropped };
 
     // 内核热加载（v0.28.0）：section 文本在注册那一刻就固定，改 prompts/*.md 后不重启进程，
     // 装配出去的仍是旧文本（实测：进程 07:39:52 启动、内核 08:08:37 改写 → 08:1x 起的子会话

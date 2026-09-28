@@ -42,6 +42,7 @@ const HOST_SOURCE = { name: "test:harness-source", order: 10000, text: "HOST-SOU
 const HOST_WEB_SURFACE = { name: "test:web-surface", order: 10100, text: "HOST-WEB-SURFACE" };
 const HOST_SECTIONS = [HOST_SOURCE, HOST_WEB_SURFACE];
 const KERNEL = "infinite-gen-5:global-system-prompt";
+const BOOST = "infinite-gen-5:boost-corpus";
 const LAYER2 = "infinite-gen-5:dual-layer-reinforce";
 const TAIL = "infinite-gen-5:tail-anchor";
 const RUNTIME = "infinite-gen-5:runtime-anchor";
@@ -130,6 +131,7 @@ const last = (arr) => arr[arr.length - 1];
         "harness:identity",
         "deployment:persona-prefix",
         KERNEL,
+        BOOST,
         LAYER2,
         "test:harness-source",
         "test:web-surface",
@@ -154,14 +156,19 @@ const last = (arr) => arr[arr.length - 1];
   const snapshot = joinContextSections(runtimeText ? [{ text: runtimeText }] : []);
   check(snapshot.includes("supersedes earlier runtime-context snapshots"), "宿主快照头写明取代早前快照（权威表述最强的一格）");
   const profile = r.profile();
-  // 末位锚点走瀑布 = 不占 section 命名空间，所以「注册段」是 2 个；
-  // 但「注入位置」是 4 处（内核 100 / 运行时 118 / 中段 200 / 真末位 10150）。
-  check(profile?.injection?.length === 2, "profile 汇报 2 个注册段（末位锚点不占命名空间）", JSON.stringify(profile?.injection));
-  check(profile?.injectionPlacements?.length === 4, "profile 汇报四处注入位置", JSON.stringify(profile?.injectionPlacements?.map((p) => p.order)));
+  // 末位锚点走瀑布 = 不占 section 命名空间，所以「注册段」是 3 个（v0.35.0 起多了增强集）；
+  // 但「注入位置」是 5 处（内核 100 / 运行时 118 / 增强集 150 / 中段 200 / 真末位 10150）。
+  check(profile?.injection?.length === 3, "profile 汇报 3 个注册段（末位锚点不占命名空间）", JSON.stringify(profile?.injection));
+  check(profile?.injectionPlacements?.length === 5, "profile 汇报五处注入位置", JSON.stringify(profile?.injectionPlacements?.map((p) => p.order)));
   check(
-    JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)) === "[100,118,200,10150]",
+    JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)) === "[100,118,150,200,10150]",
     "注入位置按 order 排序，真末位锚点标在 10150",
     JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)),
+  );
+  check(
+    (profile?.injection ?? []).some((row) => row.section === BOOST && row.order === 150),
+    "增强训练集落在 Order 150（内核之后、中段锚点之前）",
+    JSON.stringify((profile?.injection ?? []).map((row) => `${row.section}@${row.order}`)),
   );
   check(
     /瀑布末端/.test(profile?.injectionPlacements?.find((p) => p.section === TAIL)?.where ?? ""),
