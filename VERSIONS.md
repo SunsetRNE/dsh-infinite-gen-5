@@ -26,6 +26,12 @@
 
 ---
 
+## v0.36 线
+
+| 版本 | 日期 | 关键变更 | 提交 |
+| --- | --- | --- | --- |
+| v0.36.0 | 2026-09-28 | **内核拆成「常驻骨架 + 按需章节」**（正文一字不改地搬家）。① 拆分器 `scripts/kernel-lazy-split.mjs`（`--dry`/`--force`/`--restore`）：整节搬 7 + 半节移 2（Named coverage 域清单、Format examples 三条示例），原地留一行带摘要指针；三条硬校验（搬走正文必须是原文连续片段 · 常驻无残留 · 三份内核逐字同步且覆盖前校验来源）。② 体积：常驻 **10913 字符 / 15287 B**（原 15057 / 20438 B，降幅 **25.2%**）· 惰性 `prompts/infinite-gen-5-lazy.md` **8618 B**（9 单元 · 6870 B 正文）· 快照 `prompts/infinite-gen-5.full.md` 20438 B。③ 编译层 `data/lazy-sections.mjs`：档位 off 0 / light 3500 / standard 6000 / full 16000（字节），`@lazy:` 六值 + 中文同义，**整条进整条丢**；`bytes` = 硬上限（档位预算与之取小，0 = 跟随档位），默认 `LAZY_DEFAULT_BYTES = 0`。④ 接线 `index.js`：`LAZY_ORDER=160`、`TUNABLE_KEYS` **10 → 12**、env `IG5_LAZY_MODE`/`IG5_LAZY_BYTES`、装配瀑布 `refreshLazy`、`profile.lazy`；装配顺序 `[100,118,150,160,200,10150]`。⑤ 自检：`verify_lazy` **105/0** · `verify_density` **19/0**（四类轮次 15704 / 16061 / 15912 / 16172 B，均 < 原文 20438 B）· `verify_prompt_gen5` **274/0**（原 203/33，口径改「常驻 ∪ 惰性」）· `verify_injection` 65/0 · `verify_dedupe` 88/0 · `verify_tuning` 49/0 · `verify_boost` 87/0 · `verify:version` 27/0（锚点 9 处 / 扫描 130 个文件）。⑥ 文档 `docs/CONTEXT_DENSITY.md`（拆分口径 / 单元表 / 每轮成本表 / 编译语义四条 / 三个坑 / 四态断言表） | 本版提交 |
+
 ## v0.35 线
 
 | 版本 | 日期 | 关键变更 | 提交 |

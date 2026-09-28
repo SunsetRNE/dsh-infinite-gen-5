@@ -33,6 +33,7 @@ import { probeEnv, renderEnvSummary, ENV_SCHEMA } from "./data/probe.mjs";
 // 增强训练集（v0.35.0）：附件注入语料拆出的可编译单元 + 需求信号编译器的唯一真源。
 // 运行时、提取脚本与离线自检都 import 这一份，避免三处各抄一遍漂移。
 import { BOOST_UNITS, BOOST_HEADER, boostStats, compileBoost, inferMode, readDirective } from "./data/boost-corpus.mjs";
+import { LAZY_DEFAULT_BYTES, LAZY_DEFAULT_MODE, LAZY_HEADER, LAZY_MODES, compileLazy, lazyStats, readLazyDirective } from "./data/lazy-sections.mjs";
 // 统计数据库：插件本体单写、前端面板单读。面板不参与任何计算，也不认识插件内部形态。
 import { createStatsStore, emptyStats, statsFile, STATS_SCHEMA } from "./stats-store.mjs";
 // DSH 自身任务清单（宿主 todo 投影）的读/写规则：读走投影，写走官方 `todo/write` 事件。
@@ -63,7 +64,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.35.0";
+const PLUGIN_VERSION = "0.36.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -370,6 +371,14 @@ const BOOST_MODE = "standard";
 const BOOST_BYTES = 2400;
 const BOOST_SECTION = "infinite-gen-5:boost-corpus";
 const BOOST_ORDER = 150; // 内核之后（100）、中段锚点之前（200）：贴着实操条款，不进末位。
+// 惰性章节（v0.36.0）：Order 160，在内核（100）与增强集（150）之后、中段锚点（200）之前。
+// 内核正文一个字不改 —— scripts/kernel-lazy-split.mjs 把「只在触发场景才需要」的章节逐字搬到
+// prompts/infinite-gen-5-lazy.md，常驻内核原位留一行带 digest 的指针；这里按本轮用户输入
+// 里的触发词把命中的章节逐字拼回。命中不了就只留指针（那条决定仍在场，全文不回）。
+const LAZY_MODE = LAZY_DEFAULT_MODE;
+const LAZY_BYTES = LAZY_DEFAULT_BYTES;
+const LAZY_SECTION = "infinite-gen-5:lazy-sections";
+const LAZY_ORDER = 160;
 
 // 运行期调参（v0.12.3，v0.20.0 起八个，v0.35.0 起十个）：这些开关不必改代码重发布就能试档位。
 //   优先级：apply(ctx, config) 的 profile config > IG5_* 环境变量 > 文件内默认值。
@@ -394,6 +403,8 @@ const TUNABLE_KEYS = [
   "EXCLUSIVE_SECTION",
   "BOOST_MODE",
   "BOOST_BYTES",
+  "LAZY_MODE",
+  "LAZY_BYTES",
 ];
 const ENV_OF_KEY = {
   LAYER2_MODE: "IG5_LAYER2_MODE",
@@ -406,6 +417,8 @@ const ENV_OF_KEY = {
   EXCLUSIVE_SECTION: "IG5_EXCLUSIVE_SECTION",
   BOOST_MODE: "IG5_BOOST_MODE",
   BOOST_BYTES: "IG5_BOOST_BYTES",
+  LAZY_MODE: "IG5_LAZY_MODE",
+  LAZY_BYTES: "IG5_LAZY_BYTES",
 };
 // 只有真布尔键走 true/false 转换；档位键（LAYER2_MODE / TAIL_MODE / RUNTIME_ANCHOR_MODE /
 // ASK_GATE_MODE）的 "off"/"auto"/"on" 是字符串取值，不能被布尔化，否则 off 档会静默失效。
@@ -418,7 +431,7 @@ const coerce = (key, raw) => {
     if (s === "false" || s === "off" || s === "0") return false;
     return Boolean(s);
   }
-  if (key === "RUNTIME_ANCHOR_EVERY" || key === "ASK_GATE_EVERY" || key === "BOOST_BYTES") {
+  if (key === "RUNTIME_ANCHOR_EVERY" || key === "ASK_GATE_EVERY" || key === "BOOST_BYTES" || key === "LAZY_BYTES") {
     const n = Number(s);
     if (Number.isFinite(n) && n > 0) return Math.floor(n);
     return raw;
@@ -437,6 +450,8 @@ const IG5_DEFAULTS = Object.freeze({
   EXCLUSIVE_SECTION,
   BOOST_MODE,
   BOOST_BYTES,
+  LAZY_MODE,
+  LAZY_BYTES,
 });
 
 // 三档来源：设置页 UI（持久化）> profile config > 环境变量 > 文件默认。
@@ -609,6 +624,25 @@ const TUNING_CATALOG = [
     hint: "封顶值，超预算整条丢弃（绝不截半句）",
   },
   {
+    key: "LAZY_MODE",
+    label: "惰性章节（v0.36.0）",
+    hint: "内核里只在特定场景才需要的章节按触发词拼回；命中不了就只留一行指针，正文不回（省下每轮上下文）",
+    options: [
+      { value: "standard", label: "标准（默认）", hint: "命中即拼回，预算 6000 B；日常够用" },
+      { value: "light", label: "轻量", hint: "预算 3500 B，只回最相关的几章，再省一截" },
+      { value: "full", label: "全开", hint: "预算 16000 B，等于近乎不惰性化，适合排查" },
+      { value: "off", label: "关闭", hint: "零拼回，内核只剩常驻正文 + 指针行（最省）" },
+    ],
+  },
+  {
+    key: "LAZY_BYTES",
+    kind: "number",
+    min: 0,
+    max: 40000,
+    label: "惰性章节字节预算",
+    hint: "硬上限：档位预算与本值取小，超预算整章丢弃；0 = 跟随档位预算（默认），要停就关掉档位",
+  },
+  {
     key: "EXCLUSIVE_SECTION",
     kind: "bool",
     label: "独占系统段",
@@ -632,6 +666,8 @@ export const IG5_CONFIG = {
   EXCLUSIVE_SECTION,
   BOOST_MODE,
   BOOST_BYTES,
+  LAZY_MODE,
+  LAZY_BYTES,
 };
 
 
@@ -1053,6 +1089,17 @@ const profileTool = {
         section: BOOST_SECTION,
         order: BOOST_ORDER,
         directive: readDirective(typeof liveState.lastUserText === "string" ? liveState.lastUserText : ""),
+      },
+      lazy: {
+        // 只有档位能关掉惰性：LAZY_BYTES=0 是「跟随档位预算」，不是关闭（否则 full 档会被静默夹到 0）
+        enabled: IG5_CONFIG.LAZY_MODE !== "off",
+        configured: { mode: IG5_CONFIG.LAZY_MODE, bytes: IG5_CONFIG.LAZY_BYTES },
+        ...(runtime.lazy ?? { mode: "unknown", chars: 0, bytes: 0, hits: [], dropped: [] }),
+        corpus: lazyStats(),
+        header: LAZY_HEADER,
+        section: LAZY_SECTION,
+        order: LAZY_ORDER,
+        directive: readLazyDirective(typeof liveState.lastUserText === "string" ? liveState.lastUserText : ""),
       },
       mode: "armor — 单内核 + 中段锚点 + 真末位锚点 + 运行时锚点，同源载荷自动让位，零工具面纯净直出",
       payloadSections: [
@@ -1992,6 +2039,44 @@ export function apply(ctx, config) {
       }
     }
     runtime.boost = { registered: !!boostOk, mode: boostLive().effectiveMode, chars: boostLive().text.length, bytes: boostLive().bytes, hits: boostLive().hits, dropped: boostLive().dropped };
+
+    // 惰性章节（v0.36.0）：Order 160。与增强集的区别 —— 它注入的不是新条款，而是**内核自己的原文**：
+    // scripts/kernel-lazy-split.mjs 把「只在触发场景才需要」的 9 段从常驻内核里逐字搬走，
+    // 常驻内核原位留一行带 digest 的指针；这里按本轮输入里的触发词把命中的章节逐字拼回。
+    // 净效果：不命中时每轮少载 4221 字符，命中时与拆分前逐字一致 —— 内核的措辞一字未改。
+    const lazyLive = () => {
+      const userText = typeof liveState.lastUserText === "string" ? liveState.lastUserText : "";
+      return compileLazy({ text: userText, mode: IG5_CONFIG.LAZY_MODE, bytes: IG5_CONFIG.LAZY_BYTES });
+    };
+    // 与内核、增强集一致：内核让给同源宿主时不单独挂 —— 惰性章节是内核正文的搬运，
+    // 内核不在场时挂上去就是一堆没有上下文的段落。
+    const lazyOk = primaryOk && registerSection(
+      { name: LAZY_SECTION, order: LAZY_ORDER, text: lazyLive().text },
+      "Order 160 惰性章节（命中触发词拼回）",
+      "内核被搬走的 9 段原文，命中触发词才拼回；未命中只留常驻指针行",
+    );
+    if (lazyOk) {
+      const refreshLazy = async (_assembly, _context, next) => {
+        const out = await next();
+        if (!out || !Array.isArray(out.sections)) return out;
+        const at = out.sections.findIndex((section) => section && section.name === LAZY_SECTION);
+        if (at < 0) return out;
+        const live = lazyLive();
+        if (out.sections[at].text === live.text) return out;
+        const sections = out.sections.slice();
+        sections[at] = { ...out.sections[at], text: live.text };
+        runtime.lazy = { mode: live.mode, directive: live.directive, chars: live.chars, bytes: live.bytes, hits: live.hits, dropped: live.dropped };
+        const row = (runtime.sections || []).find((x) => x && x.section === LAZY_SECTION);
+        if (row && row.chars !== live.text.length) row.chars = live.text.length;
+        return { ...out, sections };
+      };
+      try {
+        injectionHandles.push(ctx.effect(() => ctx.on("system-prompt/assemble", refreshLazy)));
+      } catch (error) {
+        console.warn("无法挂载惰性章节装配瀑布（" + String(error?.message ?? error) + "）；惰性章节将停在注册那一刻编译出的版本。");
+      }
+    }
+    runtime.lazy = { registered: !!lazyOk, mode: lazyLive().mode, directive: lazyLive().directive, chars: lazyLive().chars, bytes: lazyLive().bytes, hits: lazyLive().hits, dropped: lazyLive().dropped };
 
     // 内核热加载（v0.28.0）：section 文本在注册那一刻就固定，改 prompts/*.md 后不重启进程，
     // 装配出去的仍是旧文本（实测：进程 07:39:52 启动、内核 08:08:37 改写 → 08:1x 起的子会话

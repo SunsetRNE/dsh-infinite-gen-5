@@ -11,6 +11,28 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.36.0
+
+**主题：把内核拆成「常驻骨架 + 按需章节」—— 正文一个字不改地搬家，常驻从 20438 B 降到 15287 B，每轮静态少载 5151 B。**
+
+① 拆分器 `scripts/kernel-lazy-split.mjs`（`--dry` / `--force` / `--restore`）：整节搬迁 7 个 + 半节 2 个（Named coverage 只搬 107 域清单、Format examples 只搬三条示例），被搬的每节在原地留一行带摘要的指针（「【惰性 L_longrange｜轮次不衰减：第N轮 ≥ 首轮 60% 推进量】全文命中触发词时由 Order 160 段逐字拼回」）—— 未命中时那条**决定**仍在场。硬校验三条：搬走的正文必须是原文的**连续片段**；常驻里不得残留被搬正文；三份同源内核必须逐字同步（覆盖另外两份前先校验目标「等于原文或等于常驻文本」，被手改过就 exit 1 拒绝覆盖）。
+
+② 产物：常驻 `prompts/infinite-gen-5.md` **10913 字符 / 15287 B**（降幅 **25.2%**）、惰性 `prompts/infinite-gen-5-lazy.md` **8618 B**（9 单元 · 正文 6870 B / 5011 字符）、原文快照 `prompts/infinite-gen-5.full.md` **20438 B**、备份 `prompts/infinite-gen-5.md.bak-v0.36`。
+
+③ 编译层 `data/lazy-sections.mjs`：档位 off **0** / light **3500** / standard **6000** / full **16000**（字节，默认 standard），指令 `@lazy:off|all|auto|light|standard|full` + 中文同义（惰性关 / 全关 / 开 / 全开），**整条进整条丢**（预算不够从尾部丢整章，绝不截半句）。
+
+④ 接线 `index.js`：`LAZY_SECTION` + `LAZY_ORDER=160`、`TUNABLE_KEYS` **10 → 12**（`LAZY_MODE` / `LAZY_BYTES`，env `IG5_LAZY_MODE`·`IG5_LAZY_BYTES`）、`lazyLive()` + `registerSection` + `system-prompt/assemble` 瀑布 `refreshLazy`、`profile.lazy` 块；装配顺序 `[100,118,150,160,200,10150]`。
+
+⑤ 自检：新增 `scripts/verify_lazy.mjs` **105 通过 · 0 失败**（拆分不变量 / 9 条触发词用例 / 编译矩阵 / 档位与默认 / 10 条指令解析）与 `scripts/verify_density.mjs` **19 通过 · 0 失败**（常驻与单轮预算 + 四类轮次成本表：闲聊 **15704 B** · 改动 **16061 B** · 渗透 **15912 B** · 评分 **16172 B**，全部低于原文 20438 B）；`verify_prompt_gen5` 口径改为「常驻 ∪ 惰性」并新增拆分不变量节，**203/33 → 274 通过 · 0 失败**（另 `verify_prompt_gen51` 274/0）；`verify_injection` 65/0、`verify_dedupe` 88/0、`verify_tuning` 49/0、`verify_boost` 87/0。
+
+⑥ 版本锚点 0.35.0 → 0.36.0（**9 处**），扫描 **130** 个文件，`verify:version` 27 通过 · 0 失败。
+
+**三个坑（都写进代码注释）**：`ctx.systemPrompt.assemble(...)` 不存在 —— 装配瀑布只有 `ctx.effect(() => ctx.on("system-prompt/assemble", fn))` 一条挂法，写错直接 `TypeError`；拼接含反引号的代码块别走 `node -e` 模板字符串（片段自身的反引号会提前终止外层模板，报的还是无关的 `SyntaxError`），落盘成临时片段再读入、加锚点唯一性校验（命中≠1 即 exit 1）；摘要字段要真的透传 —— 循环少解构一个字段，指针行就会写成「惰性 L_x｜undefined」，现在缺摘要直接 exit 1。
+
+**一个语义修正**：`bytes` 是硬上限而不是默认值 —— 原先「档位预算 `??` 显式字节」的写法让设置页 `LAZY_BYTES` 形同虚设（给 64 B 仍拼回 877 B），且默认值取 6000 会把 full 档静默夹回 6000；现在档位预算与显式字节**取小**、`LAZY_BYTES = 0` 表示「跟随档位预算」，关闭只有 `LAZY_MODE = off` 一条路（`profile.lazy.enabled` 也只看档位）。另删掉编译函数里一行恒假的兜底循环（`u.re.test("")`）—— 语义就是「命中才拼回」，不留后门。
+
+**边界**：命中走触发词、不做语义判断（一句「学术写作」也会把整节压力规则拼回，多花 445 B —— 宁多拼不漏拼）；未命中只有一行指针，要全文就 `@lazy:all` 或提档；行为面复测是抽样，不是结论。完整叙述与四态断言表见 `docs/CONTEXT_DENSITY.md`。
+
 ## v0.35.0
 
 **主题：把一份 20602 B 的注入提示词附件训练成插件可加载的增强资产 —— 提取器切三态、编译层按本轮需求选条款、挂在 Order 150、受字节预算硬约束。**

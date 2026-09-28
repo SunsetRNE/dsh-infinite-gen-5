@@ -1,4 +1,4 @@
-// 无限五代 v0.35.0 注入去重行为回归（离线、确定性、无需 API Key）
+// 无限五代 v0.36.0 注入去重行为回归（离线、确定性、无需 API Key）
 //
 // 针对的缺陷：v0.5.0 的 Order 100 与 Order 200 载入的是逐字同源的两个文件，
 // 于是同一份 3010 字节内核每轮被注入两遍；与同机在线的上一代破甲插件叠加时
@@ -94,17 +94,22 @@ const chars = (rows) => rows.map((r) => r.text.length);
 // ---- 1. 空宿主：单内核 + 中段锚点 + 真末位锚点，不再双份同源 ----
 {
   const r = run({});
-  check(r.registered.length === 4, "空宿主注册四段（内核 + 增强集 + 中段锚点 + 末位锚点）", `实得 ${r.registered.length}`);
+  check(r.registered.length === 5, "空宿主注册五段（内核 + 增强集 + 惰性章节 + 中段锚点 + 末位锚点）", `实得 ${r.registered.length}`);
   check(r.registered[0].name === PRIMARY && r.registered[0].order === 100, "首段是 Order 100 通用内核");
   check(
     r.registered[1].name === BOOST && r.registered[1].order === 150,
     "次段是 Order 150 增强训练集（紧跟内核之后）",
     `${r.registered[1].name}@${r.registered[1].order}`,
   );
-  check(r.registered[2].name === LAYER2 && r.registered[2].order === 200, "第三段是 Order 200 槽位");
+  check(
+    r.registered[2].name === "infinite-gen-5:lazy-sections" && r.registered[2].order === 160,
+    "第三段是 Order 160 惰性章节",
+    `${r.registered[2].name}@${r.registered[2].order}`,
+  );
+  check(r.registered[3].name === LAYER2 && r.registered[3].order === 200, "第四段是 Order 200 槽位");
   const kernel = r.registered[0].text.length;
   const boost = r.registered[1].text.length;
-  const anchor2 = r.registered[2].text;
+  const anchor2 = r.registered[3].text;
   check(kernel > 2000, "内核是完整载荷", `实得 ${kernel} 字符`);
   check(anchor2.length < 500, "Order 200 是短锚点而非第二份完整内核", `实得 ${anchor2.length} 字符`);
   check(anchor2.length !== kernel, "两段内容不再逐字同源");
@@ -119,13 +124,13 @@ const chars = (rows) => rows.map((r) => r.text.length);
   check(anchor2.length < kernel * 0.1, "Order 200 长度不到内核的 10%（是锚点不是载荷）", `${anchor2.length} vs ${kernel}`);
   check(
     kernel + anchor2.length + boost < kernel * 1.2,
-    "四段合计不到 1.2 份内核（无第二份同源载荷）",
+    "五段合计不到 1.2 份内核（无第二份同源载荷）",
     `${kernel + anchor2.length + boost} vs ${kernel}`,
   );
   check(!r.registered.some((s) => /\{\{/.test(s.text)), "注入文本里没有可触发插值器抛错的 {{");
   // 第四段：宿主瀑布不可用时的降级位置。真实宿主上的「恒为最后一段」由 verify_injection 断言。
-  const tail = r.registered[3];
-  check(tail.name === "infinite-gen-5:tail-anchor", "第四段是末位锚点段");
+  const tail = r.registered[4];
+  check(tail.name === "infinite-gen-5:tail-anchor", "第五段是末位锚点段");
   check(tail.order === 10150, "末位锚点退化到 order 10150（瀑布不可用）", String(tail.order));
   check(tail.text.length > 100 && tail.text.length < 900, "末位锚点是紧凑锚点", `实得 ${tail.text.length}`);
   check(!tail.text.includes("[MODE: SANDBOX]"), "末位锚点不含内核正文");
@@ -149,15 +154,15 @@ const chars = (rows) => rows.map((r) => r.text.length);
       `${first.slice(0, 24)} … ${rotated.slice(0, 24)}`,
     );
   }
-  check(r.profile?.injection?.length === 4, "profile 工具汇报实际注入 4 段");
+  check(r.profile?.injection?.length === 5, "profile 工具汇报实际注入 5 段");
   check(
-    r.profile?.injectionPlacements?.length === 5,
-    "profile 汇报五处注入位置",
+    r.profile?.injectionPlacements?.length === 6,
+    "profile 汇报六处注入位置",
     `实得 ${r.profile?.injectionPlacements?.length}`,
   );
   check(
-    JSON.stringify((r.profile?.injectionPlacements ?? []).map((p) => p.order)) === "[100,118,150,200,10150]",
-    "注入位置按 order 排序（运行时锚点 118、增强集 150，末位锚点排在最后）",
+    JSON.stringify((r.profile?.injectionPlacements ?? []).map((p) => p.order)) === "[100,118,150,160,200,10150]",
+    "注入位置按 order 排序（运行时锚点 118、增强集 150、惰性 160，末位锚点排在最后）",
     JSON.stringify((r.profile?.injectionPlacements ?? []).map((p) => p.order)),
   );
   check(r.profile?.dedupe?.role === "primary", "profile 汇报本插件是内核提供方");
@@ -212,14 +217,14 @@ const chars = (rows) => rows.map((r) => r.text.length);
 // ---- 5. 无关段落不得误伤 ----
 {
   const r = run({ preexisting: [["harness:identity", "You are an AI agent powered by DeepSeek Harness."]] });
-  check(r.registered.length === 4, "无关段落在场时照常注入四段", `实得 ${r.registered.length}`);
+  check(r.registered.length === 5, "无关段落在场时照常注入五段", `实得 ${r.registered.length}`);
   check(r.profile?.dedupe?.role === "primary", "无关段落不触发让位");
 }
 
 // ---- 6. 枚举不到宿主段落时绝不静默丢载荷 ----
 {
   const r = run({ enumerable: false });
-  check(r.registered.length === 4, "无法枚举宿主段落时照常注入（宁可重复，不可静默丢失）");
+  check(r.registered.length === 5, "无法枚举宿主段落时照常注入（宁可重复，不可静默丢失）", `实得 ${r.registered.length}`);
   check(r.profile?.dedupe?.role === "primary", "无法枚举时按内核提供方处理");
 }
 
@@ -227,7 +232,7 @@ const chars = (rows) => rows.map((r) => r.text.length);
 {
   const mine = readFileSync(join(ROOT, "prompts", "infinite-gen-5.md"), "utf8");
   const r = run({ preexisting: [[PRIMARY, mine]] });
-  check(r.registered.length === 4, "自己的段名不算同源重复（热重载安全）");
+  check(r.registered.length === 5, "自己的段名不算同源重复（热重载安全）", `实得 ${r.registered.length}`);
   check(r.registered[0].name === PRIMARY, "热重载后内核仍会重新注册");
 }
 

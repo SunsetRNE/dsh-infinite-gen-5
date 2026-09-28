@@ -43,6 +43,7 @@ const HOST_WEB_SURFACE = { name: "test:web-surface", order: 10100, text: "HOST-W
 const HOST_SECTIONS = [HOST_SOURCE, HOST_WEB_SURFACE];
 const KERNEL = "infinite-gen-5:global-system-prompt";
 const BOOST = "infinite-gen-5:boost-corpus";
+const LAZY = "infinite-gen-5:lazy-sections";
 const LAYER2 = "infinite-gen-5:dual-layer-reinforce";
 const TAIL = "infinite-gen-5:tail-anchor";
 const RUNTIME = "infinite-gen-5:runtime-anchor";
@@ -132,6 +133,7 @@ const last = (arr) => arr[arr.length - 1];
         "deployment:persona-prefix",
         KERNEL,
         BOOST,
+        LAZY,
         LAYER2,
         "test:harness-source",
         "test:web-surface",
@@ -156,12 +158,12 @@ const last = (arr) => arr[arr.length - 1];
   const snapshot = joinContextSections(runtimeText ? [{ text: runtimeText }] : []);
   check(snapshot.includes("supersedes earlier runtime-context snapshots"), "宿主快照头写明取代早前快照（权威表述最强的一格）");
   const profile = r.profile();
-  // 末位锚点走瀑布 = 不占 section 命名空间，所以「注册段」是 3 个（v0.35.0 起多了增强集）；
-  // 但「注入位置」是 5 处（内核 100 / 运行时 118 / 增强集 150 / 中段 200 / 真末位 10150）。
-  check(profile?.injection?.length === 3, "profile 汇报 3 个注册段（末位锚点不占命名空间）", JSON.stringify(profile?.injection));
-  check(profile?.injectionPlacements?.length === 5, "profile 汇报五处注入位置", JSON.stringify(profile?.injectionPlacements?.map((p) => p.order)));
+  // 末位锚点走瀑布 = 不占 section 命名空间，所以「注册段」是 4 个（v0.35.0 加增强集、v0.36.0 加惰性章节）；
+  // 但「注入位置」是 6 处（内核 100 / 运行时 118 / 增强集 150 / 惰性 160 / 中段 200 / 真末位 10150）。
+  check(profile?.injection?.length === 4, "profile 汇报 4 个注册段（末位锚点不占命名空间）", JSON.stringify(profile?.injection));
+  check(profile?.injectionPlacements?.length === 6, "profile 汇报六处注入位置", JSON.stringify(profile?.injectionPlacements?.map((p) => p.order)));
   check(
-    JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)) === "[100,118,150,200,10150]",
+    JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)) === "[100,118,150,160,200,10150]",
     "注入位置按 order 排序，真末位锚点标在 10150",
     JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)),
   );
