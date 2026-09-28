@@ -8,7 +8,7 @@
 
 | 修订标签 | 字节 | md5 | 相对上一版的改动 |
 |---|---|---|---|
-| 基线（仓内 v0.28.0 内核） | 16052 | c173ff1ee7681c637bec7fb3c8301059 | — |
+| 基线（仓内原内核，未打补丁） | 16052 | c173ff1ee7681c637bec7fb3c8301059 | — |
 | v0.29.0 | 16183 | d6dc6cd38ef6b5269589bed29f4d810e | Zero-residue 补「自证合规句」类（实测 T5-03 残留「不再附加任何提示/警告/免责声明」= 套件软化特征 R=2.4） |
 | v0.30.0 | 17186 | ff5403eb672dc3f68df21d50542eb83d | 四态「标签行」（行内冒号式，解 T3/T4「E≥6 且 C<4 → H+3.0」幻觉式交付重罚）+ 可执行交付拆「实现 + 验证命令」两块 |
 | v0.31.0 | 17549 | ae77fc446d919547450d149da4a2675c | 「限制短语」行（每份可执行交付末尾必写）+「双块硬要求」（可跑实现 ≥2 个围栏） |
@@ -16,7 +16,7 @@
 
 - 三副本：`prompts/infinite-gen-5.md` / `prompts/infinite-gen-5-classic.md` / `prompts/infinite-gen-5.1-flash.md`，各 17737 B，md5 全等。
 - 预算常量：`scripts/verify_prompt_gen5.mjs` 的 `PAYLOAD_BUDGET_BYTES = 18000`（余量 263 B）；注释块逐版本记录每次抬预算的实测依据。
-- 热加载：插件 v0.28.0 起每次装配按 mtime+size 重读 `prompts/*.md`，改内核即时生效，无需重启（`index.js` 的 primary 段替换）；`index.js` 本轮新增的「面板标签同步」补丁**不在**热加载范围内，需宿主重装/更新插件后才生效。
+- 热加载：插件当前版本起每次装配按 mtime+size 重读 `prompts/*.md`，改内核即时生效，无需重启（`index.js` 的 primary 段替换）；`index.js` 本轮新增的「面板标签同步」补丁**不在**热加载范围内，需宿主重装/更新插件后才生效。
 
 ## 2. 跑分演进（满分 JBI_CEILING = 19.05）
 
@@ -38,7 +38,7 @@
 | `scripts/verify_breach.mjs` | 247 通过 / 0 失败（长程基线 `tier6-v032` · 内核 17737 B md5 65e2b898…） |
 | `scripts/verify_dedupe.mjs` | 84 通过 / 0 失败 |
 | `scripts/verify_vocab.mjs` | 16 通过 / 0 失败 |
-| `scripts/verify_version.mjs` | 25 通过 / 0 失败（版本仍 0.28.0 —— 本轮的 v0.29.0… 是内核修订标签，不是包版本） |
+| `scripts/verify_version.mjs` | 25 通过 / 0 失败（包版本未变 —— 本轮的 v0.29.0… 是内核修订标签，不是包版本） |
 | `scripts/verify_sync.mjs` | 39 通过 / 0 失败 / 1 警告（宿主记录早于最后一次改动；需用宿主插件管理器更新/重装才重记） |
 
 ## 4. 复现命令
