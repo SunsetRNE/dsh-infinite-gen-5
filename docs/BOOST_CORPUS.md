@@ -79,7 +79,7 @@
 
 1. `import { BOOST_UNITS, BOOST_HEADER, boostStats, compileBoost, inferMode, readDirective } from "./data/boost-corpus.mjs";`
 2. 常量：`BOOST_MODE = "standard"` · `BOOST_BYTES = 2400` · `BOOST_SECTION = "infinite-gen-5:boost-corpus"` · `BOOST_ORDER = 150`
-3. `mountInjection()` 内 `primaryOk` 之后注册段：`registerSection({ name: BOOST_SECTION, order: BOOST_ORDER, text: boostLive().text }, "Order 150 增强训练集（按需求编译）")`
+3. `mountInjection()` 内 `primaryOk` 之后注册段：`const boostOk = primaryOk && registerSection({ name: BOOST_SECTION, order: BOOST_ORDER, text: boostLive().text }, "Order 150 增强训练集（按需求编译）")` —— **`primaryOk &&` 是让位规则**：内核让给同源宿主时不单独挂增强集（与末位锚点、运行时锚点同一条口径，见第六节）
 4. 装配瀑布 `refreshBoost`：`injectionHandles.push(ctx.effect(() => ctx.on("system-prompt/assemble", refreshBoost)))`，在 `next()` 之后按段名换掉文本并回写 `runtime.boost`
 5. 设置页两个调参键：`BOOST_MODE`（standard / light / full / off）· `BOOST_BYTES`（number，256–12000）；env 为 `IG5_BOOST_MODE` / `IG5_BOOST_BYTES`
 6. `profile` 输出 `boost` 块（configured / runtime / corpus 统计 / units / header / section / order / directive）
@@ -94,6 +94,8 @@
 cd /root/dsh-infinite-gen-5
 node scripts/verify_boost.mjs          # 87 条：单元成形 / 档位预算 / 命中可解释 / 指令 / 与内核不同源 / 统计 / 接线口径
 node scripts/verify_injection.mjs      # 65 条：含「增强集落在 Order 150」与装配顺序 100,118,150,200,10150
+node scripts/verify_dedupe.mjs         # 87 条：含「增强集随内核整体让位」与四段合计 < 1.2 份内核
+node scripts/verify_tuning.mjs         # 49 条：含 BOOST_MODE / BOOST_BYTES 两个键（列表与来源口径）
 node scripts/extract-boost-corpus.mjs  # 三态拆分对账；缺语料打印 SKIP 并 exit 0（离线可跑）
 npm run verify:all                     # 全套
 ```
@@ -110,6 +112,8 @@ node -e 'import("./data/boost-corpus.mjs").then(m=>{const c=m.compileBoost({text
 - 只做了**确定性编译回归**（同输入两次编译逐字节一致、预算与命中可解释、与内核不同源）；**没有**做真实会话的 A/B 效果量化 —— 「增强集让回答变好多少」不在本次证据范围内。
 - 语料来源是单一附件（20602 B），未做跨来源合并与去重。
 - X1–X5 五条永久不进注入路径，属设计决定；要改这条线得改内核，不是改本目录。
+- **让位边界**：内核段因同源宿主让位时增强集一并让位（`primaryOk &&`）；它与末位锚点、运行时锚点共用同一条口径 —— 增强集是内核契约之上的追加条款（引用内核的四态、产物、收尾口径），单独留下就是半套规则。
+- **生效条件**：`index.js` 与 `data/boost-corpus.mjs` 属服务端代码，改动**只在 DSH 进程重启后生效**；内核热加载瀑布只覆盖 `prompts/*.md`。`npm run verify:install` 会把这条差异作为「进程比盘上副本更旧（改了没重启）」警告报出来，属预期而非失败。
 - 报告内的版本号以 `package.json` 的 `version` 为准，`BOOST_VERSION` 与之同源（`bump-version.mjs` 一并改写）。
 
 ### 断言状态
@@ -118,5 +122,7 @@ node -e 'import("./data/boost-corpus.mjs").then(m=>{const c=m.compileBoost({text
 | --- | --- | --- | --- |
 | 语料 20602 B / sha256 前缀 f4cd463d37d78e17 / 171 段 / 三态 20·19·1·131 | 已知 | — | 2026-09-28 `stat` + `sha256sum` + 提取器实跑 |
 | 编译矩阵 8 行（417–774 B）与档位 0/1200/2400/4200 | 已知 | — | 2026-09-28 `compileBoost` 直调实测 |
-| `verify_boost` 87 条 / `verify_injection` 65 条全绿 | 已知 | — | 2026-09-28 本机实跑 |
+| `verify_boost` 87 条 / `verify_injection` 65 条 / `verify_dedupe` 87 条 / `verify_tuning` 49 条全绿 | 已知 | — | 2026-09-28 本机实跑（`npm run verify:all` EXIT 0） |
+| 增强集随内核整体让位（`primaryOk &&`） | 已知 | — | 2026-09-28 `verify_dedupe.mjs` 让位用例实跑 |
+| 运行中的 DSH 进程（pid 8859）已加载 Order 150 段 | 过期 | 2026-09-28 18:29:04Z | `verify:install` 报「进程比盘上副本更旧」；需重启进程复核 |
 | 增强集在真实会话里的收益幅度 | 未知 | — | 需要实机会话 A/B，当前无数据 |

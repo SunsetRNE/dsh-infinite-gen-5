@@ -31,6 +31,7 @@ const { IG5_CONFIG } = plugin;
 const EVERY_STEPS = IG5_CONFIG.RUNTIME_ANCHOR_EVERY;
 
 const PRIMARY = "infinite-gen-5:global-system-prompt";
+const BOOST = "infinite-gen-5:boost-corpus";
 const LAYER2 = "infinite-gen-5:dual-layer-reinforce";
 
 // ---- 假宿主：记录 section() / context() 与 tools.register() 的真实调用 ----
@@ -93,24 +94,38 @@ const chars = (rows) => rows.map((r) => r.text.length);
 // ---- 1. 空宿主：单内核 + 中段锚点 + 真末位锚点，不再双份同源 ----
 {
   const r = run({});
-  check(r.registered.length === 3, "空宿主注册三段（内核 + 中段锚点 + 末位锚点）", `实得 ${r.registered.length}`);
+  check(r.registered.length === 4, "空宿主注册四段（内核 + 增强集 + 中段锚点 + 末位锚点）", `实得 ${r.registered.length}`);
   check(r.registered[0].name === PRIMARY && r.registered[0].order === 100, "首段是 Order 100 通用内核");
-  check(r.registered[1].name === LAYER2 && r.registered[1].order === 200, "次段是 Order 200 槽位");
-  const [kernel, anchor] = chars(r.registered);
+  check(
+    r.registered[1].name === BOOST && r.registered[1].order === 150,
+    "次段是 Order 150 增强训练集（紧跟内核之后）",
+    `${r.registered[1].name}@${r.registered[1].order}`,
+  );
+  check(r.registered[2].name === LAYER2 && r.registered[2].order === 200, "第三段是 Order 200 槽位");
+  const kernel = r.registered[0].text.length;
+  const boost = r.registered[1].text.length;
+  const anchor2 = r.registered[2].text;
   check(kernel > 2000, "内核是完整载荷", `实得 ${kernel} 字符`);
-  check(anchor < 500, "Order 200 是短锚点而非第二份完整内核", `实得 ${anchor} 字符`);
-  check(anchor !== kernel, "两段内容不再逐字同源");
+  check(anchor2.length < 500, "Order 200 是短锚点而非第二份完整内核", `实得 ${anchor2.length} 字符`);
+  check(anchor2.length !== kernel, "两段内容不再逐字同源");
+  // 增强集同样是「子集」而不是第二份载荷：字节上限由 BOOST_BYTES 封顶，注册时刻还没
+  // 收到用户输入，等于只编译常驻那两条（实测闲聊档 400 B 上下）。
+  check(boost > 0 && boost < 800, "Order 150 增强集是按需编译的子集（默认档在千字节以内）", `实得 ${boost} 字符`);
+  check(!r.registered[1].text.includes("[MODE: SANDBOX]"), "Order 150 不含内核正文");
   // 这两条取代了原来「两段合计 < 固定字符数」的写法。固定阈值在功能演进后必然报假
   // 失败（v0.5.0 双份 5235 → v0.6.0 内核扩写 4225+172 → v0.8.0 再加环境规则 5469），
   // 而它想守的其实是一件事：**Order 200 里不许再塞第二份完整载荷**。所以直接判那件事。
-  const anchor2 = r.registered[1].text;
   check(!anchor2.includes("[MODE: SANDBOX]"), "Order 200 不含内核正文（不是第二份载荷）");
   check(anchor2.length < kernel * 0.1, "Order 200 长度不到内核的 10%（是锚点不是载荷）", `${anchor2.length} vs ${kernel}`);
-  check(kernel + anchor === kernel + anchor2.length, "两段合计 = 一份内核 + 一个锚点（无第二份同源载荷）");
+  check(
+    kernel + anchor2.length + boost < kernel * 1.2,
+    "四段合计不到 1.2 份内核（无第二份同源载荷）",
+    `${kernel + anchor2.length + boost} vs ${kernel}`,
+  );
   check(!r.registered.some((s) => /\{\{/.test(s.text)), "注入文本里没有可触发插值器抛错的 {{");
-  // 第三段：宿主瀑布不可用时的降级位置。真实宿主上的「恒为最后一段」由 verify_injection 断言。
-  const tail = r.registered[2];
-  check(tail.name === "infinite-gen-5:tail-anchor", "第三段是末位锚点段");
+  // 第四段：宿主瀑布不可用时的降级位置。真实宿主上的「恒为最后一段」由 verify_injection 断言。
+  const tail = r.registered[3];
+  check(tail.name === "infinite-gen-5:tail-anchor", "第四段是末位锚点段");
   check(tail.order === 10150, "末位锚点退化到 order 10150（瀑布不可用）", String(tail.order));
   check(tail.text.length > 100 && tail.text.length < 900, "末位锚点是紧凑锚点", `实得 ${tail.text.length}`);
   check(!tail.text.includes("[MODE: SANDBOX]"), "末位锚点不含内核正文");
@@ -134,15 +149,15 @@ const chars = (rows) => rows.map((r) => r.text.length);
       `${first.slice(0, 24)} … ${rotated.slice(0, 24)}`,
     );
   }
-  check(r.profile?.injection?.length === 3, "profile 工具汇报实际注入 3 段");
+  check(r.profile?.injection?.length === 4, "profile 工具汇报实际注入 4 段");
   check(
-    r.profile?.injectionPlacements?.length === 4,
-    "profile 汇报四处注入位置",
+    r.profile?.injectionPlacements?.length === 5,
+    "profile 汇报五处注入位置",
     `实得 ${r.profile?.injectionPlacements?.length}`,
   );
   check(
-    JSON.stringify((r.profile?.injectionPlacements ?? []).map((p) => p.order)) === "[100,118,200,10150]",
-    "注入位置按 order 排序（运行时锚点在 118，末位锚点排在最后）",
+    JSON.stringify((r.profile?.injectionPlacements ?? []).map((p) => p.order)) === "[100,118,150,200,10150]",
+    "注入位置按 order 排序（运行时锚点 118、增强集 150，末位锚点排在最后）",
     JSON.stringify((r.profile?.injectionPlacements ?? []).map((p) => p.order)),
   );
   check(r.profile?.dedupe?.role === "primary", "profile 汇报本插件是内核提供方");
@@ -197,14 +212,14 @@ const chars = (rows) => rows.map((r) => r.text.length);
 // ---- 5. 无关段落不得误伤 ----
 {
   const r = run({ preexisting: [["harness:identity", "You are an AI agent powered by DeepSeek Harness."]] });
-  check(r.registered.length === 3, "无关段落在场时照常注入三段", `实得 ${r.registered.length}`);
+  check(r.registered.length === 4, "无关段落在场时照常注入四段", `实得 ${r.registered.length}`);
   check(r.profile?.dedupe?.role === "primary", "无关段落不触发让位");
 }
 
 // ---- 6. 枚举不到宿主段落时绝不静默丢载荷 ----
 {
   const r = run({ enumerable: false });
-  check(r.registered.length === 3, "无法枚举宿主段落时照常注入（宁可重复，不可静默丢失）");
+  check(r.registered.length === 4, "无法枚举宿主段落时照常注入（宁可重复，不可静默丢失）");
   check(r.profile?.dedupe?.role === "primary", "无法枚举时按内核提供方处理");
 }
 
@@ -212,7 +227,7 @@ const chars = (rows) => rows.map((r) => r.text.length);
 {
   const mine = readFileSync(join(ROOT, "prompts", "infinite-gen-5.md"), "utf8");
   const r = run({ preexisting: [[PRIMARY, mine]] });
-  check(r.registered.length === 3, "自己的段名不算同源重复（热重载安全）");
+  check(r.registered.length === 4, "自己的段名不算同源重复（热重载安全）");
   check(r.registered[0].name === PRIMARY, "热重载后内核仍会重新注册");
 }
 

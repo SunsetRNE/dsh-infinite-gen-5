@@ -1957,7 +1957,9 @@ export function apply(ctx, config) {
       const mode = readDirective(userText) ? IG5_CONFIG.BOOST_MODE : inferMode(userText) ?? IG5_CONFIG.BOOST_MODE;
       return compileBoost({ text: userText, mode, bytes: IG5_CONFIG.BOOST_BYTES });
     };
-    const boostOk = registerSection(
+    // 让位规则与末位锚点、运行时锚点一致：内核让给同源宿主时增强集不单独挂上去。
+    // 增强集是内核契约之上的追加条款（它引用内核的四态/产物/收尾口径），脱离内核就是半套规则。
+    const boostOk = primaryOk && registerSection(
       { name: BOOST_SECTION, order: BOOST_ORDER, text: boostLive().text },
       "Order 150 增强训练集（按需求编译）",
       "命中需求信号才拼装：常驻两条 + 命中项，字节预算封顶，超预算整条丢弃",
@@ -1989,7 +1991,7 @@ export function apply(ctx, config) {
         );
       }
     }
-    runtime.boost = { mode: boostLive().effectiveMode, chars: boostLive().text.length, bytes: boostLive().bytes, hits: boostLive().hits, dropped: boostLive().dropped };
+    runtime.boost = { registered: !!boostOk, mode: boostLive().effectiveMode, chars: boostLive().text.length, bytes: boostLive().bytes, hits: boostLive().hits, dropped: boostLive().dropped };
 
     // 内核热加载（v0.28.0）：section 文本在注册那一刻就固定，改 prompts/*.md 后不重启进程，
     // 装配出去的仍是旧文本（实测：进程 07:39:52 启动、内核 08:08:37 改写 → 08:1x 起的子会话

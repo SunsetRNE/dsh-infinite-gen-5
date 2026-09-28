@@ -168,15 +168,15 @@ const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
   const got = await callRoute(r.route.handler, { token });
   check(got.status === 200 && got.body?.ok === true, "GET 回 200 + ok:true", `${got.status} ${JSON.stringify(got.body).slice(0, 120)}`);
   const keys = Object.keys(got.body?.effective ?? {});
-  check(keys.length === 8, "effective 八个开关都在", JSON.stringify(keys));
+  check(keys.length === 10, "effective 十个开关都在（含 BOOST_MODE / BOOST_BYTES）", JSON.stringify(keys));
   const sources = got.body?.sources ?? {};
   check(
     Object.values(sources).every((v) => v === "default"),
-    "没有覆盖时八键来源都是文件默认",
+    "没有覆盖时十键来源都是文件默认",
     JSON.stringify(sources),
   );
   check(got.body?.effective?.RUNTIME_ANCHOR_EVERY === DEFAULTS.RUNTIME_ANCHOR_EVERY, "GET 的生效值等于文件默认", String(got.body?.effective?.RUNTIME_ANCHOR_EVERY));
-  check(Array.isArray(got.body?.catalog) && got.body.catalog.length === 8, "控件目录随响应下发（八项）", String(got.body?.catalog?.length));
+  check(Array.isArray(got.body?.catalog) && got.body.catalog.length === 10, "控件目录随响应下发（十项）", String(got.body?.catalog?.length));
 
   // ---- 3. 自守 ----
   const badToken = await callRoute(r.route.handler, { token: "0".repeat(32) });
