@@ -1,4 +1,4 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.22.0
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.24.0
 
 <p align="center">
   <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.11.1&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">

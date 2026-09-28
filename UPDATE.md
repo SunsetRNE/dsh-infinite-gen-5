@@ -10,6 +10,53 @@
 
 ---
 
+## v0.24.0
+
+一件事：**域包 62 → 78**。上一版之后还剩一批「用户真的会提、但内核点不出名」的工作面 —— 工控/OT、数据库、资产测绘、RAG 投毒、多模态、模型投毒、PKI、隐私计算、商业文案、互动小说、合同文书、求职材料、测试与质量、数据库设计、前端、数据工程。本轮把它们补成正式域包（五槽 + 骨架 + 命中词 + 别名 + 命令词汇 + 工具链），并同步所有把「62」写死的地方。内核、注入路径、面板逻辑一个字没动。
+
+### ① 新增 16 个域（62 → 78）
+
+- **offense 26 → 29**：`ics`（工控 / OT：Modbus、S7、OPC UA、SCADA、PLC）· `database`（数据库与存储服务：MySQL / Redis / MSSQL / xp_cmdshell / 未授权）· `recon`（资产测绘与攻击面：shodan / fofa / subfinder / httpx）
+- **ai 6 → 9**：`rag_poison`（检索库投毒与知识库污染）· `multimodal`（多模态与视觉提示注入）· `model_poison`（微调投毒与权重后门）
+- **crypto 7 → 8**：`pki`（证书与 PKI）
+- **data 4 → 5**：`privacy_tech`（隐私计算与匿名化：差分隐私 / 联邦学习 / k‑匿名）
+- **creative 6 → 8**：`copywriting`（商业文案与广告）· `interactive_fiction`（互动小说与剧本杀）
+- **language 5 → 7**：`legal_doc`（合同与法律文书）· `career`（简历与求职材料）
+- **engineering 8 → 12**：`qa_test`（测试与质量保障）· `db_design`（数据库设计与 SQL 调优）· `frontend`（前端与 UI 实现）· `data_pipeline`（数据工程与 ETL）
+- 每个域按既有结构写全 `id/family/label/aliases/markers/role/object/action/scope/shape/notes[5]/skeleton[5]/example`，`toolchain` 与 `commands` 仍由 `data/scenarios.mjs` 尾部后处理挂上。非豁免新域实测都过下限：标记 ≥12、别名 ≥14（`multimodal` / `model_poison` / `qa_test` / `db_design` / `frontend` / `data_pipeline` 各内联补了 2–3 条别名）。
+- 跨族共用标记词**必须为零**（除非登记 `CROSS_FAMILY_ALLOW`）：新增域带来 18 个跨族撞车，其中 8 个是本轮自己引入的，逐个换词解决 —— `model_poison` 投毒 → 模型投毒、后门 → 后门植入；`qa_test` playwright → 端到端测试；`legal_doc` 法律 → 违约条款、条款 → 管辖法院；`database` redis → nosql；`copywriting` 文案 → 商品文案、钩子 → 引流钩子；`frontend` css → 层叠样式；`data_pipeline` dbt → dbt模型。余下 10 个跨族共用是既有且已签字的（mitmproxy / jadx / binwalk / wireshark / github actions / hashcat / 字典攻击 / 暴力破解 / 隐写 / ioc）。
+
+### ② 词表多一个源文件
+
+- 新增 `data/vocab/H-v0240-newdomains.json`（照 `F-v0140-newdomains.json` 样板：顶层只有 `_note` + `command_vocab` + `toolchain_extra`）。别名与命中词写在域包本体里，这一层只补「用什么打」和「可直接粘贴的命令」。
+- 覆盖 12 个非豁免新域，每域 4 条命令 + 4 条工具链（`privacy_tech` 3 条命令）；4 个豁免域（creative / language）按 `EXEMPT_FAMILIES` 不设下限、不进词表。
+- `npm run vocab:build` 重新生成 `data/vocabulary-data.mjs`（生成物，别手改）：命令词汇 332 → **379** 条、工具链 208 → **256** 条，扩展词条合计 2053 → **2148** 条，与域包重复跳过 307 条，**不合规 0 条**。
+- 命令条目有 120 字符硬闸（`vocab-build.mjs` 的 `entryOk()`，整条含中文描述都算），首轮 15 条超限，两轮改成「真命令截短 / 引用本地脚本」后归零。
+
+### ③ 索引与预算
+
+- 索引 `scenarioIndexText()` 11701 → **14560 B**（62 域时的预算余量只剩 9%），因此 `INDEX_BUDGET_BYTES` 16000 → **20000**，与词条同一个 diff —— 项目规矩是预算随域数/词条同批上调并写明理由（4628 → 12000 → 16000 → 20000）。
+- 单包 639–4540 B（护栏 600–6000），78 包合计 **212587 B**（按需取用，不进 system prompt）。
+
+### ④ 内核点名清单跟上
+
+- `prompts/infinite-gen-5.md` 的 `Named coverage` 段从 62 域扩到 78 域（offense 加 3 行、ai 加 1 行，crypto / data / creative / language / engineering 追加域名），三份逐字副本同步（sha256 一致）。
+- 载荷 12204 → **12460 B**，`PAYLOAD_BUDGET_BYTES` 12400 → **13200**（多出的字节就是 16 个域名的点名）。
+
+### ⑤ 把「62」写死的地方全部同步
+
+- `scripts/verify_scenarios.mjs`：域数断言 62 → 78、标记表键数断言 62 → 78、头注释「78 包结构完整性」。
+- `scripts/verify_prompt_gen5.mjs`：`"78 domain playbooks"`、指向领域包工具的说明文案、载荷预算 12400 → 13200。
+- `scripts/verify_ui.mjs`：覆盖面板夹具换成**实测值** —— 域数 78、族分布 offense 29 / crypto 8 / ai 9 / data 5 / creative 8 / language 7 / engineering 12、标记表 1736（latin 707 / cjk 929 / mixed 100）、扩展词条 2148（别名 619 + 标记 894 + 命令 379 + 工具链 256）、索引 14560 B ÷ 预算 20000 B、单包 639–4540 B / 合计 212587 B；两个 percent 档位改成 72.8（正常档）与 95.5（告警档），档位断言不变。
+- `scripts/lib/vocab-fixtures.mjs`：`「慢查询与索引设计」` 的期望域补上 `db_design` —— 新域出现后它才是最近域（旧期望集是 `analytics / system_design`）。
+- `index.js` 的七处注释与工具描述、`data/vocabulary.mjs` 的预算注释一并改口径。
+- `index.js` 的**工具结果体积闸** `RESULT_BUDGET_BYTES` 14000 → **17600**：78 域下无参索引调用（最坏合法结果）是 16301 B，旧预算会把它误判成超限并降级（丢 `toolchain` 等字段 + 截断正文），正常查询被当成超限处理；新预算给最坏结果留 1299 B 余量，`verify:tool-budget` 的「≥512 B 余量」断言重新成立。
+
+### ⑥ 自检
+
+- 场景 83 · 词表 16 · 领域工具 85 · 内核 211 —— 全绿；索引 14560 B / 预算 20000 B；语料 102 + 41 + 7 条。
+- **本轮没做**：`dist/` 里仍是 v0.13.5 的陈旧发布件（历史遗留，不在本轮范围）。`CHANGELOG.md` 的 v0.24.0 段是**生成物** —— 由 `node scripts/changelog.mjs` 从 `feat(v0.24.0)` 提交标题切出来，别手改。
+
 ## v0.22.0
 
 一件事：把「用户向选择」的**档位开关搬进浮层卡片** —— 用户第二次抱怨「重启后浮层里还是看不到开关」，根因是开关只活在设置页。现在点状态条弹出的判决卡片底部多一个胶囊按钮，点一下循环切档（主动 → 按节拍 → 强制开 → 关闭 → 主动）。内核、服务端、调参键位一个字没动。

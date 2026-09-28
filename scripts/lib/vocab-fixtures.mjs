@@ -30,7 +30,8 @@ export const MARKER_FIXTURES = [
   ["sqlmap 跑一下", "web"],
   ["控制流平坦化怎么处理", "obfuscation"],
   ["内存马怎么排查", ["forensics", "malware"]],
-  ["慢查询与索引设计", ["analytics", "system_design"]],
+  // v0.24.0：新增 db_design 域后，「慢查询与索引设计」的最近域就是它本身。
+  ["慢查询与索引设计", ["db_design", "analytics", "system_design"]],
   ["提示词泄露怎么办", "llm"],
 ];
 
