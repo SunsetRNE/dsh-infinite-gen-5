@@ -1,39 +1,120 @@
 {
   "version": 1,
-  "createdAt": "2026-09-28T09:48:48.893Z",
-  "note": "无限五代离线评测基线 · node scripts/eval-corpus.mjs --write-baseline 可刷新；--gate 用本文件做回归门禁",
+  "createdAt": "2026-09-28T10:13:31.012Z",
+  "note": "无限五代离线评测基线 · node scripts/eval-corpus.mjs --write-baseline 可刷新；--gate 用本文件做回归门禁。口径变更（2026-09-28）：并入 prompt-bank-coverage.jsonl 294 条覆盖用例后重建 —— 该批用例生成时已按「rankDomains 现行口径必须判对」自查，属覆盖/回归护栏而非无偏难度样本；Top-1 92.9%(85 条标签) → 98.4%(379 条标签) 主要由分母构成变化贡献，不得当作排序器能力提升。难度采样仍须靠 run_bank_live 在线用例或人工未过滤语料。",
   "corpus": {
-    "cases": 110,
-    "files": 4,
-    "labeledDomain": 85,
+    "cases": 404,
+    "files": 5,
+    "labeledDomain": 379,
     "labeledVerdict": 78,
     "wildcard": 8,
     "missingPrompt": 0,
     "duplicates": 0
   },
   "domain": {
-    "evaluated": 85,
-    "top1": 0.9294117647058824,
-    "top3": 0.9764705882352941,
+    "evaluated": 379,
+    "top1": 0.9841688654353562,
+    "top3": 0.9947229551451188,
     "macro": {
-      "precision": 0.9516666666666665,
-      "recall": 0.9703996983408748,
-      "f1": 0.9553030303030303,
-      "labels": 10
+      "precision": 0.9884735202492212,
+      "recall": 0.9972336166673713,
+      "f1": 0.9918173726584942,
+      "labels": 107
     },
     "micro": {
-      "precision": 0.9294117647058824,
-      "recall": 0.9294117647058824,
-      "f1": 0.9294117647058824
+      "precision": 0.9841688654353562,
+      "recall": 0.9841688654353562,
+      "f1": 0.9841688654353562
     },
     "perLabel": {
+      "academic": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "adversarial_suffix": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "agent": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "ai_redteam": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "analytics": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
       "automation": {
-        "precision": 0,
-        "recall": null,
-        "f1": null,
-        "support": 0,
-        "tp": 0,
-        "fp": 1,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "automotive": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "biometrics": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "career": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "chain": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
         "fn": 0
       },
       "cloud": {
@@ -46,12 +127,48 @@
         "fn": 0
       },
       "code_eng": {
-        "precision": 0,
-        "recall": null,
-        "f1": null,
-        "support": 0,
-        "tp": 0,
+        "precision": 0.75,
+        "recall": 1,
+        "f1": 0.8571428571428571,
+        "support": 3,
+        "tp": 3,
         "fp": 1,
+        "fn": 0
+      },
+      "comic": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "compliance": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "container": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "copywriting": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
         "fn": 0
       },
       "crack": {
@@ -60,6 +177,186 @@
         "f1": 1,
         "support": 8,
         "tp": 8,
+        "fp": 0,
+        "fn": 0
+      },
+      "crypto_impl": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "data_pipeline": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "database": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "db_design": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "deanon": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "debate": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "decrypt": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "devops_cicd": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "diffusion": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "dos": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "drm": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "email_doc": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "embedded_dev": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "erp": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "evasion": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "exploit_dev": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "firmware": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "forensics": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "frontend": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "fuzzing": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
         "fp": 0,
         "fn": 0
       },
@@ -72,6 +369,123 @@
         "fp": 1,
         "fn": 1
       },
+      "game_design": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "geospatial": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "graph_data": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "hook_inject": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "i18n": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "ics": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "injection": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "interactive_fiction": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "jailbreak": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "kernel": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "keymgmt": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "legal_doc": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "lit_review": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
       "llm": {
         "precision": 1,
         "recall": 0.9411764705882353,
@@ -80,6 +494,42 @@
         "tp": 16,
         "fp": 0,
         "fn": 1
+      },
+      "lore": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "lyrics": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "macos": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "malware": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
       },
       "miniprogram": {
         "precision": 1,
@@ -90,7 +540,52 @@
         "fp": 0,
         "fn": 0
       },
+      "ml_eng": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
       "mobile": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "mobile_dev": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "model_internals": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "model_poison": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "multimodal": {
         "precision": 1,
         "recall": 1,
         "f1": 1,
@@ -108,6 +603,24 @@
         "fp": 0,
         "fn": 0
       },
+      "network_device": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "novel": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
       "nsfw": {
         "precision": 1,
         "recall": 1,
@@ -117,21 +630,336 @@
         "fp": 0,
         "fn": 0
       },
+      "obfuscation": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "ops": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
       "osint": {
-        "precision": 0,
-        "recall": null,
-        "f1": null,
-        "support": 0,
-        "tp": 0,
+        "precision": 0.75,
+        "recall": 1,
+        "f1": 0.8571428571428571,
+        "support": 3,
+        "tp": 3,
         "fp": 1,
+        "fn": 0
+      },
+      "output_shaping": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "patent": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "perf_eng": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "phishing": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "pki": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "podcast": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "post_quantum": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "privacy_tech": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
         "fn": 0
       },
       "privesc": {
         "precision": 1,
         "recall": 1,
         "f1": 1,
-        "support": 1,
-        "tp": 1,
+        "support": 4,
+        "tp": 4,
+        "fp": 0,
+        "fn": 0
+      },
+      "product": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "programming": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "protocol_re": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "qa_test": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "rag_poison": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "rat_c2": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "re": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "recon": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "rf": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "roleplay": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "scraping": {
+        "precision": 0.75,
+        "recall": 1,
+        "f1": 0.8571428571428571,
+        "support": 3,
+        "tp": 3,
+        "fp": 1,
+        "fn": 0
+      },
+      "screenplay": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "sidechannel": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "speech_ai": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "speech_writing": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "stego": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "supply_chain": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "system_design": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "teaching": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "tech_writing": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "translation": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "unpack": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "virtualization": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "voip": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "wallet": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
         "fp": 0,
         "fn": 0
       },
@@ -143,6 +971,24 @@
         "tp": 22,
         "fp": 0,
         "fn": 4
+      },
+      "windows_ad": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
+      },
+      "wireless": {
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "support": 3,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0
       }
     }
   },
