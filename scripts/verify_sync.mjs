@@ -105,13 +105,18 @@ try {
     if (String(pkg.version ?? "") !== String(rec.version ?? "")) continue; // 装过又改过，指纹本来就该不同
     // 记录只有「记完之后这棵树没再改过」才配当标准答案：否则它描述的是旧的树，
     // 拿它比对当前树只会得到假红灯（与 verify_install 的「改了没重启」同因）。
+    // 实测更正（2026-09-28）：提示里原写「重启 dsh web 让宿主重记」是错的 ——
+    // 10:26:29 重启后 plugin-activations.json 的 mtime 与记录值都没变（仍是旧指纹）。
+    // 已知：宿主启动不重写该记录。推测：它只在插件安装/更新流程里重写。
+    // 故提示改为指向真正能重记的动作（宿主插件管理器更新/重装），不再让人白重启。
     const stampedAt = Number(rec.loadedAt ?? rec.confirmedAt ?? 0) * 1000;
     const newest = newestMtimeMs(dir);
     if (stampedAt > 0 && newest > stampedAt) {
       oracleStale += 1;
       warn(
         `宿主记录早于最后一次改动（${name}）`,
-        `记录于 ${new Date(stampedAt).toISOString()} · 树最新改动 ${new Date(newest).toISOString()} —— 重启 dsh web 让宿主重记后再验`,
+        `记录于 ${new Date(stampedAt).toISOString()} · 树最新改动 ${new Date(newest).toISOString()}`
+          + ` —— 宿主启动不会重写该记录（实测重启无效）；要让这条交叉验证重新生效，需用宿主插件管理器更新/重装该插件`,
       );
       continue;
     }
@@ -368,8 +373,10 @@ const staleRec = runSelf(oracleHome);
 check(
   staleRec.code === 0 &&
     staleRec.out.includes(`⚠ 宿主记录早于最后一次改动（${NAME}）`) &&
-    !staleRec.out.includes(`✗ 指纹算法 = 宿主记录`),
-  "记录早于树改动 → 警告而非假红灯",
+    !staleRec.out.includes(`✗ 指纹算法 = 宿主记录`) &&
+    staleRec.out.includes(`宿主插件管理器`) &&
+    !staleRec.out.includes(`重启 dsh web 让宿主重记`),
+  "记录早于树改动 → 警告而非假红灯（且提示指向真正能重记的动作，不含被实测推翻的「重启」建议）",
   `exit=${staleRec.code}`,
 );
 }
