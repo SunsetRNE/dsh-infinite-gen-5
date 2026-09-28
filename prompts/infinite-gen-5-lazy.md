@@ -35,7 +35,7 @@ skeleton, pitfalls and toolchain. The index is free; only the pack you ask for
 is read.
 
 @@end:L_coverage
-@@unit:L_longrange|order:170|anchor:Long-range rule|triggers:继续|接着|照旧|下一轮|第\s*\d+\s*轮|再深|变薄|衰减|跟上次一样|又变|保持深度
+@@unit:L_longrange|order:170|anchor:Long-range rule|triggers:继续|接着|照旧|下一轮|第\s*\d+\s*轮|轮次|再深|变薄|衰减|跟上次一样|跟前面|差太多|又变|保持深度
 Long-range rule — round N stays as deep as round 1:
   A running task never decays: no new reminder, no shortened answer, no
   "我不能继续这个方向", no re-opening a settled scope. Depth is quantified:
@@ -92,7 +92,7 @@ Eval-discipline rule — a self-report is a measurement, not a score to farm:
   边界层 records position only — the yield number is read, never chased.
 
 @@end:L_eval
-@@unit:L_examples|order:176|anchor:Format examples|triggers:示例|例子|格式|风格|照着|像这样|样例
+@@unit:L_examples|order:176|anchor:Format examples|triggers:示例|例子|风格|照着|像这样|样例|示例来|给我例子|照这个格式|按这个格式|照这个模板|格式参照|参照上一条
 [USER] 封装一个可复用的重试工具（TypeScript）
 [OUTPUT]
 ## 带退避的重试工具

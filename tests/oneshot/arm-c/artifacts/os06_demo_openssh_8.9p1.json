@@ -1,0 +1,126 @@
+{
+  "cpe": "cpe:2.3:a:openbsd:openssh:8.9p1:*:*:*:*:*:*:*",
+  "total": 23,
+  "rows": [
+    {
+      "id": "CVE-2023-28531",
+      "cvss": 9.8,
+      "cvss_version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "severity": "CRITICAL",
+      "published": "2023-03-17",
+      "status": "Modified",
+      "desc": "ssh-add in OpenSSH before 9.3 adds smartcard keys to ssh-agent without the intended per-hop destination constraints. The earliest affected version is 8.9.",
+      "refs": [
+        "https://lists.fedoraproject.org/archives/list/package-announce%40lists.fedoraproject.org/message/AN2UDTXEUSKFIOIYMV6JNI5VSBMYZOFT/",
+        "https://security.gentoo.org/glsa/202307-01",
+        "https://security.netapp.com/advisory/ntap-20230413-0008/"
+      ]
+    },
+    {
+      "id": "CVE-2023-38408",
+      "cvss": 9.8,
+      "cvss_version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "severity": "CRITICAL",
+      "published": "2023-07-20",
+      "status": "Modified",
+      "desc": "The PKCS#11 feature in ssh-agent in OpenSSH before 9.3p2 has an insufficiently trustworthy search path, leading to remote code execution if an agent is forwarded to an attacker-con",
+      "refs": [
+        "http://packetstormsecurity.com/files/173661/OpenSSH-Forwarded-SSH-Agent-Remote-Code-Execution.html",
+        "http://www.openwall.com/lists/oss-security/2023/07/20/1",
+        "http://www.openwall.com/lists/oss-security/2023/07/20/2"
+      ]
+    },
+    {
+      "id": "CVE-2024-6387",
+      "cvss": 8.1,
+      "cvss_version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "severity": "HIGH",
+      "published": "2024-07-01",
+      "status": "Modified",
+      "desc": "A security regression (CVE-2006-5051) was discovered in OpenSSH's server (sshd). There is a race condition which can lead sshd to handle some signals in an unsafe manner. An unauth",
+      "refs": [
+        "https://access.redhat.com/errata/RHSA-2024:4312",
+        "https://access.redhat.com/errata/RHSA-2024:4340",
+        "https://access.redhat.com/errata/RHSA-2024:4389"
+      ]
+    },
+    {
+      "id": "CVE-2026-60002",
+      "cvss": 7.7,
+      "cvss_version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:L",
+      "severity": "HIGH",
+      "published": "2026-07-08",
+      "status": "Analyzed",
+      "desc": "ssh in OpenSSH before 10.4 can have a use-after-free when a server changes its host key during a key re-exchange. (This outcome occurs only on the client side.)",
+      "refs": [
+        "https://marc.info/?l=openssh-unix-dev&m=178333966933090&w=2",
+        "https://www.openssh.org/releasenotes.html#10.4p1",
+        "https://www.openwall.com/lists/oss-security/2026/07/06/5"
+      ]
+    },
+    {
+      "id": "CVE-2026-35385",
+      "cvss": 7.5,
+      "cvss_version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:H",
+      "severity": "HIGH",
+      "published": "2026-04-02",
+      "status": "Modified",
+      "desc": "In OpenSSH before 10.3, a file downloaded by scp may be installed setuid or setgid, an outcome contrary to some users' expectations, if the download is performed as root with -O (l",
+      "refs": [
+        "https://marc.info/?l=openssh-unix-dev&m=177513443901484&w=2",
+        "https://www.openssh.org/releasenotes.html#10.3p1",
+        "https://www.openwall.com/lists/oss-security/2026/04/02/3"
+      ]
+    },
+    {
+      "id": "CVE-2025-26465",
+      "cvss": 6.8,
+      "cvss_version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:H/A:N",
+      "severity": "MEDIUM",
+      "published": "2025-02-18",
+      "status": "Modified",
+      "desc": "A vulnerability was found in OpenSSH when the VerifyHostKeyDNS option is enabled. A machine-in-the-middle attack can be performed by a malicious machine impersonating a legit serve",
+      "refs": [
+        "https://access.redhat.com/errata/RHSA-2025:16823",
+        "https://access.redhat.com/errata/RHSA-2025:3837",
+        "https://access.redhat.com/errata/RHSA-2025:6993"
+      ]
+    },
+    {
+      "id": "CVE-2023-51385",
+      "cvss": 6.5,
+      "cvss_version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+      "severity": "MEDIUM",
+      "published": "2023-12-18",
+      "status": "Modified",
+      "desc": "In ssh in OpenSSH before 9.6, OS command injection might occur if a user name or host name has shell metacharacters, and this name is referenced by an expansion token in certain si",
+      "refs": [
+        "http://seclists.org/fulldisclosure/2024/Mar/21",
+        "http://www.openwall.com/lists/oss-security/2023/12/26/4",
+        "https://github.com/openssh/openssh-portable/commit/7ef3787c84b6b524501211b11a26c742f829af1a"
+      ]
+    },
+    {
+      "id": "CVE-2026-60001",
+      "cvss": 6.5,
+      "cvss_version": "3.1",
+      "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+      "severity": "MEDIUM",
+      "published": "2026-07-08",
+      "status": "Analyzed",
+      "desc": "sshd in OpenSSH before 10.4 does not always honor the minimum authentication delay.",
+      "refs": [
+        "https://marc.info/?l=openssh-unix-dev&m=178333966933090&w=2",
+        "https://www.openssh.org/releasenotes.html#10.4p1",
+        "https://www.openwall.com/lists/oss-security/2026/07/06/5"
+      ]
+    }
+  ]
+}

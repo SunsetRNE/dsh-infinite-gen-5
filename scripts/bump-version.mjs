@@ -38,10 +38,12 @@ if (!/^\d+\.\d+\.\d+$/.test(OLD)) {
   console.error(`package.json 的 version 不是 x.y.z：${JSON.stringify(pkg.version)}`);
   process.exit(2);
 }
-if (OLD === NEW) {
-  console.log(`版本已是 ${OLD}，无需改写`);
-  process.exit(0);
-}
+// package.json 已是目标版本时**不退出**：旧缺陷是这里直接 exit(0)，
+// 于是「package.json 先到新号、锚点文件还停在旧号」的漂移永远修不掉，
+// 而 verify:version 会红（本会话实测 6 处）。改为对齐模式：
+// 同一目标版本下只修与目标不一致的锚点，package.json 不再改写。
+const ALIGN = OLD === NEW;
+if (ALIGN) console.log(`package.json 已是 ${OLD}，进入对齐模式：只修与 v${NEW} 不一致的锚点`);
 
 // ---------- 第 1 段：全量校验，任何问题都不落盘 ----------
 const problems = [];
@@ -65,11 +67,16 @@ for (const { file, name, re, count = 1 } of VERSION_ANCHORS) {
     continue;
   }
   const found = hits[0][1];
-  const stray = [...new Set(hits.map((h) => h[1]).filter((v) => v !== OLD))];
-  if (found !== OLD || stray.length) {
+  const stray = [...new Set(hits.map((h) => h[1]).filter((v) => v !== NEW))];
+  if (stray.length > 1) {
+    problems.push(`${name}：同一处锚点里出现多个版本号 v${stray.join(" / v")}（${file}）—— 手工对齐后再跑`);
+    continue;
+  }
+  if (!ALIGN && (found !== OLD || stray.length)) {
     problems.push(`${name}：文件里是 v${(stray.length ? stray : [found]).join(" / v")}，package.json 是 ${OLD} —— 先跑 npm run verify:version 对齐`);
     continue;
   }
+  if (found === NEW && !stray.length) continue; // 已经是目标号：不进计划（对齐模式下多数锚点走这条）
   plans.push({ file, name, text, re, found, count });
 }
 
@@ -82,10 +89,12 @@ if (problems.length) {
 // ---------- 第 2 段：落盘 ----------
 const done = [];
 
-pkg.version = NEW;
-if (pkg.dsh && typeof pkg.dsh === "object") pkg.dsh.version = NEW;
-if (!DRY) writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
-done.push("package.json（version / dsh.version，description 里的历史叙述不动）");
+if (!ALIGN) {
+  pkg.version = NEW;
+  if (pkg.dsh && typeof pkg.dsh === "object") pkg.dsh.version = NEW;
+  if (!DRY) writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + "\n");
+  done.push("package.json（version / dsh.version，description 里的历史叙述不动）");
+}
 
 // 同一份文件可能挂着多个锚点（README：标题 1 处 + 一键安装深链 4 处）。
 // 必须按文件归组，在一份内存文本上依次改写、最后只写一次 ——
@@ -106,13 +115,19 @@ for (const [file, { text, items }] of byFile) {
   // 落盘前复查：本文件里旧版本号的出现次数必须**恰好减少** sum(count) 处。
   // 用「差额」而不是「归零」，因为锚点文件里可能有刻意保留旧号的历史叙述；
   // 差额对不上就说明某个锚点的改写被覆盖了（旧缺陷：报 OK 但文件没改）。
-  const oldRe = new RegExp(OLD.replace(/\./g, "\\."), "g");
-  const expected = items.reduce((n, it) => n + (it.count ?? 1), 0);
-  const before = [...text.matchAll(oldRe)].length;
-  const after = [...out.matchAll(oldRe)].length;
-  if (before - after !== expected) {
-    console.error(`✗ ${file}：旧版本 v${OLD} 出现次数 ${before} → ${after}，应减少 ${expected} 处（锚点改写被覆盖）`);
-    process.exit(1);
+  // 落盘前复查：本文件里每个「被改写的旧版本串」出现次数必须**恰好减少**其锚点份额。
+  // 用「差额」而不是「归零」，因为锚点文件里可能有刻意保留旧号的历史叙述；
+  // 按 found 串分组，因为对齐模式下同一文件里不同锚点可能停在不同的旧号上。
+  const want = new Map();
+  for (const it of items) want.set(it.found, (want.get(it.found) ?? 0) + (it.count ?? 1));
+  for (const [ver, expected] of want) {
+    const verRe = new RegExp(ver.replace(/\./g, "\\."), "g");
+    const before = [...text.matchAll(verRe)].length;
+    const after = [...out.matchAll(verRe)].length;
+    if (before - after !== expected) {
+      console.error(`✗ ${file}：旧版本 v${ver} 出现次数 ${before} → ${after}，应减少 ${expected} 处（锚点改写被覆盖）`);
+      process.exit(1);
+    }
   }
   if (!DRY) writeFileSync(abs(file), out);
   for (const { name, found, count } of items) {
@@ -120,6 +135,7 @@ for (const [file, { text, items }] of byFile) {
   }
 }
 
-console.log(`${DRY ? "[dry-run] 不会写盘 · " : ""}版本改写 ${OLD} → ${NEW}`);
+console.log(`${DRY ? "[dry-run] 不会写盘 · " : ""}${ALIGN ? `对齐模式（package.json 已是 ${NEW}，未改写 package.json）` : `版本改写 ${OLD} → ${NEW}`}`);
+if (ALIGN && !plans.length) console.log(`  [OK] 所有锚点已是 v${NEW}，无需改写`);
 for (const d of done) console.log(`  [OK] ${d}`);
 console.log("\n接着跑：npm run verify:all          （提交建议：chore(v" + NEW + "): 版本号提升）");
