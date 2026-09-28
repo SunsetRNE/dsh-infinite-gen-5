@@ -55,6 +55,7 @@ if [ "$VERIFY_ONLY" = 0 ]; then
 __pycache__/
 *.pyc
 out/remote/
+out/dist/*.tar.gz
 out/run_full.json
 *.log
 IGN
