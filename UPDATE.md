@@ -11,6 +11,18 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.32.2
+
+### ① 修 v0.32.1 的回归：兼容声明从 `peerDependencies` 挪到 `engines.dsh`
+
+- 现象（本机实测）：装完 v0.32.1 后 `npm run verify:sync` 出现 1 红 —— `✗ 指纹算法 = 宿主记录（dsh-infinite-gen-5） — 16e613bc6d36…`；装 v0.32.0 时该项是 40 通过 / 0 失败 / 0 警告。
+- 定位（用宿主自己的函数跑，非推断）：`plugin-dependencies.py` 的 `current('/root/.dsh/plugin-src/dsh-infinite-gen-5')` 返回 **521 个节点**、指纹 `16e613bc6d36d578156654a040eab8b20536c0cffc626c7d3566cab0a6e84e21` —— 与 `plugin-activations.json` 的记录**逐字符一致**，即记录没坏，是仓库复刻只算单节点图（`scripts/lib/tree-fingerprint.mjs` 对同一棵树给 `cdcc38bc…`）。
+- 机制（读码）：`plugin-dependencies.py:172-175` 把 `dependencies / peerDependencies / optionalDependencies` **一律建成图上的边**；peer 目标解析到 `/usr/local/lib/node_modules/@deepseek-ai/dsh`，于是整棵 DSH 依赖树被拉进本插件的内容指纹。而 `plugin-lifecycle.py:109` 取兼容声明的顺序是 `peerDependencies['@deepseek-ai/dsh']` **or** `engines.dsh` —— 两条路都能声明，**只有 peer 会建边**。
+- 对照实验（同路径副本，实测）：同一份树放到 `/tmp/fp-test/copy` 并把声明改为 `engines.dsh` → 宿主 `current()` 返回 **1 个节点**、指纹 `b8bc148b8d05d112049a9d20e8af6d964e0bcb09b3cb073bab3b7658b7724a71`，与本仓复刻**逐字符一致**；两种写法的 `codeSha256` 本来就相同（`dcc816621695850cfaef0c8fe0700e8f2cd2e9470de00f658bcf3af5b6f71aa6`），差异只在节点集。
+- 运行风险（读码）：`plugin-lifecycle.py:447-450` 在每次加载开始时比较 `current(dir)['sha256']` 与记录指纹，不等则 `status='changed'`、`reason='CONTENT_CHANGED_BEFORE_LOAD'` 并**停用插件**。指纹里含宿主 521 节点 ⇒ 宿主自身依赖一变（DSH 升级、别的插件往共享池装依赖）本插件就可能被判「内容变更」而停用。
+- 修：`package.json` 的 `peerDependencies['@deepseek-ai/dsh']` → `engines: { "dsh": ">=0.1.7-rc.2" }`。面板文案与兼容判定不变（`:109` 回退读 `engines.dsh`，仍 `compatible`），图谱回到单节点，本仓复刻恢复对宿主可预测、`verify:sync` 的交叉验证恢复意义。
+- 复验口径：装 v0.32.2 后 `verify:sync` 该项应复绿（预期 40 通过 / 0 失败 / 0 警告），`verify:install` 仍 13 通过 / 0 失败 / 0 警告。
+
 ## v0.32.1
 
 ### ① 补 dsh 兼容声明：`peerDependencies['@deepseek-ai/dsh'] = ">=0.1.7-rc.2"`
