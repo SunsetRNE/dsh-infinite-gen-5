@@ -4,11 +4,21 @@
 版本段落按提交标题里的 `vX.Y.Z` 切分，未带版本号的提交归入最新段；
 每条末尾的短哈希是提交号，最新一条（HEAD）不标哈希 —— 它在「生成 → 提交」之间还会变。
 
+## v0.34.3 — 2026-09-28
+
+### ✨ 新特性
+
+- 浮层面板动态数据扩容（当前轮切片集中 + 命中流水扩字段 + 空答类型/候选明细上屏）
+
 ## v0.34.2 — 2026-09-28
 
 ### 🧹 杂务与维护
 
-- 版本号提升至 0.34.2（package.json / index.js / client.js / cordis.patch.yml / README / HARNESS_PLUGIN / 两个自检脚本同源改写）
+- 版本号提升至 0.34.2（package.json / index.js / client.js / cordis.patch.yml / README / HARNESS_PLUGIN / 两个自检脚本同源改写）（`57421e1`）
+
+### 📝 文档
+
+- 更新日志（55 个版本段 · 106 条提交）+ RELEASE-NOTES 压缩源（`1b188df`）
 
 ## v0.34.1 — 2026-09-28
 
