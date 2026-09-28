@@ -109,8 +109,13 @@ check(host.assembled.length > 1000, "system prompt 装配出内容", `${host.ass
 const toolNames = host.registeredTools.map((t) => t.name);
 check(toolNames.includes("infinite_gen5_profile"), "元数据工具已注册");
 check(toolNames.includes("infinite_gen5_scenario"), "领域打法工具已注册");
-check(host.registeredTools.length === 3, "只注册三个工具（不引入额外决策噪音）", JSON.stringify(toolNames));
 check(toolNames.includes("infinite_gen5_env"), "环境探测工具已注册");
+check(toolNames.includes("infinite_gen5_dispatch"), "分发工具已注册（v0.34.0 并回主干）");
+check(
+  host.registeredTools.length === 4,
+  "只注册四个工具（profile / scenario / env / dispatch，不引入额外决策噪音）",
+  JSON.stringify(toolNames),
+);
 
 const scenarioTool = host.registeredTools.find((t) => t.name === "infinite_gen5_scenario");
 const profileTool = host.registeredTools.find((t) => t.name === "infinite_gen5_profile");

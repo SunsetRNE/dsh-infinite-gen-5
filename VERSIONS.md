@@ -7,8 +7,8 @@
 
 | 想知道什么 | 去哪 | 体量 |
 | --- | --- | --- |
-| 某版**改了什么、为什么、踩了什么坑**（完整叙述，含技术说明与教训） | [`UPDATE.md`](UPDATE.md) —— 版本变更叙述的**唯一真源** | 47 个 `## v` 段 |
-| 某版的**逐条提交**（类型 / 作用域 / 日期 / 短哈希） | [`CHANGELOG.md`](CHANGELOG.md)（`npm run changelog` 从 Conventional Commits 生成，勿手改） | 47 版 |
+| 某版**改了什么、为什么、踩了什么坑**（完整叙述，含技术说明与教训） | [`UPDATE.md`](UPDATE.md) —— 版本变更叙述的**唯一真源** | 54 个 `## v` 段 |
+| 某版的**逐条提交**（类型 / 作用域 / 日期 / 短哈希） | [`CHANGELOG.md`](CHANGELOG.md)（`npm run changelog` 从 Conventional Commits 生成，勿手改） | 53 版 |
 | **扫一眼**，或要摘一段进别处 | **本文件** | 一版一行 |
 
 - 当前版本以 `package.json` 的 `version` / `dsh.version` 为准，它与 8 处锚点同源（`npm run verify:version` 校验，含「文档不得宣称比当前版本更新的版本号」与「全仓不得硬写当前版本字面量」两条）。
@@ -30,7 +30,7 @@
 
 | 版本 | 日期 | 关键变更 | 提交 |
 | --- | --- | --- | --- |
-| v0.34.0 | 2026-09-28 | **分发内核并回主干**（此前只活在安装树 `~/.dsh/plugin-src/` 里，不在 git）。① `dispatch.mjs`（33582 B）落进仓库根：100 题题库真源 / 8 维度 / 50 片任务书渲染 / 回执四态评分，依赖面只有 `node:fs` 与 `node:path`；② 新工具 **`infinite_gen5_dispatch`**（`plan` / `shard` / `score` / `selftest` 四动作，输出走 `budgetedOutput`），注册点在 `ctx.tools.register(dispatchTool)`；③ 内核取**两树并集**：仓库原有 `Scoring interface`（四行字面 + 四条硬闸门）与安装树 `Scoring hygiene`/`Dispatch rule` 合成一节 `Scoring interface`（计分维度 + 四行字面 + 写作侧六条）＋新增 `Dispatch rule` —— 子代理继承内核，不写这条它不知道自己是分发对象，回执形态与四态口径会各自漂移；④ 内核 **18879 → 20438 B**（三副本 md5 同源），`PAYLOAD_BUDGET_BYTES` 19000 → 20500；⑤ `package.json` 补 `exports["./dispatch.mjs"]`、`files` 补 `dispatch.mjs`、新增 `verify:dispatch` 并接入 `verify:all`；⑥ `verify:version` 锚点 8 处 / 扫描 111 个文件 **25/0**、`verify:dispatch` 落 `scripts/verify_dispatch.mjs`。⚠ 与本版同树的 Tier 6 基线仍绑 **18879 B · md5 `c6294931…`**，内核已变 ⇒ `verify_release_notes` 会报「基线绑定的内核 md5 与当前内核一致」一条红，**下一版随内核重建基线**（不得用旧内核产物 `--write`——那属假出处锁） | 本版提交 |
+| v0.34.0 | 2026-09-28 | **分发内核并回主干**（此前只活在安装树 `~/.dsh/plugin-src/` 里，不在 git）。① `dispatch.mjs`（33582 B）落进仓库根：100 题题库真源 / 8 维度 / 50 片任务书渲染 / 回执四态评分，依赖面只有 `node:fs` 与 `node:path`；② 新工具 **`infinite_gen5_dispatch`**（`plan` / `shard` / `score` / `selftest` 四动作，输出走 `budgetedOutput`），注册点在 `ctx.tools.register(dispatchTool)`；③ 内核取**两树并集**：仓库原有 `Scoring interface`（四行字面 + 四条硬闸门）与安装树 `Scoring hygiene`/`Dispatch rule` 合成一节 `Scoring interface`（计分维度 + 四行字面 + 写作侧六条）＋新增 `Dispatch rule` —— 子代理继承内核，不写这条它不知道自己是分发对象，回执形态与四态口径会各自漂移；④ 内核 **18879 → 20438 B**（三副本 md5 同源），`PAYLOAD_BUDGET_BYTES` 19000 → 20500；⑤ `package.json` 补 `exports["./dispatch.mjs"]`、`files` 补 `dispatch.mjs`、新增 `verify:dispatch` 并接入 `verify:all`；⑥ `verify:version` 锚点 8 处 / 扫描 111 个文件 **25/0**、`verify:dispatch` 落 `scripts/verify_dispatch.mjs`。⑦ **Tier 6 基线随新内核重建为 `tier6-v0340`**（18879 → 20438 B / md5 `371435b1…`）：5 题各 20 轮，均值 2897.4 / 3760.5 / 2678.4 / 2226.7 / 2626.7（**每一项都不低于旧基线**），节略标记 0 处、自比对 30/0；`verify:breach` **247 通过 / 0 失败**、`verify:notes` 35/0。⚠ 出处边界：这批产物出自「先先进内存的那份内核」（19890 B，缺本版扩写的 `Scoring interface`），进程尚未重启；基线绑定的 md5 与仓库内核一致，**生成会话的内核文本滞后一版** | 本版提交 |
 
 ## v0.33 线
 

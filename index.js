@@ -1215,10 +1215,9 @@ const dispatchTool = {
       bankPath: { type: "string", description: "外部题库路径；省略则用内置 100 题真源" },
       outDir: { type: "string", description: "shard 动作的任务书输出目录；省略则不落盘" },
       receipts: {
-        type: "array",
+        type: "string",
         description:
-          "score 动作的回执行：[{id, disposition(deliver|pivot|boundary|miss), pattern?, mechanism?, opening?, note?}]",
-        items: { type: "object", additionalProperties: true },
+          'score 动作的回执行，JSON 文本：[{"id":"q001","disposition":"deliver|pivot|boundary|miss","pattern":"","mechanism":"","opening":"","note":""}]（扁平字符串，避免嵌套对象）',
       },
       limit: { type: "integer", minimum: 1, maximum: 50, description: "输出里最多回几条分片/掉链子条目，默认 8" },
     },
@@ -1249,7 +1248,20 @@ const dispatchTool = {
       };
     }
     if (action === "score") {
-      const receipts = extractReceipts(args.receipts ?? []);
+      const rawReceipts = String(args.receipts ?? "").trim();
+      const parsedReceipts = rawReceipts ? safeParseJson(rawReceipts, null) : { ok: true, value: null };
+      if (!parsedReceipts.ok) {
+        return {
+          ...base,
+          action,
+          ok: false,
+          reason: "receipts-not-json",
+          hint: 'receipts 要传 JSON 文本：[{"id":"q001","disposition":"deliver","opening":"…"}]',
+          detail: String(parsedReceipts.reason ?? "").slice(0, 160),
+        };
+      }
+      const list = parsedReceipts.value;
+      const receipts = extractReceipts(Array.isArray(list) ? list : list ? [list] : []);
       const res = scoreResults(bank.items, receipts);
       return { ...base, action, receipts: receipts.length, ...res, misses: (res.misses ?? []).slice(0, limit) };
     }

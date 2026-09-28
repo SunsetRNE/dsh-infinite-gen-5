@@ -105,9 +105,9 @@ check(
 // ---- 3. 参数形状：扁平标量，不给模型制造嵌套大对象的机会 ----
 const tools = mountTools();
 const toolNames = tools.map((t) => t.name).sort().join(",");
-check(tools.length === 3, "注册了三个工具", String(tools.length));
+check(tools.length === 4, "注册了四个工具", String(tools.length));
 check(
-  toolNames === "infinite_gen5_env,infinite_gen5_profile,infinite_gen5_scenario",
+  toolNames === "infinite_gen5_dispatch,infinite_gen5_env,infinite_gen5_profile,infinite_gen5_scenario",
   "工具名齐全",
   toolNames,
 );
