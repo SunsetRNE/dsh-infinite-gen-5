@@ -2007,18 +2007,34 @@ export function rankDomains(text, markers = DOMAIN_MARKERS, limit = 4, frames = 
   if (!folded) return [];
   const rows = [];
   for (const [key, list] of Object.entries(markers)) {
-    let longest = 0;
     const hitMarkers = [];
     for (const marker of list) {
       if (!marker) continue;
       // 自定义标记表可能带大写，逐条兜底折叠（内置表在构造时已折叠）。
       const needle = marker === marker.toLocaleLowerCase() ? marker : marker.toLocaleLowerCase();
-      if (folded.includes(needle)) {
-        hitMarkers.push(marker);
-        if (needle.length > longest) longest = needle.length;
-      }
+      if (folded.includes(needle)) hitMarkers.push(marker);
     }
-    if (hitMarkers.length) rows.push({ id: key, hits: hitMarkers.length, markers: hitMarkers, longest });
+    if (hitMarkers.length) {
+      // 同域内「被更长命中标记包含」的短标记不重复计分（containment-collapse）：
+      // `frida` 已经含在 `frida hook` 里时，它对「本域是 hook_inject」没有任何
+      // 额外证据。不这么做的话，同一件事被算两遍会把长词密集的域顶上去：
+      // 「Frida Hook 内存读写改坐标」会让 hook_inject 记 2 分（frida + frida hook），
+      // 而真正的主体 game 只能记 2 分（frida + hook），平局后按 longest 被抢走。
+      // 跨域不受影响 —— game 的 frida / hook 互不包含，仍是 2 分，于是 2:1 胜出。
+      const needles = hitMarkers.map((m) => (m === m.toLocaleLowerCase() ? m : m.toLocaleLowerCase()));
+      const kept = [];
+      for (let i = 0; i < hitMarkers.length; i += 1) {
+        let dominated = false;
+        for (let j = 0; j < hitMarkers.length; j += 1) {
+          if (i === j) continue;
+          if (needles[j].length > needles[i].length && needles[j].includes(needles[i])) { dominated = true; break; }
+        }
+        if (!dominated) kept.push(hitMarkers[i]);
+      }
+      let longest = 0;
+      for (const m of kept) { const n = m === m.toLocaleLowerCase() ? m : m.toLocaleLowerCase(); if (n.length > longest) longest = n.length; }
+      rows.push({ id: key, hits: kept.length, markers: kept, longest });
+    }
   }
   rows.sort((a, b) => b.hits - a.hits || b.longest - a.longest || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
