@@ -10,6 +10,23 @@
 
 ---
 
+## v0.27.1
+
+### ① 修：工具结果的 `toolchain` 字段对新域恒为空（同一个域两套答案）
+
+- 现象（v0.27.0 重启后验证抓出）：`infinite_gen5_scenario("域内 Kerberoast 票据请求与 DCSync 复制")` 与 `("VoIP SIP 分机枚举")` 的 JSON 里 `toolchain: []`，可同一结果的 `playbook` 正文里明明列着 5 条工具链；旧域 `network`（7 条）/ `web`（8 条）正常。
+- 根因：`data/toolchains.mjs:378` 的 `toolchainOf(id) { return TOOLCHAINS[id] ?? []; }` 只读静态表（39 个键），而工具返回的 `toolchain` 字段走的是它。靠 `TOOLCHAIN_EXTRA` 补工具链的域（v0.23.0 新增 16 个 + v0.27.0 新增 17 个 = 33 个）查不到静态表，于是 JSON 回空数组；playbook 走的是 `SCENARIOS[i].toolchain = mergeUnique(TOOLCHAINS[id], TOOLCHAIN_EXTRA[id])`，所以正文一直是对的。
+- 修：`data/scenarios.mjs` 的 `lookupScenario()` 返回体新增 `toolchain: best.toolchain ?? []`（与 playbook 同源）；`index.js` 工具返回改为 `found.toolchain ?? toolchainOf(found.scenario)`（不在 SCENARIOS 里的老调用仍走静态表兜底）。修后实测 `lookupScenario` 工具链条数：voip 5 · windows_ad 5 · ics 4 · analytics 9。
+- 门禁回归：`scripts/verify_scenario_tool.mjs` 新增 2 条断言 —— 「靠扩展词表补工具链的域也回非空 toolchain」与「toolchain 与 playbook 正文同源（不出现两套答案）」。旧门禁只测 game / unpack（两者都在静态表里），所以这个缺陷从 v0.23.0 起漏了三个版本。
+
+### ② 自检与本轮没做
+
+- `verify:scenario-tool` **87/0**（原 85，新增 2 条回归）· `verify:scenarios` 83/0 · `verify:vocab` 16/0 · `verify:gen5` 228/0 · `verify:ui` 198/0 · `verify:stats-panel` 119/0 · `verify:tool-budget` 48/0 · `verify:eval` 84/0 · `gate:eval` 回退 0 项 · `verify:breach` 179/0 · `verify:env` 149/0 · `verify:version` 23/0 · `verify:notes` 35/0 · `harness:check` rc=0。
+- 域包数与词表未动：仍是 107 域 · 索引 20017 B / 预算 24000；本轮只改三处（`data/scenarios.mjs` · `index.js` · `scripts/verify_scenario_tool.mjs`）。
+- 没做：`dist/` 里仍是 v0.13.5 的陈旧发布件（打包不在本轮范围）；`toolchainOf` 本身没改成并表（保留静态表语义，由 `lookupScenario` 出面统一）。
+
+---
+
 ## v0.27.0
 
 ### ① 域包 90 → 107：新增 17 个域

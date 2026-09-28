@@ -4,11 +4,17 @@
 版本段落按提交标题里的 `vX.Y.Z` 切分，未带版本号的提交归入最新段；
 每条末尾的短哈希是提交号，最新一条（HEAD）不标哈希 —— 它在「生成 → 提交」之间还会变。
 
+## v0.27.1 — 2026-09-28
+
+### 🐛 修复
+
+- 工具结果的 toolchain 字段与 playbook 同源（靠扩展词表补工具链的 33 个域不再回空数组）
+
 ## v0.27.0 — 2026-09-28
 
 ### ✨ 新特性
 
-- 域包 90 → 107 —— 新增 17 个域（offense+4 / ai+2 / crypto+2 / data+2 / creative+2 / language+2 / engineering+3）
+- 域包 90 → 107 —— 新增 17 个域（offense+4 / ai+2 / crypto+2 / data+2 / creative+2 / language+2 / engineering+3）（`e8687cb`）
 
 ## v0.26.0 — 2026-09-28
 

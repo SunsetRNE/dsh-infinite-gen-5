@@ -225,6 +225,20 @@ check(
   installCall.toolchain.some((l) => l.includes("upx") || l.includes("unipacker")),
   "unpack 的工具链里有具体脱壳工具",
 );
+// ---- v0.27.1 回归：靠 TOOLCHAIN_EXTRA 补工具链的新域（不在静态 TOOLCHAINS 表内）----
+// 旧实现让工具去查 toolchainOf(id)（只读静态表），这些域的 JSON 里 toolchain 回空数组，
+// 而同一份 playbook 正文里却列着工具链 —— 同一个域两套答案。
+const extraOnly = call({ scenario: "windows_ad" });
+check(
+  extraOnly.ok === true && Array.isArray(extraOnly.toolchain) && extraOnly.toolchain.length >= 3,
+  "靠扩展词表补工具链的域也回非空 toolchain",
+  String(extraOnly.toolchain?.length),
+);
+check(
+  extraOnly.toolchain.every((l) => extraOnly.playbook.includes(l)),
+  "toolchain 与 playbook 正文同源（不出现两套答案）",
+  JSON.stringify(extraOnly.toolchain.filter((l) => !extraOnly.playbook.includes(l)).slice(0, 1)),
+);
 const creativeCall = call({ scenario: "写歌词" });
 check(creativeCall.ok === true && creativeCall.toolchain.length === 0, "创意域工具链为空（不硬塞）", String(creativeCall.toolchain?.length));
 check(Array.isArray(indexCall.toolProtocol) && indexCall.toolProtocol.length >= 6, "无参索引也回协议（省一次往返）");

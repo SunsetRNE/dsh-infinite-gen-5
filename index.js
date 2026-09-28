@@ -44,7 +44,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.27.0";
+const PLUGIN_VERSION = "0.27.1";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -1067,7 +1067,7 @@ const scenarioTool = {
       label: found.label,
       family: found.family,
       playbook: found.playbook,
-      toolchain: toolchainOf(found.scenario) ,
+      toolchain: found.toolchain ?? toolchainOf(found.scenario),
       toolProtocol: TOOLCHAIN_PROTOCOL,
       alternatives: found.alternatives,
       hint: "把 ROLE/OBJECT/ACTION/SCOPE/SHAPE 与输出骨架落实到本次交付物里，只保留与任务相关的行；需要工具而本地没有时，按工具链一节装完先验证再跑，把版本与降级点写进正文。",

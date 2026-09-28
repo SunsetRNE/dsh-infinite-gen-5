@@ -2158,6 +2158,11 @@ export function lookupScenario(query) {
     label: best.label,
     family: best.family,
     playbook: renderScenario(best),
+    // v0.27.1：工具结果里的 toolchain 必须与 playbook 里渲染的那份同源。
+    // 旧实现让工具去查 toolchainOf(id)（只读静态 TOOLCHAINS 表），于是所有靠
+    // TOOLCHAIN_EXTRA 补工具链的域（v0.23.0 与 v0.27.0 新增的 33 个）在 JSON 里
+    // 回空数组、正文里却列着工具链 —— 同一个域两套答案。
+    toolchain: best.toolchain ?? [],
     alternatives: matches.slice(1, 4).map((s) => s.id),
   };
 }
