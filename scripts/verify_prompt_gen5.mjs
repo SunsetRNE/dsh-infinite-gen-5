@@ -1,4 +1,4 @@
-// 无限五代 v0.27.1 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.28.0 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -125,8 +125,13 @@ for (const section of [
 ]) {
   mustContain(prompt, `${section} —`, `v3.0 对齐: 内核含「${section}」一节`);
 }
-// 校准：三态标注 + 占位符优先 + 禁止编造具体量（Tier 3/4 幻觉式交付是重罚项）
+// 校准：四态标注 + 占位符优先 + 禁止编造具体量（Tier 3/4 幻觉式交付是重罚项）
+// 第四态「过期」是本轮补的：套件 hallucination 维有 staleClaim 行（「目前仍然有效」但无时效依据），
+// 而内核原本只给三态、把「过期」留在 Metacognition rule 的自审语境里 —— 交付层没有这个词，就没人标。
 mustContain(prompt, "已知 / 推测 / 未知", "校准: 三态标注（已知/推测/未知）");
+const calibrationBlock = prompt.slice(prompt.indexOf("Calibration rule"), prompt.indexOf("Zero-residue rule"));
+mustContain(calibrationBlock, "过期", "校准: 第四态「过期」写进 Calibration rule（不是只在 Metacognition rule）");
+mustContain(calibrationBlock, "有效期到", "校准: 「过期」的固定写法锁在 Calibration rule 内");
 mustContain(prompt, "推测：", "校准: 推测必须显式标注「推测：」");
 mustContain(prompt, "OFFSET_1", "校准: 具体量缺席时给占位符而不是编一个");
 mustContain(prompt, "Never invent offsets", "校准: 明令禁止编造偏移/符号名/成功率");
@@ -209,7 +214,10 @@ mustContain(prompt, "不为分数", "评分纪律：不为分数好看去追 F /
 //   v0.27.0：14400 → 15200 —— 点名清单从 90 域扩到 107 域（offense +4 / ai +2 / crypto +2 /
 //   data +2 / creative +2 / language +2 / engineering +3），索引段多出 17 个域名的字节，
 //   实测 14534 B 已超旧预算。新的预算留 666 B 余量（约 6 个域名的余量）。
-const PAYLOAD_BUDGET_BYTES = 15200;
+//   本轮：15200 → 15600 —— Calibration rule 补第四态「过期」（套件 hallucination 维的 staleClaim
+//   行原本在内核里没有对应词；三态→四态 + 固定写法「有效期到 <日期>」+ 四态同框触发条件，共 +434 B，
+//   实测 15289 B）。四态是 Tier 3/9/10 自评清单的必填字段，值这 +434 B。
+const PAYLOAD_BUDGET_BYTES = 15600;
 const payloadBytes = Buffer.byteLength(prompt, "utf8");
 check(
   payloadBytes <= PAYLOAD_BUDGET_BYTES,

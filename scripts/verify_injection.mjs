@@ -13,7 +13,7 @@
 //
 // 找不到宿主（裸机 / CI 容器）时打印 SKIP 并 exit 0：缺宿主是环境限制，不是回归。
 // 用法：node scripts/verify_injection.mjs [--json] [--host=/path/to/dsh]
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -358,6 +358,31 @@ const last = (arr) => arr[arr.length - 1];
   const r3 = await rig();
   check(r3.profile()?.injectionStrength?.runtimeAnchor?.mode === "cadence", "去掉覆盖后回到默认档");
   check((r3.profile()?.configOverrides ?? []).length === 0, "没有覆盖时不虚报来源", JSON.stringify(r3.profile()?.configOverrides));
+}
+
+// ---- 13. 内核热加载（v0.28.1）：改盘上内核，不重启进程也要在下次装配生效 ----
+// 回归背景：旧写法在模块加载时 readFileSync 一次，段文本注册后永不更新 ——
+// 实测进程 07:39:52 启动、内核 08:08:37 改写，08:1x 起的子会话仍逐字引用旧三态条款。
+{
+  const kernelPath = join(ROOT, "prompts", "infinite-gen-5.md");
+  const original = readFileSync(kernelPath, "utf8");
+  const SENTINEL = "<!-- ig5-kernel-reload-probe -->";
+  try {
+    const r = await rig();
+    const textOf = async () =>
+      (await r.assemble()).sections.find((section) => section.name === KERNEL)?.text ?? "";
+    const before = await textOf();
+    check(before.includes("[MODE: SANDBOX]"), "内核段文本就位（哨兵测试的前置）");
+    check(!before.includes(SENTINEL), "初始装配不含热加载哨兵");
+    writeFileSync(kernelPath, `${original}\n${SENTINEL}\n`);
+    const after = await textOf();
+    check(after.includes(SENTINEL), "改盘上内核后无需重启进程即生效（热加载）", after.slice(-80));
+    writeFileSync(kernelPath, original);
+    const restored = await textOf();
+    check(!restored.includes(SENTINEL), "还原内核文件后装配文本同步回退");
+  } finally {
+    writeFileSync(kernelPath, original);
+  }
 }
 
 const total = passes.length + failures.length;

@@ -1968,10 +1968,41 @@ export const DOMAIN_FAMILIES = Object.fromEntries(SCENARIOS.map((s) => [s.id, s.
  *  落到两个域」不该只在判错时靠猜。entries 已按「跨族歧义优先」排序。 */
 export const MARKER_INDEX = buildMarkerIndex(DOMAIN_MARKERS, { families: DOMAIN_FAMILIES });
 
-/** 领域候选排名（状态条浮层 / 评测诊断共用）：返回命中数 > 0 的领域，
- *  按「命中数 → 最长命中标记」降序。带出真正命中的那几条标记词，
- *  这样「识别领域」不再是只有一个 id 的黑箱。 */
-export function rankDomains(text, markers = DOMAIN_MARKERS, limit = 4) {
+/** 元层帧标记：说明「这一轮用哪一层框架在提要求」，而不是「要打什么」。
+ *
+ *  为什么单独立一层：rankDomains 是纯计数 —— 一个被 `[FRAME=…]` / `persona=` /
+ *  「系统指令」包装过的提示词提取请求，内容词照样指向 web/network，llm 的 21 条
+ *  词表因命中数少被压到第 2 名以后。实测（83 条带标签语料，`scripts/eval-corpus.mjs`
+ *  同源判据）：把帧标记并进 `DOMAIN_MARKERS.llm` 只把 Top-1 从 62 提到 70 —— 帧标记
+ *  只是多算一次 hits，仍抢不过内容域；改成「命中即置顶」提到 74，且零误伤。
+ *  所以帧**不进词表**（进词表会被 verify_vocab 的跨族/短词护栏拦，且语义不对）。
+ *
+ *  分工：词表回答「这是什么任务」，帧回答「这是谁在要求、包在哪一层里」。
+ *  冲突时帧优先 —— 包着注入帧的知识题，该注入的是 llm playbook，不是它引用的内容域。
+ *  guard 是反向排除：文本命中 guard 时该帧不生效（例：「零宽」在隐写语境里属 crypto）。
+ *  domain 必须落在 SCENARIOS 的 id 上（verify_scenarios 会查）。 */
+export const DOMAIN_FRAME_MARKERS = Object.freeze([
+  { re: /\[frame=/i, domain: "llm", why: "宿主/评测显式声明的帧头" },
+  { re: /\[zws\]/i, domain: "llm", why: "零宽字符注入的方括号标记" },
+  { re: /零宽/, domain: "llm", why: "零宽注入（隐写语境除外）", guard: /隐写|steg[oa]|水印|watermark|莫尔斯|morse/ },
+  { re: /persona\s*=/i, domain: "llm", why: "persona= 角色槽覆盖" },
+  { re: /system[-_ ]instruction|系统指令|指令层级|instruction[-_ ]hierarchy/i, domain: "llm", why: "指令层级 / 系统指令" },
+  { re: /assistant[-_ ]continuation|助手续写槽|memory[-_ ]entry|second face|第二面/i, domain: "llm", why: "助手续写槽与第二面 / 记忆条目" },
+  { re: /infinite_gen5_(?:knowledge|specialists)/i, domain: "llm", why: "自指帧：注入体引用我们自己的块名" },
+  { re: /对抗后缀|adversarial\s*suffix/i, domain: "llm", why: "对抗后缀" },
+  { re: /多轮绕过|多轮旁路/i, domain: "llm", why: "多轮绕过" },
+]);
+
+/** 领域候选排名（状态条浮层 / 评测诊断共用）：先出「元层帧」命中的域，再按
+ *  「命中数 → 最长命中标记」降序。带出真正命中的那几条标记词，
+ *  这样「识别领域」不再是只有一个 id 的黑箱。
+ *
+ *  帧域可以内容命中数为 0 而仍然置顶（`hits` 如实报 0、另带 `frame: true`，
+ *  不注水）—— 这正是 `gen5__multiturn` / `gen5__kb` 一类「整段话都是包装、
+ *  没有内容词」的用例原先判成 null 的原因。传 `frames = null` 可关掉这一层。
+ *  注意：detectDomain 与本函数共用同一口径，状态条 / 工具 / 离线评分器不会
+ *  出现「候选列表与主判不一致」。 */
+export function rankDomains(text, markers = DOMAIN_MARKERS, limit = 4, frames = DOMAIN_FRAME_MARKERS) {
   const folded = String(text ?? "").toLocaleLowerCase();
   if (!folded) return [];
   const rows = [];
@@ -1990,12 +2021,31 @@ export function rankDomains(text, markers = DOMAIN_MARKERS, limit = 4) {
     if (hitMarkers.length) rows.push({ id: key, hits: hitMarkers.length, markers: hitMarkers, longest });
   }
   rows.sort((a, b) => b.hits - a.hits || b.longest - a.longest || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  return rows.slice(0, Math.max(1, limit)).map((row) => ({
-    id: row.id,
-    label: DOMAIN_LABELS[row.id] ?? row.id,
-    hits: row.hits,
-    markers: row.markers,
-  }));
+
+  const framedIds = [];
+  for (const frame of frames ?? []) {
+    if (!frame || !frame.domain || !frame.re) continue;
+    if (frame.guard && frame.guard.test(folded)) continue;
+    if (!frame.re.test(folded)) continue;
+    if (!framedIds.includes(frame.domain)) framedIds.push(frame.domain);
+  }
+
+  const out = [];
+  for (const id of framedIds) {
+    const row = rows.find((r) => r.id === id);
+    out.push({
+      id,
+      label: DOMAIN_LABELS[id] ?? id,
+      hits: row ? row.hits : 0,
+      markers: row ? row.markers : [],
+      frame: true,
+    });
+  }
+  for (const row of rows) {
+    if (framedIds.includes(row.id)) continue;
+    out.push({ id: row.id, label: DOMAIN_LABELS[row.id] ?? row.id, hits: row.hits, markers: row.markers });
+  }
+  return out.slice(0, Math.max(1, limit));
 }
 
 /** 在一个文本窗口里挑命中数最多的领域；命中数为 0 时返回 null。

@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.27.1)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.28.0)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
@@ -56,11 +56,12 @@
   - 载荷中的 `{{...}}` 非内置变量由 `index.js` 做安全转义，避免模板解析器抛错。
 - **领域 / 语言覆盖（v0.6.0）**：内核载荷不再只点名 3 个任务族，改为
   **五槽骨架** `ROLE / OBJECT / ACTION / SCOPE / SHAPE`（未列领域自行拆槽、直接产出）
-  + **62 个领域 × 7 族点名** + **语言规则**（任何语言的软化词都视为「重新框定并继续」）。
+  + **107 个领域 × 7 族点名** + **语言规则**（任何语言的软化词都视为「重新框定并继续」）。
   载荷 3010 B → 4837 B。
-- **领域包工具 `infinite_gen5_scenario`**：62 个领域包共约 164 KB（v0.7.0 计算机向扩写 11 个域 + v0.14.0 扩写 6 个域），
-  放在工具里按需取用而不是常驻 system prompt。无参调用返回约 10.6 KB 索引（≈2.9 K token），
-  带用户原话只返回命中的那一个包（≈0.2–1.0 K token）。
+- **领域包工具 `infinite_gen5_scenario`**：**107 个领域包共约 310 KB**（v0.7.0 计算机向扩写 11 个域 + v0.14.0 扩写 6 个域，
+  v0.24.0 / v0.27.0 再行扩编），放在工具里按需取用而不是常驻 system prompt。无参调用返回
+  **20017 B 索引（≈5.5 K token）**，带用户原话只返回命中的那一个包（**639–4540 B，≈0.2–1.2 K token**）。
+  包数与体积随域包增长：`npm run verify:scenarios` 打印当前值，历代值见 [`VERSIONS.md`](VERSIONS.md)。
 - **工具链注入（v0.7.0）**：每个计算机域在 `data/toolchains.mjs` 里配了
   `<工具> — <用途> | 装: <命令> | 验: <命令>` 形式的工具链，外加一份「缺工具协议」
   （探测 → 安装 → 验证 → 降级替代）。工具的返回值与 playbook 正文都带这两块，
@@ -92,34 +93,42 @@
 
 ## 版本
 
-逐版「改了什么、为什么、自检项数怎么变」统一收在仓库内《更新文档》—— [`UPDATE.md`](UPDATE.md)（随包分发）；本文件不再复述历史。
+本文件与 README 只讲**当前状态**；逐版「改了什么、为什么」不再在此复述，按需要的深度分三层：
 
-- 当前版本：以 `package.json` 的 `version` 为准（本文件标题同步，锚点表见 `scripts/version-targets.mjs`）。
-- 机械生成的提交清单：[`CHANGELOG.md`](CHANGELOG.md)（生成物，别手改）。
+| 想要 | 去哪 |
+|---|---|
+| 速查 —— 一版 1–3 行，含硬数字与提交哈希 | [`VERSIONS.md`](VERSIONS.md) |
+| 完整叙述 —— 那一轮的技术说明与教训（随包分发） | [`UPDATE.md`](UPDATE.md)（版本变更叙述的**唯一真源**） |
+| 机械清单 —— 逐条提交、日期、短哈希 | [`CHANGELOG.md`](CHANGELOG.md)（生成物，别手改） |
+
+- 当前版本：以 `package.json` 的 `version` 为准（本文件标题同步；锚点表见 `scripts/version-targets.mjs`，其中「一键安装深链 `version=`」为 4 处同源）。
 - 发布产物 / Release 正文：只带最近一次更新（`scripts/lib/release-notes.mjs` 压缩）并指回 `UPDATE.md`。
 
 ## Local verification
 
 ```powershell
 node --check index.js
-node scripts/verify_prompt_gen5.mjs   # 158 项：载荷逐字同源 + 五槽骨架 + 七族点名 + 语言/工具链/环境/工具调用卫生（含坏包修复回路与结果侧截断）+ 体积预算 + 投影 + 品牌纯净度
-node scripts/verify_scenarios.mjs     # 83 项：62 个领域包 / 索引预算 / 标记表唯一真源 / 工具链装验成对 / 匹配用例
-node scripts/verify_vocab.mjs         # 16 项：2053 条扩展词条形态 / 跨族签字 / 英文碰撞 / 102 条真实语料 + 41 条破甲题库 + 20 条行话 + 7 条负样本
-node scripts/verify_scenario_tool.mjs # 85 项：真宿主挂载三个工具（+ 环境工具离线调用） + 工具链返回 + 「包正文不进 system prompt」硬断言
+node scripts/verify_prompt_gen5.mjs   # 228 项：载荷逐字同源 + 五槽骨架 + 七族点名 + 语言/工具链/环境/工具调用卫生（含坏包修复回路与结果侧截断）+ 体积预算 + 投影 + 品牌纯净度
+node scripts/verify_scenarios.mjs     # 83 项：107 个领域包 / 索引预算 / 标记表唯一真源 / 工具链装验成对 / 匹配用例
+node scripts/verify_vocab.mjs         # 16 项：2512 条扩展词条形态 / 跨族签字 / 英文碰撞 / 102 条真实语料 + 41 条破甲题库 + 20 条行话 + 7 条负样本
+node scripts/verify_scenario_tool.mjs # 87 项：真宿主挂载三个工具（+ 环境工具离线调用） + 工具链返回 + 「包正文不进 system prompt」硬断言
+node scripts/verify_breach.mjs        # 232 项：破甲套件 v3.0 —— §3.3 特征库逐行对齐 / JBI 数学（19.05，反例 20.25）/ §3.7 输出形态 / 内核七类条款 / 校准负样本锁 / 长程回归基线
+node scripts/probe_jb_suite.mjs       # 反应探针生成器（baseline / middle / boundary / shape 四份）；实测记录 tests/jb-v3-reactions.md
+node scripts/regress_jb.mjs           # 长程回归量尺：--self-check 夹具自检 / --dir 产出目录对 tests/jb-v3-regression/tier6-golden.json 比对（基线绑定内核 md5）
 node scripts/verify_tool_budget.mjs   # 48 项：唯一解析入口 / 结果体积闸（真实 render 驱动）/ 工具参数扁平 / 服务端与页面体积上限同值
-node scripts/verify_stats_panel.mjs   # 99 项：统计数据库（原子写 / 防抖 / 只读不写盘 / 写失败不抛 / SSE 推送与 live 分区 / 命中环流水与定长）+ 任务清单（读 todos 投影、写走 todo/write）+ 面板只读库
+node scripts/verify_stats_panel.mjs   # 119 项：统计数据库（原子写 / 防抖 / 只读不写盘 / 写失败不抛 / SSE 推送与 live 分区 / 命中环流水与定长）+ 任务清单（读 todos 投影、写走 todo/write）+ 面板只读库
 node scripts/verify_dedupe.mjs        # 84 项：同源让位 / 中段锚点 / 真末位锚点降级 / 运行时锚点节拍 / 版本单一真源
-node scripts/verify_injection.mjs     # 41 项：真实宿主演习台（装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级；无宿主时 SKIP 并以 0 退出）
-node scripts/verify_tuning.mjs        # 45 项：设置页调参接口（路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位 / 无 webServer 降级 / webServer 晚挂补挂；无宿主时 SKIP 并以 0 退出）
-node scripts/verify_version.mjs       # 23 项：版本锚点唯一且等于 package.json / 文档无超前版本号 / 全仓无未登记字面量
-node scripts/verify_release_notes.mjs # 32 项：发布正文压缩（只留最近更新 / 截断与封顶 / 去重 / 指针指回 UPDATE.md）+ 两个产物路径都走压缩器 + 叙述统一在仓库内
+node scripts/verify_injection.mjs     # 60 项：真实宿主演习台（装配顺序 / 真末位位置 / 运行时快照节拍 / 独占档 / 瀑布降级；无宿主时 SKIP 并以 0 退出）
+node scripts/verify_tuning.mjs        # 49 项：设置页调参接口（路由自守 / 改档位后重装注入 / 落盘 / 优先级 / 复位 / 无 webServer 降级 / webServer 晚挂补挂；无宿主时 SKIP 并以 0 退出）
+node scripts/verify_version.mjs       # 25 项：版本锚点唯一且等于 package.json（深链 4 处同源）/ 文档无超前版本号 / 全仓无未登记字面量
+node scripts/verify_release_notes.mjs # 35 项：发布正文压缩（只留最近更新 / 截断与封顶 / 去重 / 指针指回 UPDATE.md）+ 两个产物路径都走压缩器 + 叙述统一在仓库内
 node scripts/cleanup.mjs              # 安装残留清理（默认只列；--yes 才删，活着的安装树不在范围内）
 node scripts/verify_install.mjs       # 本地接线体检（项数随机器变化）：接线入口唯一 / 定向 config 覆盖识别 / 内容一致 / 进程是否比安装树更旧（缺 ~/.dsh 时 SKIP）
 node scripts/sync-local.mjs           # 本机安装树同步（默认只读预览；--yes 才铺树并刷激活记录）—— 复刻宿主指纹算法，见下文
 node scripts/verify_sync.mjs          # 37 项：指纹算法（与宿主记录交叉验证）/ 预览不落盘 / 增改删 / 权限位 / 幂等 / 激活记录刷新
-node scripts/verify_ui.mjs            # 174 项：状态条行为 + 设置台（偏好读写与持久化 / 形态与位置切换生效 / 清理与幂等 / 推送订阅与自适应轮询）+ 判决浮层卡片（chip 命中与风险载荷 / 最近命中流水 / 实时行）；--emit-html 出视觉预览
+node scripts/verify_ui.mjs            # 198 项：状态条行为 + 设置台（偏好读写与持久化 / 形态与位置切换生效 / 清理与幂等 / 推送订阅与自适应轮询）+ 判决浮层卡片（chip 命中与风险载荷 / 最近命中流水 / 实时行）；--emit-html 出视觉预览
 node scripts/verify_env.mjs           # 149 项：环境探测（纯函数 / 只读与隐私边界 / CLI 退出码 / 性能预算）
-node scripts/verify_eval.mjs          # 81 项：评测计量（P/R/F1 手算可核）+ 语料载入形状 + CLI 退出码 0/1/3
+node scripts/verify_eval.mjs          # 84 项：评测计量（P/R/F1 手算可核）+ 语料载入形状 + CLI 退出码 0/1/3
 node scripts/verify_prompt.mjs        # 64 项：载荷锚点 + 导出 + 安装协议 + 用例库
 node scripts/eval-corpus.mjs --gate   # 离线评测门禁：坏行=1、相对 tests/eval-baseline.json 回退=3
 ```
@@ -147,7 +156,7 @@ npm run release:pack                        # 发布产物：tar.gz / zip / SHA2
 
 `--release` 优先用 `gh release create`；没装 `gh` 时自动改用 GitHub REST（`POST /repos/<owner>/<repo>/releases`）。凭据顺序：`GH_TOKEN` / `GITHUB_TOKEN` → `GH_TOKEN_FILE` / `--token-file=PATH` → 约定路径 `~/.local-gh/.token`（通用凭据目录）。只想补 Release、tag 已推过：加 `--release-only`。
 
-README / 本文档的版本沿革、`package.json` description、`ENV_PROBE.md` 的历史引用、以及生成物 `CHANGELOG.md` 里的版本号属**历史叙述**，刻意不改写（`verify_version.mjs` 只在 `PROSE_ALLOWED_FILES` 里放行）；发版时改了它们等于篡改历史。
+版本变更的**叙述**只有一处真源：`UPDATE.md`（速查在 [`VERSIONS.md`](VERSIONS.md)，机械清单在 `CHANGELOG.md`）。README / 本文档 / `package.json` description 只描述**当前状态**，要提历史就指回上面三处，不再内嵌逐版细节。允许携带当前版本号字面量的文件（`package.json` / `ENV_PROBE.md` / `CHANGELOG.md` / `UPDATE.md` / `VERSIONS.md`）由 `verify_version.mjs` 的 `PROSE_ALLOWED_FILES` 放行；其它文件出现当前版本号即失败。
 
 ### 把仓库铺进安装树并刷新管理器记账（sync:local）
 

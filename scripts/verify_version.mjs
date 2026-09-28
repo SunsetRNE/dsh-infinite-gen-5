@@ -46,8 +46,8 @@ const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 check(/^\d+\.\d+\.\d+$/.test(V), "package.json 的 version 形如 x.y.z", V);
 check(pkg.dsh?.version === V, "package.json 的 dsh.version 与 version 一致", `dsh.version=${pkg.dsh?.version} version=${V}`);
 
-// ---- 2. 当前版本锚点恰好命中一次且等于当前版本 ----
-for (const { file, name, re } of VERSION_ANCHORS) {
+// ---- 2. 当前版本锚点恰好命中 count 次（默认 1）且每一处都等于当前版本 ----
+for (const { file, name, re, count = 1 } of VERSION_ANCHORS) {
   let text = null;
   try {
     text = readFileSync(abs(file), "utf8");
@@ -56,9 +56,10 @@ for (const { file, name, re } of VERSION_ANCHORS) {
     continue;
   }
   const hits = [...text.matchAll(new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g"))];
-  check(hits.length === 1, `锚点唯一性 · ${name}`, `命中 ${hits.length} 次，期望 1 次（${file}）`);
-  if (hits.length === 1) {
-    check(hits[0][1] === V, `锚点版本 · ${name}`, `文件里是 ${hits[0][1]}，package.json 是 ${V}`);
+  check(hits.length === count, `锚点唯一性 · ${name}`, `命中 ${hits.length} 次，期望 ${count} 次（${file}）`);
+  if (hits.length === count) {
+    const wrong = [...new Set(hits.map((h) => h[1]).filter((v) => v !== V))];
+    check(wrong.length === 0, `锚点版本 · ${name}`, `文件里是 ${wrong.join(" / ")}，package.json 是 ${V}`);
   }
 }
 

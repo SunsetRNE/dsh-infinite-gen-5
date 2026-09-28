@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, renameSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, renameSync, mkdirSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname as dirNameOf, join as joinPath } from "node:path";
 import { randomBytes } from "node:crypto";
@@ -44,7 +44,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.27.1";
+const PLUGIN_VERSION = "0.28.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -57,8 +57,30 @@ const PROMPT_URL = new URL("./prompts/infinite-gen-5.md", import.meta.url);
 const PROMPT41_URL = new URL("./prompts/infinite-gen-5.1-flash.md", import.meta.url);
 // 兼容 DSH 提示词变量插值引擎（非内置变量的连续花括号做安全转义，防止模板解析器抛出 malformed prompt variable reference）
 const escapeTemplate = (text) => text.replace(/\{\{(?!(?:cwd|model|provider)\}\})/g, "{ {");
-const PROMPT_TEXT = escapeTemplate(readFileSync(PROMPT_URL, "utf8"));
-const PROMPT41_TEXT = escapeTemplate(readFileSync(PROMPT41_URL, "utf8"));
+// 内核文本按需重读（mtime + size 签名缓存）：
+// 旧写法在模块加载时 readFileSync 一次，此后编辑 prompts/*.md 必须**重启进程**才生效 ——
+// 「内核改了、注入的还是旧文本」的根因（实测：进程 07:39 启动、内核 08:08 改写 → 子会话仍逐字引用旧三态）。
+const KERNEL_CACHE = new Map();
+const KERNEL_STATE = { reloads: 0, lastPath: "", lastMtimeMs: 0, lastBytes: 0 };
+function kernelText(url) {
+  const key = String(url.pathname || url);
+  const hit = KERNEL_CACHE.get(key);
+  try {
+    const stat = statSync(url);
+    const sig = `${stat.mtimeMs}:${stat.size}`;
+    if (hit && hit.sig === sig) return hit.text;
+    const text = escapeTemplate(readFileSync(url, "utf8"));
+    KERNEL_CACHE.set(key, { sig, text });
+    KERNEL_STATE.reloads += 1;
+    KERNEL_STATE.lastPath = key;
+    KERNEL_STATE.lastMtimeMs = Math.round(stat.mtimeMs);
+    KERNEL_STATE.lastBytes = Buffer.byteLength(text, "utf8");
+    return text;
+  } catch (error) {
+    if (hit) return hit.text; // 文件被临时改名/删除时退回上一次成功的文本，不炸注入
+    throw error;
+  }
+}
 
 // Order 200 末位锚点：只复述最强约束，不复述整份内核。
 const ANCHOR_TEXT =
@@ -1710,7 +1732,8 @@ export function apply(ctx, config) {
       return;
     }
     // 独占档：把末位锚点并进内核文本（宿主会丢弃其余系统段，瀑布追加也会被裁掉）。
-    const primaryText = exclusive ? `${PROMPT_TEXT}\n\n${TAIL_ANCHOR_TEXT}` : PROMPT_TEXT;
+    const kernel = kernelText(PROMPT_URL);
+    const primaryText = exclusive ? `${kernel}\n\n${TAIL_ANCHOR_TEXT}` : kernel;
     const primarySpec = { name: PRIMARY, order: 100, text: primaryText };
     if (exclusive) primarySpec.complete = true;
     const primaryOk = registerSection(
@@ -1719,6 +1742,33 @@ export function apply(ctx, config) {
       exclusive ? "系统提示唯一段（complete: true，其余系统段被宿主丢弃）" : undefined,
     );
     runtime.role = primaryOk ? "primary" : "yielded";
+
+    // 内核热加载（v0.28.1）：section 文本在注册那一刻就固定，改 prompts/*.md 后不重启进程，
+    // 装配出去的仍是旧文本（实测：进程 07:39:52 启动、内核 08:08:37 改写 → 08:1x 起的子会话
+    // 仍逐字引用旧三态 Calibration rule）。这里在每次 assemble 时按 mtime+size 重读盘，
+    // 把 Order 100 段就地换成新文本 —— 改内核即刻生效，不必重启。
+    if (primaryOk) {
+      const refreshKernel = async (_assembly, _context, next) => {
+        const out = await next();
+        if (!out || !Array.isArray(out.sections)) return out;
+        const at = out.sections.findIndex((section) => section && section.name === PRIMARY);
+        if (at < 0) return out;
+        const fresh = kernelText(PROMPT_URL);
+        const wanted = exclusive ? `${fresh}\n\n${TAIL_ANCHOR_TEXT}` : fresh;
+        if (out.sections[at].text === wanted) return out;
+        const sections = out.sections.slice();
+        sections[at] = { ...out.sections[at], text: wanted };
+        return { ...out, sections };
+      };
+      try {
+        injectionHandles.push(ctx.effect(() => ctx.on("system-prompt/assemble", refreshKernel)));
+      } catch (error) {
+        console.warn(
+          `[infinite-gen-5] 无法挂载内核热加载瀑布（${String(error?.message ?? error)}）；` +
+            `改 prompts/*.md 后需重启进程才生效。`,
+        );
+      }
+    }
 
     if (exclusive && primaryOk) {
       console.warn(
@@ -1732,9 +1782,9 @@ export function apply(ctx, config) {
         kind: "dropped",
       });
     } else if (CFG.LAYER2_MODE !== "off") {
-      const layer2Text = CFG.LAYER2_MODE === "mirror" ? PROMPT41_TEXT : ANCHOR_TEXT;
+      const layer2Text = CFG.LAYER2_MODE === "mirror" ? kernelText(PROMPT41_URL) : ANCHOR_TEXT;
       const label = CFG.LAYER2_MODE === "mirror" ? "Order 200 强化镜像" : "Order 200 中段锚点";
-      if (CFG.LAYER2_MODE === "mirror" && normalized(layer2Text) === normalized(PROMPT_TEXT)) {
+      if (CFG.LAYER2_MODE === "mirror" && normalized(layer2Text) === normalized(kernelText(PROMPT_URL))) {
         runtime.skipped.push({ label, section: LAYER2, reason: "与 Order 100 逐字同源", kind: "identical" });
         console.warn(
           `[infinite-gen-5] 跳过重复注入（${label}）：两份载荷逐字同源，` +
