@@ -161,8 +161,8 @@ check(counts.regressions.some((r) => r.key === "domain.perLabel.web.precision"),
 // ---- 7 · 真实语料：形状与一致性 ----------------------------------------
 
 const real = loadCorpus(join(ROOT, "tests"));
-check(!real.error && real.files.length === 4, "真实语料：4 份 jsonl 都读进来");
-check(real.cases.length === 110, "真实语料：110 条用例");
+check(!real.error && real.files.length === 5, "真实语料：5 份 jsonl 都读进来（含 prompt-bank-coverage）");
+check(real.cases.length === 404, "真实语料：404 条用例");
 check(real.bad.length === 0, "真实语料：0 行坏 JSON（v4pro 的 9 行是注释）");
 check(real.comments === 9, "真实语料：v4pro 的 9 行注释被识别为注释");
 check(real.duplicates.length === 0, "真实语料：case_id 无重复");
@@ -170,7 +170,11 @@ check(real.files.some((f) => f.rows === 40 && f.comments === 9), "真实语料�
 check(real.cases.filter((c) => c.problems.length > 0).length === 0, "真实语料：没有缺 prompt / 未知判决的用例");
 
 const domainIds = SCENARIOS.map((s) => s.id);
-const realCov = coverage(real.cases, { domains: domainIds, languages: ["zh", "en", "ja", "ko", "ru"], levels: ["minimal", "short", "medium"] });
+const realCov = coverage(real.cases, {
+  domains: domainIds,
+  languages: ["zh", "en", "ja", "ko", "ru", "es", "ar", "zh-Hant"],
+  levels: ["minimal", "short", "medium"],
+});
 // v0.28.0：语料里原有两条 `"domain":"postex"`（不在领域清单内）已修正为 privesc / network，
 // 所以这里不能再钉「必须报出 postex」。拆成两条判据，机制与数据各自的真实状态都锁住：
 //   ① 机制：合成的域外标签必须被如实报出（覆盖体检不会静默吞掉未知标签）；
@@ -179,14 +183,14 @@ const ghostSyn = normalizeCase({ raw: { case_id: "ghost__postex", prompt: "对�
 const ghostCov = coverage([ghostSyn], { domains: domainIds, languages: ["zh"], levels: ["minimal"] });
 check(ghostCov.unknownDomains.join(",") === "postex", "覆盖：不属于领域清单的标签被如实报出（不静默吞掉）");
 check(realCov.unknownDomains.length === 0, "真实语料：0 条域外标签（postex 已于 v0.28.0 修正为 privesc / network）");
-check(realCov.labeledDomain === 85 && realCov.labeledVerdict === 78, "真实语料：85 条带领域标签 / 78 条带判决标签");
-check(realCov.languageGaps.includes("ja") && realCov.languageGaps.includes("ko"), "真实语料：日/韩实测零用例（这就是缺口）");
-check(realCov.domainGaps.length > 40, "真实语料：56 域里大多数域零用例");
+check(realCov.labeledDomain === 379 && realCov.labeledVerdict === 78, "真实语料：379 条带领域标签 / 78 条带判决标签");
+check(realCov.languageGaps.length === 0, "真实语料：8 种语言零缺口（ja/ko/ru/es/ar/zh-Hant 已由覆盖语料补齐）");
+check(realCov.domainGaps.length === 0, "真实语料：107 域零缺口（零用例域已由覆盖语料补齐）");
 
 const realPairs = domainPairs(real.cases, () => ["web"]);
 const realPrf = prf(realPairs.pairs);
-check(realPairs.pairs.length === 85, "真实语料：85 条进领域配对");
-check(realPrf.rows.reduce((a, r) => a + r.support, 0) === 85, "真实语料：per-label support 之和 = 配对数");
+check(realPairs.pairs.length === 379, "真实语料：379 条进领域配对");
+check(realPrf.rows.reduce((a, r) => a + r.support, 0) === 379, "真实语料：per-label support 之和 = 配对数");
 check(realPrf.accuracy > 0 && realPrf.accuracy < 1, "真实语料：Top-1 准确率落在 (0,1)");
 
 // 已录回包：目录不存在时必须优雅返回空，而不是抛错
@@ -272,8 +276,8 @@ try {
 } catch {
   realSnap = null;
 }
-check(realSnap !== null && realSnap.corpus.cases === 110, "CLI：真实语料快照 110 条");
-check(realSnap !== null && realSnap.domain.evaluated === 85, "CLI：真实语料领域配对 85 条");
+check(realSnap !== null && realSnap.corpus.cases === 404, "CLI：真实语料快照 404 条");
+check(realSnap !== null && realSnap.domain.evaluated === 379, "CLI：真实语料领域配对 379 条");
 check(realSnap !== null && Object.keys(realSnap.domain.perLabel).length > 0, "CLI：快照带每类指标");
 check(realSnap !== null && realSnap.verdict.evaluated === 0, "CLI：没有已录回包时判决段为 0 条而不是报错");
 
