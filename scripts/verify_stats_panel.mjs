@@ -379,6 +379,39 @@ check(cov?.playbooks?.min > 0 && cov.playbooks.max <= cov.playbooks.maxBytes,
   "单包体量落在护栏区间内（面板显示的上下限不是编的）",
   cov?.playbooks ? `${cov.playbooks.min}–${cov.playbooks.max}` : "playbooks 缺失");
 
+// ── 缺口视图（v0.26.0）：还能不能加域 / 哪些域贴边 / 撞车在哪。核心算好落盘，面板只画。 ──
+const gaps = cov?.gaps;
+check(gaps && typeof gaps === "object" && Array.isArray(gaps.belowLimit) && Array.isArray(gaps.thin),
+  "库里已经有缺口分区（余量 / 贴边域 / 撞车）", gaps ? "" : "gaps 缺失");
+const gapsLimits = gaps?.limits ?? {};
+check(gapsLimits.markers === 12 && gapsLimits.aliases === 14 && gapsLimits.commands === 3 &&
+  gapsLimits.toolchain === 3 && gapsLimits.playbookMin === 600,
+  "缺口分区的门禁下限与 verify_vocab 口径一致（12 命中 / 14 别名 / 3 命令 / 3 工具链 / 600 B）",
+  JSON.stringify(gapsLimits));
+const gapsHeadroom = gaps?.headroom ?? {};
+check(Number(gapsHeadroom.bytes) === Number(cov.index.budget) - Number(cov.index.bytes) &&
+  gapsHeadroom.perDomain === Math.round(cov.index.bytes / scenarioMod.SCENARIOS.length) &&
+  gapsHeadroom.domainsAffordable === Math.floor(gapsHeadroom.bytes / Math.max(1, gapsHeadroom.perDomain)),
+  "余量自洽：预算减已用 = 剩多少；剩多少 ÷ 每域均值 = 还能加几个域（面板照抄不重算）",
+  JSON.stringify(gapsHeadroom));
+const thinIds = new Set((gaps?.thin ?? []).map((t) => t.id));
+const thinRows = new Map((gaps?.thin ?? []).map((t) => [t.id, t]));
+const gapsExempt = new Set(gaps?.exemptFamilies ?? []);
+const deepIds = scenarioMod.SCENARIOS.filter((s) => !gapsExempt.has(s.family)).map((s) => s.id);
+const thinShapeOk = [...thinIds].every((id) => deepIds.includes(id) ||
+  (thinRows.get(id)?.exempt === true && (thinRows.get(id)?.thin ?? []).every((k) => k === "playbook")));
+check(Number(gaps?.thinCount) === thinIds.size && thinShapeOk,
+  "贴边域数 = 去重后的薄域数；豁免族只在「单包太瘦」时报薄，不记命令 / 工具链薄",
+  `${gaps?.thinCount} vs ${thinIds.size}`);
+check(Number(gaps?.deepDomains) === deepIds.length && (gaps?.belowLimit ?? []).every((id) => deepIds.includes(id)),
+  "非豁免域数 = SCENARIOS 里的非豁免域数；低于门禁下限的只可能是非豁免域",
+  `${gaps?.deepDomains} vs ${deepIds.length} · belowLimit=${JSON.stringify(gaps?.belowLimit)}`);
+check(Number(gaps?.collisions?.unsigned) === 0 &&
+  (gaps?.collisions?.items ?? []).every((it) => it.signature === "SHORT_MARKER_OK" || it.signature === "TRAP_ALLOW") &&
+  Number(gaps?.collisions?.signed) === (gaps?.collisions?.items ?? []).length,
+  "撞车分区：未签字的短词子串命中必须是 0，列出的每一对都要有签字（TRAP_ALLOW / SHORT_MARKER_OK）",
+  JSON.stringify(gaps?.collisions && { shared: gaps.collisions.shared, crossFamily: gaps.collisions.crossFamily, signed: gaps.collisions.signed, unsigned: gaps.collisions.unsigned, items: gaps.collisions.items }));
+
 // 取用分布：驱动真实领域工具，计数必须落进 coverage.hits / coverage.misses。
 const scenarioToolRef = mount.runtime.tools.find((tool) => tool.name === "infinite_gen5_scenario");
 const hitResult = scenarioToolRef.execute({ scenario: "web 渗透信息收集" });

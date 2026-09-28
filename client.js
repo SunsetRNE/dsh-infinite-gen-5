@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.25.0";
+        var VERSION = "v0.26.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -1292,6 +1292,13 @@
           var at = db && db.generatedAt ? Date.parse(db.generatedAt) : 0;
           var age = at ? Math.max(0, Math.round((Date.now() - at) / 1000)) : null;
           var misses = Number(cov.misses) || 0;
+          // 缺口视图（v0.26.0）：还能不能加域 / 哪些域贴边 / 撞车在哪。核心算，面板只画。
+          var gaps = cov.gaps || {};
+          var gapTargets = gaps.targets
+            ? "目标 ≥" + gaps.targets.markers + " 命中 / ≥" + gaps.targets.aliases + " 别名 / ≥" + gaps.targets.commands +
+              " 命令 / ≥" + gaps.targets.toolchain + " 工具链"
+            : "";
+          var gapsMissing = "需要 v0.26.0 的服务端（重启一次 DSH 后由本体落盘）";
           var rows = [
             ["词表", String(extended.total || 0) + " 条扩展（别名 " + (extended.aliases || 0) + " · 命中 " + (extended.markers || 0) +
               " · 命令 " + (extended.commands || 0) + " · 工具链 " + (extended.toolchains || 0) + "）"],
@@ -1300,6 +1307,18 @@
             ["索引", fmtBytes(index.bytes) + " / " + fmtBytes(index.budget) + "（" + (index.percent || 0) + "%）"],
             ["单包体量", fmtBytes(playbooks.min) + " – " + fmtBytes(playbooks.max) + "（护栏 " + fmtBytes(playbooks.minBytes) +
               " – " + fmtBytes(playbooks.maxBytes) + "）· " + cov.domains + " 包合计 " + fmtBytes(playbooks.total)],
+            ["余量", gaps.headroom
+              ? "索引还剩 " + fmtBytes(gaps.headroom.bytes) + "（均值 " + fmtBytes(gaps.headroom.perDomain) + "/域）→ 还能加 " +
+                gaps.headroom.domainsAffordable + " 个域"
+              : gapsMissing],
+            ["薄弱域", gaps.thinCount === undefined
+              ? gapsMissing
+              : gaps.thinCount + " 个贴边（" + gapTargets + "）· 低于门禁下限 " + (gaps.belowLimit || []).length +
+                " 个 · 非豁免 " + (gaps.deepDomains || 0) + " 域"],
+            ["撞车", gaps.collisions
+              ? "跨族共用 " + gaps.collisions.crossFamily + " · 共用词 " + gaps.collisions.shared + " · 签字 " +
+                gaps.collisions.signed + " · 未签字 " + gaps.collisions.unsigned
+              : gapsMissing],
             ["工具取用", hitTotal > 0
               ? hitTotal + " 次 · " + top.join(" · ") + (misses > 0 ? "（未命中 " + misses + " 次）" : "")
               : "本进程还没取过领域包"],

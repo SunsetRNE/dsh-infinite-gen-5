@@ -35,6 +35,19 @@ export const TRAP_ALLOW = Object.freeze({
   lora: "模型微调技术名，撞 floral/人名 Lora 的概率低到可忽略",
   ruff: "Python linter，撞 ruffle/ruffian 属罕见词",
 });
+
+/** 常用英文词：任何 marker 若是它们的子串，就要在报告里点名。
+ *  v0.26.0 起这里是唯一源 —— 面板要现算撞车，`scripts/lib/vocab-fixtures.mjs`
+ *  改成从这里转出，避免运行时与门禁各抄一份慢慢漂移。 */
+export const TRAP_WORDS = Object.freeze([
+  "logic", "login", "unsafe", "biosphere", "candidate", "equipment", "database",
+  "windows", "build", "guide", "table", "enabled", "double", "capable", "self",
+  "address", "macos", "cost", "capital", "adapt", "desktop", "floral", "principal",
+  "despite", "quarter", "ruffle", "combat", "catalog", "load", "port", "core",
+  "market", "password", "profile", "process", "product", "project", "request",
+  "resource", "service", "session", "source", "support", "system", "target",
+  "transfer", "transport", "trigger", "update", "upgrade", "virtual", "volume",
+]);
 // 曾经想收但**实测有害**的短词，留在这里当反面教材：
 //   dos → 命中 windows；ui / ux → 命中 build、guide、flux；ble → 命中 table、enabled、
 //   double、capable；elf → 命中 self；ida → 命中 candidate；can → 命中 candidate。

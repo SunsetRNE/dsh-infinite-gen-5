@@ -215,13 +215,7 @@ export const FORBID_FIXTURES = [
 ];
 
 /** 常用英文词：任何 marker 若是它们的子串，就要在报告里点名。
- *  这些词是「用户真会打出来的」普通英文，不是生僻词。 */
-export const TRAP_WORDS = [
-  "logic", "login", "unsafe", "biosphere", "candidate", "equipment", "database",
-  "windows", "build", "guide", "table", "enabled", "double", "capable", "self",
-  "address", "macos", "cost", "capital", "adapt", "desktop", "floral", "principal",
-  "despite", "quarter", "ruffle", "combat", "catalog", "load", "port", "core",
-  "market", "password", "profile", "process", "product", "project", "request",
-  "resource", "service", "session", "source", "support", "system", "target",
-  "transfer", "transport", "trigger", "update", "upgrade", "virtual", "volume",
-];
+ *  这些词是「用户真会打出来的」普通英文，不是生僻词。
+ *  v0.26.0：唯一源搬到 `data/vocabulary.mjs`（面板要在运行时现算撞车），
+ *  这里只转出，门禁与面板从此读同一份。 */
+export { TRAP_WORDS } from "../../data/vocabulary.mjs";

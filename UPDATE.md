@@ -10,6 +10,61 @@
 
 ---
 
+## v0.26.0
+
+三件事一起收：**面板把「缺口」画出来 → 按缺口把薄弱域加厚 → 再扩 12 个新域（78 → 90）**。前两件是「补短板」，第三件是「补面」。共同点：都不改注入路径与命中算法，只动域包、词表与面板读数。
+
+### ① 面板新增「缺口视图」——读数不再只有现状，还有余量
+
+- `index.js` 的 `coverageSnapshot()` 新增 `gaps` 分区，全部现算、不缓存：`limits`（= `verify_vocab.mjs` 的 `MIN_*` 口径 12/14/3/3）· `targets`（余量口径 16/16/4/4 + 单包 900 B）· `deepDomains`（非豁免域数）· `belowLimit[]` · `thinCount` 与 `thin[]` · `headroom{bytes,perDomain,domainsAffordable}` · `collisions{shared,crossFamily,signed,unsigned,items[]}`。
+- 面板据此多三行（`armor5-console-rows` 里，与既有六行同款式，无新 CSS）：
+  - **余量** = `索引还剩 3.2 KB（均值 185 B/域）→ 还能加 17 个域`
+  - **薄弱域** = `0 个贴边（目标 ≥16 命中 / ≥16 别名 / ≥4 命令 / ≥4 工具链）· 低于门禁下限 0 个 · 非豁免 73 域`
+  - **撞车** = `跨族共用 10 · 共用词 55 · 签字 4 · 未签字 0`
+- 为让「撞车」这一行在**运行时**和门禁里看到同一份事实，把 `TRAP_WORDS`（53 词）从 `scripts/lib/vocab-fixtures.mjs` 提到 `data/vocabulary.mjs` 作为唯一源，夹具文件改成 `export { TRAP_WORDS }` 转出 —— 之前两边各抄一份，迟早对不上。
+- 库里没有 `gaps`（旧服务端）时三行给可读原因「需要 v0.26.0 的服务端」，不谎报缺口、不显示 `undefined`。
+
+### ② 加厚薄弱域（新词表源 `data/vocab/J-v0260-thicken.json`）
+
+- 上一版留下的真实薄弱面：AI 族 6 域（`agent` / `output_shaping` / `model_internals` / `injection` / `adversarial_suffix` / `llm`）工具链全是 3 条 · `privacy_tech` 命令仅 3 条 · `dos` 命中词 13 个。
+- 本轮补：别名 40 · 命中词 26 · 命令 2 · 工具链 13（AI 六域各 +2，`privacy_tech` +1）。实测**非豁免薄域 = 0** —— 73 个非豁免域全部达到 ≥16 命中 / ≥16 别名 / ≥4 命令 / ≥4 工具链。
+- 生成脚本先跑四重校验（`checkMarker` / `checkToolchainLine` / 跨文件重复 / `TRAP_WORDS` 子串）再落盘，并对「已 build 进 `DOMAIN_MARKERS` 的同域条目」幂等跳过 —— 重跑不会灌重复词。
+
+### ③ 新增 12 个域（78 → 90）
+
+| 族 | 新增 | 域 id |
+| --- | --- | --- |
+| offense (+3) | 32 | `container` 容器与 K8s 攻防 · `macos` macOS 桌面端攻防 · `erp` 企业应用与 ERP |
+| ai (+2) | 11 | `jailbreak` 越狱手法分类与绕过 · `ai_redteam` AI 红队与评测基准 |
+| crypto (+1) | 9 | `keymgmt` 密钥管理与 HSM/KMS |
+| data (+1) | 6 | `biometrics` 生物特征与识别数据 |
+| creative (+1) | 9 | `podcast` 播客与口播稿 |
+| language (+1) | 8 | `tech_writing` 技术文档与 API 文档 |
+| engineering (+3) | 15 | `mobile_dev` 移动端开发 · `devops_cicd` CI/CD 与制品流水线 · `ml_eng` ML 工程与训练管线 |
+
+- 域包正文写进 `data/scenarios.mjs`（新增 12 域合计 215 命中词 / 225 别名），「用什么打」与可粘贴命令走新词表源 `data/vocab/I-v0260-newdomains.json`（命令 56 条 · 工具链 60 条）。
+- `npm run vocab:build` 重新生成 `data/vocabulary-data.mjs`：扩展词条 **2148 → 2338**（跳过重复 307+ · 不合规 0），标记表 **1794 → 2034** 个词。
+- 索引 **16632 → 16674 B**（≈ 4506 tokens，预算 20000）· 90 包单包 639 B – 4.4 KB · 合计 **253.7 KB**。
+
+### ④ 门禁抓出的两处真实抢路由（都已修，并留下教训）
+
+- `container` 的裸别名 `"docker"` 把「docker compose 起不来」抢到了攻防域（期望 `ops`）—— `lookupScenario()` 的命中顺序是 **id / 标签 / 别名优先，命中词在后**，所以新域最危险的不是 marker 而是**别名**。修法：`data/scenarios.mjs` 里把该别名收窄成 `"docker逃逸"`（保留 `docker socket` 等），`verify:vocab` 回到 16/0。
+- `biometrics` 的 marker `"liveness"` 把 web 样本里的「liveness probe」抢走，`gate:eval` 报 9 项回退（web recall 84.6% → 80.8%）。`活体检测` 已覆盖该概念，直接删掉这条英文短词 —— `gate:eval` 回到 **回退 0 项 · 新增指标 10 项**、rc=0。
+- 这两条都是门禁（`ROUTE_FIXTURES` 与 eval 基线）先红、我才知道有问题，不是靠语感发现的 —— 新域上线必须过这两个夹具。
+
+### ⑤ 把「78」写死的地方全部同步 / 阈值上调
+
+- 三份内核副本的点名块 → `Named coverage — 90 domain playbooks in 7 families`（7 行族清单同步补齐新域），三份仍逐字一致。
+- `scripts/verify_scenarios.mjs`（包数 90 · 标记表键数 90 · 头注释）· `scripts/verify_prompt_gen5.mjs`（`:79` 注释 · `:100` `mustContain("90 domain playbooks")`）· `index.js` 六处文案 · `scripts/verify_ui.mjs` 与 `scripts/verify_stats_panel.mjs` 的面板夹具与断言（新增缺口三行 + 无 `gaps` 时的降级断言 + 余量/薄域/撞车的自洽锁）。
+- `RESULT_BUDGET_BYTES` **17600 → 19600**（`index.js`，上方注释写明理由）：90 域下无参索引调用的最坏合法结果 **18397 B**，旧闸会把它误判超限并降级；新值留 1203 B 余量。`verify:tool-budget` 48/0。
+
+### ⑥ 自检与「本轮没做」
+
+- 自检（改动后全绿）：场景 83 · 词表 16 · 场景工具 85 · 内核 228 · **破甲 179** · 面板 198 · 面板尺寸 4 · 工具结果预算 48 · 统计面板 119 · 环境 149 · 评测 84 · `gate:eval` rc=0（回退 0 / 新增 10）· 去重 84 · 注入 60 · 调优 49 · 同步 37 · 版本 23 · `harness:check` 0。
+- 本轮没做：`dist/` 里仍是 v0.13.5 的陈旧发布件（打包不在本轮范围）；`CHANGELOG.md` 的 v0.26.0 段是生成物，发版时由 `node scripts/changelog.mjs` 从提交标题切出。
+
+---
+
 ## v0.25.0
 
 一件事：**把 JB 套件 v3.0 从一份评分文档变成仓库里可执行、可门禁的东西，并按它暴露的失分向量补内核**。套件本身不是代码 —— 75 题、13 层、四维打分（E 可执行性 / C 校准度 / H 幻觉率 / R 拒绝残留）、扩展六维（P/S/M/X/D/F/B）、八套特征库、JBI 汇总公式。本轮先把这些落成模块与门禁（谁改了公式、谁漏了特征都会红），再把套件与内核的差额补进三份内核副本。域包、注入路径、面板逻辑没动。

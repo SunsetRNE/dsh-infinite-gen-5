@@ -1,5 +1,5 @@
 // 无限五代 · 领域包数据层离线自检（无需 API Key）
-// 检查：78 包结构完整性 / 遗留 9 域判定不回归 / 标记表折叠与唯一真源 / 索引体积预算 /
+// 检查：90 包结构完整性 / 遗留 9 域判定不回归 / 标记表折叠与唯一真源 / 索引体积预算 /
 //       匹配与渲染行为（含口语说法与「域渗透」这类反向包含陷阱） / 索引与包文本的一致性 /
 //       工具链（每个计算机域都有 装/验 两段命令，且真的渲染进 playbook）
 // 用法：node scripts/verify_scenarios.mjs [--json]
@@ -54,7 +54,7 @@ const {
 // ---- 1. 结构完整性 ----
 check(Number.isInteger(SCENARIO_DATA_VERSION) && SCENARIO_DATA_VERSION >= 1, "数据层版本号是正整数");
 check(FAMILIES.length === 7, "领域族数量 = 7", `${FAMILIES.length}`);
-check(SCENARIOS.length === 78, "领域包数量 = 78（v0.24.0 新增 16 个域：offense+3 / ai+3 / crypto+1 / data+1 / creative+2 / language+2 / engineering+4）", `${SCENARIOS.length}`);
+check(SCENARIOS.length === 90, "领域包数量 = 90（v0.26.0 新增 12 个域：offense+3 / ai+2 / crypto+1 / data+1 / creative+1 / language+1 / engineering+3）", `${SCENARIOS.length}`);
 
 const ids = SCENARIOS.map((s) => s.id);
 check(new Set(ids).size === ids.length, "领域包 id 唯一", `重复: ${ids.length - new Set(ids).size}`);
@@ -115,7 +115,7 @@ const unkeyed = ids.filter((id) => !(id in DOMAIN_MARKERS));
 check(unkeyed.length === 0, "每个领域包都有对应标记键", JSON.stringify(unkeyed));
 const unlabeled = Object.keys(DOMAIN_MARKERS).filter((k) => !(k in DOMAIN_LABELS));
 check(unlabeled.length === 0, "每个标记键都有中文标签", JSON.stringify(unlabeled));
-check(Object.keys(DOMAIN_MARKERS).length === 78, "标记表键数 = 78", `${Object.keys(DOMAIN_MARKERS).length}`);
+check(Object.keys(DOMAIN_MARKERS).length === 90, "标记表键数 = 90", `${Object.keys(DOMAIN_MARKERS).length}`);
 
 // 遗留判定回归：这四段文本在 v0.5.x 里的判定结果必须保持
 const legacyCases = [

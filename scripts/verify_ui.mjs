@@ -792,6 +792,17 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
       extended: { total: 2148, aliases: 619, markers: 894, commands: 379, toolchains: 256 },
       index: { bytes: 14560, budget: 20000, percent },
       playbooks: { min: 639, max: 4540, total: 212587, minBytes: 600, maxBytes: 6000 },
+      gaps: {
+        limits: { markers: 12, aliases: 14, commands: 3, toolchain: 3, playbookMin: 600 },
+        targets: { markers: 16, aliases: 16, commands: 4, toolchain: 4, playbook: 900 },
+        exemptFamilies: ["creative", "language"],
+        deepDomains: 63,
+        belowLimit: [],
+        thinCount: 36,
+        thin: [{ id: "lyrics", family: "creative", exempt: true, thin: ["commands", "toolchain"], markers: 8, aliases: 9, commands: 0, toolchain: 0, bytes: 639 }],
+        headroom: { bytes: 5440, perDomain: 187, domainsAffordable: 29 },
+        collisions: { shared: 55, crossFamily: 10, crossFamilyItems: [], signedAllow: 1, signed: 4, unsigned: 0, items: [], unsignedItems: [] }
+      },
       hits: { web: 3, re: 2, malware: 1 },
       misses: 2
     },
@@ -815,6 +826,27 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
   ok("词表 / 标记表 / 索引 / 单包 / 取用都上屏",
     covText.includes("2148 条扩展") && covText.includes("1736 个词") && covText.includes("14.2 KB / 19.5 KB（72.8%）") &&
     covText.includes("639 B – 4.4 KB") && covText.includes("web 3"), JSON.stringify(covText.slice(0, 400)));
+  ok("缺口行上屏：余量 / 薄弱域 / 撞车三行都由库里的 gaps 画出来",
+    covText.includes("索引还剩 5.3 KB（均值 187 B/域）→ 还能加 29 个域") &&
+    covText.includes("36 个贴边（目标 ≥16 命中 / ≥16 别名 / ≥4 命令 / ≥4 工具链）") &&
+    covText.includes("低于门禁下限 0 个 · 非豁免 63 域") &&
+    covText.includes("跨族共用 10 · 共用词 55 · 签字 4 · 未签字 0"),
+    JSON.stringify(covText.slice(0, 600)));
+  {
+    const noGap = coverageDoc(72.8);
+    delete noGap.coverage.gaps;
+    const noGapInst = loadInstance({
+      storage: fakeStorage({}),
+      stats: { path: "/infinite-gen-5/stats", tuningPath: "/infinite-gen-5/tuning", token: "tok-nogap" },
+      fetch: covFetch(noGap)
+    });
+    const noGapView = mountComponent(noGapInst.page, undefined, { hooks: [] });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const noGapText = textOf(noGapView.rerender());
+    ok("库里没有 gaps 时三行给可读原因（不谎报缺口）",
+      noGapText.includes("需要 v0.26.0 的服务端") && !noGapText.includes("还能加"),
+      JSON.stringify(noGapText.slice(0, 400)));
+  }
   ok("健康行带库版本 / pid / 锚点数 / 注入处数",
     covText.includes("库 v0.0.0-ui") && covText.includes("pid 4242") && covText.includes("锚点已发 7 版") &&
     covText.includes("注入 4 处"), JSON.stringify(covText.slice(0, 400)));
