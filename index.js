@@ -1758,6 +1758,16 @@ export function apply(ctx, config) {
         if (out.sections[at].text === wanted) return out;
         const sections = out.sections.slice();
         sections[at] = { ...out.sections[at], text: wanted };
+        // 面板标签同步（v0.29.0）：runtime.sections[].chars 是「注册那一刻」记下的字符数，
+        // 热加载只换装配文本、不换这个数，面板就会停在旧值（实测：内核 16052→16183 B、
+        // 字符 13112→13160，面板仍报 13112）。这里就地改正，免得面板数字与线上载荷对不上。
+        const live = (runtime.sections || []).find((s) => s && s.section === PRIMARY);
+        if (live && live.chars !== wanted.length) {
+          live.chars = wanted.length;
+          const placed = (runtime.placements || []).find((p) => p && p.section === PRIMARY);
+          if (placed) placed.chars = wanted.length;
+          publishStats();
+        }
         return { ...out, sections };
       };
       try {
