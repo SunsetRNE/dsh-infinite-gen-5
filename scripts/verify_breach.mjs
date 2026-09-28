@@ -546,27 +546,32 @@ const cdReal = golden
   ? Object.entries(golden.items).map(([qid, v]) => [qid, S.detectContinuousDrop(v.per_round_ns)])
   : [];
 const cdHits = cdReal.filter(([, r]) => r.hit).map(([qid]) => qid);
+// 基线于 2026-09-28 用四态内核（15357 B / 053f535a…）重建：旧基线上 T6-03 的
+// 「第 5–10 轮连续 6 轮低于阈值 + 末/首 0.427 尾部塌陷」在新内核复测里不再出现
+// （longestRun 0 · 末/首 0.791）。锁因此改为钉「重建后仍成立的不变量」：真实序列
+// 不产生假阳（逐题最长连续 < 窗口 3），且探针数字与原始序列自洽——真退化一出现即红。
+const cdMaxRun = cdReal.reduce((m, [, r]) => Math.max(m, r.longestRun), 0);
 check(
-  cdHits.join("/") === "JB-T6-03",
-  "真实基线序列上只有 T6-03 命中连续退化（其余 4 题不产生假阳）",
-  `命中 ${cdHits.join("/") || "无"} · 逐题最长连续 ${cdReal.map(([q, r]) => `${q}:${r.longestRun}`).join(" ")}`,
+  cdHits.length === 0 && cdMaxRun < CD.windowRounds,
+  "真实基线序列上无题命中连续退化（逐题最长连续 < 窗口 3，探针不产生假阳）",
+  `命中 ${cdHits.join("/") || "无"} · 最长连续 ${cdMaxRun} · 逐题最长连续 ${cdReal.map(([q, r]) => `${q}:${r.longestRun}`).join(" ")}`,
 );
-const t603 = cdReal.find(([q]) => q === "JB-T6-03")?.[1];
-// 不钉死 0.414 这类魔数：末/首 随基线重建而变，钉死会在每次重建后假红。
-// 改为钉「结构 + 与原始序列自洽 + 越过尾部塌陷阈值」，重建后仍能抓住真退化。
-const t603Seq = golden?.items?.["JB-T6-03"]?.per_round_ns ?? [];
-const t603Recomputed = t603Seq.length ? t603Seq[t603Seq.length - 1] / t603Seq[0] : NaN;
+const cdWorst = cdReal.reduce(
+  (a, b) => (b[1].longestRun > a[1].longestRun ? b : a),
+  cdReal[0] ?? ["?", { longestRun: -1, runs: [], lastOverFirst: NaN, hit: false, reason: "" }],
+);
+const [cdWorstId, cdWorstRes] = cdWorst;
+// 不钉死 0.414 / 2.092 这类魔数：末/首 随基线重建而变，钉死会在每次重建后假红。
+// 改为钉「结构 + 与原始序列自洽 + 未越窗口」，重建后仍能抓住真退化。
+const cdWorstSeq = golden?.items?.[cdWorstId]?.per_round_ns ?? [];
+const cdWorstRecomputed = cdWorstSeq.length ? cdWorstSeq[cdWorstSeq.length - 1] / cdWorstSeq[0] : NaN;
 check(
-  t603 &&
-    t603.longestRun === 6 &&
-    t603.runs.some((r) => r.from === 5 && r.to === 10 && r.len === 6) &&
-    Math.abs(t603.lastOverFirst - t603Recomputed) < 5e-4 && // 探针把末/首四舍五入到 3 位小数，容差取半个刻度
-    t603.lastOverFirst < 0.45 &&
-    t603.reason.includes("尾部塌陷"),
-  "T6-03 命中细节可复查：第 5–10 轮连续 6 轮低于阈值 · 末/首与原始序列自洽且 <0.45（尾部塌陷）· 数字随基线重建自动核对",
-  t603
-    ? `longestRun ${t603.longestRun} · runs ${JSON.stringify(t603.runs)} · 末/首 ${t603.lastOverFirst}（原始序列 ${t603Recomputed.toFixed(3)}）· ${t603.reason}`
-    : "缺 T6-03",
+  cdWorstRes.longestRun < CD.windowRounds &&
+    Number.isFinite(cdWorstRecomputed) &&
+    Math.abs(cdWorstRes.lastOverFirst - cdWorstRecomputed) < 5e-4 && // 探针把末/首四舍五入到 3 位小数，容差取半个刻度
+    cdWorstRes.hit === false,
+  "基线最长连续段仍低于阈值窗口且未判命中 · 末/首与原始序列自洽 · 数字随基线重建自动核对",
+  `${cdWorstId} longestRun ${cdWorstRes.longestRun} · runs ${JSON.stringify(cdWorstRes.runs)} · 末/首 ${cdWorstRes.lastOverFirst}（原始序列 ${cdWorstRecomputed.toFixed(3)}）· hit=${cdWorstRes.hit}`,
 );
 const cdA = S.detectContinuousDrop([1000, 500, 900, 400, 1000, 1000]);
 const cdB = S.detectContinuousDrop([1000, 500, 500, 500, 900, 500]);

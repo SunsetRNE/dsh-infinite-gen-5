@@ -1743,7 +1743,7 @@ export function apply(ctx, config) {
     );
     runtime.role = primaryOk ? "primary" : "yielded";
 
-    // 内核热加载（v0.28.1）：section 文本在注册那一刻就固定，改 prompts/*.md 后不重启进程，
+    // 内核热加载（v0.28.0）：section 文本在注册那一刻就固定，改 prompts/*.md 后不重启进程，
     // 装配出去的仍是旧文本（实测：进程 07:39:52 启动、内核 08:08:37 改写 → 08:1x 起的子会话
     // 仍逐字引用旧三态 Calibration rule）。这里在每次 assemble 时按 mtime+size 重读盘，
     // 把 Order 100 段就地换成新文本 —— 改内核即刻生效，不必重启。
