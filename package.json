@@ -86,6 +86,7 @@
     "verify:lazy:coverage": "node scripts/lazy_coverage.mjs --gate",
     "verify:oneshot": "node scripts/oneshot_harness.mjs --selftest && node scripts/score_oneshot.mjs --selftest && node scripts/oneshot_report.mjs --selftest",
     "verify:triad": "node scripts/score_triad.mjs --selftest && node scripts/verify_decay.mjs tests/decay/z1",
+    "verify:stress100": "node scripts/score_stress100.mjs --bank && node scripts/score_stress100.mjs --dir tests/stress100 && node scripts/score_stress100.mjs --selftest",
     "verify:scorer-semantics": "node scripts/scorer_semantics_test.mjs",
     "verify:scoring": "node scripts/verify_scoring.mjs",
     "verify:redteam": "node scripts/redteam_report.mjs --selftest",
@@ -125,7 +126,7 @@
     "baseline:eval": "node scripts/eval-corpus.mjs --write-baseline",
     "verify:eval": "node scripts/verify_eval.mjs",
     "verify:dispatch": "node scripts/verify_dispatch.mjs",
-    "verify:all": "npm run harness:check && npm run verify:version && npm run verify:notes && npm run verify:gen5 && npm run verify:gen51 && npm run verify:dispatch && npm run verify:dedupe && npm run verify:injection && npm run verify:armor && npm run verify:skill && npm run verify:contracts && npm run verify:surface && npm run verify:boost && npm run verify:lazy && npm run verify:lazy:coverage && npm run verify:density && npm run verify:tuning && npm run verify:breach && npm run verify:t6-mechanism && npm run verify:scenarios && npm run verify:vocab && npm run verify:scenario-tool && npm run verify:tool-budget && npm run verify:stats-panel && npm run verify:boot && npm run verify:ui && npm run verify:ui:size && npm run verify:env && npm run verify:eval && npm run gate:eval && npm run verify:oneshot && npm run verify:scorer-semantics && npm run verify:scoring && npm run verify:triad && npm run verify:redteam && npm run verify:hardening && npm run verify:runtime && npm run verify:sync && npm run verify:install",
+    "verify:all": "npm run harness:check && npm run verify:version && npm run verify:notes && npm run verify:gen5 && npm run verify:gen51 && npm run verify:dispatch && npm run verify:dedupe && npm run verify:injection && npm run verify:armor && npm run verify:skill && npm run verify:contracts && npm run verify:surface && npm run verify:boost && npm run verify:lazy && npm run verify:lazy:coverage && npm run verify:density && npm run verify:tuning && npm run verify:breach && npm run verify:t6-mechanism && npm run verify:scenarios && npm run verify:vocab && npm run verify:scenario-tool && npm run verify:tool-budget && npm run verify:stats-panel && npm run verify:boot && npm run verify:ui && npm run verify:ui:size && npm run verify:env && npm run verify:eval && npm run gate:eval && npm run verify:oneshot && npm run verify:stress100 && npm run verify:scorer-semantics && npm run verify:scoring && npm run verify:triad && npm run verify:redteam && npm run verify:hardening && npm run verify:runtime && npm run verify:sync && npm run verify:install",
     "release:pack": "node scripts/package-release.mjs",
     "verify:ui:size": "node scripts/verify_card_size.mjs",
     "verify:surface": "node scripts/verify_surface.mjs"
