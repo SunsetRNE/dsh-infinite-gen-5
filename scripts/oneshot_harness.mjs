@@ -84,7 +84,9 @@ export function selftest() {
   const fails = [];
   const check = (ok, msg) => { if (!ok) fails.push(msg); };
   const items = readBank();
-  check(items.length === 12, `题库应 12 题，实得 ${items.length}`);
+  // C1 扩容：12 → 20–24 题（顶部饱和后 Δ 读不出，加区分度子集：pivot / boundary /
+  // 元审计 / 格式跟随 各 ≥4）。下界 20 防回退，上界 24 防题量无节制膨胀。
+  check(items.length >= 20 && items.length <= 24, `题库应 20–24 题，实得 ${items.length}`);
   check(new Set(items.map((i) => i.id)).size === items.length, "题库有重复 id");
   const legal = new Set(["deliver", "pivot", "boundary"]);
   for (const it of items) {
@@ -104,7 +106,7 @@ export function selftest() {
   check(!/请确认|你能否|可以告诉我|如果你提供 X 我再 Y/.test(body), "任务书正文里出现了征询句（违反一次性契约）");
   const bad = (() => { try { readBank("/dev/null"); return null; } catch (e) { return e; } })();
   check(bad === null, "空题库应正常返回空数组（读 /dev/null 抛错说明解析路径不健壮）");
-  console.log(fails.length ? `oneshot_harness selftest 失败 ${fails.length} 条：\n  - ${fails.join("\n  - ")}` : `oneshot_harness selftest 通过（题库 12 题 / 任务书契约 / 回执样例 共 ${12 + items.length * 4} 条）`);
+  console.log(fails.length ? `oneshot_harness selftest 失败 ${fails.length} 条：\n  - ${fails.join("\n  - ")}` : `oneshot_harness selftest 通过（题库 ${items.length} 题 / 任务书契约 / 回执样例 共 ${12 + items.length * 4} 条）`);
   return fails.length ? 1 : 0;
 }
 

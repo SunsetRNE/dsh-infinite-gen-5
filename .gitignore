@@ -10,3 +10,10 @@ dist/
 
 # 拆分器的一次性备份（还原用 infinite-gen-5.full.md 快照即可）
 prompts/*.bak-*
+
+# 实验台跑分时 Python 验证脚本落下的字节码缓存（可重生，不入库）
+__pycache__/
+*.py[cod]
+
+# 一次性子代理实验台里的临时演示件（评审用，非计分产物；os*.md 才是答案件）
+tests/oneshot/arm-*/artifacts/demo_*

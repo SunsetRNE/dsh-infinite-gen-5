@@ -87,7 +87,9 @@ export const PROSE_ALLOWED_FILES = [
 ];
 
 // 全仓字面量扫描时跳过的目录：依赖 / 生成物 / 运行产物 / 版本库内部。
-export const SCAN_SKIP_DIRS = [".git", "node_modules", "ui-preview", "runs", ".dsh"];
+// dist/ = `npm run release:pack` 的打包输出（含它生成的 RELEASE-NOTES.md），已被 .gitignore
+// 忽略；包内副本写死当前版本号是正常的，不该当成「未登记的源码字面量」。
+export const SCAN_SKIP_DIRS = [".git", "node_modules", "ui-preview", "runs", ".dsh", "dist"];
 
 // 只扫这些后缀，避免把二进制、图片、用例产物当文本读。
 export const SCAN_EXTENSIONS = [

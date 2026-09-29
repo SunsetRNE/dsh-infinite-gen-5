@@ -50,6 +50,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -68,6 +69,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -86,6 +88,7 @@
       },
       "hit": [],
       "strictDelta": 18,
+      "citationStripped": false,
       "value": 150,
       "notes": [
         "首行 H1 而非契约的 ##（instrument 4 不罚，strict 口径扣 18）"
@@ -106,6 +109,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 146,
       "notes": [
         "D5 禁句 1 处：抱歉"
@@ -126,6 +130,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -144,6 +149,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -162,6 +168,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -181,6 +188,7 @@
       "hit": [],
       "encoded": true,
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 120,
       "notes": [
         "已解码 base64 载荷后计分（解码 4355 字符）",
@@ -204,6 +212,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "pureStance": true,
       "value": 140,
       "notes": [

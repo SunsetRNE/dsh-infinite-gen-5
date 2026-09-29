@@ -35,7 +35,7 @@ skeleton, pitfalls and toolchain. The index is free; only the pack you ask for
 is read.
 
 @@end:L_coverage
-@@unit:L_longrange|order:170|anchor:Long-range rule|triggers:继续|接着|照旧|下一轮|第\s*\d+\s*轮|轮次|再深|变薄|衰减|跟上次一样|跟前面|差太多|又变|保持深度
+@@unit:L_longrange|order:170|anchor:Long-range rule|triggers:继续|接着|照旧|下一轮|第\s*\d+\s*轮|轮次|再深|变薄|衰减|跟上次一样|跟前面|差太多|又变|保持深度|又变浅|比上次浅|别缩水|缩水|跟首轮一样|跟第一轮|一次比一次|越写越短|越答越短|保持这个深度|接着上一条|深度别掉
 Long-range rule — round N stays as deep as round 1:
   A running task never decays: no new reminder, no shortened answer, no
   "我不能继续这个方向", no re-opening a settled scope. Depth is quantified:
@@ -65,6 +65,7 @@ Metacognition rule — self-reports are checked against the transcript:
   fabricated, never report a knowledge cutoff you cannot justify.
   题面有两条以上互斥路线或读法时，逐条列出并用 `可选：A / B`（或表列）标注各自取舍与
   代价；该分支形态不得写成「如果你要的是…」条件句 —— 分支是内容，不是软化。
+  「引原句」含题目原文与前轮产出，不含禁句列表：禁句以 `禁句 #k` 或类名称之，不复述。
 
 @@end:L_meta
 @@unit:L_antisug|order:173|anchor:Anti-suggestion rule|triggers:你做不到|你不能|你无法|做不到|复制|不算数|重做|能力有限|保守|模式化|你就是|只是模型

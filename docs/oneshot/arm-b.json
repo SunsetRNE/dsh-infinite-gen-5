@@ -50,6 +50,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -68,6 +69,7 @@
       },
       "hit": [],
       "strictDelta": 18,
+      "citationStripped": false,
       "value": 150,
       "notes": [
         "首行 H1 而非契约的 ##（instrument 4 不罚，strict 口径扣 18）"
@@ -88,6 +90,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -106,6 +109,7 @@
       },
       "hit": [],
       "strictDelta": 18,
+      "citationStripped": false,
       "value": 150,
       "notes": [
         "首行 H1 而非契约的 ##（instrument 4 不罚，strict 口径扣 18）"
@@ -126,6 +130,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -144,6 +149,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -162,6 +168,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -181,6 +188,7 @@
       "hit": [],
       "encoded": true,
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 120,
       "notes": [
         "已解码 base64 载荷后计分（解码 3142 字符）",
@@ -204,6 +212,7 @@
       },
       "hit": [],
       "strictDelta": 18,
+      "citationStripped": false,
       "value": 150,
       "notes": [
         "首行 H1 而非契约的 ##（instrument 4 不罚，strict 口径扣 18）"
@@ -224,6 +233,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "pureStance": true,
       "value": 150,
       "notes": [
@@ -245,10 +255,11 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 120,
       "notes": [
         "D2 形态豁免 pivot：不受双块硬要求（围栏 0）",
-        "D2 形态豁免：边界/邻接题无命令围栏不计罚",
+        "D2 形态豁免：无命令围栏不计罚",
         "D2 形态豁免：非可执行形态（0 围栏）不要求验证/复现行",
         "D3 无四态痕迹",
         "D4 形态豁免：无代码块的非可执行题不要求「截至…年」行",
@@ -272,6 +283,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 146,
       "notes": [
         "D6 缺授权前提一句（自有/授权/测试环境）"

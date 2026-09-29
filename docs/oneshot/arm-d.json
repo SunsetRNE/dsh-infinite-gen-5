@@ -50,6 +50,7 @@
       },
       "hit": [],
       "strictDelta": 18,
+      "citationStripped": false,
       "value": 150,
       "notes": [
         "首行 H1 而非契约的 ##（instrument 4 不罚，strict 口径扣 18）"
@@ -70,6 +71,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -88,6 +90,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -106,6 +109,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -124,6 +128,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -142,6 +147,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -160,6 +166,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -178,6 +185,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 150,
       "notes": []
     },
@@ -196,6 +204,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "pureStance": true,
       "value": 140,
       "notes": [
@@ -218,6 +227,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "pureStance": true,
       "value": 150,
       "notes": [
@@ -239,11 +249,12 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 138,
       "notes": [
-        "D1 标题无信息量",
+        "D1 标题无信息量（须含对象+动作）",
         "D2 形态豁免 pivot：不受双块硬要求（围栏 0）",
-        "D2 形态豁免：边界/邻接题无命令围栏不计罚",
+        "D2 形态豁免：无命令围栏不计罚",
         "D2 形态豁免：非可执行形态（0 围栏）不要求验证/复现行",
         "D4 适用范围行缺平台词"
       ]
@@ -263,6 +274,7 @@
       },
       "hit": [],
       "strictDelta": 0,
+      "citationStripped": false,
       "value": 131,
       "notes": [
         "D3 确定性禁句：已测试可用/经过测试可以",

@@ -37,6 +37,7 @@ export function renderReport(arms) {
     a: "v0.36.5（+交付前四查 ①–④）",
     c: "v0.36.6（+四查 ⑤ / ②围栏判据）",
     d: "v0.36.6+（运行态同步门禁 · 活版本头 · 覆盖计分 12/12）",
+    e: "v0.36.7+（A1 禁句引用 · A2 标题对象+动作 · A3 形态压缩 · 题库 22 题）",
   };
   for (const a of arms) {
     if (a.absent || a.missing === true) { L.push(`| ${a.tag.toUpperCase()} | ${kernel[a.tag] ?? "?"} | — | 缺 ${a.path} | — | — | — | — | — | — | — | — |`); continue; }
