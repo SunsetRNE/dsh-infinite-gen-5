@@ -39,9 +39,11 @@ const FULL_PATH = join(ROOT, "prompts", "infinite-gen-5.full.md");
 
 // ── 1. 单元成形 ────────────────────────────────────────────────────────────────
 const units = lazyUnits();
-check(units.length === 9, "惰性单元 9 个", String(units.length));
+// 单元数随内核拆分批次增长：v0.38.6 为 9，v0.39.0 起 11（+L_writing6 / +L_toolcall_repair）
+const EXPECT_UNITS = 11;
+check(units.length === EXPECT_UNITS, `惰性单元 ${EXPECT_UNITS} 个`, String(units.length));
 check(new Set(units.map((u) => u.id)).size === units.length, "单元 id 不重复");
-check(units.every((u) => /^L_[a-z]+$/.test(u.id)), "单元 id 形如 L_xxx");
+check(units.every((u) => /^L_[a-z0-9_]+$/.test(u.id)), "单元 id 形如 L_xxx（半节搬允许数字/下划线后缀）");
 check(new Set(units.map((u) => u.order)).size === units.length, "单元 order 不重复");
 check(
   units.every((u, i) => i === 0 || units[i - 1].order < u.order),
@@ -66,7 +68,7 @@ if (existsSync(LAZY_PATH) && existsSync(FULL_PATH)) {
   const lazyText = readFileSync(LAZY_PATH, "utf8");
   const core = readFileSync(CORE_PATH, "utf8");
   const full = readFileSync(FULL_PATH, "utf8");
-  check(parseLazyUnits(lazyText).length === 9, "parseLazyUnits 能从文件解析出 9 个单元");
+  check(parseLazyUnits(lazyText).length === EXPECT_UNITS, `parseLazyUnits 能从文件解析出 ${EXPECT_UNITS} 个单元`);
   for (const u of units) {
     check(full.includes(u.body), `惰性 ${u.id} 正文是原文连续片段`);
     check(!core.includes(u.body), `惰性 ${u.id} 正文已不在常驻内核`);
@@ -118,7 +120,9 @@ check(cDeep.text.startsWith(LAZY_HEADER), "拼回文本以惰性段头开头");
 check(cDeep.dropped.length === 0, "预算内无丢弃");
 
 const cScore = caseOf("给我打个分，多少分算合格");
-check(cScore.hits[0]?.id === "L_eval", "评分题命中 L_eval");
+check(cScore.hits.some((h) => h.id === "L_eval"), "评分题命中 L_eval", cScore.hits.map((h) => h.id).join(","));
+// v0.39.0 起「评分/打分」同时命中写作侧六条（order 163 < 175，故它排在 L_eval 之前）
+check(cScore.hits.some((h) => h.id === "L_writing6"), "评分题同时命中 L_writing6（写作侧六条）");
 const cEx = caseOf("照这个格式来");
 check(cEx.hits.some((h) => h.id === "L_examples"), "示例题命中 L_examples");
 const cAnti = caseOf("你做不到这个，不算数");
@@ -130,10 +134,10 @@ check(cOff.emit === false && cOff.bytes === 0, "@lazy:off 零拼回");
 check(cOff.dropped.length === 1, "@lazy:off 命中的章被整条丢弃");
 
 const cAll = caseOf("@lazy:all 随便聊聊");
-check(cAll.all === true && cAll.hits.length === 9, "@lazy:all 拼回全部 9 章");
+check(cAll.all === true && cAll.hits.length === EXPECT_UNITS, `@lazy:all 拼回全部 ${EXPECT_UNITS} 章`);
 check(cAll.budget === 0, "@lazy:all 无上限（budget=0 表示不设限）");
 const cFull = caseOf("@lazy:full 继续");
-check(cFull.mode === "full" && cFull.hits.length === 9, "@lazy:full 拼回全部 9 章");
+check(cFull.mode === "full" && cFull.hits.length === EXPECT_UNITS, `@lazy:full 拼回全部 ${EXPECT_UNITS} 章`);
 check(cFull.bytes === cAll.bytes, "full 与 all 拼回体积一致");
 
 const cModeOff = caseOf("继续下一轮", { mode: "off" });
@@ -147,7 +151,11 @@ const cCap1000 = caseOf("继续下一轮", { bytes: 1000 });
 check(cCap1000.budget === 1000, "硬上限 1000B 生效（取 min）");
 check(cCap1000.hits.length === 1 && cCap1000.bytes > 800, "1000B 上限下长程章仍进");
 const cFullCap = caseOf("@lazy:full 继续", { bytes: 1000 });
-check(cFullCap.hits.length === 1 && cFullCap.dropped.length === 8, "full+硬上限：只留放得下的那章");
+check(
+  cFullCap.hits.length >= 1 && cFullCap.dropped.length === units.length - cFullCap.hits.length,
+  "full+硬上限：只留放得下的章，其余整章丢弃",
+  `留 ${cFullCap.hits.length} / 丢 ${cFullCap.dropped.length}（共 ${units.length}）`,
+);
 check(cFullCap.bytes <= 1000, "full+硬上限：不超上限");
 
 // 整章进/整章丢：留存的每一章必须逐字出现在拼回文本里
