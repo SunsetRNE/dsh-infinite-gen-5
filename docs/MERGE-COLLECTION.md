@@ -77,7 +77,16 @@ python3 -c "import json;print('dsh-persona-volt' in json.load(open('/root/.dsh/p
 
 `package.json`：`merge:collection` / `verify:merge` / `companion:check` / `companion:install` / `verify:companion`；`verify:all` 在 `verify:merge` 之后串入 `verify:companion`，与其余 40 余项一起跑。
 
-## 6. 已知边界
+## 6. 凭据样串脱敏（唯一的内容改写）
+
+素材含公开披露案例原文，里面夹着格式完整的 token / 密钥样串；直推时 GitHub Push Protection 直接以 `GH013` 拦下整条 push（实测命中 AWS 三件套、npm Access Token、Salesforce / Facebook Access Token 等）。编译器因此在写入阶段做一遍替换，**源件一字不动**：
+
+- `SECRET_RULES`（`scripts/merge_collection.mjs`）按前缀族匹配：`jwt`、`private-key-block`、AWS 三件套、`github-token`、`npm-auth-token`、`google-api-key`、`slack-token`、`openai-key`、`stripe/sendgrid/gitlab/digitalocean/shopify/huggingface/pypi/heroku-key`、`salesforce/facebook-access-token`、`slack/discord-webhook`、`google-oauth-token`、`azure-storage-key`；替换体沿用素材既有体例 `«REDACTED:<KIND>»`。
+- 命中文件写脱敏文本并记 `sanitized[]`（源 sha256 → 产物 sha256）、`counts.sanitized`；未命中文件仍逐字节 `cpSync`。实测：layer-02 命中 6 文件（`jwt` 6 处）、layer-03 命中 18 文件（`jwt` 20 / `github-token` 4 / `private-key-block` 4 / `google-api-key` 3 / AWS 三件套各 2 / `npm-auth-token` 1）、layer-04 命中 0。
+- `--check` 复扫产物（`.md/.txt/.json/.ya?ml/.csv/.toml/.ini/.cfg`），命中即 `MERGE CHECK FAILED`；自检夹具里的 token 也是分段拼装，连自检文件本身都不留完整串。`aws-*` 两条规则带负向前瞻 `(?!«REDACTED)`，避免替换标记自己被复扫自命中。
+- 边界：脱敏**只针对高置信前缀族**，不做 `"password": "…"` 泛匹配（会毁掉载荷样例）；判据是「能通过 GitHub 秘密扫描」，不是「内容安全审查」。
+
+## 7. 已知边界
 
 - 融合不保证「素材里写的工具在目标机上存在」——每层的 `refs/` 是知识文本，运行时要按工具链协议现场探测（缺工具是待办，不是阻塞）。
 - 三层合计 26 MB 落在技能扫描根；`ig5-layer-02/03` 体积来自源素材本身，不做压缩或摘要，保持原样可复算。

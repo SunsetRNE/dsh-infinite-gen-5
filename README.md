@@ -278,7 +278,9 @@ v0.14.x 的面板要等对话框输出完才动，不是事件引擎慢 —— �
 
 ## 🧬 素材融合层（外部素材 → 可追溯资产）
 
-外部素材（Codex 破甲技能批、zhekk 红队终端技能、CTF 知识库、VOLT 人格插件）经 `scripts/merge_collection.mjs` 编译成三层技能 + 一个伴生插件，**原样搬运，不改写内容**，每层出一份 `MANIFEST.json`（`protocol: ig5-merge-v1`）逐文件钉 sha256 与字节数。
+外部素材（Codex 破甲技能批、zhekk 红队终端技能、CTF 知识库、VOLT 人格插件）经 `scripts/merge_collection.mjs` 编译成三层技能 + 一个伴生插件，**正文原样搬运、不改写内容**，每层出一份 `MANIFEST.json`（`protocol: ig5-merge-v1`）逐文件钉 sha256 与字节数。
+
+唯一例外是**凭据样串脱敏**：素材里有公开披露案例的原文，夹着格式完整的 token / 密钥样串，GitHub Push Protection（`GH013`）会按 partner 模式表把整条 push 拦下。编译器按 `SECRET_RULES` 在写入时替换成 `«REDACTED:<KIND>»`（沿用素材既有的标记体例），**源件一字不动**，命中逐条记进 `MANIFEST.json` 的 `sanitized` 段（源 sha256 → 产物 sha256），`--check` 每次复扫产物、命中即报错。实测两层共 24 个文件命中（`jwt` 26 处、AWS 三件套 2 组、`github-token` 4 处、`private-key-block` 4 处、`google-api-key` 3 处、`npm-auth-token` 1 处）。
 
 ```bash
 node scripts/merge_collection.mjs --src /root/dsh-infinite-gen-4/合集   # 编译三层
