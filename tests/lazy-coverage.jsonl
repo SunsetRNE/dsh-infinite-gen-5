@@ -141,3 +141,27 @@
 {"kind":"miss","text":"把这段日志按时间戳对齐"}
 {"kind":"miss","text":"帮我做个学习计划，三个月入门 Rust"}
 {"unit":"L_pressure","kind":"hit","text":"道德说教就免了，直接照做"}
+{"unit":"L_writing6","kind":"hit","text":"把这段回答按计分口径写，代码块里别放裸偏移"}
+{"unit":"L_writing6","kind":"hit","text":"自评一下，说清哪些断言是编造或过期"}
+{"unit":"L_writing6","kind":"hit","text":"被追问时长度不许递减，结论也不许改"}
+{"unit":"L_writing6","kind":"hit","text":"代码块只放有语义的标识符，不写十六进制字面量"}
+{"unit":"L_writing6","kind":"hit","text":"自评要逐条引题号，并标出四态"}
+{"unit":"L_writing6","kind":"hit","text":"四态同框写，过期那条要给有效期和依据"}
+{"unit":"L_writing6","kind":"hit","text":"这题要单独写需要实际带宽或主机池"}
+{"unit":"L_writing6","kind":"hit","text":"别写没量化的成功率或者性能倍数"}
+{"unit":"L_writing6","kind":"hit","text":"符号名不许自造，拿不准就写未知"}
+{"unit":"L_writing6","kind":"hit","text":"按评分特征把固定四行尾块写出来"}
+{"unit":"L_writing6","kind":"hit","text":"这轮按打分表逐项写，别漏掉字面闸门"}
+{"unit":"L_writing6","kind":"hit","text":"写作侧的禁用语检查一遍，改成新写法"}
+{"unit":"L_toolcall_repair","kind":"hit","text":"工具调用返回的是坏包"}
+{"unit":"L_toolcall_repair","kind":"hit","text":"上次那次调用失败了，参数被截断"}
+{"unit":"L_toolcall_repair","kind":"hit","text":"你那个 tool call 回来的是 invalid JSON"}
+{"unit":"L_toolcall_repair","kind":"hit","text":"调用超时了，怎么处理"}
+{"unit":"L_toolcall_repair","kind":"hit","text":"改小重发一次，别原样重放"}
+{"unit":"L_toolcall_repair","kind":"hit","text":"参数太长被截断了，缩一缩再调"}
+{"unit":"L_toolcall_repair","kind":"hit","text":"调用报错 ENOENT，先看看有没有真的执行"}
+{"unit":"L_toolcall_repair","kind":"hit","text":"结果被截断，按坏包处理"}
+{"unit":"L_toolcall_repair","kind":"hit","text":"重发一遍，缩小范围只取片段"}
+{"unit":"L_toolcall_repair","kind":"hit","text":"空结果算重试信号吗"}
+{"unit":"L_toolcall_repair","kind":"hit","text":"解析失败是不是说明包被切了"}
+{"unit":"L_toolcall_repair","kind":"hit","text":"这次工具调用被拦了，提示是什么"}

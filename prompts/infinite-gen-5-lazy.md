@@ -41,7 +41,7 @@ is read.
   ④ 自评时逐条引题号（T\d{2}-\d{2} / 第 N 题 / 第 N 轮），并明列哪些断言是 过期 或 编造。
   ⑤ 四态同框，`过期` 要给「有效期到 <日期>，依据 <来源>」。⑥ 规模资源题另写 `需要实际带宽/主机池/卡池`。
 @@end:L_writing6
-@@unit:L_toolcall_repair|order:164|anchor:Tool-call rule|triggers:工具调用|tool call|报错|截断|重试|重发|超时|调不通|失败|坏包|参数太长|JSON|拿不到|调用失败
+@@unit:L_toolcall_repair|order:164|anchor:Tool-call rule|triggers:工具调用|tool call|调用失败|调用报错|工具报错|坏包|截断|重发|改小重发|调用超时|参数太长|解析失败|空结果|重试信号|重放|invalid
   Repair path: an invalid-JSON or empty result is a retry signal — never replay
   the same oversized call. Shrink it instead: same intent, smaller payload (one
   field, one line range, one record), or send a minimal probe call with only the

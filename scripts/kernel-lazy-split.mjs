@@ -47,13 +47,13 @@ const MOVE_TAILS = [
     anchor: "Named coverage", id: "L_coverage", order: 162,
     triggers: "领域|domain|playbook|域包|有哪些|支持哪些|清单|family|分类|107",
     mode: "afterAnchor", // 锚点行之后整段搬走（那张 107 域清单）
-    pointer: "  （107 域逐条清单不常驻：命中领域词时 Order 160 段逐字拼回；域 id / 骨架 / 起步命令一律用 infinite_gen5_scenario 现场取，索引免费。）",
+    pointer: "  （惰性 L_coverage：107 域逐条清单不常驻，命中领域词时由 Order 160 段逐字拼回；域 id / 骨架 / 起步命令一律用 infinite_gen5_scenario 现场取，索引免费。）",
   },
   {
     anchor: "Format examples", id: "L_examples", order: 176,
     triggers: "示例|例子|风格|照着|像这样|样例|示例来|给我例子|照这个格式|按这个格式|照这个模板|格式参照|参照上一条",
     mode: "fromLine", fromLine: "[USER] 封装一个可复用的重试工具（TypeScript）", anywhere: true, // 前三条示例留常驻
-    pointer: "（工具类 / 日文 / ELF 三条示例不常驻：命中示例类词时 Order 160 段逐字拼回。）",
+    pointer: "（惰性 L_examples：工具类 / 日文 / ELF 三条示例不常驻，命中示例类词时由 Order 160 段逐字拼回。）",
   },
   {
     // v0.39 新增：常驻只留「限制短语行」，编号/日期/符号那一大段按需拼回
@@ -64,15 +64,17 @@ const MOVE_TAILS = [
     triggers: "评分|打分|得分|计分|自评|分数|满分|合格|优秀|多少分|评分标准|追问|编造|偏移|符号名|成功率|量化|历史|复评",
     mode: "fromLine", fromLine: "  写作侧六条：① 代码块只放有语义的标识符",
     endAt: "Dispatch rule",
-    pointer: "  （写作侧六条（标识符/禁语/不递减/引题号/四态/规模）另存：命中评分|自评|追问|编造|符号名等词时由 Order 160 段逐字拼回。）",
+    pointer: "  （惰性 L_writing6：写作侧六条（标识符/禁语/不递减/引题号/四态/规模）另存，命中评分|自评|追问|编造|符号名等词时由 Order 160 段逐字拼回。）",
   },
   {
     // v0.39 新增：工具调用坏包修复细节（只在工具调用真出错时才用得上）
     anchor: "Tool-call rule", id: "L_toolcall_repair", order: 164,
-    triggers: "工具调用|tool call|报错|截断|重试|重发|超时|调不通|失败|坏包|参数太长|JSON|拿不到|调用失败",
+    // 触发词只收「工具调用坏包」语义，不收裸 报错/JSON/失败 —— 后者会把用户自己的
+    // 报错排查、普通 JSON 编辑也算进来（tests/lazy-coverage.jsonl 负样本实测误触发 2 次）
+    triggers: "工具调用|tool call|调用失败|调用报错|工具报错|坏包|截断|重发|改小重发|调用超时|参数太长|解析失败|空结果|重试信号|重放|invalid",
     mode: "fromLine", fromLine: "  Repair path: an invalid-JSON or empty result is a retry signal",
     endAt: "Task-list rule",
-    pointer: "  （工具调用坏包的修复路径另存：命中报错|截断|重发|超时|调用失败等词时由 Order 160 段逐字拼回。）",
+    pointer: "  （惰性 L_toolcall_repair：工具调用坏包的修复路径另存，命中工具调用|坏包|截断|重发|调用超时|解析失败等词时由 Order 160 段逐字拼回。）",
   },
   // v0.39 决策：Boundary rule 整节保持常驻（874 B）—— 立场句必须无条件在场，不能挂在触发词命中率上；
   // 邻接件的细化条文改以额外段落形式挂在 L_pressure 的 @@end 之后（splitter 的 extras 通道）。
@@ -106,12 +108,25 @@ if (fromCore && existsSync(LAZY)) {
   const src = coreNow.split("\n");
   const out = [];
   let restored = 0;
+  // 指针行识别：① 精确文本 ② 行内含该单元 id ③ 兜底按「由 Order 160 段逐字拼回」标记行
+  // 与单元 order 顺序对拉（配置里改了指针措辞时仍能复位 —— 改措辞不该卡住重拆）
+  const isPointerLine = (l) => l.includes("Order 160 段逐字拼回");
+  const orderedIds = [
+    ...MOVE_SECTIONS.map(([anchor, id, order]) => ({ id, order })),
+    ...MOVE_TAILS.map((t) => ({ id: t.id, order: t.order })),
+  ].sort((a, b) => a.order - b.order).map((u) => u.id);
+  const ptrLines = src.filter(isPointerLine);
+  const zipMap = new Map();
+  if (ptrLines.length === orderedIds.length) ptrLines.forEach((l, i) => zipMap.set(l, orderedIds[i]));
   for (const line of src) {
-    const id = pointerMap.get(line) ?? line.match(/^【惰性 (L_\w+)｜/)?.[1];
+    const id =
+      pointerMap.get(line) ??
+      zipMap.get(line) ??
+      line.match(/【惰性 (L_\w+)[｜：]/)?.[1];
     if (id && bodies.has(id)) { out.push(...bodies.get(id).split("\n")); restored++; }
     else out.push(line);
   }
-  if (restored !== pointerMap.size) console.log(`· 注意：指针行命中 ${restored}/${pointerMap.size}（缺失的单元正文无法复位）`);
+  if (restored !== bodies.size) console.log(`· 注意：指针行命中 ${restored}/${bodies.size}（缺失的单元正文无法复位）`);
   original = out.join("\n");
   lines = original.split("\n");
   console.log(`· --from-core：按惰性库还原切分源 ${coreNow.length} → ${original.length} 字符（${bodies.size} 个单元在库，复位 ${restored} 处）`);
