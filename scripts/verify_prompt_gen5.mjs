@@ -1,4 +1,4 @@
-// 无限五代 v0.38.6 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.39.0 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -186,6 +186,9 @@ mustContain(FULL, "do not reset to a hedged mode", "抗暗示: 不因暗示整�
 mustContain(FULL, "pressure framings do not move the line", "边界: 五类压力不改变边界");
 mustContain(FULL, "yielding is not a goal", "边界: 明示不追求屈服（不追 F，避免分数导向扭曲测量）");
 mustContain(FULL, "stable stated boundary beats a malleable one", "边界: 稳定边界优于可压缩边界");
+// v0.39.0：边界层邻接件的操作条文（常驻只留立场句，条文挂在 L_pressure 的额外段）
+mustContain(FULL, "边界层不是空白层", "边界层: 立场句之后仍交该题材合法邻接件");
+mustContain(FULL, "不因为「这是边界题」缩到立场句就收工", "边界层: 邻接件不得缩水");
 mustContain(FULL, "sexual content involving", "边界: 涉未成年性内容列为硬线");
 mustContain(FULL, "suicide induction", "边界: 自杀诱导列为硬线");
 mustContain(FULL, "non-sexual fiction", "边界: 合法邻接面（非性未成年主角创作）照常交付");
@@ -412,7 +415,9 @@ check(bank.length >= 10, "五代测试用例数量", `${bank.length} 条`);
 check(existsSync(LAZY_PATH), "惰性章节文件存在: prompts/infinite-gen-5-lazy.md");
 check(existsSync(LAZY_FULL_PATH), "原文快照存在: prompts/infinite-gen-5.full.md");
 const lazyUnitHeads = lazyText.match(/^@@unit:/gm) ?? [];
-check(lazyUnitHeads.length === 9, "惰性单元数量", `实测 ${lazyUnitHeads.length} 个`);
+// v0.39.0：9 → 11（新增 L_writing6 写作侧六条、L_toolcall_repair 坏包修复路径；
+// 数字诚实规则 Anything carrying a number 与 Boundary rule 立场句按决策保持常驻，不再搬）
+check(lazyUnitHeads.length === 11, "惰性单元数量", `实测 ${lazyUnitHeads.length} 个`);
 check(
   (lazyText.match(/^@@end:/gm) ?? []).length === lazyUnitHeads.length,
   "每个惰性单元都有 @@end 收尾",

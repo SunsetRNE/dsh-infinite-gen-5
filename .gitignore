@@ -17,3 +17,6 @@ __pycache__/
 
 # 一次性子代理实验台里的临时演示件（评审用，非计分产物；os*.md 才是答案件）
 tests/oneshot/arm-*/artifacts/demo_*
+
+# 内核拆分前的一次性备份（回滚用；还原走 git 或 scripts/kernel-lazy-split.mjs --restore）
+.kernel-backup/
