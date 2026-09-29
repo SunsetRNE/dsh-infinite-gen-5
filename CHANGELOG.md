@@ -12,8 +12,12 @@
 
 ### 🐛 修复
 
-- 环境工具常驻定义回收到 1.5 KB 内（88/0）+ docs/SURFACE.md 回执 + README 表面覆盖节
+- 环境工具常驻定义回收到 1.5 KB 内（88/0）+ docs/SURFACE.md 回执 + README 表面覆盖节（`8a09483`）
 - 既有门禁对齐 withContract 工具注册点（prompt 64 · env 149 · dispatch 52）（`49e05d5`）
+
+### 📝 文档
+
+- SURFACE.md 补环境工具 1.5 KB 上限回收到位记录
 
 ## v0.37.1 — 2026-09-29
 

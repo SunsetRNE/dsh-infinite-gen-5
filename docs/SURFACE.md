@@ -52,6 +52,11 @@ node -e 'import("./index.js").then(m=>console.log("末位锚点长度:",String(m
 - 同类过期断言共 4 处，已一并改为「必须命中包装后的形态」：`verify_prompt.mjs:115`（profile）·
   `verify_env.mjs:285,289`（env / scenario）· `verify_dispatch.mjs:207`（dispatch）。
 - 复跑：`verify_prompt` 64/0 · `verify_env` 149/0 · `verify_dispatch` 52/0。
+- **第二次失败** `scripts/verify_scenario_tool.mjs:157` 报 `环境工具常驻定义 < 1.5 KB — 1550 B`：
+  短形 163 字符加进 `infinite_gen5_env` 的 description 后超了 1500 B 上限。处置**不是放宽阈值**，而是
+  把该 description 自身的散文压回 163 B 以内（`Probe the local runtime, read-only, no side effects…`
+  `No arguments = summary; layers narrows the probe`），所有层名、参数说明、`additionalProperties: false` 一个没少 ——
+  复跑 `verify_scenario_tool` **88 通过 / 0 失败**，定义回落到上限内且短形仍在场。
 
 ## 四态
 
