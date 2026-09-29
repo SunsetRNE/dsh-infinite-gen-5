@@ -72,7 +72,7 @@ npm run verify:hardening                                    # 全链
 - static 模拟：**10 条通过 · 4 条 skip · 通道 static**（退出码 0；四条对照被跳过，降级断言全过）
 - `verify:hardening`：`plugin_integrity` 10 条 · `cred_reach_gate` 11 条 · `ca_key_guard` 10 条 · `--check` 回 `CRED_REACH=NO_DRIFT`（7 件扫描）→ 退出码 0
 
-static 一列是**模拟**（把两个绝对路径改指 `/nonexistent/` 的副本），不是真 runner；真 CI 的复验要等 tag `v0.38.1` 的那次 run。
+static 一列是**模拟**（把两个绝对路径改指 `/nonexistent/` 的副本）；真 CI 上同一分支的复验见 §6 —— 那里是真正的 `通道 static`，输出形状与模拟一致。
 
 ## 5. 门禁可移植性矩阵
 
@@ -95,17 +95,38 @@ verify_sync：37 通过 · 0 失败 · 1 警告（没有可用的宿主指纹做
 SKIP 无限五代安装体检：找不到 /tmp/nohost-dsh（CI / 未装 DSH 的机器属正常）
 ```
 
-## 6. 断言状态
+## 6. tag v0.38.1 的真 CI 结论（已回读）
+
+- `gh run view 36547285512`：`package` job **completed / success**，HEAD `51c8048`（checkout 日志里的提交标题即本轮修复提交）。
+- 真 CI 上 `cred_reach_gate` 的那几行原文：
+
+```
+skip(降权通道可用（setpriv/su） — 本机无 setpriv/su，见降级断言)
+skip(阳性对照：644 文件降权可读 — 本机无 setpriv/su，见降级断言)
+skip(阴性对照：000 文件降权被拒 — 本机无 setpriv/su，见降级断言)
+skip(阴性对照：不存在的路径判为不可读 — 本机无 setpriv/su，见降级断言)
+cred_reach_gate 自检通过（共 10 条 · 跳过 4 条 · 通道 static）
+ca_key_guard 自检通过（共 10 条）
+CRED_REACH=NO_DRIFT
+verify_sync：37 通过 · 0 失败 · 1 警告
+SKIP 无限五代安装体检：找不到 /root/.dsh（CI / 未装 DSH 的机器属正常）
+```
+
+即：CI 走的就是 static 分支，四条对照被跳过、降级断言全过，链一路跑到底（含 v0.38.0 那次没跑到的 `verify:sync` / `verify:install`）。
+同一提交的 main 分支 run `36547233568` 也是 success；对照之下，tag v0.38.0 的 run `36546187205` 是 failure —— 修复前后各一次真跑，因果闭合。
+
+## 7. 断言状态
 
 | 断言 | 态 | 有效期到 | 依据 |
 | --- | --- | --- | --- |
-| CI runner 无 `setpriv`/`su`，通道探测回 `static` | 已知 | — | 用户贴入的 tag v0.38.0 run 日志 |
-| 修后本机 live 11/0、static 模拟 10/0 且全链退出 0 | 已知 | — | 本机 `node` 实跑输出 |
-| tag `v0.38.1` 的 CI run 转绿 | 未知 | — | 待该 run 结束才能定 |
-| `verify:all` 第 33–35 项在 CI 上跳过 | 推测 | — | 本机 `DSH_HOME=/tmp/nohost-dsh` 模拟，非真 runner |
-| 「Node.js 20 弃用」告警不影响结果 | 已知 | — | 日志里两条告警后仍继续执行到失败点 |
+| CI runner 无 `setpriv`/`su`，通道探测回 `static` | 已知 | — | tag v0.38.0 run 日志与 v0.38.1 run 日志一致 |
+| tag `v0.38.1` 的 CI run 转绿（`package` success） | 已知 | — | `gh run view 36547285512`，2026-09-29 回读 |
+| `verify:all` 第 33–35 项在 CI 上干净跳过 | 已知 | — | v0.38.1 run 里 `verify_sync` 37/0 与安装体检 SKIP 原文 |
+| 修后本机 live 11/0、static 模拟 10/0、`verify:hardening` 退出 0 | 已知 | — | 本机 `node` 实跑输出 |
+| 「Node.js 20 弃用」告警不影响结果 | 已知 | — | 两次 run 里告警后流程照常执行 |
+| Node 22 / npm 10.9.8 与 Node 24 / npm 11.17.0 行为一致 | 推测 | — | 两端全链都退出 0，但未逐套做差异比对 |
 
-- 截至 2026 年（2026-09-29 核）已验证：`cred_reach_gate` 自检在 live 与 static 两条路径上均通过，`verify:hardening` 全链退出 0。
-- 适用范围：适用于 Linux CI runner（ubuntu-24.04）与本机 Linux 容器；换 macOS / Windows runner 需重新核验（`setpriv`/`su` 路径、`chmod` 语义都不同）。
-- 已知：CI 失败根因与修法已现场核实；推测：尾段三套在真 runner 上同样 SKIP；未知：tag v0.38.1 的 CI 结论我不掌握。
-- 依赖与边界：需要实际 CI 环境复验；真 runner 的最终结论以该次 run 为准。
+- 截至 2026 年（2026-09-29 核）已验证：tag `v0.38.1` 的 CI `package` job 与 main 分支 run 均 success，`cred_reach_gate` 在 static 通道下 10 条通过 / 4 条 skip，链跑完全部 35 项。
+- 适用范围：适用于 Linux CI runner（ubuntu-24.04、Node 22.23.2）与本机 Linux 容器（Node 24、root + setpriv）；换 macOS / Windows runner 需重新核验（`setpriv`/`su` 路径与 `chmod` 语义都不同）。
+- 已知：CI 失败根因、修法与两次真 run 的结论都已回读；推测：两个 Node 主版本在剩余套件上无差异；未知：别的 runner 镜像（如自建镜像）是否带 `setpriv` 我没测。
+- 依赖与边界：需要实际 CI 环境复验；本次结论只覆盖 `ubuntu-24.04` 这一档 runner。
