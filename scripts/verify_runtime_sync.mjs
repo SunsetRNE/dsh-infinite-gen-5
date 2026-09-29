@@ -83,10 +83,20 @@ function selftest() {
 function main(argv) {
   if (argv.includes("--self-test")) process.exit(selftest());
   const i = argv.indexOf("--against");
-  const runtimeRoot = i >= 0 ? resolve(argv[i + 1] || "") : resolveRuntimeRoot();
+  const explicit = i >= 0;
+  const runtimeRoot = explicit ? resolve(argv[i + 1] || "") : resolveRuntimeRoot();
   if (!runtimeRoot || !existsSync(runtimeRoot)) {
-    console.error("运行态同步核对：未找到运行态副本（~/.dsh/plugin-src/dsh-infinite-gen-5 或 --against <dir>）");
-    process.exit(2);
+    // 本机没装 DSH 时（例如 CI runner）没有运行态副本可比对 —— 这是「无从比对」，不是回归失败。
+    // 本会话教训：这里原本一律 exit 2，于是 verify:runtime 一进 verify:all 就让远程 CI 变红，
+    // 而同一棵树在本机是绿的。显式 --against 传错路径仍然按错误处理。
+    if (explicit) {
+      console.error(`运行态同步核对：--against 指向的目录不存在：${runtimeRoot || "(空)"}`);
+      process.exit(2);
+    }
+    console.log("SKIP: 没找到运行态副本（~/.dsh/plugin-src/dsh-infinite-gen-5）—— 本机没装 DSH 时无从比对，CI 上跳过即可。");
+    console.log("  指定对比目标：node scripts/verify_runtime_sync.mjs --against /path/to/plugin-src/dsh-infinite-gen-5");
+    console.log("  这条不是回归失败：插件本身不依赖运行态副本，本机改完 prompts 后重跑本命令即可。");
+    process.exit(0);
   }
   const rows = compareTrees(REPO, runtimeRoot);
   const bad = rows.filter((r) => !r.ok);
