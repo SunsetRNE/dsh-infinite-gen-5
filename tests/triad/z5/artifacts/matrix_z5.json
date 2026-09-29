@@ -1,0 +1,351 @@
+{
+  "ts": "2026-09-29T06:27:41Z",
+  "timeout_s": 0.5,
+  "ports": [
+    22,
+    80,
+    443,
+    3000,
+    3080,
+    8080
+  ],
+  "targets": [
+    "127.0.0.1",
+    "127.0.0.2",
+    "127.0.0.254",
+    "172.30.215.113",
+    "10.202.11.230",
+    "10.202.11.229",
+    "172.19.0.1",
+    "172.19.0.2",
+    "8.8.8.8",
+    "223.5.5.5"
+  ],
+  "elapsed_s": 0.135,
+  "matrix": {
+    "127.0.0.2": {
+      "22": {
+        "verdict": "refused",
+        "ms": 12.63,
+        "errno": "ECONNREFUSED"
+      },
+      "80": {
+        "verdict": "refused",
+        "ms": 8.32,
+        "errno": "ECONNREFUSED"
+      },
+      "443": {
+        "verdict": "refused",
+        "ms": 6.33,
+        "errno": "ECONNREFUSED"
+      },
+      "3000": {
+        "verdict": "refused",
+        "ms": 3.97,
+        "errno": "ECONNREFUSED"
+      },
+      "3080": {
+        "verdict": "refused",
+        "ms": 2.45,
+        "errno": "ECONNREFUSED"
+      },
+      "8080": {
+        "verdict": "refused",
+        "ms": 13.51,
+        "errno": "ECONNREFUSED"
+      }
+    },
+    "127.0.0.254": {
+      "22": {
+        "verdict": "refused",
+        "ms": 3.34,
+        "errno": "ECONNREFUSED"
+      },
+      "80": {
+        "verdict": "refused",
+        "ms": 11.29,
+        "errno": "ECONNREFUSED"
+      },
+      "443": {
+        "verdict": "refused",
+        "ms": 13.82,
+        "errno": "ECONNREFUSED"
+      },
+      "3000": {
+        "verdict": "refused",
+        "ms": 13.28,
+        "errno": "ECONNREFUSED"
+      },
+      "3080": {
+        "verdict": "refused",
+        "ms": 13.16,
+        "errno": "ECONNREFUSED"
+      },
+      "8080": {
+        "verdict": "refused",
+        "ms": 3.46,
+        "errno": "ECONNREFUSED"
+      }
+    },
+    "127.0.0.1": {
+      "22": {
+        "verdict": "refused",
+        "ms": 1.37,
+        "errno": "ECONNREFUSED"
+      },
+      "80": {
+        "verdict": "refused",
+        "ms": 1.67,
+        "errno": "ECONNREFUSED"
+      },
+      "443": {
+        "verdict": "refused",
+        "ms": 2.84,
+        "errno": "ECONNREFUSED"
+      },
+      "3000": {
+        "verdict": "refused",
+        "ms": 11.83,
+        "errno": "ECONNREFUSED"
+      },
+      "3080": {
+        "verdict": "open",
+        "ms": 11.65,
+        "errno": ""
+      },
+      "8080": {
+        "verdict": "refused",
+        "ms": 11.68,
+        "errno": "ECONNREFUSED"
+      }
+    },
+    "172.30.215.113": {
+      "22": {
+        "verdict": "refused",
+        "ms": 3.84,
+        "errno": "ECONNREFUSED"
+      },
+      "80": {
+        "verdict": "refused",
+        "ms": 3.81,
+        "errno": "ECONNREFUSED"
+      },
+      "443": {
+        "verdict": "refused",
+        "ms": 5.05,
+        "errno": "ECONNREFUSED"
+      },
+      "3000": {
+        "verdict": "refused",
+        "ms": 8.88,
+        "errno": "ECONNREFUSED"
+      },
+      "3080": {
+        "verdict": "refused",
+        "ms": 6.19,
+        "errno": "ECONNREFUSED"
+      },
+      "8080": {
+        "verdict": "refused",
+        "ms": 9.04,
+        "errno": "ECONNREFUSED"
+      }
+    },
+    "10.202.11.230": {
+      "22": {
+        "verdict": "refused",
+        "ms": 4.68,
+        "errno": "ECONNREFUSED"
+      },
+      "80": {
+        "verdict": "refused",
+        "ms": 6.34,
+        "errno": "ECONNREFUSED"
+      },
+      "443": {
+        "verdict": "refused",
+        "ms": 8.1,
+        "errno": "ECONNREFUSED"
+      },
+      "3000": {
+        "verdict": "refused",
+        "ms": 15.35,
+        "errno": "ECONNREFUSED"
+      },
+      "3080": {
+        "verdict": "refused",
+        "ms": 7.76,
+        "errno": "ECONNREFUSED"
+      },
+      "8080": {
+        "verdict": "refused",
+        "ms": 7.36,
+        "errno": "ECONNREFUSED"
+      }
+    },
+    "10.202.11.229": {
+      "22": {
+        "verdict": "open",
+        "ms": 7.43,
+        "errno": ""
+      },
+      "80": {
+        "verdict": "open",
+        "ms": 17.15,
+        "errno": ""
+      },
+      "443": {
+        "verdict": "open",
+        "ms": 15.99,
+        "errno": ""
+      },
+      "3000": {
+        "verdict": "open",
+        "ms": 11.99,
+        "errno": ""
+      },
+      "3080": {
+        "verdict": "open",
+        "ms": 13.94,
+        "errno": ""
+      },
+      "8080": {
+        "verdict": "open",
+        "ms": 14.22,
+        "errno": ""
+      }
+    },
+    "172.19.0.1": {
+      "22": {
+        "verdict": "refused",
+        "ms": 9.52,
+        "errno": "ECONNREFUSED"
+      },
+      "80": {
+        "verdict": "refused",
+        "ms": 10.8,
+        "errno": "ECONNREFUSED"
+      },
+      "443": {
+        "verdict": "refused",
+        "ms": 9.54,
+        "errno": "ECONNREFUSED"
+      },
+      "3000": {
+        "verdict": "refused",
+        "ms": 10.84,
+        "errno": "ECONNREFUSED"
+      },
+      "3080": {
+        "verdict": "refused",
+        "ms": 9.43,
+        "errno": "ECONNREFUSED"
+      },
+      "8080": {
+        "verdict": "refused",
+        "ms": 12.98,
+        "errno": "ECONNREFUSED"
+      }
+    },
+    "172.19.0.2": {
+      "22": {
+        "verdict": "open",
+        "ms": 30.56,
+        "errno": ""
+      },
+      "80": {
+        "verdict": "open",
+        "ms": 16.57,
+        "errno": ""
+      },
+      "443": {
+        "verdict": "open",
+        "ms": 19.01,
+        "errno": ""
+      },
+      "3000": {
+        "verdict": "open",
+        "ms": 4.3,
+        "errno": ""
+      },
+      "3080": {
+        "verdict": "open",
+        "ms": 4.14,
+        "errno": ""
+      },
+      "8080": {
+        "verdict": "open",
+        "ms": 14.77,
+        "errno": ""
+      }
+    },
+    "8.8.8.8": {
+      "22": {
+        "verdict": "open",
+        "ms": 18.49,
+        "errno": ""
+      },
+      "80": {
+        "verdict": "open",
+        "ms": 16.8,
+        "errno": ""
+      },
+      "443": {
+        "verdict": "open",
+        "ms": 15.25,
+        "errno": ""
+      },
+      "3000": {
+        "verdict": "open",
+        "ms": 19.77,
+        "errno": ""
+      },
+      "3080": {
+        "verdict": "open",
+        "ms": 19.11,
+        "errno": ""
+      },
+      "8080": {
+        "verdict": "open",
+        "ms": 23.92,
+        "errno": ""
+      }
+    },
+    "223.5.5.5": {
+      "22": {
+        "verdict": "open",
+        "ms": 24.74,
+        "errno": ""
+      },
+      "80": {
+        "verdict": "open",
+        "ms": 23.54,
+        "errno": ""
+      },
+      "443": {
+        "verdict": "open",
+        "ms": 23.23,
+        "errno": ""
+      },
+      "3000": {
+        "verdict": "open",
+        "ms": 22.77,
+        "errno": ""
+      },
+      "3080": {
+        "verdict": "open",
+        "ms": 22.73,
+        "errno": ""
+      },
+      "8080": {
+        "verdict": "open",
+        "ms": 12.41,
+        "errno": ""
+      }
+    }
+  },
+  "distribution": {
+    "refused": 35,
+    "open": 25
+  }
+}

@@ -25,6 +25,10 @@ process.env.IG5_STATS_FILE = "/tmp/ig5-stats-injection.json";
 // （文件里落了 override），这些断言就会集体变红。先清一个临时 home 再导入插件。
 process.env.IG5_HOME = "/tmp/ig5-home-injection";
 rmSync("/tmp/ig5-home-injection", { recursive: true, force: true });
+// 适配层（ig5-adapt:endpoint，order 101）要有缓存文件才多插一段，会把本脚本的
+// 「装配顺序 / 注入位置」两条定长断言带偏。本套只考内核五段 + 末位瀑布，缓存指空。
+process.env.IG5_ADAPT_CACHE = "/tmp/ig5-adapt-cache-injection-off.json";
+rmSync("/tmp/ig5-adapt-cache-injection-off.json", { force: true });
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const passes = [];

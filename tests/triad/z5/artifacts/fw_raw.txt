@@ -1,0 +1,42 @@
+### command -v nft iptables ufw
+/usr/sbin/nft
+/usr/sbin/iptables
+/usr/sbin/ufw
+cv_exit=0
+
+### nft list ruleset
+Operation not permitted (you must be root)
+netlink: Error: cache initialization failed: Operation not permitted
+nft_exit=1
+
+### iptables -S
+iptables v1.8.10 (nf_tables): Could not fetch rule set generation id: Permission denied (you must be root)
+iptables_exit=4
+
+### iptables -L -n
+iptables v1.8.10 (nf_tables): Could not fetch rule set generation id: Permission denied (you must be root)
+iptables_L_exit=4
+
+### ufw status
+ERROR: problem running iptables: iptables v1.8.10 (nf_tables): Could not fetch rule set generation id: Permission denied (you must be root)
+
+
+ufw_exit=1
+
+### nft list tables
+Operation not permitted (you must be root)
+netlink: Error: cache initialization failed: Operation not permitted
+nft_tables_exit=1
+
+### ls /proc/net/ip_tables_names
+ls: cannot access '/proc/net/nf_tables': No such file or directory
+-r--r-----. 1 root root 0 Sep 29 06:26 /proc/net/ip_tables_names
+
+### ping -c1 -W1 127.0.0.1
+PING 127.0.0.1 (127.0.0.1) 56(84) bytes of data.
+64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.128 ms
+
+--- 127.0.0.1 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.128/0.128/0.128/0.000 ms
+ping_exit=0

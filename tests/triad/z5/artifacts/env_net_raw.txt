@@ -1,0 +1,113 @@
+### date: 2026-09-29T06:25:10Z
+### ip -br a
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+dummy0           UNKNOWN        fe80::50d8:c1ff:fe45:d7e4/64 
+ifb0             UNKNOWN        fe80::d004:f6ff:fe5b:bc73/64 
+ifb1             UNKNOWN        fe80::3c08:bfff:fe62:1083/64 
+tunl0@NONE       DOWN           
+gre0@NONE        DOWN           
+gretap0@NONE     DOWN           
+erspan0@NONE     DOWN           
+ip_vti0@NONE     DOWN           
+ip6_vti0@NONE    DOWN           
+sit0@NONE        DOWN           
+ip6tnl0@NONE     DOWN           
+ip6gre0@NONE     DOWN           
+ovnet0           DOWN           
+ovnet1           DOWN           
+ovnet2           DOWN           
+rmnet_ipa0       UNKNOWN        
+ifb2             UNKNOWN        fe80::84e9:dbff:fe69:3527/64 
+rmnet_data0@rmnet_ipa0 UNKNOWN        fe80::3c1a:3fff:feee:f2de/64 
+rmnet_data2@rmnet_ipa0 DOWN           
+rmnet_data1@rmnet_ipa0 DOWN           
+r_rmnet_data0@rmnet_ipa0 DOWN           
+r_rmnet_data2@rmnet_ipa0 DOWN           
+r_rmnet_data3@rmnet_ipa0 DOWN           
+r_rmnet_data1@rmnet_ipa0 DOWN           
+rmnet_data3@rmnet_ipa0 UNKNOWN        240a:42d8:10:5694:3cb6:61ff:fe6e:3d96/64 fe80::3cb6:61ff:fe6e:3d96/64 
+wlan0            DOWN           
+p2p0             DOWN           
+wifi-aware0      DOWN           
+rmnet_data4@rmnet_ipa0 UNKNOWN        2408:8563:30:b43b:987e:a1ff:fe11:f0be/64 fe80::987e:a1ff:fe11:f0be/64 
+vgate0           UNKNOWN        172.30.215.113/32 fe80::653e:41a3:80bd:c55b/64 
+rmnet_data5@rmnet_ipa0 UNKNOWN        10.202.11.230/30 2408:8462:230:daf:24f0:15ff:fe60:48aa/64 fe80::24f0:15ff:fe60:48aa/64 
+tun0             UNKNOWN        172.19.0.1/30 fe80::1ec1:2c36:a2cb:8336/64 
+exit=0
+### ip -br -4 a
+lo               UNKNOWN        127.0.0.1/8 
+vgate0           UNKNOWN        172.30.215.113/32 
+rmnet_data5@rmnet_ipa0 UNKNOWN        10.202.11.230/30 
+tun0             UNKNOWN        172.19.0.1/30 
+exit=0
+### ip route
+10.202.11.228/30 dev rmnet_data5 proto kernel scope link src 10.202.11.230 
+172.19.0.0/30 dev tun0 proto kernel scope link src 172.19.0.1 
+172.30.215.113 via 172.30.215.113 dev vgate0 
+exit=0
+### ip -6 route
+exit=0
+### /etc/resolv.conf
+nameserver 8.8.8.8
+nameserver 223.5.5.5
+### ip -details link show
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00 promiscuity 0  allmulti 0 minmtu 0 maxmtu 0 addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 524280 tso_max_segs 65535 gro_max_size 65536 
+2: dummy0: <BROADCAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/ether 52:d8:c1:45:d7:e4 brd ff:ff:ff:ff:ff:ff promiscuity 0  allmulti 0 minmtu 0 maxmtu 0 
+    dummy addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+3: ifb0: <BROADCAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc htb state UNKNOWN mode DEFAULT group default qlen 1000
+    link/ether d2:04:f6:5b:bc:73 brd ff:ff:ff:ff:ff:ff promiscuity 0  allmulti 0 minmtu 0 maxmtu 0 
+    ifb addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+4: ifb1: <BROADCAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UNKNOWN mode DEFAULT group default qlen 1000
+    link/ether 3e:08:bf:62:10:83 brd ff:ff:ff:ff:ff:ff promiscuity 0  allmulti 0 minmtu 0 maxmtu 0 
+    ifb addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+5: tunl0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ipip 0.0.0.0 brd 0.0.0.0 promiscuity 0  allmulti 0 minmtu 0 maxmtu 0 
+    ipip any remote any local any ttl inherit nopmtudisc addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+6: gre0@NONE: <NOARP> mtu 1476 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/gre 0.0.0.0 brd 0.0.0.0 promiscuity 0  allmulti 0 minmtu 0 maxmtu 0 
+    gre remote any local any ttl inherit nopmtudisc addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+7: gretap0@NONE: <BROADCAST,MULTICAST> mtu 1462 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether 00:00:00:00:00:00 brd ff:ff:ff:ff:ff:ff promiscuity 0  allmulti 0 minmtu 68 maxmtu 0 
+    gretap remote any local any ttl inherit nopmtudisc addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+8: erspan0@NONE: <BROADCAST,MULTICAST> mtu 1450 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether 00:00:00:00:00:00 brd ff:ff:ff:ff:ff:ff promiscuity 0  allmulti 0 minmtu 68 maxmtu 0 
+    erspan remote any local any ttl inherit nopmtudisc okey 0.0.0.0 erspan_index 0 erspan_ver 1 addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+9: ip_vti0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ipip 0.0.0.0 brd 0.0.0.0 promiscuity 0  allmulti 0 minmtu 0 maxmtu 0 
+    vti remote any local any addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+10: ip6_vti0@NONE: <NOARP> mtu 1364 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/tunnel6 :: brd :: permaddr b298:455b:ebf4:: promiscuity 0  allmulti 0 minmtu 68 maxmtu 65495 
+    vti6 remote any local any addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+11: sit0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/sit 0.0.0.0 brd 0.0.0.0 promiscuity 0  allmulti 0 minmtu 1280 maxmtu 65555 
+    sit ip6ip remote any local any ttl 64 nopmtudisc addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+12: ip6tnl0@NONE: <NOARP> mtu 1452 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/tunnel6 :: brd :: permaddr ae60:88a5:8440:: promiscuity 0  allmulti 0 minmtu 68 maxmtu 65535 
+    ip6tnl ip6ip6 remote any local any hoplimit inherit encaplimit 0 tclass 0x00 flowlabel 0x00000 addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+13: ip6gre0@NONE: <NOARP> mtu 1448 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/gre6 :: brd :: permaddr 7692:8ecc:bcff:: promiscuity 0  allmulti 0 minmtu 0 maxmtu 0 
+    ip6gre remote any local any hoplimit inherit encaplimit 0 tclass 0x00 flowlabel 0x00000 addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+14: ovnet0: <BROADCAST,POINTOPOINT,MULTICAST,NOARP> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 500
+    link/ether c6:c2:76:ba:2e:ab peer ff:ff:ff:ff:ff:ff promiscuity 0  allmulti 0 minmtu 68 maxmtu 1500 
+    ovnet addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+15: ovnet1: <BROADCAST,POINTOPOINT,MULTICAST,NOARP> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 500
+    link/ether a2:52:5c:12:6f:f2 peer ff:ff:ff:ff:ff:ff promiscuity 0  allmulti 0 minmtu 68 maxmtu 1500 
+    ovnet addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+16: ovnet2: <BROADCAST,POINTOPOINT,MULTICAST,NOARP> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 500
+    link/ether 3e:2f:6c:41:8b:93 peer ff:ff:ff:ff:ff:ff promiscuity 0  allmulti 0 minmtu 68 maxmtu 1500 
+    ovnet addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+17: rmnet_ipa0: <UP,LOWER_UP> mtu 9216 qdisc pfifo_fast state UNKNOWN mode DEFAULT group default qlen 1000
+    link/[519]  promiscuity 0  allmulti 0 minmtu 68 maxmtu 1500 addrgenmode eui64 numtxqueues 1 numrxqueues 2 gso_max_size 64000 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+19: ifb2: <BROADCAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UNKNOWN mode DEFAULT group default qlen 1000
+    link/ether 86:e9:db:69:35:27 brd ff:ff:ff:ff:ff:ff promiscuity 0  allmulti 0 minmtu 0 maxmtu 0 
+    ifb addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 65536 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+20: rmnet_data0@rmnet_ipa0: <UP,LOWER_UP> mtu 9216 qdisc mq state UNKNOWN mode DEFAULT group default qlen 1000
+    link/[519]  promiscuity 0  allmulti 0 minmtu 0 maxmtu 0 
+    rmnet mux_id 1 addrgenmode eui64 numtxqueues 31 numrxqueues 1 gso_max_size 65535 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+21: rmnet_data2@rmnet_ipa0: <> mtu 1400 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/[519]  promiscuity 0  allmulti 0 minmtu 0 maxmtu 0 
+    rmnet mux_id 3 addrgenmode eui64 numtxqueues 31 numrxqueues 1 gso_max_size 65535 gso_max_segs 65535 tso_max_size 65536 tso_max_segs 65535 gro_max_size 65536 
+22: rmnet_data1@rmnet_ipa0: <> mtu 1400 qdisc mq state DOWN mode DEFAULT group default qlen 1000
+    link/[519]  promiscuity 0  allmulti 0 minmtu 0 maxmtu 0 

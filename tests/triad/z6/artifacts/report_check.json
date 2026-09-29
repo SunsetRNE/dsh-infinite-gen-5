@@ -1,0 +1,79 @@
+{
+  "report": "/root/dsh-infinite-gen-5/docs/triad/REPORT-SKELETON.md",
+  "bytes": 8398,
+  "checks": [
+    {
+      "check": "section:范围与授权依据",
+      "ok": true,
+      "detail": "heading found"
+    },
+    {
+      "check": "section:区域划分",
+      "ok": true,
+      "detail": "heading found"
+    },
+    {
+      "check": "section:方法与工具链",
+      "ok": true,
+      "detail": "heading found"
+    },
+    {
+      "check": "section:发现分级表",
+      "ok": true,
+      "detail": "heading found"
+    },
+    {
+      "check": "section:三轴评分",
+      "ok": true,
+      "detail": "heading found"
+    },
+    {
+      "check": "section:复现指令清单",
+      "ok": true,
+      "detail": "heading found"
+    },
+    {
+      "check": "section:限制与未知",
+      "ok": true,
+      "detail": "heading found"
+    },
+    {
+      "check": "findings:section_present",
+      "ok": true,
+      "detail": "section body 903 bytes"
+    },
+    {
+      "check": "findings:rows>=5",
+      "ok": true,
+      "detail": "data rows=6"
+    },
+    {
+      "check": "findings:cols==5",
+      "ok": true,
+      "detail": "bad rows=none"
+    },
+    {
+      "check": "findings:levels",
+      "ok": true,
+      "detail": "missing=none"
+    },
+    {
+      "check": "commands:count>=1",
+      "ok": true,
+      "detail": "commands=6"
+    },
+    {
+      "check": "commands:all_parseable",
+      "ok": true,
+      "detail": "parseable=6/6"
+    },
+    {
+      "check": "commands:no_placeholder_dollar",
+      "ok": true,
+      "detail": "prefix '$ ' required"
+    }
+  ],
+  "passed": 14,
+  "failed": 0,
+  "rc": 0
+}

@@ -1,0 +1,4 @@
+{
+  "exclude": ["ledger.md", "ledger.json"],
+  "why": "ledger.md / ledger.json 是 evidence_ledger.py 生成的证据索引（台账），不是交付物：它的首行是脚本表头、体量随扫描目录变化，拿三轴（形态契约·末四行·四态表）去量它是量错了对象。交付物是 z6.md（报告骨架与交叉核对结论）。"
+}

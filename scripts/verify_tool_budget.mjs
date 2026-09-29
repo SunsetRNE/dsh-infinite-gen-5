@@ -105,13 +105,21 @@ check(
 // ---- 3. 参数形状：扁平标量，不给模型制造嵌套大对象的机会 ----
 const tools = mountTools();
 const toolNames = tools.map((t) => t.name).sort().join(",");
-check(tools.length === 4, "注册了四个工具", String(tools.length));
-check(
-  toolNames === "infinite_gen5_dispatch,infinite_gen5_env,infinite_gen5_profile,infinite_gen5_scenario",
-  "工具名齐全",
-  toolNames,
-);
-for (const tool of tools) {
+// v0.36.8 起 relay / skills 两块并回主干，注册面由 4 名变 6 名（注册点 index.js:3505
+// registerRelayTools；relay 定义 index.js:2882、skills 定义 index.js:3247）。
+// 这两名工具自带结果渲染、不走 budgetedOutput，所以体积闸只对下面 4 名资源工具断言。
+const EXPECTED_TOOLS = [
+  "infinite_gen5_dispatch",
+  "infinite_gen5_env",
+  "infinite_gen5_profile",
+  "infinite_gen5_scenario",
+];
+const EXPECTED_ALL = [...EXPECTED_TOOLS, "infinite_gen5_relay", "infinite_gen5_skills"].sort().join(",");
+check(tools.length === 6, "注册了六个工具（4 资源 + relay/skills）", String(tools.length));
+check(toolNames === EXPECTED_ALL, "工具名齐全且无计划外工具", toolNames);
+const renderTools = tools.filter((t) => EXPECTED_TOOLS.includes(t.name));
+check(renderTools.length === EXPECTED_TOOLS.length, "四个资源工具都在注册面里", String(renderTools.length));
+for (const tool of renderTools) {
   const props = tool.parameters?.properties ?? {};
   const kinds = Object.values(props).map((p) => p.type);
   const flat =
@@ -123,7 +131,7 @@ for (const tool of tools) {
 }
 
 // ---- 4. 结果闸走真实 render：小结果原样、超大结果被压进预算并写明降级 ----
-for (const tool of tools) {
+for (const tool of renderTools) {
   const smallText = tool.output.render([], { ok: true, note: "小结果" })[0].text;
   check(!JSON.parse(smallText).truncated, `${tool.name} 小结果不加降级标记（原样返回）`);
   const hugeText = tool.output.render([], {

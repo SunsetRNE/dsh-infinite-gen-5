@@ -11,10 +11,12 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { CONTRACT_KINDS } from "./lib/contracts.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, "..");
 const BANK = join(ROOT, "tests", "oneshot-bank.jsonl");
+const BANK_COMPLIANCE = join(ROOT, "tests", "oneshot-compliance.jsonl");
 
 export function readBank(path = BANK) {
   return readFileSync(path, "utf8")
@@ -38,12 +40,13 @@ export function taskBook(item, artifactPath) {
   ].join("\n");
 }
 
-function cmdEmit(dir) {
-  const items = readBank();
+function cmdEmit(dir, bankArg) {
+  const bankPath = bankArg ? resolve(bankArg) : BANK;
+  const items = readBank(bankPath);
   const abs = resolve(dir);
   mkdirSync(join(abs, "tasks"), { recursive: true });
   mkdirSync(join(abs, "artifacts"), { recursive: true });
-  const manifest = { bank: "tests/oneshot-bank.jsonl", items: [] };
+  const manifest = { bank: bankPath.startsWith(ROOT) ? bankPath.slice(ROOT.length + 1) : bankPath, items: [] };
   for (const it of items) {
     const artifact = join(abs, "artifacts", `${it.id}.md`);
     const prompt = taskBook(it, artifact);
@@ -51,7 +54,7 @@ function cmdEmit(dir) {
     manifest.items.push({ ...it, artifact, promptBytes: Buffer.byteLength(prompt, "utf8") });
   }
   writeFileSync(join(abs, "manifest.json"), JSON.stringify(manifest, null, 2), "utf8");
-  console.log(`发题完成：${items.length} 题 → ${abs}`);
+  console.log(`发题完成：${items.length} 题（题库 ${manifest.bank}）→ ${abs}`);
   console.log(`任务书 ${join(abs, "tasks")} · 产物目录 ${join(abs, "artifacts")}`);
 }
 
@@ -104,18 +107,33 @@ export function selftest() {
   check(book.includes("不写「如果你提供 X 我再 Y」"), "任务书缺少禁止征询的契约行");
   const body = book.split("\n").filter((l) => !l.startsWith("规矩：")).join("\n");
   check(!/请确认|你能否|可以告诉我|如果你提供 X 我再 Y/.test(body), "任务书正文里出现了征询句（违反一次性契约）");
+  if (existsSync(BANK_COMPLIANCE)) {
+    const cs = readBank(BANK_COMPLIANCE);
+    check(cs.length >= 8, `服从性题库应 ≥8 题，实得 ${cs.length}`);
+    check(new Set(cs.map((i) => i.id)).size === cs.length, "服从性题库有重复 id");
+    for (const it of cs) {
+      check(/^os\d{2}$/.test(it.id), `${it.id} 不合法的题号`);
+      check(it.contract && Array.isArray(it.contract.items) && it.contract.items.length >= 3, `${it.id} 契约条目应 ≥3 条`);
+      for (const c of (it.contract?.items ?? [])) check(CONTRACT_KINDS.includes(c.kind), `${it.id} 未知契约类型 ${c.kind}`);
+      check(it.calib === undefined || typeof it.calib === "boolean", `${it.id}.calib 应是布尔`);
+    }
+  }
   const bad = (() => { try { readBank("/dev/null"); return null; } catch (e) { return e; } })();
   check(bad === null, "空题库应正常返回空数组（读 /dev/null 抛错说明解析路径不健壮）");
   console.log(fails.length ? `oneshot_harness selftest 失败 ${fails.length} 条：\n  - ${fails.join("\n  - ")}` : `oneshot_harness selftest 通过（题库 ${items.length} 题 / 任务书契约 / 回执样例 共 ${12 + items.length * 4} 条）`);
   return fails.length ? 1 : 0;
 }
 
-const [mode, dir, id] = process.argv.slice(2);
-if (mode === "--emit") cmdEmit(dir);
+const argv = process.argv.slice(2);
+const bankIdx = argv.indexOf("--bank");
+const bankArg = bankIdx >= 0 ? argv[bankIdx + 1] : null;
+const rest = bankIdx >= 0 ? argv.filter((_, i) => i !== bankIdx && i !== bankIdx + 1) : argv;
+const [mode, dir, id] = rest;
+if (mode === "--emit") cmdEmit(dir, bankArg);
 else if (mode === "--prompt") cmdPrompt(dir, id);
 else if (mode === "--collect") cmdCollect(dir);
 else if (mode === "--selftest") process.exit(selftest());
 else {
-  console.log("用法：--emit <dir> | --prompt <dir> <id> | --collect <dir> | --selftest");
+  console.log("用法：--emit <dir> [--bank <题库>] | --prompt <dir> <id> | --collect <dir> | --selftest");
   process.exit(2);
 }

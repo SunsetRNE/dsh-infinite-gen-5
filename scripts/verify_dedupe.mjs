@@ -17,6 +17,10 @@ process.env.IG5_STATS_FILE = "/tmp/ig5-stats-dedupe.json";
 // 在干净机器上绿。这里先清掉临时 home 再导入插件，保证每次都是「没有调参档」的初始态。
 process.env.IG5_HOME = "/tmp/ig5-home-dedupe";
 rmSync("/tmp/ig5-home-dedupe", { recursive: true, force: true });
+// 适配层（ig5-adapt:endpoint）在缓存文件存在时会多注册一段，段数断言就随开发机状态飘。
+// 本套只考内核五段：把适配缓存指到一个不存在的路径，注入口径回到「无适配层」的干净态。
+process.env.IG5_ADAPT_CACHE = "/tmp/ig5-adapt-cache-dedupe-off.json";
+rmSync("/tmp/ig5-adapt-cache-dedupe-off.json", { force: true });
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const passes = [];
@@ -95,6 +99,12 @@ const chars = (rows) => rows.map((r) => r.text.length);
 {
   const r = run({});
   check(r.registered.length === 5, "空宿主注册五段（内核 + 增强集 + 惰性章节 + 中段锚点 + 末位锚点）", `实得 ${r.registered.length}`);
+  // 适配层是「有缓存才注入」的条件段：本套把缓存指空（见文件头），所以它必须不在场。
+  // 这条同时守住 env() 的读取口径——对象式 reader（process.env）读不出来的话，关不掉这个段。
+  check(
+    !r.registered.some((s) => s.name === "ig5-adapt:endpoint"),
+    "适配缓存关闭时不注入 ig5-adapt:endpoint（条件段不参与内核五段计数）",
+  );
   check(r.registered[0].name === PRIMARY && r.registered[0].order === 100, "首段是 Order 100 通用内核");
   check(
     r.registered[1].name === BOOST && r.registered[1].order === 150,

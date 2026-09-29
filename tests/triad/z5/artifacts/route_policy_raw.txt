@@ -1,0 +1,125 @@
+### ip rule show
+0:	from all lookup local
+9999:	from all to 172.30.215.113 lookup main
+10000:	from all fwmark 0xc0000/0xd0000 lookup 99
+11000:	from all iif lo oif dummy0 uidrange 0-0 lookup 1002
+11000:	from all iif lo oif rmnet_data0 uidrange 0-0 lookup 1020
+11000:	from all iif lo oif rmnet_data3 uidrange 0-0 lookup 1027
+11000:	from all iif lo oif rmnet_data4 uidrange 0-0 lookup 1031
+11000:	from all iif lo oif rmnet_data5 uidrange 0-0 lookup 1034
+12000:	from all iif tun0 lookup 97
+16000:	from all fwmark 0x10063/0x1ffff iif lo lookup 97
+16000:	from all fwmark 0xd0001/0xdffff iif lo lookup 1020
+16000:	from all fwmark 0xd0096/0xdffff iif lo lookup 1027
+16000:	from all fwmark 0xd00a6/0xdffff iif lo lookup 1031
+16000:	from all fwmark 0x100a5/0x1ffff iif lo lookup 1034
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 0-0 lookup 1058
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 0-10087 lookup 1058
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 10089-10102 lookup 1058
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 10104-10117 lookup 1058
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 10121-10317 lookup 1058
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 10319-20087 lookup 1058
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 20089-20102 lookup 1058
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 20104-20117 lookup 1058
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 20121-20317 lookup 1058
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 20319-99999 lookup 1058
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 99700000-99799999 lookup 1058
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 99800000-99899999 lookup 1058
+16000:	from all fwmark 0x100a9/0x1ffff iif lo uidrange 99900000-99999999 lookup 1058
+17000:	from all iif lo oif dummy0 lookup 1002
+17000:	from all fwmark 0xc0000/0xc0000 iif lo oif rmnet_data0 lookup 1020
+17000:	from all fwmark 0xc0000/0xc0000 iif lo oif rmnet_data3 lookup 1027
+17000:	from all fwmark 0xc0000/0xc0000 iif lo oif rmnet_data4 lookup 1031
+17000:	from all iif lo oif rmnet_data5 lookup 1034
+17000:	from all iif lo oif tun0 uidrange 0-10087 lookup 1058
+17000:	from all iif lo oif tun0 uidrange 10089-10102 lookup 1058
+17000:	from all iif lo oif tun0 uidrange 10104-10117 lookup 1058
+17000:	from all iif lo oif tun0 uidrange 10121-10317 lookup 1058
+17000:	from all iif lo oif tun0 uidrange 10319-20087 lookup 1058
+17000:	from all iif lo oif tun0 uidrange 20089-20102 lookup 1058
+17000:	from all iif lo oif tun0 uidrange 20104-20117 lookup 1058
+17000:	from all iif lo oif tun0 uidrange 20121-20317 lookup 1058
+17000:	from all iif lo oif tun0 uidrange 20319-99999 lookup 1058
+17000:	from all iif lo oif tun0 uidrange 99700000-99799999 lookup 1058
+17000:	from all iif lo oif tun0 uidrange 99800000-99899999 lookup 1058
+17000:	from all iif lo oif tun0 uidrange 99900000-99999999 lookup 1058
+18000:	from all fwmark 0/0x10000 lookup 99
+19000:	from all fwmark 0/0x10000 lookup 98
+20000:	from all fwmark 0/0x10000 lookup 97
+21003:	from all to 172.19.0.1/30 lookup main
+21013:	from all fwmark 0x400/0xfff lookup 1058
+23000:	from all fwmark 0xa5/0x1ffff iif lo lookup 1034
+24000:	from all fwmark 0xc00a9/0xcffff lookup 1058
+24000:	from all fwmark 0/0x30000 iif lo uidrange 0-10087 lookup 1058
+24000:	from all fwmark 0/0x30000 iif lo uidrange 10089-10102 lookup 1058
+24000:	from all fwmark 0/0x30000 iif lo uidrange 10104-10117 lookup 1058
+24000:	from all fwmark 0/0x30000 iif lo uidrange 10121-10317 lookup 1058
+24000:	from all fwmark 0/0x30000 iif lo uidrange 10319-20087 lookup 1058
+24000:	from all fwmark 0/0x30000 iif lo uidrange 20089-20102 lookup 1058
+24000:	from all fwmark 0/0x30000 iif lo uidrange 20104-20117 lookup 1058
+24000:	from all fwmark 0/0x30000 iif lo uidrange 20121-20317 lookup 1058
+24000:	from all fwmark 0/0x30000 iif lo uidrange 20319-99999 lookup 1058
+24000:	from all fwmark 0/0x30000 iif lo uidrange 99700000-99799999 lookup 1058
+24000:	from all fwmark 0/0x30000 iif lo uidrange 99800000-99899999 lookup 1058
+24000:	from all fwmark 0/0x30000 iif lo uidrange 99900000-99999999 lookup 1058
+26000:	from all fwmark 0/0x10000 iif lo lookup 1000000034
+28000:	from all fwmark 0xa9/0xffff lookup 1034
+31000:	from all fwmark 0/0xffff iif lo lookup 1034
+32000:	from all unreachable
+rule_exit=0
+
+### ip route show table all (head -40)
+default via 10.202.11.229 dev rmnet_data5 table 1034 proto static mtu 1400 
+10.202.11.228/30 dev rmnet_data5 table 1034 proto static scope link 
+224.0.0.0/24 dev rmnet_data0 table 1000000020 proto static scope link 
+224.0.0.0/24 dev rmnet_data3 table 1000000027 proto static scope link 
+224.0.0.0/24 dev rmnet_data4 table 1000000031 proto static scope link 
+default dev tun0 table 1058 proto static scope link 
+172.19.0.0/30 dev tun0 table 1058 proto static scope link 
+10.202.11.228/30 dev rmnet_data5 table 1000000034 proto static scope link 
+224.0.0.0/24 dev rmnet_data5 table 1000000034 proto static scope link 
+172.19.0.0/30 dev tun0 table 1000000058 proto static scope link 
+default dev dummy0 table 1002 proto static scope link 
+10.202.11.228/30 dev rmnet_data5 proto kernel scope link src 10.202.11.230 
+172.19.0.0/30 dev tun0 proto kernel scope link src 172.19.0.1 
+172.30.215.113 via 172.30.215.113 dev vgate0 
+local 10.202.11.230 dev rmnet_data5 table local proto kernel scope host src 10.202.11.230 
+broadcast 10.202.11.231 dev rmnet_data5 table local proto kernel scope link src 10.202.11.230 
+local 127.0.0.0/8 dev lo table local proto kernel scope host src 127.0.0.1 
+local 127.0.0.1 dev lo table local proto kernel scope host src 127.0.0.1 
+broadcast 127.255.255.255 dev lo table local proto kernel scope link src 127.0.0.1 
+local 172.19.0.1 dev tun0 table local proto kernel scope host src 172.19.0.1 
+broadcast 172.19.0.3 dev tun0 table local proto kernel scope link src 172.19.0.1 
+local 172.30.215.113 dev vgate0 table local proto kernel scope host src 172.30.215.113 
+240a:42d8:10:5694::/64 dev rmnet_data3 table 1027 proto kernel metric 256 pref medium
+240a:42d8:10:5694::/64 dev rmnet_data3 table 1027 proto static metric 1024 pref medium
+fe80::/64 dev rmnet_data3 table 1027 proto kernel metric 256 pref medium
+default via fe80::a4c3:b559:81c6:49d5 dev rmnet_data3 table 1027 proto ra metric 1024 expires 32856sec pref medium
+2408:8563:30:b43b::/64 dev rmnet_data4 table 1031 proto kernel metric 256 pref medium
+2408:8563:30:b43b::/64 dev rmnet_data4 table 1031 proto static metric 1024 pref medium
+fe80::/64 dev rmnet_data4 table 1031 proto kernel metric 256 pref medium
+default via fe80::b886:3955:3b9d:ede1 dev rmnet_data4 table 1031 proto ra metric 1024 expires 64609sec pref medium
+fe80::/64 dev vgate0 table 1032 proto kernel metric 256 pref medium
+2408:8462:230:daf::/64 dev rmnet_data5 table 1034 proto kernel metric 256 pref medium
+2408:8462:230:daf::/64 dev rmnet_data5 table 1034 proto static metric 1024 pref medium
+fe80::/64 dev rmnet_data5 table 1034 proto kernel metric 256 pref medium
+default via fe80::116f:59a8:d291:2ec1 dev rmnet_data5 table 1034 proto ra metric 1024 expires 64228sec pref medium
+240a:42d8:10:5694::/64 dev rmnet_data3 table 1000000027 proto static metric 1024 pref medium
+2408:8563:30:b43b::/64 dev rmnet_data4 table 1000000031 proto static metric 1024 pref medium
+fe80::/64 dev tun0 table 1058 proto kernel metric 256 pref medium
+unreachable default dev lo table 1058 proto static metric 1024 pref medium
+2408:8462:230:daf::/64 dev rmnet_data5 table 1000000034 proto static metric 1024 pref medium
+
+### ip -6 rule
+0:	from all lookup local
+10000:	from all fwmark 0xc0000/0xd0000 lookup 99
+11000:	from all iif lo oif dummy0 uidrange 0-0 lookup 1002
+11000:	from all iif lo oif rmnet_data0 uidrange 0-0 lookup 1020
+11000:	from all iif lo oif rmnet_data3 uidrange 0-0 lookup 1027
+11000:	from all iif lo oif rmnet_data4 uidrange 0-0 lookup 1031
+11000:	from all iif lo oif rmnet_data5 uidrange 0-0 lookup 1034
+12000:	from all iif tun0 lookup 97
+16000:	from all fwmark 0x10063/0x1ffff iif lo lookup 97
+16000:	from all fwmark 0xd0001/0xdffff iif lo lookup 1020
+
+### /proc/net/fib_trie (local 32 hosts)

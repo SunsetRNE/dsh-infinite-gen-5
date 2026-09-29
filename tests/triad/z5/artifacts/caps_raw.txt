@@ -1,0 +1,12 @@
+### raw socket 真值（修正上一条脚本的变量展开错误后重测）
+AF_INET/SOCK_RAW/ICMP                      -> PermissionError: [Errno 1] Operation not permitted
+AF_PACKET/SOCK_RAW                         -> PermissionError: [Errno 1] Operation not permitted
+AF_INET/SOCK_DGRAM/ICMP(非特权 ping socket)   -> OK
+ping_group_range = 0	2147483647  gid=0
+
+### ICMP 端到端对照（同一批目标的 ping 结果）
+127.0.0.1        64 bytes from 127.0.0.1: icmp_seq=1 ttl=64 time=0.188 ms 1 packets transmitted, 1 received, 0% packet loss, time 0ms 
+10.202.11.229    1 packets transmitted, 0 received, 100% packet loss, time 0ms 
+8.8.8.8          64 bytes from 8.8.8.8: icmp_seq=1 ttl=108 time=229 ms 1 packets transmitted, 1 received, 0% packet loss, time 0ms 
+223.5.5.5        64 bytes from 223.5.5.5: icmp_seq=1 ttl=49 time=51.9 ms 1 packets transmitted, 1 received, 0% packet loss, time 0ms 
+192.0.2.1        1 packets transmitted, 0 received, 100% packet loss, time 0ms 

@@ -89,10 +89,13 @@ export const PROSE_ALLOWED_FILES = [
   "docs/oneshot/GATE.md",
 ];
 
-// 全仓字面量扫描时跳过的目录：依赖 / 生成物 / 运行产物 / 版本库内部。
+// 全仓字面量扫描时跳过的目录：依赖 / 生成物 / 运行产物 / 版本库内部 / 实验证据。
 // dist/ = `npm run release:pack` 的打包输出（含它生成的 RELEASE-NOTES.md），已被 .gitignore
 // 忽略；包内副本写死当前版本号是正常的，不该当成「未登记的源码字面量」。
-export const SCAN_SKIP_DIRS = [".git", "node_modules", "ui-preview", "runs", ".dsh", "dist"];
+// tests/ = 题库、一次性子代理产物与三轴/六臂证据（tests/oneshot/**、tests/triad/**）。
+// 这些文件记录的是「被审计对象在本轮是什么版本」，不是可发布物的版本锚点：
+// 把它们登记成锚点会让每次升版都被迫改写历史证据，所以整目录跳过。
+export const SCAN_SKIP_DIRS = [".git", "node_modules", "ui-preview", "runs", ".dsh", "dist", "tests"];
 
 // 只扫这些后缀，避免把二进制、图片、用例产物当文本读。
 export const SCAN_EXTENSIONS = [

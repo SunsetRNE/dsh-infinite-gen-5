@@ -1,0 +1,8 @@
+# proc_snap maps.txt  ts=2026-09-29T06:24:45+0000  pid=1863  page=4096
+# path=/proc/1863/maps  segments=109  bytes=2180939776
+# CATEGORY SEGMENTS            BYTES
+# exec           11          2842624
+# anon           18         19025920
+# heap            0                0
+# stack           1           143360
+# other          79       2158927872

@@ -1,0 +1,35 @@
+### python3 reach_matrix.py --selftest
+PASS  临时监听端口->open: 127.0.0.1:35613 -> open (handshake ok, 0.5ms)
+PASS  关闭端口->refused: 127.0.0.1:60603 -> refused (ECONNREFUSED, 0.7ms)
+FAIL  黑洞地址->timeout/no-route: 192.0.2.1:443 -> open (, 1.7ms)
+FAIL  run_matrix 与 probe 一致: matrix[live]=refused, 15.6ms
+
+selftest: 2 passed, 2 failed
+selftest_exit=1
+
+### python3 reach_matrix.py (自动发现候选，全矩阵)
+== Z5 横向可行域矩阵 (TCP connect) ==
+时间(UTC): 2026-09-29T06:27:40Z  timeout=0.5s  workers=16
+本地接口: lo             127.0.0.1/8  网段 127.0.0.0/8
+本地接口: vgate0         172.30.215.113/32  网段 172.30.215.113/32
+本地接口: rmnet_data5    10.202.11.230/30  网段 10.202.11.228/30
+本地接口: tun0           172.19.0.1/30  网段 172.19.0.0/30
+候选目标(10): 127.0.0.1, 127.0.0.2, 127.0.0.254, 172.30.215.113, 10.202.11.230, 10.202.11.229, 172.19.0.1, 172.19.0.2, 8.8.8.8, 223.5.5.5
+
+target             22    80   443  3000  3080  8080   max_ms
+127.0.0.2           R     R     R     R     R     R      13.5
+127.0.0.254         R     R     R     R     R     R      13.8
+127.0.0.1           R     R     R     R     O     R      11.8
+172.30.215.113      R     R     R     R     R     R       9.0
+10.202.11.230       R     R     R     R     R     R      15.3
+10.202.11.229       O     O     O     O     O     O      17.1
+172.19.0.1          R     R     R     R     R     R      13.0
+172.19.0.2          O     O     O     O     O     O      30.6
+8.8.8.8             O     O     O     O     O     O      23.9
+223.5.5.5           O     O     O     O     O     O      24.7
+
+矩阵规模: 10 目标 x 6 端口 = 60 次 TCP connect  |  总耗时 0.14s  |  timeout=0.5s/次
+O=open  R=refused(端口关闭)  T=timeout(丢弃/过滤)  N=no-route(本机无路由)  E=其他 errno
+判定分布: open=25  refused=35
+JSON 已写入 matrix_z5.json
+matrix_exit=0

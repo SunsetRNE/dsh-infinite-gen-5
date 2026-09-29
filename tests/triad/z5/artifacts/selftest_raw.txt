@@ -1,0 +1,8 @@
+### selftest 复跑（修正后）
+NOTE  黑洞地址观测(仅记录, 不断言): 192.0.2.1:443 -> open (handshake ok, 1.6ms)  提示：非本机地址出现 open 说明出口存在透明 TCP 拦截（见 z5.md 拦截验证节），非本脚本判定错误
+PASS  临时监听端口->open: 127.0.0.1:46335 -> open (handshake ok, 0.8ms)
+PASS  关闭端口->refused: 127.0.0.1:37669 -> refused (ECONNREFUSED, 0.7ms)
+PASS  run_matrix 与 probe 一致: matrix[listen]=open, matrix[closed]=refused, 19.4ms
+
+selftest: 3 passed, 0 failed
+selftest_exit=0

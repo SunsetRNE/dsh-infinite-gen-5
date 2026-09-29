@@ -1,0 +1,46 @@
+# Nmap 7.94SVN scan initiated Tue Sep 29 06:26:57 2026 as: nmap -sT -Pn -n -sV --version-light -p 3080,3090,10150,10152,10156,10157,10162,12479,16094,43795,46888,7890 -oN nmap_observed_ports.txt 127.0.0.1
+Nmap scan report for 127.0.0.1
+Host is up (0.0058s latency).
+
+PORT      STATE  SERVICE    VERSION
+3080/tcp  open   stm_pproc?
+3090/tcp  open   stss?
+7890/tcp  open   unknown
+10150/tcp open   unknown
+10152/tcp open   tcpwrapped
+10156/tcp open   unknown
+10157/tcp closed unknown
+10162/tcp open   tcpwrapped
+12479/tcp open   unknown
+16094/tcp open   unknown
+43795/tcp open   unknown
+46888/tcp open   unknown
+4 services unrecognized despite returning data. If you know the service/version, please submit the following fingerprints at https://nmap.org/cgi-bin/submit.cgi?new-service :
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port3080-TCP:V=7.94SVN%I=2%D=9/29%Time=6ABB5A3D%P=aarch64-unknown-linux
+SF:-gnu%r(GetRequest,F2,"HTTP/1\.1\x20401\x20Unauthorized\r\ncache-control
+SF::\x20no-store\r\ncontent-type:\x20text/plain;\x20charset=utf-8\r\nVary:
+SF:\x20Accept-Encoding\r\nDate:\x20Tue,\x2029\x20Sep\x202026\x2006:27:09\x
+SF:20GMT\r\nConnection:\x20close\r\n\r\ndsh\x20web\x20authentication\x20re
+SF:quired;\x20reopen\x20the\x20URL\x20printed\x20by\x20dsh\x20web\.\n")%r(
+SF:SSLSessionReq,2F,"HTTP/1\.1\x20400\x20Bad\x20Request\r\nConnection:\x20
+SF:close\r\n\r\n")%r(TLSSessionReq,2F,"HTTP/1\.1\x20400\x20Bad\x20Request\
+SF:r\nConnection:\x20close\r\n\r\n");
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port3090-TCP:V=7.94SVN%I=2%D=9/29%Time=6ABB5A37%P=aarch64-unknown-linux
+SF:-gnu%r(GetRequest,84,"HTTP/1\.1\x20200\x20OK\r\nContent-Type:\x20applic
+SF:ation/json;\x20charset=utf-8\r\nContent-Length:\x2027\r\nConnection:\x2
+SF:0close\r\n\r\n{\"result\":\"\[UNAUTHORIZED\]\"}");
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port7890-TCP:V=7.94SVN%I=2%D=9/29%Time=6ABB5A3D%P=aarch64-unknown-linux
+SF:-gnu%r(GetRequest,42,"HTTP/1\.0\x20400\x20Bad\x20Request\r\nConnection:
+SF:\x20close\r\nContent-Length:\x200\r\n\r\n");
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port43795-TCP:V=7.94SVN%I=2%D=9/29%Time=6ABB5A3D%P=aarch64-unknown-linu
+SF:x-gnu%r(GetRequest,9D,"HTTP/1\.1\x20200\x20OK\r\ncontent-type:\x20appli
+SF:cation/json\r\nDate:\x20Tue,\x2029\x20Sep\x202026\x2006:27:09\x20GMT\r\
+SF:nConnection:\x20close\r\n\r\n{\"ok\":true,\"upstream\":\"https://api\.a
+SF:nthropic\.com\"}");
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Tue Sep 29 06:27:24 2026 -- 1 IP address (1 host up) scanned in 27.03 seconds

@@ -1,0 +1,35 @@
+### 路由归因（每个候选目标的实际出口）
+127.0.0.1        -> local 127.0.0.1 dev lo table local src 127.0.0.1 uid 10527 
+127.0.0.2        -> local 127.0.0.2 dev lo table local src 127.0.0.1 uid 10527 
+172.30.215.113   -> local 172.30.215.113 dev lo table local src 172.30.215.113 uid 10527 
+10.202.11.230    -> local 10.202.11.230 dev lo table local src 10.202.11.230 uid 10527 
+10.202.11.229    -> 10.202.11.229 dev tun0 table 1058 src 172.19.0.1 uid 10527 
+172.19.0.1       -> local 172.19.0.1 dev lo table local src 172.19.0.1 uid 10527 
+172.19.0.2       -> 172.19.0.2 dev tun0 src 172.19.0.1 uid 10527 
+8.8.8.8          -> 8.8.8.8 dev tun0 table 1058 src 172.19.0.1 uid 10527 
+223.5.5.5        -> 223.5.5.5 dev tun0 table 1058 src 172.19.0.1 uid 10527 
+192.0.2.1        -> 192.0.2.1 dev tun0 table 1058 src 172.19.0.1 uid 10527 
+
+### 应用层对照（同一批目标：TCP connect 判定 vs 应用层回包判定）
+127.0.0.1:3080  connect=OK recv=64B first=b'HTTP/1.1 401 Unauthorize'  4ms
+127.0.0.1:3090  connect=OK recv=64B first=b'HTTP/1.1 200 OK\r\nContent'  2ms
+8.8.8.8:443   connect=OK recv->TimeoutError  1505ms
+192.0.2.1:443   connect=OK recv->TimeoutError  1515ms
+10.202.11.229:443   connect=OK recv->TimeoutError  1507ms
+172.19.0.2:443   connect=OK recv->TimeoutError  1513ms
+
+### 能力面十六进制真值
+Uid:	10527	10527	10527	10527
+Gid:	10527	10527	10527	10527
+NoNewPrivs:	1
+Seccomp:	2
+解析: CapEff=0x0000000000000000 -> 置位能力数=0; net_admin=0 net_raw=0 sys_admin=0
+
+### 无 NET_ADMIN/NET_RAW 时的可用/不可用动作探针（真实 exit code）
+rc=1   cmd=nft add table inet z5probe                                 out=Error: Could not process rule: Operation not permitted
+rc=4   cmd=iptables -N Z5PROBE                                        out=iptables v1.8.10 (nf_tables): Could not fetch rule set generation id: Permission denied (you must be root)
+rc=0   cmd=sysctl -w net.ipv4.ip_forward=1                            out=sysctl: permission denied on key "net.ipv4.ip_forward", ignoring
+rc=2   cmd=ip link add z5dummy type dummy                             out=RTNETLINK answers: Operation not permitted
+rc=2   cmd=ip addr add 10.9.9.9/32 dev lo                             out=RTNETLINK answers: Operation not permitted
+rc=1   cmd=python3 -c "import socket;s=socket.socket(socket.AF_INET,socket.SOCK_RAW,socket.IPPROTO_ICMP);print('raw-socket OK')" out=Traceback (most recent call last):
+rc=1   cmd=python3 -c "import socket;s=socket.socket(socket.AF_PACKET,socket.SOCK_RAW);print('af_packet OK')" out=Traceback (most recent call last):

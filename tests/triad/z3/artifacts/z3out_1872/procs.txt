@@ -1,0 +1,18 @@
+# proc_snap procs.txt  ts=2026-09-29T06:26:44+0000  visible=16  top=20  page=4096
+# PID      COMM                     STATE      RSS_KB      VSIZE
+1872     MainThread               t          770528 10757255168
+2140     MainThread               R          561988 19244875776
+5836     apt-get                  S           87700  100323328
+2151     MainThread               S           33124 1168060416
+6881     python3                  R           15704   23056384
+6325     frontend                 S           13804   18046976
+1863     libproot.so              S            4664 2180939776
+6299     dpkg                     S            4384    8015872
+5812     bash                     S            3016    4149248
+6860     bash                     S            3012    4153344
+6971     ucf                      S            1648    2465792
+6882     grep                     S            1360    3371008
+6333     ufw.postinst             S             900    2465792
+5832     tail                     S             816    2383872
+5826     timeout                  S             792    2359296
+6908     head                     Z               0          0

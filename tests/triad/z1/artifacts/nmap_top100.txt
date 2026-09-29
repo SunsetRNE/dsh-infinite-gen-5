@@ -1,0 +1,7 @@
+# Nmap 7.94SVN scan initiated Tue Sep 29 06:26:53 2026 as: nmap -sT -Pn -n --top-ports 100 -oN nmap_top100.txt 127.0.0.1
+Nmap scan report for 127.0.0.1
+Host is up (0.0024s latency).
+All 100 scanned ports on 127.0.0.1 are in ignored states.
+Not shown: 100 closed tcp ports (conn-refused)
+
+# Nmap done at Tue Sep 29 06:26:53 2026 -- 1 IP address (1 host up) scanned in 0.14 seconds
