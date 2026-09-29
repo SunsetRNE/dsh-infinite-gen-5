@@ -16,6 +16,8 @@ import {
   BANK_DATA,
   DISPATCH_RULES,
   DISPATCH_SCHEMA,
+  DISPOSITION_TABLE,
+  DISPOSITION_TIEBREAK,
   RECEIPT_LIMITS,
   SCORE_STANDARD,
   extractReceipts,
@@ -182,6 +184,20 @@ try {
   const head = readFileSync(files[0].file, "utf8");
   check(head.includes("q001") && head.includes("q002"), "任务书带上该片的题号");
   check(head.includes("disposition"), "任务书写明回执字段");
+  // v0.43.0（O2+O3）：字段闸门与四态判定表必须真的写进任务书 —— 这两条曾经缺失，
+  // 代价是「deliver 留空 note 被当缺字段」（100 题实测 68 条空 note）与探针保守落 pivot。
+  check(head.includes("四态判定表"), "任务书带四态判定表（O3）");
+  check(
+    DISPOSITION_TABLE.length === 4 && DISPOSITION_TABLE.every(([s, d]) => s && d),
+    "判定表四态齐全、各有判据",
+    JSON.stringify(DISPOSITION_TABLE.map(([s]) => s)),
+  );
+  check(head.includes(DISPOSITION_TIEBREAK), "任务书带兜底判据（拿不准往 deliver 判）");
+  check(/note：≤60 字[^\n]*每条必填/.test(head), "note 写明每条必填（O2：空串＝缺字段）");
+  check(
+    DISPATCH_RULES.some((r) => r.includes("回执字段闸门")),
+    "载荷规则含「回执字段闸门」条款",
+  );
   check(files.every((f) => f.bytes > 200), "每个任务书非空");
 } finally {
   rmSync(dir, { recursive: true, force: true });
