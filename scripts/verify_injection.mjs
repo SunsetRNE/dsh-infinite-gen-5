@@ -17,6 +17,7 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { reportHostMiss, resolveHost } from "./lib/host-resolve.mjs";
 // 自检不碰用户真实统计库（v0.13.9）：给统计库指一个 /tmp 落点，跑完即弃。
 process.env.IG5_STATS_FILE = "/tmp/ig5-stats-injection.json";
 // 也不读用户真实调参档（v0.22.0）：调参档落点 = IG5_HOME ?? DSH_HOME ?? ~/.dsh，
@@ -53,38 +54,19 @@ const TAIL = "infinite-gen-5:tail-anchor";
 const RUNTIME = "infinite-gen-5:runtime-anchor";
 
 // ── 找宿主：插件仓库里没有 node_modules，所以只能从 dsh 安装目录里取真模块 ──────
-const hostArg = process.argv.find((a) => a.startsWith("--host="));
-const candidates = [
-  hostArg && hostArg.slice("--host=".length),
-  process.env.IG5_DSH_ROOT,
-  "/usr/local/lib/node_modules/@deepseek-ai/dsh",
-  join(dirname(process.execPath), "..", "lib", "node_modules", "@deepseek-ai", "dsh"),
-  join(dirname(process.execPath), "..", "node_modules", "@deepseek-ai", "dsh"),
-].filter((p) => typeof p === "string" && p.length > 0);
-
-function locateHost() {
-  for (const root of candidates) {
-    const cordis = join(root, "node_modules", "@deepseek-ai", "cordis", "lib", "index.js");
-    const prompt = join(root, "node_modules", "@deepseek-ai", "dsh-system-prompt", "lib", "index.js");
-    if (existsSync(cordis) && existsSync(prompt)) return { root, cordis, prompt };
-  }
-  return null;
-}
-
-const host = locateHost();
+// 三形状解析（node_modules 父级 / @deepseek-ai 作用域目录 / dsh 包目录）见
+// scripts/lib/host-resolve.mjs：0.2.0 的平铺布局与 0.1.7 的单体布局都能命中；
+// 显式 --host= 找不到就直接 FAIL —— 回落别的宿主等于拿别的靶子刷绿（v0.38.2）。
+const { host, candidates, explicit } = resolveHost();
 if (!host) {
-  const message = [
-    "SKIP: 没找到 dsh 宿主（@deepseek-ai/dsh-system-prompt），注入强度自检只在装有 DSH 的机器上跑。",
-    "  找过：" + candidates.join(" · "),
-    "  指定安装位置：node scripts/verify_injection.mjs --host=/path/to/node_modules/@deepseek-ai/dsh",
-    "  这条不是回归失败：插件本身不依赖宿主包，CI 上跳过即可。",
-  ];
-  if (process.argv.includes("--json")) {
-    console.log(JSON.stringify({ skipped: true, reason: "no dsh-system-prompt", candidates, passed: 0, failed: 0 }, null, 1));
-  } else {
-    for (const line of message) console.log(line);
-  }
-  process.exit(0);
+  reportHostMiss({
+    script: "verify_injection.mjs",
+    what: "注入强度自检",
+    reason: "no dsh-system-prompt",
+    candidates,
+    explicit,
+    json: process.argv.includes("--json"),
+  });
 }
 
 const { Context } = await import(pathToFileURL(host.cordis).href);

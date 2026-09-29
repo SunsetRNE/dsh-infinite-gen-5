@@ -1,7 +1,7 @@
 - insert:
     - id: dsh-infinite-gen-5
       name: dsh-infinite-gen-5
-      # ── 无限五代 v0.38.1 注入说明 ──────────────────────────────────────────────
+      # ── 无限五代 v0.38.2 注入说明 ──────────────────────────────────────────────
       # 本插件不读外部配置：注入行为全部由包内 index.js 顶部的 IG5_CONFIG 决定
       # （LAYER2_MODE / DEDUPE_PAYLOAD / TAIL_MODE / RUNTIME_ANCHOR_MODE /
       #   RUNTIME_ANCHOR_EVERY / EXCLUSIVE_SECTION），改完需要重启 session

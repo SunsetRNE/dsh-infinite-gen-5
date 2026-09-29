@@ -247,13 +247,22 @@ check(
 function runCli(args, timeout = 30000) {
   return new Promise((resolve) => {
     execFile(process.execPath, [CLI_PATH, ...args], { timeout, maxBuffer: 8 << 20 }, (error, stdout, stderr) => {
-      resolve({ code: error?.code ?? 0, stdout, stderr });
+      // 子进程被信号结束（超时 / OOM）时 error.code 是 null —— 不能让它伪装成「退出码 0」：
+      // 那会把假红（未知层其实被拒了）和更糟的假绿一起塞进判据里。
+      const signaled = Boolean(error && (error.signal || error.killed));
+      const code = error ? (typeof error.code === "number" ? error.code : signaled ? -1 : 1) : 0;
+      resolve({ code, signaled, signal: error?.signal ?? null, stdout, stderr });
     });
   });
 }
+const sigNote = (r) => (r.signaled ? ` signal=${r.signal}` : "");
 const badLayer = await runCli(["--layers", "nope"]);
-check(badLayer.code === 2, "CLI：未知层退出码 2", `code=${badLayer.code}`);
-check(badLayer.stderr.includes("未知层"), "CLI：未知层给出可读错误", badLayer.stderr.trim().slice(0, 80));
+check(badLayer.code === 2, "CLI：未知层退出码 2", `code=${badLayer.code}${sigNote(badLayer)}`);
+check(
+  badLayer.stderr.includes("未知层"),
+  "CLI：未知层给出可读错误",
+  badLayer.stderr.trim().slice(0, 80) || (badLayer.signaled ? `子进程被 ${badLayer.signal} 结束` : "stderr 为空"),
+);
 const badTimeout = await runCli(["--timeout", "abc"]);
 check(badTimeout.code === 2, "CLI：非数字 timeout 退出码 2", `code=${badTimeout.code}`);
 const badArg = await runCli(["--nope"]);

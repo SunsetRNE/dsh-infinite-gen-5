@@ -26,10 +26,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
+import { findPackageDir } from "./lib/host-resolve.mjs";
 
 const MARK = "[ig5-toolargs-patch rev=2]";
 const LEGACY_MARKS = ["[ig5-toolargs-patch rev=1]"];
-const DEFAULT_FILE = "/usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js";
+// 宿主布局两种都认（0.1.7 嵌套在 dsh 包内 / 0.2.0 平铺兄弟包）：按包名搜，
+// 搜不到才回落到旧的绝对路径（旧路径只作为最后兜底，不再写死为唯一解）。
+const LEGACY_LLM_DEEPSEEK = "/usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/@deepseek-ai/dsh-llm-deepseek/lib/index.js";
+const DEFAULT_FILE = (() => {
+	const dir = findPackageDir("dsh-llm-deepseek");
+	return dir ? path.join(dir, "lib", "index.js") : LEGACY_LLM_DEEPSEEK;
+})();
 const DSH_HOME = process.env.DSH_HOME ?? path.join(process.env.HOME ?? "/root", ".dsh");
 const LOG_FILE = path.join(DSH_HOME, "llm-deepseek", "malformed-toolargs.jsonl");
 

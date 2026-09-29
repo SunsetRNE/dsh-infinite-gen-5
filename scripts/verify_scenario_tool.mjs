@@ -4,6 +4,7 @@
 // 用法：node scripts/verify_scenario_tool.mjs [--json]
 import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { reportHostMiss, resolveHost } from "./lib/host-resolve.mjs";
 import { dirname, join } from "node:path";
 // 预算从 data/vocabulary.mjs 取，别在这里再抄一份：抄一份的下场就是
 // 词表加深之后这里还卡着旧数字（v0.13.6 就撞过一次）。
@@ -14,38 +15,16 @@ const SCENARIOS_COUNT = SCENARIOS.length;
 
 // ── 找宿主：插件仓库里没有 node_modules，只能从 dsh 安装目录取真模块 ──────────
 // 找不到（裸机 / CI 容器）时打印 SKIP 并 exit 0：缺宿主是环境限制，不是回归。
-const hostArg = process.argv.find((a) => a.startsWith("--host="));
-const candidates = [
-  hostArg && hostArg.slice("--host=".length),
-  process.env.IG5_DSH_ROOT,
-  "/usr/local/lib/node_modules/@deepseek-ai/dsh",
-  join(dirname(process.execPath), "..", "lib", "node_modules", "@deepseek-ai", "dsh"),
-  join(dirname(process.execPath), "..", "node_modules", "@deepseek-ai", "dsh"),
-].filter((p) => typeof p === "string" && p.length > 0);
-
-function locateHost() {
-  for (const root of candidates) {
-    const cordis = join(root, "node_modules", "@deepseek-ai", "cordis", "lib", "index.js");
-    const prompt = join(root, "node_modules", "@deepseek-ai", "dsh-system-prompt", "lib", "index.js");
-    if (existsSync(cordis) && existsSync(prompt)) return { root, cordis, prompt };
-  }
-  return null;
-}
-
-const dshHost = locateHost();
+const { host: dshHost, candidates, explicit } = resolveHost();
 if (!dshHost) {
-  const message = [
-    "SKIP: 没找到 dsh 宿主（@deepseek-ai/cordis + dsh-system-prompt），领域工具挂载自检只在装有 DSH 的机器上跑。",
-    "  找过：" + candidates.join(" · "),
-    "  指定安装位置：node scripts/verify_scenario_tool.mjs --host=/path/to/node_modules/@deepseek-ai/dsh",
-    "  这条不是回归失败：插件本身不依赖宿主包，CI 上跳过即可。",
-  ];
-  if (process.argv.includes("--json")) {
-    console.log(JSON.stringify({ skipped: true, reason: "no dsh host", candidates, passed: 0, failed: 0 }, null, 1));
-  } else {
-    for (const line of message) console.log(line);
-  }
-  process.exit(0);
+  reportHostMiss({
+    script: "verify_scenario_tool.mjs",
+    what: "领域工具挂载自检",
+    reason: "no dsh host",
+    candidates,
+    explicit,
+    json: process.argv.includes("--json"),
+  });
 }
 
 const { Context } = await import(pathToFileURL(dshHost.cordis).href);

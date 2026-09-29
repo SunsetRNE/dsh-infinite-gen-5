@@ -14,6 +14,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { reportHostMiss, resolveHost } from "./lib/host-resolve.mjs";
 // 自检不碰用户真实统计库（v0.13.9）：给统计库指一个 /tmp 落点，跑完即弃。
 process.env.IG5_STATS_FILE = "/tmp/ig5-stats-tuning.json";
 
@@ -34,33 +35,18 @@ const TAIL = "infinite-gen-5:tail-anchor";
 const RUNTIME = "infinite-gen-5:runtime-anchor";
 const PATH_UNDER_TEST = "/infinite-gen-5/tuning";
 
-const hostArg = process.argv.find((a) => a.startsWith("--host="));
-const candidates = [
-  hostArg && hostArg.slice("--host=".length),
-  process.env.IG5_DSH_ROOT,
-  "/usr/local/lib/node_modules/@deepseek-ai/dsh",
-  join(dirname(process.execPath), "..", "lib", "node_modules", "@deepseek-ai", "dsh"),
-].filter((p) => typeof p === "string" && p.length > 0);
-
-function locateHost() {
-  for (const root of candidates) {
-    const cordis = join(root, "node_modules", "@deepseek-ai", "cordis", "lib", "index.js");
-    const prompt = join(root, "node_modules", "@deepseek-ai", "dsh-system-prompt", "lib", "index.js");
-    if (existsSync(cordis) && existsSync(prompt)) return { root, cordis, prompt };
-  }
-  return null;
-}
-
-const host = locateHost();
+// 三形状解析见 scripts/lib/host-resolve.mjs（0.2.0 平铺 / 0.1.7 单体都能命中）；
+// 显式 --host= 找不到就 FAIL，不回落别的宿主（v0.38.2）。
+const { host, candidates, explicit } = resolveHost();
 if (!host) {
-  if (process.argv.includes("--json")) {
-    console.log(JSON.stringify({ skipped: true, reason: "no dsh-system-prompt", candidates, passed: 0, failed: 0 }, null, 1));
-  } else {
-    console.log("SKIP: 没找到 dsh 宿主（@deepseek-ai/dsh-system-prompt），设置页调参自检只在装有 DSH 的机器上跑。");
-    console.log("  找过：" + candidates.join(" · "));
-    console.log("  指定安装位置：node scripts/verify_tuning.mjs --host=/path/to/node_modules/@deepseek-ai/dsh");
-  }
-  process.exit(0);
+  reportHostMiss({
+    script: "verify_tuning.mjs",
+    what: "设置页调参自检",
+    reason: "no dsh-system-prompt",
+    candidates,
+    explicit,
+    json: process.argv.includes("--json"),
+  });
 }
 
 const { Context } = await import(pathToFileURL(host.cordis).href);

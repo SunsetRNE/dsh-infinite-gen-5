@@ -16,6 +16,7 @@
 import { existsSync, readFileSync, rmSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { reportHostMiss, resolveHost } from "./lib/host-resolve.mjs";
 import { homedir } from "node:os";
 
 process.env.IG5_STATS_FILE = "/tmp/ig5-stats-surface.json";
@@ -28,33 +29,18 @@ function check(ok, label, detail = "") {
   (ok ? passes : failures).push(`${label}${!ok && detail ? " — " + detail : ""}`);
 }
 
-const hostArg = process.argv.find((a) => a.startsWith("--host="));
-const candidates = [
-  hostArg && hostArg.slice("--host=".length),
-  process.env.IG5_DSH_ROOT,
-  "/usr/local/lib/node_modules/@deepseek-ai/dsh",
-  join(dirname(process.execPath), "..", "lib", "node_modules", "@deepseek-ai", "dsh"),
-  join(dirname(process.execPath), "..", "node_modules", "@deepseek-ai", "dsh"),
-].filter((p) => typeof p === "string" && p.length > 0);
-
-function locateHost() {
-  for (const root of candidates) {
-    const cordis = join(root, "node_modules", "@deepseek-ai", "cordis", "lib", "index.js");
-    const prompt = join(root, "node_modules", "@deepseek-ai", "dsh-system-prompt", "lib", "index.js");
-    if (existsSync(cordis) && existsSync(prompt)) return { root, cordis, prompt };
-  }
-  return null;
-}
-
-const host = locateHost();
+// 三形状解析见 scripts/lib/host-resolve.mjs（0.2.0 平铺 / 0.1.7 单体都能命中）；
+// 显式 --host= 找不到就 FAIL，不回落别的宿主（v0.38.2）。
+const { host, candidates, explicit } = resolveHost();
 if (!host) {
-  if (process.argv.includes("--json")) {
-    console.log(JSON.stringify({ skipped: true, reason: "no dsh-system-prompt", candidates, passed: 0, failed: 0 }, null, 1));
-  } else {
-    console.log("SKIP: 没找到 dsh 宿主（@deepseek-ai/dsh-system-prompt），表面覆盖门禁只在装有 DSH 的机器上跑。");
-    console.log("  找过：" + candidates.join(" · "));
-  }
-  process.exit(0);
+  reportHostMiss({
+    script: "verify_surface.mjs",
+    what: "表面覆盖门禁",
+    reason: "no dsh-system-prompt",
+    candidates,
+    explicit,
+    json: process.argv.includes("--json"),
+  });
 }
 
 const { Context } = await import(pathToFileURL(host.cordis).href);

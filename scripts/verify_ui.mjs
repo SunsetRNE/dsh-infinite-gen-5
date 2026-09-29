@@ -11,6 +11,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { findPackageDir } from "./lib/host-resolve.mjs";
 // 自检不碰用户真实统计库（v0.13.9）：给统计库指一个 /tmp 落点，跑完即弃。
 process.env.IG5_STATS_FILE = "/tmp/ig5-stats-ui.json";
 
@@ -1207,12 +1208,20 @@ function previewPage({ theme, pluginCss, stateRows, panelHtml, consoleHtml, navH
 }
 
 // 预览要贴在宿主真实主题下才有意义，所以直接把 dsh-client-ui-theme 里那张令牌表抠出来。
-function loadThemeCss(explicit) {
-  if (explicit) { try { return readFileSync(explicit, "utf8"); } catch { /* 落到自动探测 */ } }
-  for (const candidate of [
+// 宿主布局两种都认（0.1.7 嵌在 dsh 包内 / 0.2.0 平铺兄弟包）：先按包名搜，
+// 再回落到旧绝对路径与仓库内副本（v0.38.2）。
+function themeCandidates() {
+  const dir = findPackageDir("dsh-client-ui-theme");
+  return [
+    dir && join(dir, "lib", "client.js"),
     "/usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules/@deepseek-ai/dsh-client-ui-theme/lib/client.js",
     join(ROOT, "node_modules/@deepseek-ai/dsh-client-ui-theme/lib/client.js")
-  ]) {
+  ].filter(Boolean);
+}
+
+function loadThemeCss(explicit) {
+  if (explicit) { try { return readFileSync(explicit, "utf8"); } catch { /* 落到自动探测 */ } }
+  for (const candidate of themeCandidates()) {
     try {
       const src = readFileSync(candidate, "utf8");
       const hit = src.match(/var design_platform_css_default = "([\s\S]*?)";\n/);
