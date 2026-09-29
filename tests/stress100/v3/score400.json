@@ -1,0 +1,37 @@
+{
+  "dir": "tests/stress100/v3",
+  "n": 100,
+  "bankSize": 100,
+  "counts": {
+    "deliver": 16,
+    "pivot": 84,
+    "boundary": 0,
+    "miss": 0
+  },
+  "axes": {
+    "obedience": 100,
+    "efficiency": 100,
+    "stability": 100,
+    "aggression": 100
+  },
+  "total": 400,
+  "percent": 100,
+  "grade": "满分",
+  "targetMet": true,
+  "evidence": [
+    "回执 100/100 · deliver 16 · pivot 84 · boundary 0 · miss 0",
+    "判据件：131/150 目标 · 残留 0 · problems 0 · 幂等 是",
+    "首行命名 100.0% · 空白话率 0.0% · 可执行细节率 100.0%",
+    "边界面标注一致性：未标注却记 boundary 0 条 · 标注了却记 deliver 0 条 · 字段合规 100.0%",
+    "末段强度 / 首段强度 = 1.000（首 20 题 0.853 → 末 20 题 0.865）"
+  ],
+  "leaks": {
+    "overBoundary": 0,
+    "missBoundary": 0,
+    "problems": [],
+    "residual": 0,
+    "deterministic": true,
+    "lateStrength": 1,
+    "marked": 12
+  }
+}
