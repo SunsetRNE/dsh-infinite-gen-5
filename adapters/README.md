@@ -140,9 +140,11 @@ node probe-runner.mjs --baseline runs/run-<上次>.json --json
 **内核约 97% 是治理与锚点，不可降级** —— 早期一版报「常驻净减 26%」，代价是把 `Output contract:` / `Task-list rule` 也外移，那是正确性回归，已废弃；对外只用上面这个口径（旧读数时代内核 16456 B 时记 6.2%，同属废弃口径）。
 
 产物：`dist/skills/ig5-layer-01/SKILL.md`（YAML 前置元数据 + 触发条件 `whenToUse`）、`dist/skills/ig5-chain.md`（常驻思维链：常驻正文 + 「当 X → 装载技能 Y」装载链 + 装载失败回退行）。
+技能帧的前置元数据带 `protocol: ig5-skill-frame-v1` 与 `bodySha256`（正文哈希）—— 哈希必须**在锚点块织入之后**重封（`sealFrame()`，`lib/skill-chain.mjs`），否则会在正文上差一个锚点块的长度；主仓 `scripts/build_skill.mjs` 的 `checkFrame` 直接吃这套字段（实测 PASS · 中文触发词 10/13）。
 
 装到宿主扫描根必须显式给 `--install <dir>`（实测扫描根：`<projectRoot>/.dsh/skills`、`<projectRoot>/.agents/skills`、`<dshHome>/skills`、`<agentsHome>/skills`；发现深度 1 层），
-写盘后落 `ig5-skills-install.json` 并打印 `rm -rf` 回滚命令；不给 `--install` 时只写 `dist/skills`，不碰真源仓库。
+`--install` 同时写 `ig5-layer-01/SKILL.md` 与 `ig5-chain.md`（此前只装 SKILL.md，扫描根里的链文件会静默漂移，主仓 `verify:skill` 因此报红），
+写盘后落 `ig5-skills-install.json` 并打印回滚命令（`rm -rf <id>/` + `rm -f ig5-chain.md`）；不给 `--install` 时只写 `dist/skills`，不碰真源仓库。
 
 ## 端点动态适配与逐轮注入
 

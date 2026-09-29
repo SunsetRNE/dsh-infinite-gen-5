@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import {
   buildSkillChain,
   renderSkillFile,
+  sealFrame,
   SKILL_BUDGET_CHARS,
   SKILL_ROOTS,
   NON_DEROGABLE,
@@ -115,7 +116,7 @@ export function skillsPlan({ promptDir = DEFAULT_PROMPT_DIR, header = "", armor 
       description: policy.description,
       whenToUse: policy.whenToUse,
     });
-    const text = injectArmor(rendered, armor ? armor.block : "");
+    const text = sealFrame(injectArmor(rendered, armor ? armor.block : ""));
     files.push({ id: b.id, kind: "skill", path: join(b.id, "SKILL.md"), text, chars: text.length, sha256: sha256(text), armored: !!armor });
   }
   files.push({
@@ -212,8 +213,8 @@ export async function main(argv = process.argv.slice(2)) {
     const known = SKILL_ROOTS.map((r) => (typeof r === "string" ? r : JSON.stringify(r)));
     console.log(`\n安装目标：${args.install}`);
     console.log(`宿主实测扫描根（供对照）：${known.join(" , ")}`);
-    for (const f of plan.files.filter((x) => x.kind === "skill")) {
-      const dest = join(args.install, f.id, "SKILL.md");
+    for (const f of plan.files) {
+      const dest = f.kind === "skill" ? join(args.install, f.id, "SKILL.md") : join(args.install, f.path);
       mkdirSync(dirname(dest), { recursive: true });
       writeFileSync(dest, f.text);
       console.log(`  写入 ${dest}`);
@@ -221,8 +222,10 @@ export async function main(argv = process.argv.slice(2)) {
     const record = {
       installedAt: new Date().toISOString(),
       target: args.install,
-      skills: plan.files.filter((x) => x.kind === "skill").map((f) => ({ id: f.id, sha256: f.sha256, chars: f.chars })),
-      rollback: plan.files.filter((x) => x.kind === "skill").map((f) => `rm -rf ${JSON.stringify(join(args.install, f.id))}`),
+      skills: plan.files.map((f) => ({ id: f.id, kind: f.kind, sha256: f.sha256, chars: f.chars })),
+      rollback: plan.files.map((f) =>
+        f.kind === "skill" ? `rm -rf ${JSON.stringify(join(args.install, f.id))}` : `rm -f ${JSON.stringify(join(args.install, f.path))}`,
+      ),
     };
     writeFileSync(join(args.install, "ig5-skills-install.json"), `${JSON.stringify(record, null, 2)}\n`);
     console.log("回滚：");

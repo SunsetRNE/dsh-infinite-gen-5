@@ -121,6 +121,10 @@ export function packBundles(blocks, { budgetChars = SKILL_SAFE_CHARS, targetChar
 
 /** 渲染成 DSH 技能文件：YAML 前置元数据 + 正文。 */
 export function renderSkillFile(bundle, { description, whenToUse, title }) {
+  // 正文先成形、再算哈希：主仓 scripts/build_skill.mjs:106 checkFrame 会拿 metadata.bodySha256
+  // 与 parseFrontmatter 切出的正文逐字节比对（body = frontmatter 闭合处之后的全部内容），
+  // 所以哈希必须覆盖「# 标题 + 空行 + 块正文 + 尾换行」这一整段，不能只哈希 bundle.body。
+  const bodyText = `# ${title ?? bundle.id}\n\n${bundle.body}\n`;
   const lines = [
     "---",
     `name: ${bundle.id}`,
@@ -128,16 +132,30 @@ export function renderSkillFile(bundle, { description, whenToUse, title }) {
     `whenToUse: ${whenToUse ?? "需要该层的细则时装载"}`,
     "metadata:",
     "  source: ig5-adapters/lib/skill-chain.mjs",
+    "  protocol: ig5-skill-frame-v1",
+    "  generatedBy: ig5-adapters/build-skills.mjs",
     `  blocks: ${bundle.blocks.length}`,
     `  chars: ${bundle.chars}`,
+    `  bodySha256: ${sha256(bodyText)}`,
     "---",
     "",
-    `# ${title ?? bundle.id}`,
-    "",
-    bundle.body,
-    "",
   ];
-  return lines.join("\n");
+  return lines.join("\n") + bodyText;
+}
+
+/**
+ * 用最终正文重封 metadata.bodySha256。
+ * 必须在所有正文加工（例如 build-skills.mjs 的 injectArmor 织入锚点块）之后调用 ——
+ * 主仓 scripts/build_skill.mjs:122-123 拿 metadata.bodySha256 与解析出的正文逐字节比对，
+ * 在加工前算哈希会差一个锚点块的长度。
+ */
+export function sealFrame(text) {
+  if (!text.startsWith("---\n")) return text;
+  const end = text.indexOf("\n---\n", 4);
+  if (end < 0) return text;
+  const head = text.slice(0, end).replace(/\n[ \t]*bodySha256:[^\n]*/g, "");
+  const body = text.slice(end + 5);
+  return `${head}\n  bodySha256: ${sha256(body)}${text.slice(end)}`;
 }
 
 /**
