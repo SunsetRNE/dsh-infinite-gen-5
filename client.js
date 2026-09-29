@@ -39,7 +39,7 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.38.2";
+        var VERSION = "v0.38.3";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -1433,6 +1433,13 @@
             ["工具取用", hitTotal > 0
               ? hitTotal + " 次 · " + top.join(" · ") + (misses > 0 ? "（未命中 " + misses + " 次）" : "")
               : "本进程还没取过领域包"],
+            ["加载确认", "本世代 " + (boot.generation === null || boot.generation === undefined ? "未知" : "#" + String(boot.generation)) +
+              " · 启动 " + (boot.startup ? String(boot.startup).slice(0, 8) : "旧版无此记录") + " · 上次 " +
+              (boot.previous
+                ? "世代 " + (boot.previous.generation === null || boot.previous.generation === undefined ? "未知" : "#" + String(boot.previous.generation)) +
+                  " · " + (boot.previous.at ? fmtAgo(boot.previous.at) : "时刻未知")
+                : "无记录") +
+              (boot.nativePluginManager ? "（DSHA 原生闸门：确认不进 profile，本行由本体自证）" : "")],
             ["健康", "库 v" + String((db && db.version) || "?") + " · pid " + String(boot.pid || "?") + " · 落盘 " +
               (age === null ? "未知" : age + " 秒前") + " · 锚点已发 " + (runtime.anchorEmissions || 0) + " 版 · 注入 " +
               (runtime.placements || []).length + " 处"]

@@ -13,6 +13,7 @@
  * 读侧：只读盘上的文件，不触发任何计算；盘上没有/读坏时由调用方决定降级策略。
  */
 
+import { randomUUID } from "node:crypto";
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
@@ -41,7 +42,11 @@ export const emptyStats = (version, at = null) => ({
   plugin: STATS_PLUGIN,
   version,
   generatedAt: at,
-  boot: { at, pid: process.pid, version },
+  // v0.38.3：启动自证分区。DSHA 环境下引擎每次启动换一个 DSHA_WEB_GENERATION，而「确认/审阅」
+  // 事务被原生闸门拦下，不落 .plugin-manager/run.json —— 所以本体自己记：本次世代 + startup uuid
+  // + 上一次启动的确认快照。骨架里先摆 null / []，守住「读侧键永远齐全」这条不变量。
+  boot: { at, pid: process.pid, version, generation: null, startup: null, dsha: null, nativePluginManager: null, previous: null },
+  boots: [],
   runtime: { role: "unknown", anchorEmissions: 0, rebuilds: 0, sections: [], placements: [] },
   tuning: null,
   // v0.14.1：启动时由 index.js 用 coverageSnapshot() 填满（域数 / 族分布 / 词表 / 预算）。
@@ -66,8 +71,7 @@ export const emptyStats = (version, at = null) => ({
   counters: {},
 });
 
-/** 极简安全解析：坏文件当没有，绝不抛（与 index.js 的 safeParseJson 各管一段，互不依赖）。 */
-const parseJsonSafe = (text) => {
+/** 极简安全解析：坏文件当没有，绝不抛（与 index.js 的 safeParseJson 各管一段，互不依赖）。 */const parseJsonSafe = (text) => {
   try {
     const value = JSON.parse(text);
     return value && typeof value === "object" ? value : null;
@@ -298,4 +302,55 @@ export const createStatsStore = (options = {}) => {
     },
     load,
   };
+};
+
+/**
+ * 启动自证（v0.38.3）：把本次启动写进库 —— 世代号（DSHA 环境下引擎每次启动递增）、
+ * 本次 startup uuid、以及上一次启动的确认快照（跨重启保留，供面板显示「上次加载确认」）。
+ *
+ * 为什么需要它：DSHA 环境下插件管理器的「确认/审阅」事务被原生闸门拦下
+ * （DSHA_NATIVE_REVIEW_REQUIRED，不落 .plugin-manager/run.json），停一次 DSH 再起就
+ * 没有任何落盘面能回答「上次到底确认过没有」。这一段由插件本体自己记账，不依赖 DSHA 放行。
+ *
+ * 抽成独立导出是为了让门禁（scripts/verify_boot_attest.mjs）测的是这段真代码，而不是副本。
+ *
+ * @param {object} store createStatsStore(...) 的返回值
+ * @param {object} [options]
+ * @param {object} [options.env] 环境变量表（默认 process.env；门禁注入假世代用）
+ * @param {string} [options.startup] 本次启动 id（默认 randomUUID）
+ * @param {string} [options.at] 启动时刻（默认现在）
+ * @param {string} [options.statsFile] 库里记的库路径（默认 statsFile()）
+ * @param {number} [options.keep] 启动历史保留条数（默认 20）
+ */
+export const recordBoot = (store, options = {}) => {
+  const env = options.env ?? process.env;
+  const at = options.at ?? new Date().toISOString();
+  const startup = options.startup ?? randomUUID();
+  const generation = env.DSHA_WEB_GENERATION ?? null;
+  const prev = (store.snapshot() ?? {}).boot ?? null;
+  const boot = {
+    at,
+    pid: options.pid ?? process.pid,
+    version: store.version,
+    schema: STATS_SCHEMA,
+    file: store.file,
+    statsFile: options.statsFile ?? statsFile(),
+    generation,
+    startup,
+    dsha: env.DSHA_ANDROID_RUNTIME === "1" || env.DSHA_NATIVE_PLUGIN_MANAGER === "1",
+    nativePluginManager: env.DSHA_NATIVE_PLUGIN_MANAGER === "1",
+    // 旧库（本版之前）没有 startup —— 宁可不写「上次」，也不臆造一条确认记录。
+    previous: prev && prev.startup
+      ? {
+        at: prev.at ?? null,
+        startup: prev.startup,
+        generation: prev.generation ?? null,
+        version: prev.version ?? null,
+        pid: prev.pid ?? null,
+      }
+      : null,
+  };
+  store.set("boot", boot);
+  store.push("boots", { at, startup, generation, version: boot.version, pid: boot.pid }, options.keep ?? 20);
+  return boot;
 };

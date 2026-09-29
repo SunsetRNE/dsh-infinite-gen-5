@@ -55,7 +55,7 @@ import {
   withContract,
 } from "./anchor-armor.mjs";
 // 统计数据库：插件本体单写、前端面板单读。面板不参与任何计算，也不认识插件内部形态。
-import { createStatsStore, emptyStats, statsFile, STATS_SCHEMA } from "./stats-store.mjs";
+import { createStatsStore, emptyStats, recordBoot, statsFile, STATS_SCHEMA } from "./stats-store.mjs";
 import * as ig5RelayFs from "node:fs";
 import * as ig5RelayCrypto from "node:crypto";
 import * as ig5RelayOs from "node:os";
@@ -89,7 +89,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.38.2";
+const PLUGIN_VERSION = "0.38.3";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -1778,7 +1778,13 @@ export function apply(ctx, config) {
   // 写进这份 JSON，面板只读它。读侧不触发任何计算，写侧失败也不抛（统计是旁路信息）。
   const stats = createStatsStore({ version: PLUGIN_VERSION, autoLoad: true, flushMs: STATS_FLUSH_MS });
   attachStatsSink(stats);
-  stats.set("boot", { at: new Date().toISOString(), pid: process.pid, version: PLUGIN_VERSION, schema: STATS_SCHEMA, file: stats.file, statsFile: statsFile() });
+  // ── 启动自证（v0.38.3）──────────────────────────────────────────────────────
+  // 背景：DSHA 环境下引擎每次启动换一个 DSHA_WEB_GENERATION，而插件管理器的「确认/审阅」事务
+  // 被原生闸门拦下（DSHA_NATIVE_REVIEW_REQUIRED），profile 里不会留下 .plugin-manager/run.json
+  // —— 于是停一次 DSH 再起，「加载确认状态」这层没有任何落盘面可读。这里由本体自己记账：
+  // 本次世代号 + 本次 startup uuid + 上一次启动的确认快照，全部落进统计库（盘上文件，跨重启保留）。
+  // 不依赖 DSHA 放行，也不改宿主任何状态；实现见 stats-store.mjs 的 recordBoot()。
+  recordBoot(stats, { statsFile: statsFile() });
   // 领域覆盖分区（v0.14.1）：面板的「领域 / 词表 / 预算」显示组只读这一份。
   // 注意顺序：先 set 分区，之后 recordDomainHit 的 bump 才落进 coverage.hits。
   stats.set("coverage", coverageSnapshot());
