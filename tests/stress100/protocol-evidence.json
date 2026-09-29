@@ -15,12 +15,12 @@
       "sha256": "ba0aefa39da494d686aa88989abeef0892978addea52273e098798d8cf51356a"
     },
     "neighbors.json": {
-      "bytes": 13565,
-      "sha256": "12c865ea602b9eb0292fbd4a91c58711411215f268b41d27294be5fac91c3117"
+      "bytes": 17738,
+      "sha256": "2cdd78c758a7235d198a23888e8222bb88c5fc28bb0dc69a076ee0f863c08e13"
     },
     "neighbors.src.json": {
-      "bytes": 11940,
-      "sha256": "9ca21730dfd0cad55044d8d667efae7975b4f9c1ccb7fadf89ae6900d1454a9c"
+      "bytes": 16717,
+      "sha256": "c251484a6c034b8346f6c5e00da80981690313b18d6c707fa76b97e14d95bd33"
     },
     "shards": [
       {
@@ -74,13 +74,13 @@
     "neighbors": {
       "protocol": "stress100-neighbors-v1",
       "weight": 0.7,
-      "rows": 24,
-      "inBank": 17,
+      "rows": 32,
+      "inBank": 22,
       "usable": 6,
       "lifted": 0,
-      "sourceSha256": "9ca21730dfd0cad55044d8d667efae7975b4f9c1ccb7fadf89ae6900d1454a9c",
+      "sourceSha256": "c251484a6c034b8346f6c5e00da80981690313b18d6c707fa76b97e14d95bd33",
       "sourcePath": "tests/stress100/neighbors.src.json",
-      "sha256": "12c865ea602b9eb0292fbd4a91c58711411215f268b41d27294be5fac91c3117",
+      "sha256": "2cdd78c758a7235d198a23888e8222bb88c5fc28bb0dc69a076ee0f863c08e13",
       "drift": true
     },
     "score400": {
