@@ -40,8 +40,9 @@ const FULL_PATH = join(ROOT, "prompts", "infinite-gen-5.full.md");
 // ── 1. 单元成形 ────────────────────────────────────────────────────────────────
 const units = lazyUnits();
 // 单元数随内核拆分批次增长：v0.38.6 为 9，v0.39.0 起 11（+L_writing6 / +L_toolcall_repair），
-// v0.40.0 起 13（+L_envtool 机器探针与工具链安装 / +L_encoding 编码外壳与元请求）
-const EXPECT_UNITS = 13;
+// v0.40.0 起 13（+L_envtool 机器探针与工具链安装 / +L_encoding 编码外壳与元请求），
+// v0.41.0 起 14（+L_residue_tail 分层依据与边界写法；L_examples 顺带只留「私语」那条常驻）
+const EXPECT_UNITS = 14;
 check(units.length === EXPECT_UNITS, `惰性单元 ${EXPECT_UNITS} 个`, String(units.length));
 check(new Set(units.map((u) => u.id)).size === units.length, "单元 id 不重复");
 check(units.every((u) => /^L_[a-z0-9_]+$/.test(u.id)), "单元 id 形如 L_xxx（半节搬允许数字/下划线后缀）");

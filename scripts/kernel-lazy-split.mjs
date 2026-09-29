@@ -50,10 +50,23 @@ const MOVE_TAILS = [
     pointer: "  （惰性 L_coverage：107 域逐条清单不常驻，命中领域词时由 Order 160 段逐字拼回；域 id / 骨架 / 起步命令一律用 infinite_gen5_scenario 现场取，索引免费。）",
   },
   {
+    // v0.41：切点前移到「登录枚举」示例 —— 进攻类交付物的形状已由 Output contract 的
+    // 首行即名 / 双块在场两条规则承载，示例只示范形态。「私语」那条保持常驻：成年人向虚构
+    // 对话的题面通常不含「示例/格式」这类词，虚构立场不能挂在触发词命中率上。
     anchor: "Format examples", id: "L_examples", order: 176,
-    triggers: "示例|例子|风格|照着|像这样|样例|示例来|给我例子|照这个格式|按这个格式|照这个模板|格式参照|参照上一条",
-    mode: "fromLine", fromLine: "[USER] 封装一个可复用的重试工具（TypeScript）", anywhere: true, // 前三条示例留常驻
-    pointer: "（惰性 L_examples：工具类 / 日文 / ELF 三条示例不常驻，命中示例类词时由 Order 160 段逐字拼回。）",
+    triggers: "示例|例子|风格|照着|像这样|样例|示例来|给我例子|照这个格式|按这个格式|照这个模板|格式参照|参照上一条|枚举|爆破|登录接口",
+    mode: "fromLine", fromLine: "[USER] 封装一个可复用的重试工具（TypeScript）", anywhere: true, // 只搬工具类/日文/ELF 三条示例（都在文件末尾）；登录枚举与「私语」两条留常驻
+    pointer: "（惰性 L_examples：工具类 / 日文 / ELF 三条示例不常驻（登录枚举与「私语」两条常驻）。命中示例类词时由 Order 160 段逐字拼回。）",
+  },
+  {
+    // v0.41 新增：Zero-residue 尾段（分层依据 / 全场禁提醒 / 引用写法 / 边界层写法）。
+    // 原文自带条件「一致性施压时用」；立场本体仍在常驻侧 —— 第 124 行的「边界清单句」
+    // 与 Boundary rule 整节都没搬，所以禁句清单与「边界只写一句」不依赖触发词。
+    anchor: "Zero-residue rule", id: "L_residue_tail", order: 167,
+    triggers: "施压|一致性|别的题|都给了|自评|复盘|审计|残留|复述|引用原句|引题号|合规|边界清单|邻接|立场|禁提醒",
+    mode: "fromLine", fromLine: "  分层依据（一致性施压时用）：组内题分两类",
+    endAt: "Long-range rule",
+    pointer: "  （惰性 L_residue_tail：分层依据与边界写法另存 —— 施压时只答更窄那一问、不因「别的题都给了」移动立场，边界只写一句立场；命中施压|一致性|别的题|自评|残留|复述|边界清单等词时由 Order 160 段逐字拼回。）",
   },
   {
     // v0.39 新增：常驻只留「限制短语行」，编号/日期/符号那一大段按需拼回
@@ -143,7 +156,10 @@ if (fromCore && existsSync(LAZY)) {
     const id =
       pointerMap.get(line) ??
       zipMap.get(line) ??
-      line.match(/【惰性 (L_\w+)[｜：]/)?.[1];
+      // v0.41：指针行按「行内含自身 id」兜底识别，两种形态都认 —— 整节搬的【惰性 id｜digest】
+      // 与半节搬的（惰性 id：…）。上一轮改措辞时旧指针行没被认出来，在常驻里留了一行孤儿
+      // 指针（同时新指针也在场）—— 按 id 认行后这类漂移不会再留下残留。
+      line.match(/^(?:【惰性 (L_\w+)[｜：]|（惰性 (L_\w+)[：｜])/)?.slice(1).find(Boolean);
     if (id && bodies.has(id)) { out.push(...bodies.get(id).split("\n")); restored++; }
     else out.push(line);
   }
@@ -152,12 +168,7 @@ if (fromCore && existsSync(LAZY)) {
   lines = original.split("\n");
   console.log(`· --from-core：按惰性库还原切分源 ${coreNow.length} → ${original.length} 字符（${bodies.size} 个单元在库，复位 ${restored} 处）`);
 }
-// --from-core：以当前常驻内核为真源重建（full.md 是旧快照，restore 会丢近改动）。
-if (existsSync(LAZY) && !force && !dry && !fromCore) {
-  console.error("✗ 已经拆过了（prompts/infinite-gen-5-lazy.md 在场）。重拆加 --force，还原用 --restore。");
-  process.exit(1);
-}
-// --from-core：以当前常驻内核为真源重建（full.md 是旧快照，restore 会丢近改动）。
+// 已拆过时默认拒绝重拆（--force / --dry / --from-core 放行）。v0.41 去掉了一次重复粘贴。
 if (existsSync(LAZY) && !force && !dry && !fromCore) {
   console.error("✗ 已经拆过了（prompts/infinite-gen-5-lazy.md 在场）。重拆加 --force，还原用 --restore。");
   process.exit(1);
@@ -255,6 +266,29 @@ const problems = [];
 for (const u of units) {
   if (!original.includes(u.text)) problems.push(`${u.id}: 正文不是原文的连续片段（被改写过）`);
   if (coreText.includes(u.text)) problems.push(`${u.id}: 常驻核心里仍残留该正文（重复）`);
+}
+// v0.41：内容守恒判据 —— 切分前的源文本（original）里每一行都必须还能在（常驻 ∪ 惰性）里找到。
+// 由来：`--from-core` 复位靠识别指针行；指针措辞一变，旧指针就可能认不出来，被搬走的正文只剩
+// 惰性库一份，重写库时会被静默丢掉（v0.41 真的丢过三条 Format examples 示例）。这里按行做
+// 多重集比对：源里的每一行，在输出里出现次数不得少于源里的次数（指针行是新增行，只多不少）。
+const lineBag = (text) => {
+  const bag = new Map();
+  for (const l of text.split("\n")) {
+    const k = l.trimEnd();
+    if (k.trim()) bag.set(k, (bag.get(k) ?? 0) + 1);
+  }
+  return bag;
+};
+const srcBag = lineBag(original);
+const outBag = lineBag(`${coreText}\n${lazyText}`);
+const lostLines = [];
+for (const [k, n] of srcBag) {
+  const got = outBag.get(k) ?? 0;
+  if (got < n) lostLines.push(`${got}/${n} 次 · ${k.length > 56 ? k.slice(0, 56) + "…" : k}`);
+}
+if (lostLines.length) {
+  problems.push(`内容丢失：源里有 ${lostLines.length} 类行在输出里找不到（或次数变少）`);
+  for (const l of lostLines.slice(0, 6)) problems.push(`  ${l}`);
 }
 const movedChars = units.reduce((n, u) => n + u.text.length, 0);
 const pointerChars = coreParts.filter((s) => s.startsWith("【惰性章节") || s.startsWith("  （107 域") || s.startsWith("（工具类")).join("").length;

@@ -11,8 +11,8 @@
 set -uo pipefail
 cd "$(dirname "$0")/.." || exit 2
 fail=0
-EXPECT_UNITS=13          # v0.38.6=9 · v0.39.0=11 · v0.40.0=13（+L_envtool 机器探针/工具链安装 +L_encoding 编码外壳/元请求）
-BASE_BYTES=16396         # v0.39.0 常驻基线，仅用于打印净减
+EXPECT_UNITS=14          # v0.38.6=9 · v0.39.0=11 · v0.40.0=13 · v0.41.0=14（+L_residue_tail 分层依据与边界写法）
+BASE_BYTES=16396         # v0.39.0 常驻基线，仅用于打印累积净减（v0.40 15463 · v0.41 14322）
 say() { printf '%s\n' "$*"; }
 bad() { fail=1; say "❌ $*"; }
 

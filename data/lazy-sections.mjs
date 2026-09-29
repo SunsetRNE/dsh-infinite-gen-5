@@ -73,9 +73,13 @@ export function compileLazy({ text = "", mode = LAZY_DEFAULT_MODE, bytes = LAZY_
 
   const kept = [];
   const dropped = [];
+  // v0.41 修正：预算必须把抬头行与 join("\n") 的分隔符算进去 —— 否则 emitted.bytes 可以
+  // 超出档位预算最多 headerBytes + kept.length 字节（设置页把 light 档调到 3500 时可见）。
+  const headerBytes = Buffer.byteLength(`${LAZY_HEADER}\n`, "utf8");
   let used = 0;
   for (const u of hits) {
-    if (used + u.bytes <= budget) { kept.push(u); used += u.bytes; }
+    const overhead = kept.length > 0 ? 1 : headerBytes; // 首章付抬头，其余章付分隔符
+    if (used + overhead + u.bytes <= budget) { kept.push(u); used += overhead + u.bytes; }
     else dropped.push(u);
   }
   const header = kept.length ? `${LAZY_HEADER}\n` : "";

@@ -1,4 +1,4 @@
-// 无限五代 v0.40.0 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.41.0 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -418,7 +418,8 @@ const lazyUnitHeads = lazyText.match(/^@@unit:/gm) ?? [];
 // v0.39.0：9 → 11（新增 L_writing6 写作侧六条、L_toolcall_repair 坏包修复路径；
 // 数字诚实规则 Anything carrying a number 与 Boundary rule 立场句按决策保持常驻，不再搬）
 // v0.40.0：11 → 13（新增 L_envtool 机器探针与工具链安装、L_encoding 编码外壳与元请求）
-check(lazyUnitHeads.length === 13, "惰性单元数量", `实测 ${lazyUnitHeads.length} 个`);
+// v0.41.0：13 → 14（新增 L_residue_tail 分层依据与边界写法；L_examples 只留「私语」那条例外常驻）
+check(lazyUnitHeads.length === 14, "惰性单元数量", `实测 ${lazyUnitHeads.length} 个`);
 check(
   (lazyText.match(/^@@end:/gm) ?? []).length === lazyUnitHeads.length,
   "每个惰性单元都有 @@end 收尾",
