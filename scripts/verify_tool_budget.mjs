@@ -104,10 +104,26 @@ check(
 
 // ---- 3. 参数形状：扁平标量，不给模型制造嵌套大对象的机会 ----
 const tools = mountTools();
+// v0.41.1：宿主 tools.register 的硬要求 —— 每名工具都必须声明 output { schema, render }。
+// 缺了不是「少个渲染」，而是整份插件激活时抛 TypeError 直接不加载（dsh-tools lib/index.js:2881；
+// 2026-09-29 启动日志原句：tool "infinite_gen5_relay" must declare output { schema, render, presentationMeta? }）。
+// 判据与宿主逐字对齐：output 是对象、render 是函数、presentationMeta 可缺省但给了就必须是函数。
+const hostOutputOk = (t) => {
+  const o = t.output;
+  return (
+    o !== undefined &&
+    typeof o === "object" &&
+    typeof o.render === "function" &&
+    (o.presentationMeta === undefined || typeof o.presentationMeta === "function")
+  );
+};
+const badOutput = tools.filter((t) => !hostOutputOk(t)).map((t) => t.name);
+check(badOutput.length === 0, "六名工具都声明 output.render（宿主注册硬要求）", badOutput.join(",") || "全部合规");
+check(tools.every((t) => t.output && typeof t.output.schema === "object"), "output 都带 schema（结果形状）");
 const toolNames = tools.map((t) => t.name).sort().join(",");
-// v0.36.8 起 relay / skills 两块并回主干，注册面由 4 名变 6 名（注册点 index.js:3505
-// registerRelayTools；relay 定义 index.js:2882、skills 定义 index.js:3247）。
-// 这两名工具自带结果渲染、不走 budgetedOutput，所以体积闸只对下面 4 名资源工具断言。
+// v0.36.8 起 relay / skills 两块并回主干，注册面由 4 名变 6 名（注册点 index.js:3576
+// registerRelayTools；relay 定义 index.js:2943、skills 定义 index.js:3309）。
+// 这两名工具走 plainOutput（v0.41.1 起：不裁剪结果，但同样声明 output），体积闸只对下面 4 名资源工具断言。
 const EXPECTED_TOOLS = [
   "infinite_gen5_dispatch",
   "infinite_gen5_env",

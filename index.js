@@ -1032,6 +1032,16 @@ const budgetedOutput = (toolName) => ({
 
 const objectOutput = budgetedOutput(null);
 
+// relay / skills 两名工具的结果出口（v0.41.1）。宿主 tools.register 的硬要求是「必须声明
+// output { schema, render, presentationMeta? }」—— dsh-tools 的校验只认 output.render 是函数，
+// 缺了它整份插件会在激活时抛 TypeError 而完全不加载（2026-09-29 的启动日志就是这样崩的）：
+//   tool "infinite_gen5_relay" must declare output { schema, render, presentationMeta? }
+// 这两名工具的结果已经是小对象（relay 只回 head 切片），所以走不裁剪的纯文本渲染。
+const plainOutput = {
+  schema: { type: "object", additionalProperties: true },
+  render: (_args, value) => [{ type: "text", text: typeof value === "string" ? value : JSON.stringify(value) }],
+};
+
 // 自检接缝（v0.13.8）：体积闸与统一解析入口是「同类问题的统一强化」，所以它们自己也要能被自检
 // 直接驱动，而不是只能靠真挂载碰运气 —— scripts/verify_tool_budget.mjs 会逐个用例调它们。
 // 注意位置：必须在 capResult / safeParseJson 定义之后，否则模块求值就撞 TDZ。
@@ -2966,6 +2976,7 @@ function relayTool({ reader = process.env } = {}) {
       required: ["action"],
       additionalProperties: false,
     },
+    output: plainOutput, // 宿主硬要求：缺 output.render 会让整份插件激活失败（v0.41.1 修）
     execute(args = {}) {
       return executeRelay(args, { reader });
     },
@@ -3311,6 +3322,7 @@ function skillsTool({ cwd = process.cwd(), reader = process.env } = {}) {
       required: ["action"],
       additionalProperties: false,
     },
+    output: plainOutput, // 同上：skills 工具也必须声明 output（v0.41.1 修）
     execute(args = {}) {
       const action = String(args.action ?? "").trim();
       const roots = scanRoots(cwd);

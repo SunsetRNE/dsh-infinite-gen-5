@@ -45,6 +45,7 @@
     "data/probe.mjs",
     "scripts/probe-env.mjs",
     "scripts/verify_env.mjs",
+    "scripts/probe_registration.mjs",
     "scripts/eval-corpus.mjs",
     "scripts/verify_injection.mjs",
     "scripts/verify_tuning.mjs",
@@ -62,6 +63,7 @@
   "scripts": {
     "harness:check": "node --check index.js && node --check client.js",
     "verify": "node scripts/verify_prompt_gen5.mjs",
+    "probe:register": "node scripts/probe_registration.mjs",
     "verify:sync": "node scripts/verify_sync.mjs",
     "sync:local": "node scripts/sync-local.mjs",
     "sync:local:apply": "node scripts/sync-local.mjs --yes",
