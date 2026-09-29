@@ -22,7 +22,7 @@
 | 领域包 | **107** 个（7 族） | `node scripts/verify_scenarios.mjs` |
 | 领域索引 | 20017 B（≈5.4–5.5 K token —— 两个自检脚本口径 5410 / 5487，按需取用，不进 system prompt） | 同上 |
 | 单个领域包 | 639–4540 B（107 包合计 317484 B） | 同上 |
-| 版本锚点 | 9 处 / 扫描 143 个文件（随新增文件变化，以 `verify_version` 实测输出为准） | `node scripts/verify_version.mjs` |
+| 版本锚点 | 9 处 / 扫描 1321 个文件（随新增文件变化，以 `verify_version` 实测输出为准） | `node scripts/verify_version.mjs` |
 
 ---
 
@@ -30,6 +30,7 @@
 
 | 版本 | 日期 | 关键变更 | 提交 |
 | --- | --- | --- | --- |
+| v0.46.0 | 2026-09-29 | **把「公共层 + 兼容层」（原独立目录 `/root/ig5-adapters`）测试性合入主仓 `adapters/`**：35 文件 / 482K，不搬 `dist/`、`runs/` 产物，宿主 `prompts/` 与 `data/` 一个字节都不改。① **内核根自推导**（新增 `adapters/lib/kernel-root.mjs`）：解析顺序 = `IG5_KERNEL_DIR`/`IG5_PROMPT_DIR`/`IG5_DATA_DIR` → 本层根 → **本层上一级**（合进主仓后的布局）→ 历史绝对路径兜底；顶层 9 个文件与 `ig5-relay-plugin.mjs`（`import.meta.url` 自推导、不依赖 `lib/`）的写死默认全改。② **修两条真实缺陷**（内核 unit 9 → 14 条后适配层没跟上）：`lib/kernel-signature.mjs` 惰性指针正则只认 `【惰性 L_x｜…】`、不认 `（惰性 L_x：…）` → 7 条 unit 被误报孤儿（B3）；F3 写死「真源 9 条 unit」→ 改判「下限 + 每条 unit 被自己首个触发词单独命中」。③ **版本字面量**：`adapters/` 三处 `0.45.0` 改「0.45 线」，`verify:version` **27/0**（锚点 9 处 / 扫描 **1321** 个文件）。④ **复验**：`verify_adapters` **38 → 40/40** · `test-relay-plugin` **11 → 13/13** · `test-transport` 5/5 · `test-plugin-load` 3/3 · `test-dynamic-adapt` 14/14 · `test-adaptive-injection` 7/7 · `test-openai-embed` 6/6 · `test-codex-deploy` exit 0 · `test-endpoint-inventory` 10/10 · `build-adapters --check` **5 通道 0 问题** · `build-skills --check` 0 问题；语义指纹 `16cdd16efeb31677…`。五通道常驻字节以 `--check --json` 的 `perTarget.residentBytes` 为准（dsh 13905/40000 · codex 13509/30000 · generic 20571/28000 · claude 20571/30000 · api-endpoint 20967/32000）。⑤ 边界：**测试性合并**，`verify:all` 待重跑 | 本版提交 |
 | v0.45.0 | 2026-09-29 | 根 README 瘦身 **707 行/63168 B → 193 行/10033 B（−84.1%）**，正文拆进 `docs/` 六件 + 冻结归档 `docs/README-FULL.md`；新增工具面三件（注册表 `tool-registry.mjs` / 渲染器 `gen_tool_docs.mjs` / 门禁 `verify_tool_registry.mjs`，在册 **100** 个工具 · 排除 9 · 协议 **6** 条），生成 `docs/TOOL-PROTOCOLS.md` 与 `docs/INDEX.md`；`verify:all` **48 → 49 步**；修掉 README 里两个不存在的工具引用 | `91709d3` |
 | v0.37.0 – v0.44.0 | 2026-09-29 | 八版**未写** UPDATE.md 叙述（已知文档债，只留指针）；tag 序列在 v0.38.6 与 v0.42.1 之间有断档。逐条见 `CHANGELOG.md` | — |
 | v0.36.4 | 2026-09-28 | **修「来源标记溢出」+ 旋钮网格改响应式**（用户截图圈点后定位）。① 根因两条（`client.js` CSS）：`.armor5-console-tag{display:inline-flex;height:13px;font-size:10px}` 是 `.armor5-knob-head` 的 flex 子项却**没写 `flex:0 0 auto` 与 `white-space:nowrap`** —— 中文逐字可断，胶囊被压到一两字宽、文字折两行溢出 13px 边框；`.armor5-knob-grid{grid-template-columns:1fr 1fr}` 的 `1fr` = `minmax(auto,1fr)`，窄屏轨道被内容顶宽 → 第二列出界被裁。② 修法（**纯 CSS，文案与断言一条未动**）：网格改 `repeat(2,minmax(0,1fr))` + `@media (max-width:560px){…minmax(0,1fr)}`（宽屏两栏 / 手机单栏）；`.armor5-knob-name` 加 `flex:1 1 auto;min-width:0`；新增 `.armor5-knob-head .armor5-console-tag{flex:0 0 auto;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:13px}`；档位按钮 `26px/2px 6px` + 标签单行省略。`client.js` 113080 → 113968 字符。③ **量测台**（`verify_ui --emit-html` 的预览页没注入调参接口时只渲染兜底 YAML、不渲染旋钮，量不到本溢出）：`/tmp/ig5-knob-harness.mjs` 抽 `STYLE_TEXT` 真 CSS 拼旋钮网格 + `/tmp/ig5-shot.mjs`（playwright 缓存 chromium 截图）+ `/tmp/ig5-overflow-probe.mjs`（`--dump-dom` 读 `<title>` 溢出清单）。④ 复验：296px 单栏不再溢出（对照图）· 720px 仍两栏不溢出 · `verify_ui` **202/0** 不变 · `verify:version` 27/0（锚点 9 处 / 扫描 142 个文件） | 本版提交 |

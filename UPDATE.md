@@ -11,6 +11,22 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.46.0
+
+**主题：把「公共层 + 兼容层」（原独立目录 `/root/ig5-adapters`）测试性合入主仓 `adapters/`，并把内核根从写死路径改成自推导（用户 m00142/m00195：「尝试性合并……然后变更版本号推送远端发布」「继续，尝试性适配现有版本，应该是我忘记适配了」）。**
+
+① **合入形态**：`adapters/` 35 个文件 / 482K —— 公共层 `lib/`、五条通道的兼容层 `targets/`、构建器（`build-adapters.mjs` / `build-skills.mjs` / `codex-deploy.mjs` / `endpoint-inventory.mjs` / `plugin-patch.mjs` / `probe-runner.mjs` / `ig5-relay-plugin.mjs` / `mock-endpoint.mjs`）、自检件（`verify_adapters.mjs` + 8 个 `test-*.mjs`）与 `README.md` / `examples/`。**不搬产物**（`dist/`、`runs/` 由构建器现生成，主仓 `.gitignore` 本就忽略 `dist/`）。本层只读宿主真源：`prompts/` 与 `data/` 一个字节都不改。
+
+② **内核根自推导（新增 `adapters/lib/kernel-root.mjs`）**：解析顺序 = `IG5_KERNEL_DIR` / `IG5_PROMPT_DIR` / `IG5_DATA_DIR` 显式覆盖 → 本层根目录（适配层单独放时的布局）→ **本层上一级**（合进主仓子目录后的布局：`dsh-infinite-gen-5/adapters/` 与 `dsh-infinite-gen-5/prompts/` 同级）→ 历史绝对路径兜底。顶层 9 个文件的写死默认值改为调用它；`ig5-relay-plugin.mjs` 是被拷进宿主根的单文件插件，用 `import.meta.url` 自推导 `adapters/` 与 `prompts/` 候选，不产生对 `lib/` 的依赖（保持「装到别的机器也能跑」）。合并后从 `adapters/` 直接跑：`verify_adapters.mjs` **40/40**、`test-openai-embed.mjs` **6/6**（候选列表实测 `…/adapters | …/dsh-infinite-gen-5 | …/dsh-infinite-gen-5`，命中第二项）。
+
+③ **修掉「内核长大了、适配层没跟上」的两条真实缺陷（都是门禁抓出来的）**：**(a)** `lib/kernel-signature.mjs` 的惰性指针正则只认形态①`【惰性 L_x｜…】`，不认形态②`（惰性 L_x：…）` —— 真源 14 条 unit 里有 7 条用形态②（`L_encoding` `L_coverage` `L_envtool` `L_toolcall_repair` `L_writing6` `L_residue_tail` `L_examples`），于是 B3 把它们全报成孤儿；改成同时匹配两种形态（并复位 `lastIndex`），白名单不再需要扩容。**(b)** F3 写死「真源 9 条 unit」（真源已 14 条）→ 改判「规模下限 + 每条 unit 都被自己首个触发词单独命中 + `L_dispatch` 单命中 + 无触发词零注入」。同一类隐患另两处一并改成现读真源：`test-relay-plugin.mjs` 的 T8 现读 `prompts/infinite-gen-5.md` 字节数比对、T7 改判「技能已装或未装都自洽」，`verify_adapters.mjs` 的 B3 注释写明「形态①②都算，白名单不得再扩」。
+
+④ **版本字面量**：`adapters/` 里三处 `0.45.0`（两处 README 实测读数标题 + 两处自检注释）改成「0.45 线」措辞 —— `verify_version.mjs` 第 4 条断言（全仓不得出现未登记的当前版本字面量）第一次扫到新目录就报警，改完 **27 通过 / 0 失败**（锚点 9 处 / 扫描 1321 个文件）。要留历史读数就写「0.45 线」，不要写全版本号：全版本号会被这条断言当成「当前版本被硬写」。
+
+⑤ **复验读数（全部本机实跑）**：`verify_adapters.mjs` **40/40**（B3/F3 修前 38/40）；`test-transport` 5/5 · `test-relay-plugin` **13/13**（修前 11/13）· `test-plugin-load` 3/3 · `test-dynamic-adapt` 14/14 · `test-adaptive-injection` 7/7 · `test-openai-embed` 6/6 · `test-codex-deploy` exit 0 · `test-endpoint-inventory` 10/10 · `build-adapters.mjs --check` **5 条通道 0 问题** · `build-skills.mjs --check` **0 问题**；语义指纹 `16cdd16efeb31677b8e7ce618776067cedb3a6975f9ab710cc26881dfebfe50f`。合入后五通道常驻字节（`--check --json` 实测）：dsh 13905 / 40000 · codex 13509 / 30000 · generic 20571 / 28000 · claude 20571 / 30000 · api-endpoint 20967 / 32000；内嵌索引 7062 B（generic / claude / api-endpoint），惰性单元 14 条全通道一致。**这些数字以 `--check --json` 的 `perTarget.residentBytes` 为准，别抄文档**（`adapters/README.md` 抬头已写这一句）。
+
+⑥ **边界**：本轮是**测试性合并**，不搬产物、不动宿主内核、不替宿主做装载决策；`verify:all` 尚未重跑（下一步）。要真发布适配层产物，跑 `cd adapters && node build-adapters.mjs` 现生成。
+
 ## v0.45.0
 
 **主题：根自述文件瘦身 + 文档中心化 + 工具面补齐「工具协议」真源（用户 m02324：「压缩第五代的项目根"自述文件"，其他描述通通挪到仓库文档文件夹下，然后强化补充相应的工具、补充相应的工具协议」）。**

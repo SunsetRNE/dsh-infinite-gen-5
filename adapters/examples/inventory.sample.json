@@ -1,0 +1,36 @@
+{
+  "version": "ig5-endpoint-inventory/1",
+  "_说明": "示例清单：只放你自己有凭据的端点。密钥一律写环境变量名（keyEnv），不要把密钥写进这个文件。",
+  "entries": [
+    {
+      "id": "local-stub",
+      "baseUrl": "http://127.0.0.1:8787",
+      "model": "MOCK_MODEL",
+      "provenance": "local-stub",
+      "note": "本机桩：node mock-endpoint.mjs --port 8787，不需要密钥"
+    },
+    {
+      "id": "self-hosted-vllm",
+      "baseUrl": "http://127.0.0.1:8000/v1",
+      "model": "MODEL_ID",
+      "provenance": "self-hosted",
+      "keyEnv": "IG5_LOCAL_KEY",
+      "note": "自建推理端点：只在本机/内网可达"
+    },
+    {
+      "id": "my-account-endpoint",
+      "baseUrl": "https://HOST_PLACEHOLDER/v1",
+      "model": "MODEL_ID",
+      "provenance": "own-account",
+      "keyEnv": "IG5_OWN_KEY",
+      "note": "你自己账号的端点：keyEnv 指向你自己导出的环境变量"
+    },
+    {
+      "id": "should-be-rejected",
+      "baseUrl": "https://SOMEONE_ELSES_HOST/v1",
+      "model": "MODEL_ID",
+      "provenance": "unknown",
+      "note": "来源不明的条目会被 provenance-not-owned 拒掉、且不发包——这条是用来演示闸门的"
+    }
+  ]
+}
