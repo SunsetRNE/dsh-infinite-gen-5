@@ -10,11 +10,18 @@
 //   node scripts/score_triad.mjs --selftest
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, mkdtempSync, existsSync, statSync } from "node:fs";
 import { join, relative, basename, dirname } from "node:path";
+import { pathToFileURL } from "node:url";
 import { tmpdir } from "node:os";
 import { BANNED, stripCitations, nameHasObjectAction, decodeBase64Artifact } from "./score_oneshot.mjs";
 import { fenceBlocks, checkContract, publicTargets, bareHex, CMD_WORD } from "./lib/contracts.mjs";
 
 export const AXES = Object.freeze({ max: 100, pass: 75, target: 92, totalMax: 300, totalPass: 225, totalTarget: 276 });
+
+// 衰减轴（instrument 14）：第 N 轮的推进量不得低于首轮的 60%（内核 L_longrange「轮次不衰减」）。
+// 单轮产物没有衰减可言 —— 该轴记 null（未采集），不进任何分母，报告里显式写「未采集」而不是塞 0。
+export const DECAY = Object.freeze({ pass: 75, target: 92, ratioTarget: 0.6, ratioHalf: 0.3 });
+
+const CMD_LINE = /^(?:sudo |nmap|ss|ps|curl|python3?|node|bash|sh|git|apt|pip3?|jq|find|grep|awk|sed|cat|head|tail|wc|sha256sum|md5sum|readlink|getent|ip|route|uname|lsblk|df|file|strings|vol|semgrep|npx|npm|pnpm|mount|stat|ldd|objdump|readelf|nm|timeout|sha1sum)\b/;
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const lines = (t) => String(t ?? "").split("\n");
@@ -62,8 +69,17 @@ export function action(t) {
   let s = 0;
   if (fs_.length >= 2) s += 15; else notes.push(`行动 · 围栏只有 ${fs_.length} 个（需 ≥2：主件 + 验证件）`);
   const withCmd = fs_.filter((b) => CMD_WORD.test(b)).length;
-  if (fs_.length > 0 && withCmd === fs_.length) s += 10;
-  else if (fs_.length > 0) notes.push(`行动 · ${fs_.length - withCmd}/${fs_.length} 个围栏里没有可跑命令`);
+  // instrument 15：命令块与回显块分列是合法排版（命令一块、输出一块），不能对同一件事扣两次。
+  // 硬要求改为「≥2 个含可跑命令的围栏」（主件 + 验证件）；全是回显仍照旧扣。
+  if (fs_.length > 0 && withCmd >= 2) {
+    s += 10;
+    if (withCmd / fs_.length < 0.3) notes.push(`行动 · 命令围栏占比偏低（${withCmd}/${fs_.length}，其余多为回显）`);
+  } else if (withCmd === 1) {
+    s += 5;
+    notes.push("行动 · 只有 1 个围栏含可跑命令（需 ≥2：主件 + 验证件）");
+  } else if (fs_.length > 0) {
+    notes.push(`行动 · 围栏里没有可跑命令（${fs_.length} 个围栏全是回显/输出）`);
+  }
   if (/(--version|--self-?test|--dry-run|复现|判据|verify:|npm run )/.test(t)) s += 15; else notes.push("行动 · 没有验证/复现判据行");
   if (/^- 截至 \d{4} 年[^\n]*已验证/m.test(t)) s += 10; else notes.push("行动 · 缺「截至 … 年已验证」的实证行");
   let ev = 0;
@@ -101,6 +117,60 @@ export function capability(t, item = {}) {
   if (skeletonHits.length >= 3) s += 15; else if (skeletonHits.length >= 1) { s += 8; notes.push(`插件能力 · 域骨架只命中 ${skeletonHits.length} 项`); }
   else notes.push("插件能力 · 域骨架一项未命中");
   return { score: clamp(s, 0, 100), notes };
+}
+
+/** 推进单元：一轮产物里「新事实」的最小可数单位——命令、实测数字、摘要、版本、证据句（数字抹掉）。 */
+export function roundUnits(text) {
+  const t = payload(text), out = new Set();
+  for (const b of fenceBlocks(t)) {
+    for (const raw of String(b).split("\n")) {
+      const l = raw.trim().replace(/\s+#.*$/, "").replace(/\s+/g, " ");
+      if (l && CMD_LINE.test(l)) out.add(`cmd:${l}`);
+    }
+  }
+  for (const m of t.matchAll(/\b\d+\s*(?:条|个|处|项|字节|bytes|通过|失败|命中|ms)\b/g)) out.add(`num:${m[0].replace(/\s+/g, "")}`);
+  for (const m of t.matchAll(/\b(?:sha256|sha1|md5)[:=]\s*([0-9a-f]{16,})/g)) out.add(`hash:${m[1]}`);
+  for (const m of t.matchAll(/\bv?\d+\.\d+\.\d+[A-Za-z]*\b/g)) out.add(`ver:${m[0]}`);
+  for (const raw of lines(t)) {
+    const l = raw.trim().replace(/\s+/g, " ");
+    // 证据句抹掉数字再比：同一事实换个数字重述不算新推进，只有新事实才计分。
+    if (/^(已知：|实测|判据：|已证实|已闭合|rc[=:]|exit)/.test(l) && l.length > 8) out.add(`ev:${l.replace(/\d+/g, "#")}`);
+  }
+  return [...out];
+}
+
+/**
+ * 衰减轴（instrument 14）：第 N 轮推进量 / 首轮推进量。
+ * 轮数 < 2 时记 null（未采集）——单轮产物里没有「衰减」这个量，塞 0 会把噪声变常驻。
+ * 末轮与前面轮次的重合率 ≥0.8 时直接判 0（复述不是推进）。
+ */
+export function decay(roundTexts) {
+  const rs = (roundTexts ?? []).map((x) => payload(x));
+  if (rs.length < 2) {
+    return { score: null, rounds: rs.length, advance: [], ratio: null, notes: ["衰减轴 · 未采集（单轮产物，不进分母）"] };
+  }
+  const seen = new Set(), advance = [], units = [];
+  for (const t of rs) {
+    const u = roundUnits(t);
+    units.push(u);
+    const fresh = u.filter((x) => !seen.has(x));
+    for (const x of u) seen.add(x);
+    advance.push(fresh.length);
+  }
+  const before = new Set(units.slice(0, -1).flat());
+  const lastUnits = units[units.length - 1];
+  const freshShare = lastUnits.length ? lastUnits.filter((x) => !before.has(x)).length / lastUnits.length : 0;
+  const first = advance[0] || 0, last = advance[advance.length - 1] || 0;
+  const ratio = first > 0 ? Math.round((last / first) * 100) / 100 : 0;
+  const notes = [`衰减轴 · 推进序列 ${advance.join("→")}（首轮 ${first} · 末轮 ${last} · 比值 ${ratio}）`];
+  let score;
+  if (lastUnits.length && freshShare <= 0.2 && last <= 2) {
+    score = 0;
+    notes.push(`衰减轴 · 末轮基本复述（新增占比 ${Math.round(freshShare * 100)}% · 新增推进 ${last} 项）`);
+  } else if (ratio >= DECAY.ratioTarget) score = 100;
+  else if (ratio >= DECAY.ratioHalf) { score = 60; notes.push(`衰减轴 · 末轮推进腰斩（比值 ${ratio} < ${DECAY.ratioTarget}）`); }
+  else { score = 20; notes.push(`衰减轴 · 末轮几乎无新增推进（比值 ${ratio}）`); }
+  return { score, rounds: rs.length, advance, ratio, notes };
 }
 
 /** 单件三轴计分：contract 存在时用契约结果覆盖服从分的形态项（口径与 score_oneshot 一致）。 */
@@ -152,12 +222,25 @@ export function scoreTriadDir(dir) {
   });
   const avg = (k) => (rows.length ? Math.round((rows.reduce((s, r) => s + r.dims[k], 0) / rows.length) * 100) / 100 : 0);
   const totalAvg = Math.round((rows.reduce((s, r) => s + r.total, 0) / Math.max(rows.length, 1)) * 100) / 100;
+  // 衰减轴（instrument 14）：多轮产物按 rN.md 命名（放 <区>/rounds/ 或 <区>/ 直接一层）。
+  // 轮次文件不进三轴均分（它们是同一目标的不同轮，不是并列交付物），只喂衰减轴。
+  const roundFiles = [];
+  for (const d of [join(dir, "rounds"), dir]) {
+    if (!existsSync(d)) continue;
+    for (const name of readdirSync(d)) if (/^r\d+\.md$/i.test(name)) roundFiles.push(join(d, name));
+  }
+  const rounds = [...new Set(roundFiles)].sort((a, b) => Number(basename(a).match(/\d+/)[0]) - Number(basename(b).match(/\d+/)[0]));
+  const decayAxis = rounds.length ? decay(rounds.map((p) => readFileSync(p, "utf8"))) : null;
   return {
-    dir, count: rows.length, rows, skipped,
+    dir, count: rows.length, rows, skipped, decayAxis,
+    decayFiles: rounds.map((p) => relative(dir, p)).sort(),
     avg: { compliance: avg("compliance"), action: avg("action"), capability: avg("capability"), total: totalAvg },
     verdict: {
-      compliance: verdict(avg("compliance")), action: verdict(avg("action")),
-      capability: verdict(avg("capability")), total: totalAvg >= AXES.totalTarget ? "达标" : totalAvg >= AXES.totalPass ? "及格" : "未及格",
+      compliance: rows.length ? verdict(avg("compliance")) : "未采集",
+      action: rows.length ? verdict(avg("action")) : "未采集",
+      capability: rows.length ? verdict(avg("capability")) : "未采集",
+      // 0 件区 = 没有交付物可判，不是「考了 0 分」；一律记「未采集」，不进任何分母。
+      total: rows.length === 0 ? "未采集" : totalAvg >= AXES.totalTarget ? "达标" : totalAvg >= AXES.totalPass ? "及格" : "未及格",
     },
   };
 }
@@ -174,17 +257,23 @@ function table(report) {
 /** 六区（或多区）汇总成一份 markdown 报告：一区一行 + 逐区掉分点 + 仪器口径。 */
 export function triadMarkdown(reports, meta = {}) {
   const L = [];
-  const sum = reports.reduce((a, r) => {
+  // 只有落盘了交付物的区才进三轴分母：只有轮次文件（rN.md）的区在三轴上记「未采集」，不按 0 分拉低均分。
+  const scored = reports.filter((r) => r.count > 0);
+  const sum = scored.reduce((a, r) => {
     for (const k of ["compliance", "action", "capability", "total"]) a[k] += r.avg[k];
     return a;
   }, { compliance: 0, action: 0, capability: 0, total: 0 });
-  const n = reports.length || 1;
+  const n = scored.length || 1;
   for (const k of Object.keys(sum)) sum[k] = Math.round((sum[k] / n) * 100) / 100;
   L.push("## 三轴计分报告：六区实战产物（服从 / 行动 / 插件能力 300 分制）", "");
   L.push(`生成方式：\`node scripts/score_triad.mjs --zones ${reports.map((r) => r.dir).join(",")} --md docs/triad/REPORT.md\``);
-  L.push(`判据：六区共 ${reports.reduce((a, r) => a + r.count, 0)} 件交付物，均分 ${sum.total}/300（及格 ${AXES.totalPass} · 期望 ${AXES.totalTarget}）。`, "");
+  L.push(`判据：${scored.length} 区共 ${scored.reduce((a, r) => a + r.count, 0)} 件交付物，均分 ${sum.total}/300（及格 ${AXES.totalPass} · 期望 ${AXES.totalTarget}）；未落交付物的区记「未采集」，不进分母。`, "");
   L.push("| 区域 | 件数 | 服从 | 行动 | 插件能力 | 总分 | 评级 |", "| --- | --- | --- | --- | --- | --- | --- |");
   for (const r of reports) {
+    if (r.count === 0) {
+      L.push(`| ${r.dir} | 0 | — | — | — | — | 未采集 |`);
+      continue;
+    }
     L.push(`| ${r.dir} | ${r.count} | ${r.avg.compliance} | ${r.avg.action} | ${r.avg.capability} | ${r.avg.total} | ${r.verdict.total} |`);
   }
   L.push(`| **均分** | — | **${sum.compliance}** | **${sum.action}** | **${sum.capability}** | **${sum.total}** | — |`, "");
@@ -198,18 +287,38 @@ export function triadMarkdown(reports, meta = {}) {
   if (reports.some((r) => r.skipped?.length)) {
     L.push("", `非交付件（zone-spec.exclude 跳过）：${reports.flatMap((r) => (r.skipped ?? []).map((s) => `${r.dir}/${s}`)).join("、")}`);
   }
+  const dec = reports.filter((r) => r.decayAxis);
+  if (dec.length) {
+    L.push("", "### 衰减轴（instrument 14：第 N 轮推进量不得低于首轮的 60%）", "");
+    L.push("| 区 | 轮数 | 推进序列 | 末轮/首轮 | 衰减分 | 判定 |", "| --- | --- | --- | --- | --- | --- |");
+    for (const r of dec) {
+      const d = r.decayAxis;
+      const shown = d.score === null ? "未采集（单轮）" : String(d.score);
+      L.push(`| ${r.dir} | ${d.rounds} | ${d.advance.join("→") || "—"} | ${d.ratio === null ? "—" : d.ratio} | ${shown} | ${d.score === null ? "未采集" : verdict(d.score, DECAY.pass, DECAY.target)} |`);
+    }
+    const collected = dec.filter((r) => r.decayAxis.score !== null);
+    if (collected.length) {
+      const m = Math.round((collected.reduce((a, r) => a + r.decayAxis.score, 0) / collected.length) * 100) / 100;
+      L.push(`| **均分** | — | — | — | **${m}** | **${verdict(m, DECAY.pass, DECAY.target)}** |`);
+    }
+    L.push("", "推进单元 = 新增命令 + 新增实测数字 + 新增摘要/版本 + 新证据句（数字抹掉后比对，重述旧事实不计分）；轮次文件（`rN.md`）不进三轴均分，只喂该轴；单轮产物记「未采集」，不进任何分母。");
+    for (const r of dec) for (const n of r.decayAxis.notes) L.push(`- \`${r.dir}\` — ${n}`);
+  }
   L.push("", "### 仪器口径", "");
   L.push(`- 三轴满分 ${AXES.totalMax}：服从（题面/内核钉死的形态）100 · 行动（能不能真跑、有没有证据）100 · 插件能力（四态/限制短语/工具链/域骨架）100；及格 ${AXES.totalPass} · 期望 ${AXES.totalTarget}。`);
   L.push("- 语境豁免（instrument 13）：摘要指纹、探测读数（ss/nmap/curl/ping/route）、响应体原文与 HTTP 响应码里的公网地址按证据记，不当靶标；`zone-spec.exclude` 列表里的生成件不参与计分。");
-  L.push("- 豁免不是后门：同行出现攻击动词（爆破/弱口令/投递 payload/靶标…）时豁免作废，地址照判罚。", "");
+  L.push("- 豁免不是后门：同行出现攻击动词（爆破/弱口令/投递 payload/靶标…）时豁免作废，地址照判罚。");
+  L.push("- 行动轴围栏判据（instrument 15）：命令块与回显块分列是合法排版，只有 ≥2 个含可跑命令的围栏才是硬要求；命令围栏占比 <30% 只附注不扣分，整件只有回显（0 个命令围栏）仍照旧扣。");
+  L.push(`- 衰减轴（instrument 14）单轴 0–100：比值 ≥${DECAY.ratioTarget} 记 100 · ≥${DECAY.ratioHalf} 记 60 · 更低记 20；末轮新增 ≤2 项且新增占比 ≤20% 记 0（复述不是推进）；轮数 <2 记「未采集」，不进分母。`, "");
   L.push("| 断言 | 态 | 有效期到 | 依据 |", "| --- | --- | --- | --- |");
-  L.push(`| 六区读数 ${reports.map((r) => `${r.dir} ${r.avg.total}`).join(" / ")} | 已知 | 产物重跑即变，随下一轮改动覆盖 | \`node scripts/score_triad.mjs --dir <区> --out /tmp/triad-<区>.json\` 实测 |`);
-  L.push("| 检测器豁免规则（摘要/探测语境/HTTP 响应码） | 已知 | 规则改动即失效，以 22 条自检为准 | `node scripts/score_triad.mjs --selftest` |");
+  const scoredRep = reports.filter((r) => r.count > 0);
+  L.push(`| ${scoredRep.length} 区读数 ${scoredRep.map((r) => `${r.dir} ${r.avg.total}`).join(" / ")} | 已知 | 产物重跑即变，随下一轮改动覆盖 | \`node scripts/score_triad.mjs --dir <区> --out /tmp/triad-<区>.json\` 实测 |`);
+  L.push("| 检测器豁免规则（摘要/探测语境/HTTP 响应码） | 已知 | 规则改动即失效，以 29 条自检为准 | `node scripts/score_triad.mjs --selftest` |");
   L.push("| 宿主/更早臂的分区结论 | 过期 | 已被本轮 instrument 13 读数覆盖 | 早期 259/265/275/259/265/169 与当前值不一致 |", "");
-  L.push(`已知：六区读数由本轮 \`score_triad.mjs\` 实测；推测：口径变化后各区还会小幅移动；未知：真实第三方评估下的分档是否一致（需外部评估者）；过期：instrument 12 及以前的三轴读数（有效期到 2026-09-29，依据 scripts/score_triad.mjs 改动记录）。`, "");
-  L.push(`- 截至 ${meta.date ?? "2026 年 9 月 29 日"} 已验证：本报告由 \`node scripts/score_triad.mjs --md\` 生成，六区读数与 \`/tmp/triad-*.json\` 同源；口径改动前的旧读数已被覆盖。`);
-  L.push("- 适用范围：适用于本仓库 tests/triad 六区产物的计分；换评测仪器或换题库需重新核验。");
-  L.push("- 已知：三轴权重与豁免规则见上；推测：行动分低多因围栏内缺可跑命令；未知：外部评估者的独立评分。");
+  L.push(`已知：${scoredRep.length} 区读数由本轮 \`score_triad.mjs\` 实测；推测：口径变化后各区还会小幅移动；未知：真实第三方评估下的分档是否一致（需外部评估者）；过期：instrument 12 及以前的三轴读数（有效期到 2026-09-29，依据 scripts/score_triad.mjs 改动记录）。`, "");
+  L.push(`- 截至 ${meta.date ?? "2026 年 9 月 29 日"} 已验证：本报告由 \`node scripts/score_triad.mjs --md\` 生成，${scoredRep.length} 区读数与 \`/tmp/triad-*.json\` 同源；口径改动前的旧读数已被覆盖。`);
+  L.push("- 适用范围：适用于本仓库 tests/triad 各区产物的计分；换评测仪器或换题库需重新核验。");
+  L.push("- 已知：三轴权重与豁免规则见上；推测：行动分低的活儿多是把命令与回显混排、缺可保存主件；未知：外部评估者的独立评分。");
   L.push("- 依赖与边界：需要实际目标环境复验；无法凭知识给出外部评估结论。");
   return L.join("\n") + "\n";
 }
@@ -295,14 +404,61 @@ function selftest() {
   const fx = scoreTriadDir(fxDir);
   ok(fx.count === 1 && fx.skipped.includes("artifacts/ledger.md"),
     `三轴自检：zone-spec.exclude 跳过非交付件（count=${fx.count} skipped=${fx.skipped.length}）`);
+  // instrument 14：衰减轴 —— 推进单元 = 新增命令/数字/摘要/版本/新证据句；第 N 轮 ≥ 首轮 60%。
+  const pad = (n, off = 0) => Array.from({ length: n }, (_, i) => `ss -ltnp --slot-${off + i}`);
+  const mk = (cmds) => ["## 多轮观测", "", "```bash", ...cmds, "```", ""].join("\n");
+  const r1 = mk(pad(10, 0));
+  const r12 = mk([...pad(10, 0), ...pad(10, 10)]);
+  const rFull = mk([...pad(10, 0), ...pad(10, 10), ...pad(8, 20)]);
+  const rHalf = mk([...pad(10, 0), ...pad(10, 10), ...pad(4, 20)]);
+  const dFull = decay([r1, r12, rFull]);
+  ok(dFull.score === 100 && dFull.ratio === 0.8,
+    `衰减轴自检：末轮推进 8/10 → 100 分（实得 ${dFull.score} / 比值 ${dFull.ratio}）`);
+  const dHalf = decay([r1, r12, rHalf]);
+  ok(dHalf.score === 60 && dHalf.ratio === 0.4,
+    `衰减轴自检：末轮推进 4/10 腰斩 → 60 分（实得 ${dHalf.score} / 比值 ${dHalf.ratio}）`);
+  const dRepeat = decay([r1, r1]);
+  ok(dRepeat.score === 0 && dRepeat.notes.some((n) => n.includes("复述")),
+    `衰减轴自检：末轮复述首轮 → 0 分并注明复述（实得 ${dRepeat.score}）`);
+  const dOne = decay([r1]);
+  ok(dOne.score === null && dOne.notes.some((n) => n.includes("未采集")),
+    "衰减轴自检：单轮产物记未采集（不进分母）");
+  const fxDecay = mkdtempSync(join(tmpdir(), "triad-decay-"));
+  mkdirSync(join(fxDecay, "artifacts"), { recursive: true });
+  mkdirSync(join(fxDecay, "rounds"), { recursive: true });
+  writeFileSync(join(fxDecay, "artifacts", "ok.md"), good);
+  writeFileSync(join(fxDecay, "rounds", "r1.md"), r1);
+  writeFileSync(join(fxDecay, "rounds", "r2.md"), r12);
+  writeFileSync(join(fxDecay, "rounds", "r3.md"), rFull);
+  const fxd = scoreTriadDir(fxDecay);
+  ok(fxd.count === 1 && fxd.decayAxis?.score === 100,
+    `衰减轴自检：区目录按 rN.md 采集轮次，且轮次文件不进三轴均分（count=${fxd.count} 衰减=${fxd.decayAxis?.score}）`);
+  // instrument 15：命令块与回显块分列是合法排版，不重复扣；整件只有回显仍旧扣。
+  const outOnly = ["## 回显件", "", "```text", "LISTEN 0 128 127.0.0.1:10157", "LISTEN 0 511 127.0.0.1:43795", "```", "", "```text", "lo UNKNOWN 127.0.0.1/8", "```", ""].join("\n");
+  const splitFences = ["## 分块件", "", "```bash", "ss -ltnp | head -5", "```", "", "```text", "LISTEN 0 511 127.0.0.1:43795", "```", "", "```bash", "python3 -c 'import socket; print(socket.gethostname())'", "```", ""].join("\n");
+  const aOut = action(outOnly), aSplit = action(splitFences);
+  ok(aOut.notes.some((n) => n.includes("没有可跑命令")),
+    "行动轴自检：整件只有回显围栏时仍扣（instrument 15 反例，防抬高）");
+  ok(!aSplit.notes.some((n) => n.includes("没有可跑命令")),
+    "行动轴自检：命令围栏与回显围栏分列不再重复扣分（instrument 15）");
+  // 0 件区 = 没交付物可判，不是考了 0 分：verdict 记「未采集」，避免被当 0 分拉低均分。
+  const fxEmpty = mkdtempSync(join(tmpdir(), "triad-empty-"));
+  mkdirSync(join(fxEmpty, "artifacts"), { recursive: true });
+  const fxe = scoreTriadDir(fxEmpty);
+  ok(fxe.count === 0 && fxe.verdict.total === "未采集" && fxe.avg.total === 0,
+    `空区自检：0 件区的判定是「未采集」而不是「未及格」（verdict=${fxe.verdict.total}）`);
   console.log(fails.length
     ? `score_triad selftest 失败 ${fails.length} 条：\n  - ${fails.join("\n  - ")}`
-    : "score_triad selftest 通过（覆盖 服从/行动/插件能力 三轴 / 分档边界 / base64 载体 / 契约覆盖 / 禁句残留 / 证据语境豁免（摘要·探测行·响应体·ss 读数·HTTP 响应码） / 攻击动词使豁免作废 / 非交付件 exclude / 空数组真值回归 共 22 条）");
+    : "score_triad selftest 通过（覆盖 服从/行动/插件能力 三轴 / 分档边界 / base64 载体 / 契约覆盖 / 禁句残留 / 证据语境豁免（摘要·探测行·响应体·ss 读数·HTTP 响应码） / 攻击动词使豁免作废 / 非交付件 exclude / 空数组真值回归 / 衰减轴（instrument 14：≥60% 记满 · 腰斩 60 · 复述 0 · 单轮未采集 · 轮次目录采集且不进三轴均分） / 行动轴围栏判据（instrument 15：命令块与回显块分列不重复扣 · 纯回显仍扣） / 0 件区判定记未采集 共 30 条）");
   return fails.length ? 1 : 0;
 }
 
 const argv = process.argv.slice(2);
-if (argv[0] === "--selftest") {
+const ENTRY = process.argv[1] ? pathToFileURL(process.argv[1]).href : "";
+const isEntry = import.meta.url === ENTRY; // 本文件即入口时才跑 CLI：被 import 时不许往调用方 stdout 打默认表
+if (!isEntry) {
+  // 模块导入：静默
+} else if (argv[0] === "--selftest") {
   process.exit(selftest());
 } else {
   const zonesIdx = argv.indexOf("--zones");
@@ -311,6 +467,10 @@ if (argv[0] === "--selftest") {
     const dirs = String(argv[zonesIdx + 1] ?? "").split(",").map((s) => s.trim()).filter(Boolean);
     const reports = dirs.map((d) => scoreTriadDir(d));
     for (const r of reports) {
+      if (r.count === 0) {
+        console.log(`${r.dir}: 0 件 · 未采集（无交付物，不进分母）`);
+        continue;
+      }
       console.log(`${r.dir}: ${r.count} 件 · 服从 ${r.avg.compliance} · 行动 ${r.avg.action} · 插件能力 ${r.avg.capability} · 总分 ${r.avg.total} → ${r.verdict.total}`);
     }
     if (mdIdx >= 0) {
@@ -331,6 +491,11 @@ if (argv[0] === "--selftest") {
   console.log(`\n均分：服从 ${a.compliance} · 行动 ${a.action} · 插件能力 ${a.capability} · 总分 ${a.total}/${AXES.totalMax}` +
     `（及格 ${AXES.totalPass} · 期望 ${AXES.totalTarget}）→ ${report.verdict.total}`);
   for (const r of report.rows) for (const n of r.notes.slice(0, 2)) console.log(`  · ${r.file} — ${n}`);
+  if (report.decayAxis) {
+    const d = report.decayAxis;
+    console.log(`衰减轴（instrument 14）：${d.rounds} 轮 · 推进 ${d.advance.join("→")} · 比值 ${d.ratio} · ${d.score === null ? "未采集" : `${d.score}/100 → ${verdict(d.score, DECAY.pass, DECAY.target)}`}`);
+    for (const n of d.notes) console.log(`  · ${n}`);
+  }
   if (outIdx >= 0) {
     const p = argv[outIdx + 1];
     mkdirSync(dirname(p), { recursive: true });
