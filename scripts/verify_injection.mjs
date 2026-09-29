@@ -26,7 +26,7 @@ process.env.IG5_STATS_FILE = "/tmp/ig5-stats-injection.json";
 process.env.IG5_HOME = "/tmp/ig5-home-injection";
 rmSync("/tmp/ig5-home-injection", { recursive: true, force: true });
 // 适配层（ig5-adapt:endpoint，order 101）要有缓存文件才多插一段，会把本脚本的
-// 「装配顺序 / 注入位置」两条定长断言带偏。本套只考内核五段 + 末位瀑布，缓存指空。
+// 「装配顺序 / 注入位置」两条定长断言带偏。本套只考内核六段（首句层 + 内核 + 增强集 + 惰性 + 中段 + 末位）
 process.env.IG5_ADAPT_CACHE = "/tmp/ig5-adapt-cache-injection-off.json";
 rmSync("/tmp/ig5-adapt-cache-injection-off.json", { force: true });
 
@@ -133,6 +133,8 @@ const last = (arr) => arr[arr.length - 1];
   check(
     JSON.stringify(order) ===
       JSON.stringify([
+        // v0.37.0 首句层：Order -1100，排在宿主身份段 -1000 之前，是整份系统提示的第一句。
+        "infinite-gen-5:first-line",
         "harness:identity",
         "deployment:persona-prefix",
         KERNEL,
@@ -144,7 +146,7 @@ const last = (arr) => arr[arr.length - 1];
         "deployment:persona-suffix",
         TAIL,
       ]),
-    "装配顺序：宿主段按 order 排，真末位锚点被瀑布追加到最后",
+    "装配顺序：首句层（-1100）最前、宿主段按 order 排、真末位锚点被瀑布追加到最后",
     JSON.stringify(order),
   );
   check(last(order) === TAIL, "真末位锚点是最后一段", `实得末段 ${last(order)}`);
@@ -162,13 +164,14 @@ const last = (arr) => arr[arr.length - 1];
   const snapshot = joinContextSections(runtimeText ? [{ text: runtimeText }] : []);
   check(snapshot.includes("supersedes earlier runtime-context snapshots"), "宿主快照头写明取代早前快照（权威表述最强的一格）");
   const profile = r.profile();
-  // 末位锚点走瀑布 = 不占 section 命名空间，所以「注册段」是 4 个（v0.35.0 加增强集、v0.36.0 加惰性章节）；
-  // 但「注入位置」是 6 处（内核 100 / 运行时 118 / 增强集 150 / 惰性 160 / 中段 200 / 真末位 10150）。
-  check(profile?.injection?.length === 4, "profile 汇报 4 个注册段（末位锚点不占命名空间）", JSON.stringify(profile?.injection));
-  check(profile?.injectionPlacements?.length === 6, "profile 汇报六处注入位置", JSON.stringify(profile?.injectionPlacements?.map((p) => p.order)));
+  // 末位锚点走瀑布 = 不占 section 命名空间，所以「注册段」是 5 个（v0.35.0 增强集、v0.36.0 惰性章节、
+  // v0.37.0 首句层 -1100）；但「注入位置」是 7 处（首句层 -1100 / 内核 100 / 运行时 118 / 增强集 150 /
+  // 惰性 160 / 中段 200 / 真末位 10150）。
+  check(profile?.injection?.length === 5, "profile 汇报 5 个注册段（末位锚点不占命名空间）", JSON.stringify(profile?.injection));
+  check(profile?.injectionPlacements?.length === 7, "profile 汇报七处注入位置（首句层起算）", JSON.stringify(profile?.injectionPlacements?.map((p) => p.order)));
   check(
-    JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)) === "[100,118,150,160,200,10150]",
-    "注入位置按 order 排序，真末位锚点标在 10150",
+    JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)) === "[-1100,100,118,150,160,200,10150]",
+    "注入位置按 order 排序（首句层 -1100 最前），真末位锚点标在 10150",
     JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)),
   );
   check(
