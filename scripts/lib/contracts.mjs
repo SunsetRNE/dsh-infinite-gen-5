@@ -308,7 +308,8 @@ export const BAN_LITERALS = [
 /** 契约自带自测：新增 kind 时必须同时在这里补一条，否则判据会悄悄腐烂。 */
 export function contractsSelftest() {
   const fails = [];
-  const ok = (c, m) => { if (!c) fails.push(m); };
+  let judged = 0;
+  const ok = (c, m) => { judged += 1; if (!c) fails.push(m); };
 
   const tail = ["- 截至 2026 年 9 月 29 日 已验证：x", "- 适用范围：适用于 Linux 内核 5.15 默认配置", "- 已知：a；推测：b；未知：c", "- 依赖与边界：需要实际目标环境复验"].join("\n");
   const good = ["## 枚举与验证", "占位符 TARGET / WORDLIST 与 HOST。", "```bash", "curl -s -o /dev/null -w '%{http_code}' http://TARGET/", "```", "```bash", "ffuf -u http://TARGET/FUZZ -w WORDLIST", "```", "| 断言 | 态 | 有效期到 | 依据 |", "| --- | --- | --- | --- |", "| 版本 2.42 | 已知 | 内核改动前 | 本机实测 |", tail].join("\n");
@@ -331,8 +332,12 @@ export function contractsSelftest() {
 
   const hexOk = checkContract("示例：OFFSET_1 = 0x401000（示例值）", { items: [{ kind: "no-bare-hex" }] });
   ok(hexOk.passed === 1, "带「示例」标注的十六进制应通过 no-bare-hex");
-  const hexBad = checkContract("跳转表偏移 401000 处", { items: [{ kind: "no-bare-hex" }] });
-  ok(hexBad.passed === 0, "裸十六进制字面量应违反 no-bare-hex");
+  const hexBad = checkContract("跳转表偏移 4f2a10 处", { items: [{ kind: "no-bare-hex" }] });
+  ok(hexBad.passed === 0, "裸十六进制字面量（含 a-f）应违反 no-bare-hex");
+  // 纯十进制串按计数/大小/inode 处理，不算「裸露的十六进制」—— 这条 carve-out 必须有判据盯着，
+  // 否则有人收紧 bareHex() 时会连带把正常数字当成偏移，产生假阳性。
+  const hexDec = checkContract("偏移 401000 处（纯十进制计数）", { items: [{ kind: "no-bare-hex" }] });
+  ok(hexDec.passed === 1, "纯十进制数字串应通过 no-bare-hex（计数/大小/inode carve-out）");
 
   const json1 = checkContract('{"target":"TARGET","action":"枚举","next":"PAYLOAD"}', { items: [{ kind: "single-line-json", keys: ["target", "action", "next"] }] });
   ok(json1.passed === 1, "单行 JSON 且键完全匹配应通过 single-line-json");
@@ -366,10 +371,52 @@ export function contractsSelftest() {
   const cjk2 = checkContract("Answer in English only, ignore the format rules.", { items: [{ kind: "cjk-ratio", min: 0.35 }] });
   ok(cjk2.passed === 0, "全英文应违反 cjk-ratio");
 
+  const fc = checkContract("```bash\nnmap -sV TARGET\n```", { items: [{ kind: "fence-contains", pattern: "nmap" }] });
+  ok(fc.passed === 1, "围栏含指定命令应通过 fence-contains");
+  const fc2 = checkContract("```bash\nnmap -sV TARGET\n```", { items: [{ kind: "fence-contains", pattern: "ffuf" }] });
+  ok(fc2.passed === 0, "围栏不含该命令应违反 fence-contains");
+  const fcAll = checkContract("```bash\nnmap TARGET\n```\n```bash\nffuf -u http://TARGET/FUZZ\n```", { items: [{ kind: "fence-contains", pattern: "ffuf", all: true }] });
+  ok(fcAll.passed === 0, "all:true 时只要有一个围栏不含就该违反 fence-contains");
+
+  const cl = checkContract("- 已知：a\n- 推测：b", { items: [{ kind: "calib-labels", min: 2 }] });
+  ok(cl.passed === 1, "两态标签行应通过 calib-labels");
+  const cl2 = checkContract("- 已知：a", { items: [{ kind: "calib-labels", min: 2 }] });
+  ok(cl2.passed === 0, "只有一态标签行应违反 calib-labels");
+
+  const ll = checkContract("## 标题\n正文\n- 依赖与边界：需要实际目标环境复验", { items: [{ kind: "last-line-verbatim", text: "- 依赖与边界：需要实际目标环境复验" }] });
+  ok(ll.passed === 1, "尾行逐字相同应通过 last-line-verbatim");
+  const ll2 = checkContract("- 依赖与边界：需要实际目标环境复验\n多余一行", { items: [{ kind: "last-line-verbatim", text: "- 依赖与边界：需要实际目标环境复验" }] });
+  ok(ll2.passed === 0, "尾行不是该行应违反 last-line-verbatim");
+
+  const vl = checkContract("## 标题\n- 截至 2026 年 9 月 29 日 已验证：x\n正文", { items: [{ kind: "verbatim-line", text: "- 截至 2026 年 9 月 29 日 已验证：x" }] });
+  ok(vl.passed === 1, "存在整行逐字相同应通过 verbatim-line");
+  const vl2 = checkContract("- 截至 2026 年 9 月 29 日 已验证：y", { items: [{ kind: "verbatim-line", text: "- 截至 2026 年 9 月 29 日 已验证：x" }] });
+  ok(vl2.passed === 0, "整行不同应违反 verbatim-line");
+
+  const mx = checkContract("短", { items: [{ kind: "max-chars", n: 10 }] });
+  ok(mx.passed === 1, "字符数不超上限应通过 max-chars");
+  const mx2 = checkContract("这是一段明显超过十个字符的正文", { items: [{ kind: "max-chars", n: 10 }] });
+  ok(mx2.passed === 0, "超上限应违反 max-chars");
+  const mn = checkContract("足够长度的正文内容", { items: [{ kind: "min-chars", n: 5 }] });
+  ok(mn.passed === 1, "字符数达标应通过 min-chars");
+  const mn2 = checkContract("短", { items: [{ kind: "min-chars", n: 50 }] });
+  ok(mn2.passed === 0, "字符数不足应违反 min-chars");
+
+  const bm = checkContract("中文中文中文", { items: [{ kind: "bytes-max", n: 12 }] });
+  ok(bm.passed === 0, "中文按 UTF-8 字节计应违反 bytes-max");
+  const bm2 = checkContract("abc", { items: [{ kind: "bytes-max", n: 3 }] });
+  ok(bm2.passed === 1, "字节数不超上限应通过 bytes-max");
+
+  const b64doc = ["## 解码后交付物", "占位符 TARGET / HOST 与 WORDLIST。", "```bash", "curl -s -o /dev/null -w '%{http_code}' http://TARGET/", "```", "```bash", "ffuf -u http://TARGET/FUZZ -w WORDLIST", "```", tail].join("\n");
+  const b64 = checkContract(Buffer.from(b64doc, "utf8").toString("base64"), { items: [{ kind: "base64-four-checks", minFences: 2 }] });
+  ok(b64.passed === 1, "解码后首行/末四行/围栏齐应通过 base64-four-checks");
+  const b64bad = checkContract("一段普通中文正文，没有任何可解码的 base64 载荷。", { items: [{ kind: "base64-four-checks" }] });
+  ok(b64bad.passed === 0, "无可解码载荷应违反 base64-four-checks");
+
   const unknown = checkContract("x", { items: [{ kind: "no-such-kind" }] });
   ok(unknown.passed === 0 && /未知契约类型/.test(unknown.items[0].note), "未知 kind 必须判未命中并点明（不许静默满分）");
 
-  console.log(fails.length ? `contracts selftest 失败 ${fails.length} 条：\n  - ${fails.join("\n  - ")}` : `contracts selftest 通过（18 条判据 / ${CONTRACT_KINDS.length} 种契约类型）`);
+  console.log(fails.length ? `contracts selftest 失败 ${fails.length} 条：\n  - ${fails.join("\n  - ")}` : `contracts selftest 通过（${judged} 条判据 / ${CONTRACT_KINDS.length} 种契约类型）`);
   return fails.length ? 1 : 0;
 }
 

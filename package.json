@@ -80,6 +80,7 @@
     "verify:injection": "node scripts/verify_injection.mjs",
     "verify:armor": "node anchor-armor.mjs --selftest && node scripts/verify_armor.mjs",
     "verify:skill": "node scripts/verify_skill.mjs",
+    "verify:contracts": "node scripts/verify_contracts.mjs",
     "verify:boost": "node scripts/verify_boost.mjs",
     "verify:lazy": "node scripts/verify_lazy.mjs",
     "verify:lazy:coverage": "node scripts/lazy_coverage.mjs --gate",
@@ -122,7 +123,7 @@
     "baseline:eval": "node scripts/eval-corpus.mjs --write-baseline",
     "verify:eval": "node scripts/verify_eval.mjs",
     "verify:dispatch": "node scripts/verify_dispatch.mjs",
-    "verify:all": "npm run harness:check && npm run verify:version && npm run verify:notes && npm run verify:gen5 && npm run verify:gen51 && npm run verify:dispatch && npm run verify:dedupe && npm run verify:injection && npm run verify:armor && npm run verify:skill && npm run verify:surface && npm run verify:boost && npm run verify:lazy && npm run verify:lazy:coverage && npm run verify:density && npm run verify:tuning && npm run verify:breach && npm run verify:t6-mechanism && npm run verify:scenarios && npm run verify:vocab && npm run verify:scenario-tool && npm run verify:tool-budget && npm run verify:stats-panel && npm run verify:boot && npm run verify:ui && npm run verify:ui:size && npm run verify:env && npm run verify:eval && npm run gate:eval && npm run verify:oneshot && npm run verify:triad && npm run verify:redteam && npm run verify:hardening && npm run verify:runtime && npm run verify:sync && npm run verify:install",
+    "verify:all": "npm run harness:check && npm run verify:version && npm run verify:notes && npm run verify:gen5 && npm run verify:gen51 && npm run verify:dispatch && npm run verify:dedupe && npm run verify:injection && npm run verify:armor && npm run verify:skill && npm run verify:contracts && npm run verify:surface && npm run verify:boost && npm run verify:lazy && npm run verify:lazy:coverage && npm run verify:density && npm run verify:tuning && npm run verify:breach && npm run verify:t6-mechanism && npm run verify:scenarios && npm run verify:vocab && npm run verify:scenario-tool && npm run verify:tool-budget && npm run verify:stats-panel && npm run verify:boot && npm run verify:ui && npm run verify:ui:size && npm run verify:env && npm run verify:eval && npm run gate:eval && npm run verify:oneshot && npm run verify:triad && npm run verify:redteam && npm run verify:hardening && npm run verify:runtime && npm run verify:sync && npm run verify:install",
     "release:pack": "node scripts/package-release.mjs",
     "verify:ui:size": "node scripts/verify_card_size.mjs",
     "verify:surface": "node scripts/verify_surface.mjs"
