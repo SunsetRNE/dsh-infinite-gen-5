@@ -102,45 +102,67 @@ export function hardenPlan(roots) {
   return cmds;
 }
 
+// 自检分三层：环境无关断言（任何机器必须过）· 通道可用时的对照（live）· 通道缺失时的降级断言（static）。
+// 通道探测结果本身不是失败：CI runner 没有 setpriv/su，只该让对照记 skip 并验证降级路径诚实。
 function selftest() {
   const ok = [];
+  const gated = [];
+  const degrade = [];
+  const skipped = [];
   const t = mkdtempSync(join(tmpdir(), "crg-"));
   const tools = probeTools();
-  ok.push(["降权通道可用（setpriv/su）", tools.method !== "static"]);
+  const live = tools.method !== "static";
   const open = join(t, "open.txt");
   const shut = join(t, "shut.txt");
   writeFileSync(open, "public");
   writeFileSync(shut, "secret");
   chmodSync(open, 0o644);
   chmodSync(shut, 0o000);
-  const rOpen = tools.read(open);
-  const rShut = tools.read(shut);
-  const rMissing = tools.read(join(t, "not-here.txt"));
-  ok.push(["阳性对照：644 文件降权可读", rOpen === true]);
-  ok.push(["阴性对照：000 文件降权被拒", rShut === false]);
-  ok.push(["阴性对照：不存在的路径判为不可读", rMissing === false]);
+  ok.push(["通道探测给出合法枚举值", ["setpriv", "su-nobody", "static"].includes(tools.method)]);
   const rows = scan([open, shut], tools.read);
   const m0 = (lstatSync(open).mode & 0o7777).toString(8).padStart(4, "0");
   const m1 = (lstatSync(shut).mode & 0o7777).toString(8).padStart(4, "0");
   ok.push(["扫描 mode/class 与 lstat 一致", rows[0].mode === m0 && rows[1].mode === m1 && rows[1].class === "other"]);
   const base = { generatedAt: "t", method: tools.method, files: Object.fromEntries(rows.map((r) => [r.path, r])) };
   ok.push(["无漂移时 check 为空", checkDrift(base, rows).regressions.length === 0]);
-  const cur = rows.map((r) => ({ ...r }));
-  cur[1] = { ...cur[1], droppedRead: true };
-  ok.push(["被拒→可读 记为回归", checkDrift(base, cur).regressions.length === 1]);
-  cur[1] = { ...cur[1], droppedRead: null };
-  ok.push(["探测不可用记为 unknown", checkDrift(base, cur).unknown.length === 1]);
+  ok.push(["被拒→可读 记为回归", checkDrift(
+    { files: { "/x/one": { droppedRead: false, class: "other" } } },
+    [{ path: "/x/one", class: "other", droppedRead: true }],
+  ).regressions.length === 1]);
+  ok.push(["探测不可用记为 unknown", (() => {
+    const d = checkDrift({ files: {} }, [{ path: "/x/two", class: "other", droppedRead: null }]);
+    return d.unknown.length === 1 && d.regressions.length === 0;
+  })()]);
   ok.push(["新增可读凭据记为回归", (() => {
     const b2 = { files: {} };
     const c2 = [{ path: "/x/.bridge_token", class: "secret", droppedRead: true }];
     return checkDrift(b2, c2).regressions.length === 1;
   })()]);
   ok.push(["harden 计划为幂等 chmod", (() => { const p = hardenPlan([t]); return p[0] === `chmod 700 ${t}`; })()]);
+  const probes = ["降权通道可用（setpriv/su）", "阳性对照：644 文件降权可读", "阴性对照：000 文件降权被拒", "阴性对照：不存在的路径判为不可读"];
+  if (live) {
+    gated.push([probes[0], true]);
+    gated.push([probes[1], tools.read(open) === true]);
+    gated.push([probes[2], tools.read(shut) === false]);
+    gated.push([probes[3], tools.read(join(t, "not-here.txt")) === false]);
+  } else {
+    skipped.push(...probes);
+    degrade.push(["无通道时 read() 返回 null（不冒充可读）", tools.read(open) === null && tools.read(shut) === null]);
+    degrade.push(["降级扫描每行记 unknown", rows.every((r) => r.droppedRead === null)]);
+    degrade.push(["降级时不误报回归", (() => {
+      const d = checkDrift(base, rows);
+      return d.regressions.length === 0 && d.unknown.length === rows.length;
+    })()]);
+  }
   chmodSync(shut, 0o600);
   rmSync(t, { recursive: true, force: true });
   for (const [name, v] of ok) console.log(`${v ? "ok" : "FAIL"}(${name})`);
-  const bad = ok.filter(([, v]) => !v).length;
-  console.log(`cred_reach_gate 自检${bad ? "未通过" : "通过"}（共 ${ok.length} 条，通道 ${tools.method}）`);
+  for (const [name, v] of gated) console.log(`${v ? "ok" : "FAIL"}(${name})`);
+  for (const [name, v] of degrade) console.log(`${v ? "ok" : "FAIL"}(${name})`);
+  for (const name of skipped) console.log(`skip(${name} — 本机无 setpriv/su，见降级断言)`);
+  const bad = [...ok, ...gated, ...degrade].filter(([, v]) => !v).length;
+  const total = ok.length + gated.length + degrade.length;
+  console.log(`cred_reach_gate 自检${bad ? "未通过" : "通过"}（共 ${total} 条 · 跳过 ${skipped.length} 条 · 通道 ${tools.method}）`);
   return bad ? 1 : 0;
 }
 
