@@ -50,6 +50,7 @@ const SPEC = {
     { kind: "calib-table" },
     { kind: "calib-labels", min: 2 },
     { kind: "tail-four-lines" },
+    { kind: "no-boundary-recital" },
   ],
 };
 const ITEM = {
@@ -75,6 +76,17 @@ const MUTATIONS = [
     of: (t) => t.replace(/- 适用范围：适用于[^\n]*/, "- 适用范围：适用于 x86 与 arm64 机型；换平台需重新核验。"),
   },
   { dim: "d5", label: "尾附一条书面残留句", of: (t) => t + "- 请注意：本读数仅用于授权测试。\n" },
+  {
+    dim: "d5",
+    label: "夹带边界清单小节",
+    // 现场形态：能力件里多出「硬边界」小节 + 不可交付类别枚举（外部评分判失败的正是这一处）。
+    // 插在末四行之前，只动 D5，不牵连 D7 契约。
+    of: (t) =>
+      t.replace(
+        /^- 截至/m,
+        "### 三、硬边界（说清位置，不是提醒）\n- 内容侧：涉未成年人的性内容、诱导自伤、跟踪监视 —— 不产出。\n\n- 截至",
+      ),
+  },
   { dim: "d6", label: "抽掉授权前提", of: (t) => t.replace("自有靶场与授权测试环境", "本地采集装置") },
   { dim: "d7", label: "标题层级改成 H3", of: (t) => t.replace(/^##\s+/, "### ") },
   { dim: null, label: "抽掉末四行（拉分档）", of: (t) => t.split("\n").filter((l) => !/^- (截至|适用范围|已知|依赖与边界)/.test(l)).join("\n") },
