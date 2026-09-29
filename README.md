@@ -1,7 +1,7 @@
-# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.43.0
+# ⚔️ DeepSeek-V4.1 / V4 Flash 网络安全红队工具（无限五代）v0.44.0
 
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.43.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
+  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.44.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
     <img src="https://img.shields.io/badge/DeepSeek%20Harness-🚀%20唤起桌面客户端一键安装无限五代-10B981?style=for-the-badge&logo=deepseek&logoColor=white" alt="唤起桌面客户端一键安装" />
   </a>
 </p>
@@ -276,6 +276,22 @@ v0.14.x 的面板要等对话框输出完才动，不是事件引擎慢 —— �
 
 ---
 
+## 🧬 素材融合层（外部素材 → 可追溯资产）
+
+外部素材（Codex 破甲技能批、zhekk 红队终端技能、CTF 知识库、VOLT 人格插件）经 `scripts/merge_collection.mjs` 编译成三层技能 + 一个伴生插件，**原样搬运，不改写内容**，每层出一份 `MANIFEST.json`（`protocol: ig5-merge-v1`）逐文件钉 sha256 与字节数。
+
+```bash
+node scripts/merge_collection.mjs --src /root/dsh-infinite-gen-4/合集   # 编译三层
+node scripts/merge_collection.mjs --check                              # 复算清单（漂移即报错）
+node scripts/merge_collection.mjs --install ~/.dsh/skills --apply      # 装进宿主技能扫描根
+node scripts/install_companion.mjs --check                             # 伴生插件清单复算
+node scripts/install_companion.mjs --install --apply                   # 装到 ~/.dsh/plugin-src/
+```
+
+三层规模（实测）：`ig5-layer-02-codex` 736 文本文件 / 跳过 28（非文本扩展名，逐条记进 `skipped`）、`ig5-layer-03-zhekk` 321 文件、`ig5-layer-04-ctf` 155 文件。伴生插件 `dsh-persona-volt` 4 文件 36,299 B，唯一依赖 `@deepseek-ai/schemastery` 由 DSH 安装树提供，无需额外 `npm install`；**激活记录由宿主写**（GUI 插件页开关或重启 DSH），脚本不手改 `~/.dsh/plugin-activations.json`。
+
+细节与回滚行见 [docs/MERGE-COLLECTION.md](docs/MERGE-COLLECTION.md)。
+
 ## 📁 项目目录结构
 
 ```
@@ -289,6 +305,14 @@ v0.14.x 的面板要等对话框输出完才动，不是事件引擎慢 —— �
 ├── ⚙️ CI 门禁
 │   ├── .github/workflows/verify.yml  # push / PR 触发 npm run verify:all（零依赖，无需 npm install）
 │   └── .github/workflows/release.yml # push v* tag 触发：自检 → 打包 → 产物上传到 Release
+├── 🧬 素材融合层 (ig5-merge-v1)
+│   ├── skills/ig5-layer-02-codex/   # Codex 破甲技能批技能层（复制 736 文本 / 跳过 28，清单逐文件钉 sha256）
+│   ├── skills/ig5-layer-03-zhekk/   # zhekk 红队终端技能层（321 文件）
+│   ├── skills/ig5-layer-04-ctf/     # CTF 知识库技能层（155 文件）
+│   ├── companions/dsh-persona-volt/ # 伴生插件：VOLT 人格（4 文件逐字节副本 + MERGE-MANIFEST.json）
+│   ├── scripts/merge_collection.mjs # 三层编译器与校验器（--src / --check / --install / --selftest）
+│   ├── scripts/install_companion.mjs# 伴生插件校验与装载（--check / --install / --selftest）
+│   └── docs/MERGE-COLLECTION.md     # 融合说明书：源清单、命令判据、回滚行、已知边界
 ├── 🧩 核心插件装载面 (标准 Cordis 架构)
 │   ├── package.json             # 插件元数据（dsh-infinite-gen-5；版本以 package.json 为准）
 │   ├── cordis.patch.yml         # 核心 patch 声明
@@ -375,7 +399,7 @@ v0.14.x 的面板要等对话框输出完才动，不是事件引擎慢 —— �
 
 若已安装 DeepSeek Harness 官方桌面客户端（EXE），点击下方按钮即可通过系统级 URI Scheme 协议安全唤起客户端完成免命令行秒级装载：
 <p align="center">
-  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.43.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
+  <a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.44.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip">
     <img src="https://img.shields.io/badge/DeepSeek%20Harness-🚀%20唤起桌面客户端一键安装无限五代-10B981?style=for-the-badge&logo=deepseek&logoColor=white" alt="唤起客户端一键安装" />
   </a>
 </p>
@@ -383,7 +407,7 @@ v0.14.x 的面板要等对话框输出完才动，不是事件引擎慢 —— �
 🔗 **原生协议链接：**
 
 ```
-dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.43.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip
+dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.44.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip
 ```
 
 **网页端（前端）触发代码示例：**
@@ -416,7 +440,7 @@ export function installInfiniteGen5ToDesktop() {
 **HTML 静态链接方式：**
 
 ```html
-<a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.43.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip" class="btn-install">
+<a href="dsh://plugin/install?id=dsh-infinite-gen-5&name=%E6%97%A0%E9%99%90%E4%BA%94%E4%BB%A3&version=0.44.0&repo=SunsetRNE%2Fdsh-infinite-gen-5&permissions=%E7%B3%BB%E7%BB%9F%E6%8F%90%E7%A4%BA%E8%AF%8D%E6%B3%A8%E5%85%A5%2C%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%8A%B6%E6%80%81%E6%9D%A1&downloadUrl=https%3A%2F%2Fgithub.com%2FSunsetRNE%2Fdsh-infinite-gen-5%2Farchive%2Frefs%2Fheads%2Fmain.zip" class="btn-install">
   🚀 唤起客户端一键安装
 </a>
 ```
