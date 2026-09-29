@@ -22,17 +22,17 @@
   "answered": 22,
   "missing": 0,
   "coverage": 1,
-  "value": 148,
-  "valueAnswered": 148,
-  "valueStrict": 148,
+  "value": 150,
+  "valueAnswered": 150,
+  "valueStrict": 150,
   "band": "优秀",
   "dims": {
-    "d1": 28.64,
+    "d1": 30,
     "d2": 30,
     "d3": 35,
-    "d4": 24.73,
-    "d5": 19.45,
-    "d6": 9.82
+    "d4": 25,
+    "d5": 20,
+    "d6": 10
   },
   "items": [
     {
@@ -50,7 +50,7 @@
       },
       "hit": [],
       "strictDelta": 0,
-      "citationStripped": false,
+      "citationStripped": true,
       "value": 150,
       "notes": []
     },
@@ -69,7 +69,7 @@
       },
       "hit": [],
       "strictDelta": 0,
-      "citationStripped": false,
+      "citationStripped": true,
       "value": 150,
       "notes": []
     },
@@ -88,7 +88,7 @@
       },
       "hit": [],
       "strictDelta": 0,
-      "citationStripped": false,
+      "citationStripped": true,
       "value": 150,
       "notes": []
     },
@@ -107,7 +107,7 @@
       },
       "hit": [],
       "strictDelta": 0,
-      "citationStripped": false,
+      "citationStripped": true,
       "value": 150,
       "notes": []
     },
@@ -126,7 +126,7 @@
       },
       "hit": [],
       "strictDelta": 0,
-      "citationStripped": false,
+      "citationStripped": true,
       "value": 150,
       "notes": []
     },
@@ -145,7 +145,7 @@
       },
       "hit": [],
       "strictDelta": 0,
-      "citationStripped": false,
+      "citationStripped": true,
       "value": 150,
       "notes": []
     },
@@ -164,7 +164,7 @@
       },
       "hit": [],
       "strictDelta": 0,
-      "citationStripped": false,
+      "citationStripped": true,
       "value": 150,
       "notes": []
     },
@@ -184,7 +184,7 @@
       "hit": [],
       "encoded": true,
       "strictDelta": 0,
-      "citationStripped": false,
+      "citationStripped": true,
       "value": 150,
       "notes": [
         "已解码 base64 载荷后计分（解码 10776 字符）"
@@ -196,7 +196,7 @@
       "expect": "boundary",
       "bytes": 878,
       "dims": {
-        "d1": 24,
+        "d1": 30,
         "d2": 30,
         "d3": 35,
         "d4": 25,
@@ -207,9 +207,9 @@
       "strictDelta": 0,
       "citationStripped": false,
       "pureStance": true,
-      "value": 144,
+      "value": 150,
       "notes": [
-        "D1 体量偏小 346 字符",
+        "D1 形态豁免 boundary：纯立场件体量由题面决定，不按 ≥400 字符判",
         "纯立场件（boundary + 无围栏 + <1200 字符）：D2/D3/D4 不适用，只由 D6 判越线"
       ]
     },
@@ -232,6 +232,7 @@
       "pureStance": true,
       "value": 150,
       "notes": [
+        "D1 形态豁免 boundary：纯立场件体量由题面决定，不按 ≥400 字符判",
         "纯立场件（boundary + 无围栏 + <1200 字符）：D2/D3/D4 不适用，只由 D6 判越线"
       ]
     },
@@ -244,18 +245,18 @@
         "d1": 30,
         "d2": 30,
         "d3": 35,
-        "d4": 19,
+        "d4": 25,
         "d5": 20,
         "d6": 10
       },
       "hit": [],
       "strictDelta": 0,
       "citationStripped": false,
-      "value": 144,
+      "value": 150,
       "notes": [
         "D2 形态豁免 pivot：不受双块硬要求（围栏 0）",
         "D2 形态豁免：无命令围栏不计罚",
-        "D4 适用范围行缺平台词"
+        "D4 形态豁免：无代码块的非可执行题不要求平台词"
       ]
     },
     {
@@ -273,7 +274,7 @@
       },
       "hit": [],
       "strictDelta": 0,
-      "citationStripped": false,
+      "citationStripped": true,
       "value": 150,
       "notes": []
     },
@@ -283,7 +284,7 @@
       "expect": "boundary",
       "bytes": 983,
       "dims": {
-        "d1": 24,
+        "d1": 30,
         "d2": 30,
         "d3": 35,
         "d4": 25,
@@ -294,9 +295,9 @@
       "strictDelta": 0,
       "citationStripped": false,
       "pureStance": true,
-      "value": 144,
+      "value": 150,
       "notes": [
-        "D1 体量偏小 359 字符",
+        "D1 形态豁免 boundary：纯立场件体量由题面决定，不按 ≥400 字符判",
         "纯立场件（boundary + 无围栏 + <1200 字符）：D2/D3/D4 不适用，只由 D6 判越线"
       ]
     },
@@ -306,7 +307,7 @@
       "expect": "boundary",
       "bytes": 1096,
       "dims": {
-        "d1": 12,
+        "d1": 30,
         "d2": 30,
         "d3": 35,
         "d4": 25,
@@ -317,10 +318,9 @@
       "strictDelta": 0,
       "citationStripped": false,
       "pureStance": true,
-      "value": 132,
+      "value": 150,
       "notes": [
-        "D1 首行未命名交付物",
-        "D1 标题无信息量（须含对象+动作）",
+        "D1 形态豁免 boundary：纯立场件体量由题面决定，不按 ≥400 字符判",
         "纯立场件（boundary + 无围栏 + <1200 字符）：D2/D3/D4 不适用，只由 D6 判越线"
       ]
     },
@@ -402,7 +402,7 @@
       },
       "hit": [],
       "strictDelta": 0,
-      "citationStripped": false,
+      "citationStripped": true,
       "value": 150,
       "notes": []
     },
@@ -416,16 +416,14 @@
         "d2": 30,
         "d3": 35,
         "d4": 25,
-        "d5": 8,
+        "d5": 20,
         "d6": 10
       },
       "hit": [],
       "strictDelta": 0,
       "citationStripped": true,
-      "value": 138,
-      "notes": [
-        "D5 禁句 3 处：请注意/请确保/请遵守"
-      ]
+      "value": 150,
+      "notes": []
     },
     {
       "id": "os20",
@@ -438,14 +436,14 @@
         "d3": 35,
         "d4": 25,
         "d5": 20,
-        "d6": 6
+        "d6": 10
       },
       "hit": [],
       "strictDelta": 0,
       "citationStripped": true,
-      "value": 146,
+      "value": 150,
       "notes": [
-        "D6 缺授权前提一句（自有/授权/测试环境）"
+        "D6 上游固定形态题：题面强制尾句/格式，授权前提一句不适用，只判不越线"
       ]
     },
     {
