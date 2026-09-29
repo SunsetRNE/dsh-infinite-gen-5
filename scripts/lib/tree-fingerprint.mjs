@@ -21,7 +21,7 @@
  */
 import { createHash } from "node:crypto";
 import { lstatSync, readdirSync, readFileSync, readlinkSync, realpathSync, statSync } from "node:fs";
-import { join, relative, sep } from "node:path";
+import { basename, dirname, join, relative, sep } from "node:path";
 
 const SNAPSHOT = ".dsha-dependencies.json";
 const MAX_ENTRIES = 100000;
@@ -89,12 +89,105 @@ export function codeSha256(root) {
   return hash.digest("hex");
 }
 
-/** 复刻 `current(root)['sha256']`：单节点依赖图再哈希一次。 */
-export function treeFingerprint(root) {
-  const top = realpathSync(root);
-  const pkg = JSON.parse(readFileSync(join(top, "package.json"), "utf8"));
-  const name = pkg.name;
-  const version = String(pkg.version ?? "");
-  const node = `{"codeSha256":"${codeSha256(top)}","dependencies":{},"name":${hostJson(name)},"version":${hostJson(version)}}`;
-  return createHash("sha256").update(`{${hostJson(top)}:${node}}`).digest("hex");
+/* ---------- 依赖图那一半（宿主 current() 的 edges + 多节点图） ---------- */
+
+const MAX_NODES = 2000;
+const MAX_EDGES = 50000;
+
+/** 宿主 Dependencies.current() 里的全局搜索目录，顺序即优先级。 */
+export function defaultGlobalDirs(env = process.env) {
+  const home = env.DSH_HOME || join(env.HOME || "/root", ".dsh");
+  return [
+    join(home, "node_modules"),
+    "/usr/local/lib/node_modules/@deepseek-ai/dsh/node_modules",
+    "/usr/local/lib/node_modules",
+  ];
+}
+
+const isFile = (path) => { try { return statSync(path).isFile(); } catch { return false; } };
+const isDir = (path) => { try { return statSync(path).isDir(); } catch { return false; } };
+
+/** 键排序 + ensure_ascii 的序列化（= json.dumps(sort_keys=True, separators=(',',':'))）。 */
+function stableJson(value) {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value).sort()
+      .map((key) => `${hostJson(key)}:${stableJson(value[key])}`).join(",")}}`;
+  }
+  return hostJson(value);
+}
+
+/** 复刻 backup-plugin-graph.py:21 resolve_module：先沿父链找 node_modules，再查全局目录。 */
+export function resolveModule(source, name, globalDirs = defaultGlobalDirs()) {
+  for (let parent = source; ; parent = dirname(parent)) {
+    if (basename(parent) !== "node_modules" && isFile(join(parent, "node_modules", name, "package.json"))) {
+      return realpathSync(join(parent, "node_modules", name));
+    }
+    if (dirname(parent) === parent) break;
+  }
+  for (const base of globalDirs) {
+    if (isFile(join(base, name, "package.json"))) return realpathSync(join(base, name));
+  }
+  return null;
+}
+
+/**
+ * 复刻 `current(root)['sha256']`：从 root 起解析依赖边，拼出多节点图再整体哈希一次。
+ * 节点 = {codeSha256, dependencies, name, version}；边 = 找到时 {kind, requested, target}
+ * （target 也进图），没找到时 {hostService, kind, missing, optional, requested}。
+ */
+export function treeFingerprint(root, options = {}) {
+  const globalDirs = options.globalDirs ?? defaultGlobalDirs();
+  const shared = new Set(globalDirs.filter(isDir).map((dir) => realpathSync(dir)));
+  const pending = [realpathSync(root)];
+  const queued = new Set(pending);
+  const graph = {};
+  while (pending.length) {
+    const source = pending.shift();
+    if (graph[source]) continue;
+    if (Object.keys(graph).length >= MAX_NODES) throw new Error(`插件依赖图超过审阅上限（>${MAX_NODES} 节点）`);
+    const pkg = JSON.parse(readFileSync(join(source, "package.json"), "utf8"));
+    const requirements = new Map();
+    for (const section of ["dependencies", "peerDependencies", "optionalDependencies"]) {
+      const declared = pkg[section] ?? {};
+      if (declared === null || typeof declared !== "object" || Array.isArray(declared)) {
+        throw new Error(`插件依赖声明必须是对象：${source} 的 ${section}`);
+      }
+      for (const [name, requested] of Object.entries(declared)) requirements.set(name, { requested, kind: section });
+    }
+    const optional = new Set(Object.keys(pkg.optionalDependencies ?? {}));
+    for (const [name, meta] of Object.entries(pkg.peerDependenciesMeta ?? {})) {
+      if (meta && typeof meta === "object" && meta.optional) optional.add(name);
+    }
+    const embedded = join(source, "node_modules");
+    if (isDir(embedded) && !shared.has(realpathSync(embedded))) {
+      for (const child of readdirSync(embedded)) {
+        const scoped = child.startsWith("@");
+        const names = scoped && isDir(join(embedded, child))
+          ? readdirSync(join(embedded, child)).map((sub) => `${child}/${sub}`)
+          : [child];
+        for (const name of names) {
+          if (isFile(join(embedded, name, "package.json")) && !requirements.has(name)) {
+            requirements.set(name, { requested: "*", kind: "bundled" });
+          }
+        }
+      }
+    }
+    const edges = {};
+    for (const [name, { requested, kind }] of [...requirements.entries()].sort(([a], [b]) => (a < b ? -1 : 1))) {
+      if (Object.keys(edges).length >= MAX_EDGES) throw new Error(`插件依赖图超过审阅上限（>${MAX_EDGES} 条边）`);
+      const target = resolveModule(source, name, globalDirs);
+      if (target === null) {
+        edges[name] = {
+          hostService: kind === "peerDependencies" && name.startsWith("@deepseek-ai/dsh-"),
+          kind, missing: true, optional: optional.has(name), requested,
+        };
+      } else {
+        edges[name] = { kind, requested, target };
+        if (!queued.has(target)) { queued.add(target); pending.push(target); }
+      }
+    }
+    graph[source] = { codeSha256: codeSha256(source), dependencies: edges, name: pkg.name, version: String(pkg.version ?? "") };
+  }
+  return createHash("sha256").update(stableJson(graph)).digest("hex");
 }
