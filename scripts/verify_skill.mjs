@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { homedir } from "node:os";
 import { CONTRACT_SHORT, FIRST_LINE_TEXT, COMPACTION_EVENT_TYPES } from "../anchor-armor.mjs";
+import { checkFrame, TRIGGER_WORDS, DEFAULT_FRAME as REPO_FRAME } from "./build_skill.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
@@ -70,6 +71,26 @@ if (!distExists && !installed.length) {
 } else {
   check(distExists, "dist 产物在场", distSkill);
   check(!!installed.length, "至少一个扫描根装上了技能", roots.map((r) => `${r.id}:${r.skillPresent ? "有" : "无"}`).join(" "));
+
+  // ---- 0. 仓内帧触发面（O1）：帧策略在仓库里，判据也在仓库里 ----
+  const repoFramePresent = existsSync(REPO_FRAME);
+  check(repoFramePresent, "仓内跟踪技能帧在场（skills/ig5-layer-01/SKILL.md）", REPO_FRAME);
+  if (repoFramePresent) {
+    const repoText = readBytes(REPO_FRAME).toString("utf8");
+    const fr = checkFrame(repoText);
+    check(fr.ok, "仓内帧满足触发面策略（中文场景词 / 无生成元信息 / 正文哈希）", fr.problems.join("; "));
+    check(fr.words.length >= 3, "仓内帧 whenToUse 命中中文场景词（≥3）", `命中 ${fr.words.length}/${TRIGGER_WORDS.length}：${fr.words.slice(0, 5).join(" / ")}`);
+    const descLine = repoText.split("\n").find((l) => l.startsWith("description:")) ?? "";
+    check(!/（\s*\d+\s*块\s*\/\s*\d+\s*字符\s*）/.test(descLine), "description 不含生成元信息「（N 块 / M 字符）」");
+    check(/^whenToUse: /m.test(repoText), "仓内帧带 whenToUse 行（宿主发现规则读它）");
+    if (distExists) {
+      const repoSha = sha(readBytes(REPO_FRAME));
+      const distSha = sha(readBytes(distSkill));
+      check(repoSha === distSha, "仓内帧与 dist 产物逐字节一致（无漂移）", `${repoSha.slice(0, 12)} vs ${distSha.slice(0, 12)}`);
+    } else {
+      skips.push(`dist 产物不在场（${distSkill}）—— 仓内帧仍受触发面策略约束`);
+    }
+  }
 
   // ---- 1. 契约同源（对 dist 产物判，与装没装无关）----
   if (distExists) {

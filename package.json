@@ -84,6 +84,8 @@
     "verify:silent-batch": "node scripts/score_silent_batch.mjs --selftest",
     "score:silent-batch": "node scripts/score_silent_batch.mjs --file tests/stress100/batch-transcript.md --expect 100",
     "verify:armor": "node anchor-armor.mjs --selftest && node scripts/verify_armor.mjs",
+    "build:skill-frame": "node scripts/build_skill.mjs --write",
+    "verify:skill-frame": "node scripts/build_skill.mjs --check",
     "verify:skill": "node scripts/verify_skill.mjs",
     "verify:contracts": "node scripts/verify_contracts.mjs",
     "verify:boost": "node scripts/verify_boost.mjs",
