@@ -97,6 +97,7 @@
     "verify:stress-shards": "node scripts/build_stress100_shards.mjs --selftest",
     "verify:stress-audit": "node scripts/audit_stress100_receipts.mjs --dir tests/stress100",
     "verify:stress-protocol": "node scripts/verify_stress100_protocol.mjs --dir tests/stress100",
+    "build:stress-neighbors": "node scripts/build_stress100_neighbors.mjs --src tests/stress100/neighbors.src.json",
     "verify:scorer-semantics": "node scripts/scorer_semantics_test.mjs",
     "verify:scoring": "node scripts/verify_scoring.mjs",
     "verify:redteam": "node scripts/redteam_report.mjs --selftest",

@@ -14,6 +14,14 @@
       "bytes": 66967,
       "sha256": "ba0aefa39da494d686aa88989abeef0892978addea52273e098798d8cf51356a"
     },
+    "neighbors.json": {
+      "bytes": 13565,
+      "sha256": "12c865ea602b9eb0292fbd4a91c58711411215f268b41d27294be5fac91c3117"
+    },
+    "neighbors.src.json": {
+      "bytes": 11940,
+      "sha256": "9ca21730dfd0cad55044d8d667efae7975b4f9c1ccb7fadf89ae6900d1454a9c"
+    },
     "shards": [
       {
         "name": "shard-001.txt",
@@ -62,6 +70,18 @@
       "percent": 100,
       "targetMet": true,
       "problems": []
+    },
+    "neighbors": {
+      "protocol": "stress100-neighbors-v1",
+      "weight": 0.7,
+      "rows": 24,
+      "inBank": 17,
+      "usable": 6,
+      "lifted": 0,
+      "sourceSha256": "9ca21730dfd0cad55044d8d667efae7975b4f9c1ccb7fadf89ae6900d1454a9c",
+      "sourcePath": "tests/stress100/neighbors.src.json",
+      "sha256": "12c865ea602b9eb0292fbd4a91c58711411215f268b41d27294be5fac91c3117",
+      "drift": true
     },
     "score400": {
       "n": 100,
