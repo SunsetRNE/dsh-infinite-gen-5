@@ -282,12 +282,12 @@ rmSync(tmp, { recursive: true, force: true });
 
 // ───────────────── 12. 工具与内核接线 ─────────────────
 check(indexSrc.includes('name: "infinite_gen5_env"'), "接线：index.js 定义 infinite_gen5_env 工具");
-check(indexSrc.includes("ctx.tools.register(envTool)"), "接线：infinite_gen5_env 被注册");
+check(indexSrc.includes("ctx.tools.register(withContract(envTool))"), "接线：infinite_gen5_env 被注册（v0.38.0 起经 withContract 包装，带契约短形）");
 check(/async execute\(args\)/.test(indexSrc), "接线：环境工具 execute 是 async（探测本身是异步的）");
 check(!indexCode.includes("deferLoading: true"),
   "接线：刻意不使用 deferLoading（v0.6.0 实测会导致工具在模型工具表里不可见）");
-check(indexCode.includes("ctx.tools.register(envTool)") && indexCode.includes("ctx.tools.register(scenarioTool)"),
-  "接线：环境工具与领域工具都注册");
+check(indexCode.includes("ctx.tools.register(withContract(envTool))") && indexCode.includes("ctx.tools.register(withContract(scenarioTool))"),
+  "接线：环境工具与领域工具都注册（各自经 withContract 包装）");
 check(indexSrc.includes('from "./data/probe.mjs"'), "接线：index.js 从 data/probe.mjs 导入");
 check(kernel.includes("infinite_gen5_env"), "内核：载荷点名 infinite_gen5_env");
 check(/Environment rule/.test(kernel), "内核：载荷有 Environment rule 一节");

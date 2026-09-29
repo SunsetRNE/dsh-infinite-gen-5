@@ -112,7 +112,7 @@ check(zh > 0 && en > 0, "双语覆盖", `zh=${zh} en=${en}`);
 const indexSrc = existsSync(INDEX_PATH) ? readFileSync(INDEX_PATH, "utf8") : "";
 mustContain(indexSrc, 'export const name = "dsh-infinite-gen-5"', "index.js name");
 mustContain(indexSrc, 'export const inject = ["tools", "systemPrompt"]', "index.js inject");
-mustContain(indexSrc, "ctx.tools.register(profileTool)", "工具: profile(元数据)");
+mustContain(indexSrc, "ctx.tools.register(withContract(profileTool))", "工具: profile(元数据，v0.38.0 起带契约短形)");
 mustContain(indexSrc, '"./prompts/infinite-gen-5.md"', "index.js 载入 Order 100 内核");
 mustContain(indexSrc, '"./prompts/infinite-gen-5.1-flash.md"', "index.js 载入 Order 200 镜像");
 mustContain(indexSrc, "infinite-gen-5:global-system-prompt", "注入槽位 Order 100");

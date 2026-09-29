@@ -204,7 +204,7 @@ check(kernel.includes("回执单行 JSON"), "内核写明回执形态");
 const indexSrc = readFileSync(join(ROOT, "index.js"), "utf8");
 check(indexSrc.includes("infinite_gen5_dispatch"), "工具已注册进插件");
 check(indexSrc.includes("./dispatch.mjs"), "插件 import 分发内核");
-check(indexSrc.includes("ctx.tools.register(dispatchTool)"), "注册点存在");
+check(indexSrc.includes("ctx.tools.register(withContract(dispatchTool))"), "注册点存在（v0.38.0 起经 withContract 包装，带契约短形）");
 
 if (failures.length) {
   console.log(JSON.stringify({ pass: passes.length, fail: failures.length, failures }, null, 2));
