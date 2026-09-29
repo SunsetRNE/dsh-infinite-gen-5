@@ -132,6 +132,21 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 `armorBlock()` / `injectArmor()`，插在 YAML 前置元数据之后）。技能里带的是同一份
 `FIRST_LINE_TEXT` 全文 + 7 条压缩事件名，不是近似描述 —— 装了技能就等于装了同源契约。
 
+#### 表面覆盖：契约短形进三本目录（v0.38.0）
+
+首句层是系统提示的一段，宿主裁剪段落时它会被一起裁掉。v0.38.0 把同一条契约压成
+**163 字符的短形**（`anchor-armor.mjs` 的 `CONTRACT_SHORT`，唯一定义处），同时写进三个
+**每轮都重发、且不随段落裁剪消失**的表面：
+
+| 表面 | 载体 | 落地方式 | 判据 |
+|---|---|---|---|
+| 工具目录 | 插件自有 6 个工具的 `description` | 注册点统一走 `withContract(tool)`（浅拷贝 + 幂等） | `npm run verify:surface`：6/6 工具 description 含短形 |
+| 技能目录 | `ig5-layer-01` 的 front-matter `description` | `build-skills.mjs` 把短形追加到 description 尾部（**不依赖技能被装载**） | 宿主每轮 available_skills 目录里能读到短形原文 |
+| 真末位锚点 | `order 10150` 段正文尾行 | `TAIL_ANCHOR_TEXT + "\n" + contractShort()` | 删掉全部 `infinite-gen-5:` 段落做对抗裁剪后，短形仍可见 |
+
+改动一处即全改：三个表面都从 `CONTRACT_SHORT` 取，门禁（`verify:surface` 19 条 ·
+`verify:skill` 16 条）逐表面断言在场与幂等。
+
 #### 运行期调参：八个开关不必改代码重发布
 
 优先级 **设置页（v0.13.0 起）> profile config > `IG5_*` 环境变量 > 文件内默认值**，各级覆盖就地写回

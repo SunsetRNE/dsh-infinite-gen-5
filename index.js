@@ -1286,10 +1286,10 @@ const scenarioTool = {
 const envTool = {
   name: "infinite_gen5_env",
   description:
-    "Probe the local runtime environment, read-only and side-effect free: OS/arch/container/uid, CPU/memory/disk limits, " +
-    "network reachability and proxies, package managers, installed language runtimes and common tools, kernel/process " +
-    "capabilities, and per-domain toolchain readiness with the exact install command for what is missing. " +
-    "Call with no arguments for the summary; use layers to narrow the probe (shape/resources/network/stock/capabilities/device/domains).",
+    "Probe the local runtime, read-only, no side effects: OS/arch/container/uid, CPU/memory/disk limits, " +
+    "network reachability + proxies, package managers, installed runtimes and common tools, kernel/process " +
+    "capabilities, and per-domain toolchain readiness with the install command for what is missing. " +
+    "No arguments = summary; layers narrows the probe (shape/resources/network/stock/capabilities/device/domains).",
   parameters: {
     type: "object",
     properties: {
