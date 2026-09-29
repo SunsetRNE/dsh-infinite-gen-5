@@ -11,6 +11,30 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.45.0
+
+**主题：根自述文件瘦身 + 文档中心化 + 工具面补齐「工具协议」真源（用户 m02324：「压缩第五代的项目根"自述文件"，其他描述通通挪到仓库文档文件夹下，然后强化补充相应的工具、补充相应的工具协议」）。**
+
+① **根 README 拆成「薄入口 + docs/ 正文」**：改前 707 行 / 63168 B、九个顶层节全挤在一份文件里；改后 **193 行 / 10033 B（−84.1% 字符）**，只留标题与徽标、速览表、合规定位指针、方式 1 安装段、速查验证、工具与协议入口、文档索引、版本沿革指针、维护速查、卸载、许可。其余正文按主题机械切片成 6 份（正文逐字保留、只在每份顶部加一行「由根 README 拆出」的出处行）：`docs/WHY-REDTEAMING.md` 1446 B、`docs/LEGAL.md` 3662 B、`docs/ARCHITECTURE.md` 22007 B、`docs/LAYOUT.md` 11006 B、`docs/INSTALL.md` 7118 B、`docs/MAINTENANCE.md` 13513 B，外加**冻结归档** `docs/README-FULL.md` 63356 B（拆分前整份 README 逐字存档，供老链接与考古）。切片用脚本做（正文逐字搬运，不做二次改写），链接按新所在层级重写（`docs/MERGE-COLLECTION.md` → `MERGE-COLLECTION.md`、`UPDATE.md` → `../UPDATE.md`）。
+
+② **冻结归档件机制**：`scripts/version-targets.mjs` 新增 `FROZEN_ARCHIVE_FILES`，`scripts/verify_version.mjs` 在「全仓不得硬写当前版本字面量」那一遍里把冻结件排除 —— 归档本来就是「当时那一版」的逐字记录，跟着改版号等于篡改历史。要留新存档就另存新文件，不覆盖旧的。
+
+③ **工具面：注册表 + 生成器 + 门禁三件（新）**。改前「有哪些工具、各自判据是什么」只散落在 `package.json` 的 110 条 npm 脚本与各文件头注释里，README 里甚至挂着两个**不存在**的引用（`data/tool-protocols.mjs` 与 `node scripts/tool_registry.mjs --list`）—— 属空头承诺，本轮一并改掉。
+
+- `scripts/tool-registry.mjs`（新，真源，协议 `ig5-tool-registry-v1`）：14 类分类表 + 9 条带理由的排除项 + 6 条命名协议；**用途现读文件头注释、能力现扫文件文本**，所以文档不会跟代码漂移。
+- `scripts/gen_tool_docs.mjs`（新）：渲染 `docs/TOOL-PROTOCOLS.md` 30190 B（工具 ABI 总则 + 命名协议注册表 + 逐分类清单 100 行 + 排除表 + 实测分布：带 `--json` 49 个 / `--selftest` 23 个 / `--apply` 8 个 / 有 npm 别名 80 个）与 `docs/INDEX.md` 8221 B（docs 全表 + 证据目录 + 根叙述件）。
+- `scripts/verify_tool_registry.mjs`（新，门禁）：查完整性（盘上每个 `scripts/**` 要么在册要么按理由排除）、路径存在、能力声明在文件里真出现、judge 引用的 npm 别名与脚本存在、协议字面量在定义处、两份生成文档与生成器输出**逐字节一致**、`docs/` 下每个 md 都在索引里；`--selftest` 注入伪造 flag 与漏登记项，断言审计必抓到。接线：`npm run tools:doc` / `npm run verify:tools`，`verify:all` 由 48 步变 **49 步**。
+
+④ **协议注册表从 4 条扩到 6 条**，且只登记「实现里有字面量 + 有消费者 + 有能真跑的判据」的名字：原有 `ig5-skill-frame-v1` / `ig5-merge-v1` / `ig5-companion-v1` / `stress100-neighbors-v1`，新增 `ig5-tool-registry-v1`（本表自身）与 `infinite-gen5/env-probe@1`（真源 `data/probe.mjs` 的 `ENV_SCHEMA`）。**没有独立协议常量的工具（400 分制、dispatch、惰性节…）不上表**，只注明「判据在脚本里」，不编造协议名。
+
+⑤ **门禁抓出来的两条真实缺陷（这就是它的价值）**：**(a)** 排除项初写成相对 `scripts/` 的 `lib/*`，门禁报「排除项指向不存在的文件」→ 统一为仓库相对路径；**(b)** 我把 `infinite-gen5/env-probe@1` 的定义处猜成 `scripts/probe-env.mjs`，门禁报「协议字面量不在定义处」→ 真源实为 `data/probe.mjs`。另有两条自伤已修：`--selftest` 的注入用例曾污染真实 failures 列表、生成器首版把 INDEX 链接写成 `docs/xxx.md`（从 `docs/` 出发会变成 `docs/docs/`）。
+
+⑥ **复验读数**：`npm run verify:tools` → 4 通过 / 0 失败（在册 100 个工具 · 排除 9 个文件 · 协议 6 条）；`node scripts/verify_version.mjs` → **27 通过 / 0 失败**（此前两条红：README 里的超额版本示例改占位符 `X.Y.Z`、拆出的归档件登记为冻结件）；`IG5_SKIP_LIVE_GOLDEN=1 npm run verify:all` → **EXIT=0**（49 步；首跑只红在 `verify:runtime` 的 `package.json` 指纹漂移 —— 仓库改了而运行态副本没跟上，`npm run sync:local:apply` 后复跑全绿）。
+
+## v0.37 – v0.44（叙述缺口：本段只留指针）
+
+这八版发版时**没有**在 `UPDATE.md` 写逐版叙述，属于已知文档债 —— 这里如实登记缺口，不用事后回忆补写（补写会把「记录当时」变成「事后编造」）。要查这几版改了什么，去两处机械来源：`CHANGELOG.md`（逐条提交，从 Conventional Commits 生成）与 git tag。已打的 tag（日期取自 git，2026-09-29）：`v0.37.0` `v0.37.1` `v0.38.0` `v0.38.1` `v0.38.2` `v0.38.3` `v0.38.4` `v0.38.5` `v0.38.6` `v0.42.1` `v0.43.0` `v0.44.0`。注意 tag 序列在 `v0.38.6` 与 `v0.42.1` 之间**有断档**（0.39–0.42.0 未打 tag），版本号跳号是既成事实，不回填。
+
 ## v0.36.4
 
 **主题：修掉用户圈出来的「来源标记溢出」+ 旋钮网格改响应式（手机单栏）+ 补一套能看见溢出的量测台。**

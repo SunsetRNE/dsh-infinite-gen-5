@@ -18,7 +18,13 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join, relative } from "node:path";
-import { VERSION_ANCHORS, PROSE_ALLOWED_FILES, SCAN_SKIP_DIRS, SCAN_EXTENSIONS } from "./version-targets.mjs";
+import {
+  VERSION_ANCHORS,
+  PROSE_ALLOWED_FILES,
+  FROZEN_ARCHIVE_FILES,
+  SCAN_SKIP_DIRS,
+  SCAN_EXTENSIONS,
+} from "./version-targets.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const abs = (f) => join(ROOT, f);
@@ -79,6 +85,8 @@ for (const file of DOC_FILES) {
 
 // ---- 4. 全仓无未登记的当前版本字面量 ----
 const known = new Set([...VERSION_ANCHORS.map((a) => a.file), ...PROSE_ALLOWED_FILES]);
+// 冻结归档件跳过扫描：它记的是「当时那一版」，不是当前版本指针（理由见 version-targets.mjs）。
+const frozen = new Set(FROZEN_ARCHIVE_FILES);
 const literal = new RegExp(`\\b${escapeRe(V)}\\b`);
 
 function walk(dir, acc = []) {
@@ -98,7 +106,7 @@ const unregistered = [];
 const scanned = walk(ROOT);
 for (const full of scanned) {
   const rel = relative(ROOT, full).split("\\").join("/");
-  if (known.has(rel)) continue;
+  if (known.has(rel) || frozen.has(rel)) continue;
   let text;
   try {
     text = readFileSync(full, "utf8");

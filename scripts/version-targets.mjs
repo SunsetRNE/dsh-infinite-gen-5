@@ -97,6 +97,13 @@ export const PROSE_ALLOWED_FILES = [
 // 把它们登记成锚点会让每次升版都被迫改写历史证据，所以整目录跳过。
 export const SCAN_SKIP_DIRS = [".git", "node_modules", "ui-preview", "runs", ".dsh", "dist", "tests"];
 
+// 冻结归档件：内容是「某个已发布版本的根 README 逐字存档」，用途是回溯当时写了什么。
+// 它与 PROSE_ALLOWED_FILES 的区别在方向：那些文件写的是**当前**版本（发版时必须跟着改），
+// 归档件写的是**当时**版本，发版时不该改 —— 改了就不再是存档，而是被追认的叙述。
+// 因此它既不登记为锚点（会被 bump 改写），也不参与「未登记字面量」扫描。
+// 约束：这些文件一旦入库就只能增补说明、不得重写正文；要更新存档就另存一份新文件。
+export const FROZEN_ARCHIVE_FILES = ["docs/README-FULL.md"];
+
 // 只扫这些后缀，避免把二进制、图片、用例产物当文本读。
 export const SCAN_EXTENSIONS = [
   ".js", ".mjs", ".cjs", ".json", ".md",
