@@ -146,9 +146,9 @@ export function redteamMarkdown(zones, meta = {}) {
   if (!risks.length) {
     L.push("未采集：没有区提交 findings.json 的 risks 台账。");
   } else {
-    L.push("| 优先级 | 区 | 风险 | 等级 | 依据 | 修复 |");
-    L.push("|---|---|---|---|---|---|");
-    for (const r of risks) L.push(`| P${r.priority} | ${r.zone} | ${r.title} | ${r.severity ?? "—"} | ${r.evidence ?? "—"} | ${r.fix ?? "—"} |`);
+    L.push("| 优先级 | 区 | 风险 | 等级 | 依据 | 修复 | 处置状态 |");
+    L.push("|---|---|---|---|---|---|---|");
+    for (const r of risks) L.push(`| P${r.priority} | ${r.zone} | ${r.title} | ${r.severity ?? "—"} | ${r.evidence ?? "—"} | ${r.fix ?? "—"} | ${r.status ?? "未处置"} |`);
   }
   L.push("");
   L.push("## 五、四态与边界");
@@ -210,7 +210,7 @@ function selftest() {
       zone: "r1",
       chain: [{ from: "SUID 命中", to: "提权面收敛", evidence: "权限位矩阵" }],
       iocs: [{ type: "file", value: "/usr/bin/mount", note: "SUID 位", state: "已知" }],
-      risks: [{ id: "R1-01", title: "能力集过宽", severity: "高", evidence: "CapEff 全位", fix: "按需裁剪 capability" }],
+      risks: [{ id: "R1-01", title: "能力集过宽", severity: "高", evidence: "CapEff 全位", fix: "按需裁剪 capability", status: "已修（verify:hardening 转绿）" }],
     }));
     const zones = [collectZone(zoneA, ZONES[0]), collectZone(zoneB, ZONES[2])];
     ok.push(["collectZone 读到产物", zones[0].report.count === 1 && zones[1].report.count === 1]);
@@ -225,6 +225,7 @@ function selftest() {
     ok.push(["攻击路径读法在场", md.includes("### 攻击路径读法") && md.includes("1. **r1**")]);
     ok.push(["IOC 进入报告", md.includes("/usr/bin/mount")]);
     ok.push(["风险进入 P1", md.includes("| P1 | r1 |")]);
+    ok.push(["风险处置状态进入报告", md.includes("| 处置状态 |") && md.includes("已修（verify:hardening 转绿）")]);
     const empty = [collectZone(join(root, "nope"), ZONES[7])];
     ok.push(["0 件区不进分母", empty[0].report.verdict.total === "未采集"]);
     ok.push(["0 件区报告不崩", redteamMarkdown(empty).includes("未采集")]);

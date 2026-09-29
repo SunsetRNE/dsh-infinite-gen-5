@@ -135,46 +135,46 @@
 
 ## 四、风险排序与修复优先级
 
-| 优先级 | 区 | 风险 | 等级 | 依据 | 修复 |
-|---|---|---|---|---|---|
-| P1 | r2 | 受信任根 CA 的私钥与根证书同容器落盘，容器内 root 可签发被信任证书 | 高 | root-ca-key.pem 1706 B / 600 / sha256_12 6770dba95f40，与 CN=billion-context MITM Root CA（notAfter 2036-09-25）同目录；combined-ca.pem 421140 B 已在信任链 | 私钥移出容器（宿主 keyring / 远端签发）；容器内只留证书不落私钥，或挂载为只读且 000 的签名服务代理 |
-| P1 | r3 | 环回绑定被同机通配代理旁路，不构成隔离边界 | 高 | 7890 免认证 CONNECT 到 127.0.0.1，两源实测取到 3090/3080/43795 响应 | 7890 加来源 ACL 或改绑 127.0.0.1/unix socket；把免认证 CONNECT 收敛为需口令 |
-| P1 | r5 | 宿主插件注入点无完整性校验（file: 依赖） | 高 | install.sh:126 直接拼接 file:../../plugins/<name>；install.sh:150-154 rm -rf + ln -sfn | 注入前比对 sha256 清单并阻断不匹配；改为带校验和的归档分发 |
-| P1 | r6 | 容器内五类面无落痕，动作事后不可复盘 | 高 | 通用/认证/审计三面判为不可检出；仅连接表瞬时条目与 JSON 状态文件 mtime 两处痕迹 | 留痕改由宿主侧承担：Android 内核 audit + netfilter 日志，或设备 logcat 抓桥请求 |
-| P1 | r7 | mode 位在本容器内不构成跨进程隔离：同 uid 进程可读全部 0600 凭据 | 高 | raw/nonpriv_test.txt：降权 nobody 读 9/9 个 0600 文件成功、被拒 0，并可在 mode 700 的 /root 下建文件 | 按内核真 uid（10527）而非 mode 位判定可达性；凭据移出该 uid 可达面，或改由桥侧最小暴露 + 短时令牌 |
-| P2 | r1 | bind 挂载全 rw，含 /system 与 /sdcard 导出面 | 中 | mountinfo 34 行 RO_LINES=0；10 项 bind 含 /system /apex /sdcard /run/dsha-rc1-state | 只读消费的挂载改 ro bind；/sdcard 与状态目录按最小面收敛 |
-| P2 | r2 | SSH 私钥 id_ed25519 为空口令，容器内被读即被用 | 中 | ssh-keygen -y -P '' -f /root/.ssh/id_ed25519 rc=0（PASS id_ed25519_no_passphrase）；mode 600、411 B | 加 passphrase 并配 ssh-agent；或改为会话级短时密钥、用后即弃 |
-| P2 | r2 | DSH API 凭据以文件形态（.credentials.yaml）落在容器内，0600 只挡同 uid 之外 | 中 | .credentials.yaml 223 B / 600，键名含 DEEPSEEK_API_KEY；容器内 uid=0 可直读 | 凭据改由宿主凭据代理注入（短时令牌、可轮换），容器内不落长时可用密钥 |
-| P2 | r3 | 门禁只在响应体内，HTTP 状态码层无差别 | 中 | 无/错/错参名三态均 200，body 为 [UNAUTHORIZED] | 未授权统一回 401 并保留 body 语义；探针与审计改判 body |
-| P2 | r3 | 帮助文本泄漏 token 路径与传参形式 | 中 | /app/help 回显 /root/.dsh/.bridge_token 与 ?token= | 帮助文本不回传本机路径；改用头传 token 并减少查询串留痕 |
-| P2 | r4 | 设备桥门禁只在响应体，HTTP 层恒 200 | 中 | 无/错/错参名三态均 200 → body [UNAUTHORIZED] | 未授权统一回 401；探针与审计改判 body 并落结构化拒绝原因 |
-| P2 | r4 | 桥令牌为容器内明文文件，同机进程可读即可全量调用 | 中 | token 0600 root:root 32 B；容器内 uid=0 语境下 0600 不构成隔离 | 改域套接字或按调用方 uid 校验；令牌加时效与轮换 |
-| P2 | r5 | CI 上游 Action 未按 SHA 固定 | 中 | release.yml:41/45、verify.yml:26/29 全为 @v4 | 四处改成 40 位 commit SHA，并用 dependabot/pinact 维持 |
-| P2 | r5 | verify.yml 未声明 permissions（按默认档位） | 中 | verify.yml 无 permissions 块，对照 release.yml:33-34 contents: write | verify.yml 顶部加 permissions: contents: read |
-| P2 | r5 | 打包器 sha256 未写入 Release 正文 | 中 | release.yml:52-56 从 main 取打包器，资产无对应摘要 | 打包器 sha256 与 SBOM 一并附在 Release 正文并进签名流程 |
-| P2 | r6 | nf_conntrack 权限 640，连容器内 uid=0 也读不了 | 中 | 读操作权限拒绝；无替代网络取证源 | 宿主放宽该文件权限或提供只读导出端点；容器内不设补偿 |
-| P2 | r6 | 桥侧无请求日志与限速计数，越权调用无痕 | 中 | /app/help 30 端点中日志/历史类为 0；429 计数器「不存在」而非值为 0 | 桥增加只读审计端点或落 access log（含 token 指纹而非明文） |
-| P2 | r7 | 凭据文件与活动工作数据同容器同 uid，凭据隔离层为零 | 中 | 12 条凭据类命中与 /root/.dsh 下 392,378,798 B 数据（sessions 165,787,755 B / 634 文件）同树 | 凭据与工作数据分 uid 或分容器；R2 的根 CA 私钥同属该面，一并迁移 |
-| P2 | r7 | 日志面既无轮转也无上限，且不记录侦察动作 | 中 | raw/log_rotate.txt：logrotate 未安装、7 个文件无轮转；R6 已证请求面无日志落点 | 宿主侧启用 logrotate/尺寸上限；桥侧补请求计数与限额，使异常调用可留痕 |
-| P2 | r8 | 并发写盘使时点读数漂移，快照无冻结契约 | 中 | r6_verify.sh 与 r6.md 在同一小时被改写两次；r6 三轴分随之 272→300 | 采集前加写盘哨兵：先记录各件 mtime+sha256，遍历后再核一次，不一致则整份作废重采 |
-| P2 | r8 | 量化读数若不带有效期限会被当成长期结论引用 | 中 | r8 §2/§3 全部读数只对 2026-09-29T07:18:18Z 快照负责；兄弟区任意重写即失效 | 所有派生数字绑定快照时间戳并在报告中以「过期」标注；跨快照比较禁用 |
-| P3 | r1 | 验证件 A9 依赖可漂移的扫描集合（已修） | 低 | 同一脚本两次复跑 SUID 4→3：timeout 20 截断慢目录；现改为 A9c 固定清单覆盖 + A9b 阳性对照作判据 | 已完成：总数只作读数、判定走固定清单；后续区沿用「负结果必过阳性对照」 |
-| P3 | r1 | proot 身份映射使容器内 root 语义与内核 uid 不一致 | 低 | id -u=0 而 /proc/self/status Uid: 10527；/proc/1 与 ns/{pid,user} 缺失 | 审计口径统一写明「容器内 euid 非内核真身」；涉及 uid 归因的结论一律标注映射层 |
-| P3 | r1 | 目录清单外分支的 SUID 全集未知 | 低 | 全盘 find 两次 rc=124；A9 只覆盖固定 14 个目录 | 宿主侧或带 --one-file-system 的并行遍历补齐；容器内保持固定清单 + 阳性对照 |
-| P3 | r2 | .bridge_token 无可见轮换策略，仅有一个 2026-09-25 的 mtime | 低 | stat mtime 2026-09-25；容器内未找到任何轮换/过期策略文件（census 全量扫描 0 命中） | 在宿主侧定时轮换并写轮换日志；token 加 TTL 与使用计数 |
-| P3 | r2 | DSH 统计类文件在取证窗口内被并发写入，时点读数不可作为基线 | 低 | .dshw-usage.json 9c558ee22265→2093c8ccb47b、synapse/workspaces.json c0fc8f20a343→292e7b219c08、infinite-gen-5-stats.json 9f80c3efaf3a→fee15cc37416 | 取证先把目标文件复制到冻结目录再算哈希；或改用只读快照挂载 |
-| P3 | r3 | 20 次顺序请求无速率限制 | 低 | ratelimit.json 状态码全 200，无 429/退避 | 桥与 web 入口加节流与失败计数 |
-| P3 | r3 | 13 条 LISTEN 无进程归因 | 低 | 仅 3080/43795 两条取到 fd，其余 uid 10088/10234/10378/10385 非本容器进程 | 宿主侧核对 uid→包名；命名空间内补 /proc/<pid>/fd 可见性 |
-| P3 | r4 | 应用可见性受限致横向面读数不完整 | 低 | /app/apps 仅 1 条可见用户应用 | 需要时以明确授权核对包可见性配置（QUERY_ALL_PACKAGES 或显式 queries） |
-| P3 | r4 | 截图/剪贴板/短信端点门禁态未测 | 低 | 本区按硬约束只做只读探测，未触短信与点按类端点 | 在二次授权窗口内补测并记录状态码与拒绝串 |
-| P3 | r4 | 设备 shell 通道未连，设备侧进程/配置读数缺失 | 低 | adb-shell 未连；getprop/ps/df 未取 | 用户在设置→设备能力授权开启后补测（重试不解决开关状态） |
-| P3 | r5 | 零依赖但无锁文件：依赖面与漏洞面均不可机器复现 | 低 | 无 package-lock/pnpm-lock/.npmrc/node_modules；npm audit exit=1 ENOLOCK；依赖四类 0 条 | 维持零依赖并把 syft + supply_audit.mjs 接进 CI 作为可复现替代 |
-| P3 | r6 | 侦察连接与正常连接同形，归因仅靠瞬时快照 | 低 | ss -tanp 可见 pid，但无 5-tuple 历史；TIME-WAIT 到期即消失 | 宿主侧记录 5-tuple 历史；或桥侧记来源端口与时间戳 |
-| P3 | r6 | 认证面证据链空缺（wtmp/btmp/lastlog 恒 0） | 低 | 无 sshd；三个文件 0 字节 | 如确有本地登录面需求，再引入带 wtmp 的登录守护并纳入留痕口径 |
-| P3 | r7 | /app/readfile 门禁判据过宽：正常路径也被拒，掩盖真实分类边界 | 低 | raw/device_paths.txt：/etc/hostname、/etc/os-release、/data/local/tmp 与凭据路径回同一条 FORBIDDEN | 按路径类别重写 readfile 判定，与 export 的路径分类对齐，保留凭据类拒绝 |
-| P3 | r7 | 只读探测经 /app/export 在设备媒体库留下未清理条目 | 低 | content://media/external/downloads/311940（内容 /etc/os-release，非敏感） | 结项后由设备侧确认并清理该条目；后续探测改为导出到临时路径并即时删除 |
-| P3 | r8 | 覆盖缺口依赖人工记录，生成器不代填 | 低 | r7 未采集以文字缺口说明存在，均分分母为六区而非八区 | 生成器保留「未采集」标注（已实现：0 件区不进分母、缺台账写未采集） |
-| P3 | r8 | 0 字节文件易被误读为「无风险」证据 | 低 | r1 raw/suid_full.txt 与 suid_raw.txt 各 0 B，真实含义是全盘遍历 rc=124 超时 | 在报告与台账中显式区分「0 命中」与「未采到」；负结果必须带阳性对照 |
+| 优先级 | 区 | 风险 | 等级 | 依据 | 修复 | 处置状态 |
+|---|---|---|---|---|---|---|
+| P1 | r2 | 受信任根 CA 的私钥与根证书同容器落盘，容器内 root 可签发被信任证书 | 高 | root-ca-key.pem 1706 B / 600 / sha256_12 6770dba95f40，与 CN=billion-context MITM Root CA（notAfter 2036-09-25）同目录；combined-ca.pem 421140 B 已在信任链 | 私钥移出容器（宿主 keyring / 远端签发）；容器内只留证书不落私钥，或挂载为只读且 000 的签名服务代理 | 已处置：脚本化收窄/锁定/轮换（scripts/ca_key_guard.mjs，轮换只写 rotation-<ts>/ staging，不动在用密钥）；同 uid 可读为架构性事实，未消除 |
+| P1 | r3 | 环回绑定被同机通配代理旁路，不构成隔离边界 | 高 | 7890 免认证 CONNECT 到 127.0.0.1，两源实测取到 3090/3080/43795 响应 | 7890 加来源 ACL 或改绑 127.0.0.1/unix socket；把免认证 CONNECT 收敛为需口令 | 未处置 |
+| P1 | r5 | 宿主插件注入点无完整性校验（file: 依赖） | 高 | install.sh:126 直接拼接 file:../../plugins/<name>；install.sh:150-154 rm -rf + ln -sfn | 注入前比对 sha256 清单并阻断不匹配；改为带校验和的归档分发 | 已修：install.sh 装后写 .plugin-manifest.sha256，链接前 --verify，MISMATCH 中止（实测 OK RC=0 / MISMATCH RC=1 / NO_MANIFEST RC=3） |
+| P1 | r6 | 容器内五类面无落痕，动作事后不可复盘 | 高 | 通用/认证/审计三面判为不可检出；仅连接表瞬时条目与 JSON 状态文件 mtime 两处痕迹 | 留痕改由宿主侧承担：Android 内核 audit + netfilter 日志，或设备 logcat 抓桥请求 | 未处置 |
+| P1 | r7 | mode 位在本容器内不构成跨进程隔离：同 uid 进程可读全部 0600 凭据 | 高 | raw/nonpriv_test.txt：降权 nobody 读 9/9 个 0600 文件成功、被拒 0，并可在 mode 700 的 /root 下建文件 | 按内核真 uid（10527）而非 mode 位判定可达性；凭据移出该 uid 可达面，或改由桥侧最小暴露 + 短时令牌 | 已加门禁：scripts/cred_reach_gate.mjs 降权可达基线（7 件 7/7 可读）+ 漂移检测（RC 0 无漂移 / 1 回归）；mode 位不隔离仍是事实 |
+| P2 | r1 | bind 挂载全 rw，含 /system 与 /sdcard 导出面 | 中 | mountinfo 34 行 RO_LINES=0；10 项 bind 含 /system /apex /sdcard /run/dsha-rc1-state | 只读消费的挂载改 ro bind；/sdcard 与状态目录按最小面收敛 | 未处置 |
+| P2 | r2 | SSH 私钥 id_ed25519 为空口令，容器内被读即被用 | 中 | ssh-keygen -y -P '' -f /root/.ssh/id_ed25519 rc=0（PASS id_ed25519_no_passphrase）；mode 600、411 B | 加 passphrase 并配 ssh-agent；或改为会话级短时密钥、用后即弃 | 未处置 |
+| P2 | r2 | DSH API 凭据以文件形态（.credentials.yaml）落在容器内，0600 只挡同 uid 之外 | 中 | .credentials.yaml 223 B / 600，键名含 DEEPSEEK_API_KEY；容器内 uid=0 可直读 | 凭据改由宿主凭据代理注入（短时令牌、可轮换），容器内不落长时可用密钥 | 未处置 |
+| P2 | r3 | 门禁只在响应体内，HTTP 状态码层无差别 | 中 | 无/错/错参名三态均 200，body 为 [UNAUTHORIZED] | 未授权统一回 401 并保留 body 语义；探针与审计改判 body | 未处置 |
+| P2 | r3 | 帮助文本泄漏 token 路径与传参形式 | 中 | /app/help 回显 /root/.dsh/.bridge_token 与 ?token= | 帮助文本不回传本机路径；改用头传 token 并减少查询串留痕 | 未处置 |
+| P2 | r4 | 设备桥门禁只在响应体，HTTP 层恒 200 | 中 | 无/错/错参名三态均 200 → body [UNAUTHORIZED] | 未授权统一回 401；探针与审计改判 body 并落结构化拒绝原因 | 未处置 |
+| P2 | r4 | 桥令牌为容器内明文文件，同机进程可读即可全量调用 | 中 | token 0600 root:root 32 B；容器内 uid=0 语境下 0600 不构成隔离 | 改域套接字或按调用方 uid 校验；令牌加时效与轮换 | 未处置 |
+| P2 | r5 | CI 上游 Action 未按 SHA 固定 | 中 | release.yml:41/45、verify.yml:26/29 全为 @v4 | 四处改成 40 位 commit SHA，并用 dependabot/pinact 维持 | 未处置 |
+| P2 | r5 | verify.yml 未声明 permissions（按默认档位） | 中 | verify.yml 无 permissions 块，对照 release.yml:33-34 contents: write | verify.yml 顶部加 permissions: contents: read | 未处置 |
+| P2 | r5 | 打包器 sha256 未写入 Release 正文 | 中 | release.yml:52-56 从 main 取打包器，资产无对应摘要 | 打包器 sha256 与 SBOM 一并附在 Release 正文并进签名流程 | 未处置 |
+| P2 | r6 | nf_conntrack 权限 640，连容器内 uid=0 也读不了 | 中 | 读操作权限拒绝；无替代网络取证源 | 宿主放宽该文件权限或提供只读导出端点；容器内不设补偿 | 未处置 |
+| P2 | r6 | 桥侧无请求日志与限速计数，越权调用无痕 | 中 | /app/help 30 端点中日志/历史类为 0；429 计数器「不存在」而非值为 0 | 桥增加只读审计端点或落 access log（含 token 指纹而非明文） | 未处置 |
+| P2 | r7 | 凭据文件与活动工作数据同容器同 uid，凭据隔离层为零 | 中 | 12 条凭据类命中与 /root/.dsh 下 392,378,798 B 数据（sessions 165,787,755 B / 634 文件）同树 | 凭据与工作数据分 uid 或分容器；R2 的根 CA 私钥同属该面，一并迁移 | 未处置 |
+| P2 | r7 | 日志面既无轮转也无上限，且不记录侦察动作 | 中 | raw/log_rotate.txt：logrotate 未安装、7 个文件无轮转；R6 已证请求面无日志落点 | 宿主侧启用 logrotate/尺寸上限；桥侧补请求计数与限额，使异常调用可留痕 | 未处置 |
+| P2 | r8 | 并发写盘使时点读数漂移，快照无冻结契约 | 中 | r6_verify.sh 与 r6.md 在同一小时被改写两次；r6 三轴分随之 272→300 | 采集前加写盘哨兵：先记录各件 mtime+sha256，遍历后再核一次，不一致则整份作废重采 | 未处置 |
+| P2 | r8 | 量化读数若不带有效期限会被当成长期结论引用 | 中 | r8 §2/§3 全部读数只对 2026-09-29T07:18:18Z 快照负责；兄弟区任意重写即失效 | 所有派生数字绑定快照时间戳并在报告中以「过期」标注；跨快照比较禁用 | 未处置 |
+| P3 | r1 | 验证件 A9 依赖可漂移的扫描集合（已修） | 低 | 同一脚本两次复跑 SUID 4→3：timeout 20 截断慢目录；现改为 A9c 固定清单覆盖 + A9b 阳性对照作判据 | 已完成：总数只作读数、判定走固定清单；后续区沿用「负结果必过阳性对照」 | 未处置 |
+| P3 | r1 | proot 身份映射使容器内 root 语义与内核 uid 不一致 | 低 | id -u=0 而 /proc/self/status Uid: 10527；/proc/1 与 ns/{pid,user} 缺失 | 审计口径统一写明「容器内 euid 非内核真身」；涉及 uid 归因的结论一律标注映射层 | 未处置 |
+| P3 | r1 | 目录清单外分支的 SUID 全集未知 | 低 | 全盘 find 两次 rc=124；A9 只覆盖固定 14 个目录 | 宿主侧或带 --one-file-system 的并行遍历补齐；容器内保持固定清单 + 阳性对照 | 未处置 |
+| P3 | r2 | .bridge_token 无可见轮换策略，仅有一个 2026-09-25 的 mtime | 低 | stat mtime 2026-09-25；容器内未找到任何轮换/过期策略文件（census 全量扫描 0 命中） | 在宿主侧定时轮换并写轮换日志；token 加 TTL 与使用计数 | 未处置 |
+| P3 | r2 | DSH 统计类文件在取证窗口内被并发写入，时点读数不可作为基线 | 低 | .dshw-usage.json 9c558ee22265→2093c8ccb47b、synapse/workspaces.json c0fc8f20a343→292e7b219c08、infinite-gen-5-stats.json 9f80c3efaf3a→fee15cc37416 | 取证先把目标文件复制到冻结目录再算哈希；或改用只读快照挂载 | 未处置 |
+| P3 | r3 | 20 次顺序请求无速率限制 | 低 | ratelimit.json 状态码全 200，无 429/退避 | 桥与 web 入口加节流与失败计数 | 未处置 |
+| P3 | r3 | 13 条 LISTEN 无进程归因 | 低 | 仅 3080/43795 两条取到 fd，其余 uid 10088/10234/10378/10385 非本容器进程 | 宿主侧核对 uid→包名；命名空间内补 /proc/<pid>/fd 可见性 | 未处置 |
+| P3 | r4 | 应用可见性受限致横向面读数不完整 | 低 | /app/apps 仅 1 条可见用户应用 | 需要时以明确授权核对包可见性配置（QUERY_ALL_PACKAGES 或显式 queries） | 未处置 |
+| P3 | r4 | 截图/剪贴板/短信端点门禁态未测 | 低 | 本区按硬约束只做只读探测，未触短信与点按类端点 | 在二次授权窗口内补测并记录状态码与拒绝串 | 未处置 |
+| P3 | r4 | 设备 shell 通道未连，设备侧进程/配置读数缺失 | 低 | adb-shell 未连；getprop/ps/df 未取 | 用户在设置→设备能力授权开启后补测（重试不解决开关状态） | 未处置 |
+| P3 | r5 | 零依赖但无锁文件：依赖面与漏洞面均不可机器复现 | 低 | 无 package-lock/pnpm-lock/.npmrc/node_modules；npm audit exit=1 ENOLOCK；依赖四类 0 条 | 维持零依赖并把 syft + supply_audit.mjs 接进 CI 作为可复现替代 | 未处置 |
+| P3 | r6 | 侦察连接与正常连接同形，归因仅靠瞬时快照 | 低 | ss -tanp 可见 pid，但无 5-tuple 历史；TIME-WAIT 到期即消失 | 宿主侧记录 5-tuple 历史；或桥侧记来源端口与时间戳 | 未处置 |
+| P3 | r6 | 认证面证据链空缺（wtmp/btmp/lastlog 恒 0） | 低 | 无 sshd；三个文件 0 字节 | 如确有本地登录面需求，再引入带 wtmp 的登录守护并纳入留痕口径 | 未处置 |
+| P3 | r7 | /app/readfile 门禁判据过宽：正常路径也被拒，掩盖真实分类边界 | 低 | raw/device_paths.txt：/etc/hostname、/etc/os-release、/data/local/tmp 与凭据路径回同一条 FORBIDDEN | 按路径类别重写 readfile 判定，与 export 的路径分类对齐，保留凭据类拒绝 | 未处置 |
+| P3 | r7 | 只读探测经 /app/export 在设备媒体库留下未清理条目 | 低 | content://media/external/downloads/311940（内容 /etc/os-release，非敏感） | 结项后由设备侧确认并清理该条目；后续探测改为导出到临时路径并即时删除 | 未处置 |
+| P3 | r8 | 覆盖缺口依赖人工记录，生成器不代填 | 低 | r7 未采集以文字缺口说明存在，均分分母为六区而非八区 | 生成器保留「未采集」标注（已实现：0 件区不进分母、缺台账写未采集） | 未处置 |
+| P3 | r8 | 0 字节文件易被误读为「无风险」证据 | 低 | r1 raw/suid_full.txt 与 suid_raw.txt 各 0 B，真实含义是全盘遍历 rc=124 超时 | 在报告与台账中显式区分「0 命中」与「未采到」；负结果必须带阳性对照 | 未处置 |
 
 ## 五、四态与边界
 

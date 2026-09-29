@@ -64,7 +64,8 @@
       "zone": "r2",
       "evidence": "root-ca-key.pem 1706 B / 600 / sha256_12 6770dba95f40，与 CN=billion-context MITM Root CA（notAfter 2036-09-25）同目录；combined-ca.pem 421140 B 已在信任链",
       "fix": "私钥移出容器（宿主 keyring / 远端签发）；容器内只留证书不落私钥，或挂载为只读且 000 的签名服务代理",
-      "priority": 1
+      "priority": 1,
+      "status": "已处置：脚本化收窄/锁定/轮换（scripts/ca_key_guard.mjs，轮换只写 rotation-<ts>/ staging，不动在用密钥）；同 uid 可读为架构性事实，未消除"
     },
     {
       "id": "R2-02",

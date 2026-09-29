@@ -102,6 +102,17 @@ rm -rf "$DEST_DIR/.git" "$DEST_DIR/install.sh" "$DEST_DIR/uninstall.sh" \
        "$DEST_DIR/install.ps1" "$DEST_DIR/uninstall.ps1" 2>/dev/null || true
 ok "插件已复制到：$DEST_DIR"
 
+# ---------- [2b] 记录内容指纹（r5-01：安装时留清单，链接前校验） ----------
+step "记录插件内容清单"
+if [[ -f "$DEST_DIR/scripts/plugin_integrity.mjs" ]]; then
+  node "$DEST_DIR/scripts/plugin_integrity.mjs" --write --dir "$DEST_DIR" || {
+    err "无法写入插件内容清单，中止安装"
+    exit 1
+  }
+else
+  warn "未找到 scripts/plugin_integrity.mjs，跳过内容清单（旧版包）"
+fi
+
 # ---------- [3] 备份 package.json ----------
 step "备份 package.json"
 
@@ -147,11 +158,42 @@ NODE
   # ---------- [5] pnpm install ----------
   step "安装依赖（pnpm install）"
 
+  # 链接前校验内容清单：来源目录被同名目录替换 / 被改动则拒绝链接（r5-01）
+  if [[ -f "$DEST_DIR/scripts/plugin_integrity.mjs" ]]; then
+    INTEG_LOG="$(mktemp)"
+    if node "$DEST_DIR/scripts/plugin_integrity.mjs" --verify --dir "$DEST_DIR" >"$INTEG_LOG" 2>&1; then
+      ok "插件内容清单校验通过：$DEST_DIR"
+    else
+      cat "$INTEG_LOG" >&2
+      if [[ "${IG5_ALLOW_UNVERIFIED:-0}" == "1" ]]; then
+        warn "IG5_ALLOW_UNVERIFIED=1：跳过完整性校验继续安装"
+      else
+        err "插件内容与安装清单不一致，已中止；确认无误可用 IG5_ALLOW_UNVERIFIED=1 重跑"
+        rm -f "$INTEG_LOG"
+        exit 1
+      fi
+    fi
+    rm -f "$INTEG_LOG"
+  fi
+
   # pnpm 对 file: 依赖是复制进 node_modules 而非实时链接；先清除旧拷贝，
   # 强制 pnpm 重新同步，避免更新插件后 index.js/client.js 不同步
-  if [[ -d "$p/node_modules/$PLUGIN_NAME" ]]; then
-    rm -rf "$p/node_modules/$PLUGIN_NAME"
-    ok "已清除 node_modules 旧拷贝，pnpm 将重新同步"
+  # 删除范围收敛：仅 node_modules 下、名字完全匹配的条目；软链接只解链
+  NM_DIR="$p/node_modules/$PLUGIN_NAME"
+  if [[ -L "$NM_DIR" ]]; then
+    rm -f "$NM_DIR"
+    ok "已解除 node_modules 软链接，pnpm 将重新同步"
+  elif [[ -d "$NM_DIR" ]]; then
+    case "$NM_DIR" in
+      */node_modules/"$PLUGIN_NAME")
+        rm -rf -- "$NM_DIR"
+        ok "已清除 node_modules 旧拷贝，pnpm 将重新同步"
+        ;;
+      *)
+        err "拒绝删除路径异常的目录：$NM_DIR"
+        exit 1
+        ;;
+    esac
   fi
   for old in "${LEGACY_PLUGINS[@]}"; do
     if [[ -d "$p/node_modules/$old" ]]; then rm -rf "$p/node_modules/$old"; fi

@@ -1,0 +1,69 @@
+{
+  "generatedAt": "2026-09-29T07:56:35.576Z",
+  "method": "setpriv",
+  "files": {
+    "/root/.dsh/.bridge_token": {
+      "path": "/root/.dsh/.bridge_token",
+      "mode": "0600",
+      "uidGid": "0:0",
+      "size": 32,
+      "sha12": "b52a60d53989",
+      "class": "secret",
+      "droppedRead": true
+    },
+    "/root/.dsh/plugin-activations.json": {
+      "path": "/root/.dsh/plugin-activations.json",
+      "mode": "0600",
+      "uidGid": "0:0",
+      "size": 1828,
+      "sha12": "31fa844d7a41",
+      "class": "other",
+      "droppedRead": true
+    },
+    "/root/.dsh/.credentials.yaml": {
+      "path": "/root/.dsh/.credentials.yaml",
+      "mode": "0600",
+      "uidGid": "0:0",
+      "size": 223,
+      "sha12": "a64b618eeb7c",
+      "class": "secret",
+      "droppedRead": true
+    },
+    "/root/.local/share/billion-context/ca/root-ca-key.pem": {
+      "path": "/root/.local/share/billion-context/ca/root-ca-key.pem",
+      "mode": "0600",
+      "uidGid": "0:0",
+      "size": 1706,
+      "sha12": "6770dba95f40",
+      "class": "secret",
+      "droppedRead": true
+    },
+    "/root/.local/share/billion-context/ca/root-ca.pem": {
+      "path": "/root/.local/share/billion-context/ca/root-ca.pem",
+      "mode": "0600",
+      "uidGid": "0:0",
+      "size": 1204,
+      "sha12": "5b82e0aaaa35",
+      "class": "secret",
+      "droppedRead": true
+    },
+    "/root/.local/share/billion-context/ca/combined-ca.pem": {
+      "path": "/root/.local/share/billion-context/ca/combined-ca.pem",
+      "mode": "0600",
+      "uidGid": "0:0",
+      "size": 421140,
+      "sha12": "0063ed3e9e43",
+      "class": "secret",
+      "droppedRead": true
+    },
+    "/root/.ssh/id_ed25519": {
+      "path": "/root/.ssh/id_ed25519",
+      "mode": "0600",
+      "uidGid": "0:0",
+      "size": 411,
+      "sha12": "f6e392e1de98",
+      "class": "secret",
+      "droppedRead": true
+    }
+  }
+}

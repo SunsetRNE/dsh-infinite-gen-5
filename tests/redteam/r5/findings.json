@@ -2,23 +2,106 @@
   "zone": "r5",
   "source": "tests/redteam/r5/artifacts/r5.md + supply_audit.mjs + 回执",
   "chain": [
-    { "from": "install.sh:126 注入 file:../../plugins/<name> 且无 sha256 校验；install.sh:150-154 先 rm -rf 再 ln -sfn", "to": "宿主插件目录内容可被同名本地目录替换，安装期即取得宿主加载面", "evidence": "supply_audit.mjs DEP 项实测 + install.sh 行号取证" },
-    { "from": "4 处 Actions 全按浮动 tag（release.yml:41/45、verify.yml:26/29 均 @v4）", "to": "上游 tag 重指向即可让构建内容漂移，产物不可复现", "evidence": "grep uses: 四行逐行核对，无 40 位 SHA" },
-    { "from": "release.yml:52-56 补历史 tag 时从 main 取打包器", "to": "历史 Release 资产可用当前 main 的打包器重打包，资产与 tag 声称版本不绑定", "evidence": "workflow 段落逐行读码" }
+    {
+      "from": "install.sh:126 注入 file:../../plugins/<name> 且无 sha256 校验；install.sh:150-154 先 rm -rf 再 ln -sfn",
+      "to": "宿主插件目录内容可被同名本地目录替换，安装期即取得宿主加载面",
+      "evidence": "supply_audit.mjs DEP 项实测 + install.sh 行号取证"
+    },
+    {
+      "from": "4 处 Actions 全按浮动 tag（release.yml:41/45、verify.yml:26/29 均 @v4）",
+      "to": "上游 tag 重指向即可让构建内容漂移，产物不可复现",
+      "evidence": "grep uses: 四行逐行核对，无 40 位 SHA"
+    },
+    {
+      "from": "release.yml:52-56 补历史 tag 时从 main 取打包器",
+      "to": "历史 Release 资产可用当前 main 的打包器重打包，资产与 tag 声称版本不绑定",
+      "evidence": "workflow 段落逐行读码"
+    }
   ],
   "iocs": [
-    { "type": "path", "value": "install.sh:126 pkg.dependencies[name] = \"file:../../plugins/\" + name;", "note": "宿主插件目录注入点，无完整性校验", "state": "已知" },
-    { "type": "config", "value": "verify.yml 无 permissions 块；release.yml:33-34 contents: write", "note": "CI 令牌面按默认档位下发", "state": "已知" },
-    { "type": "ci", "value": "release.yml:41/45 · verify.yml:26/29 = @v4 tag", "note": "四处上游 Action 均未按 SHA 固定", "state": "已知" },
-    { "type": "artifact", "value": "CycloneDX 1.7 / 6 组件 / 许可证未声明 6/6", "note": "syft 1.52.0 生成，SBOM 已落盘", "state": "已知" },
-    { "type": "env", "value": "npm whoami exit=1 ENEEDAUTH", "note": "发布凭据缺失（非网络问题），npm ping PONG 1151ms", "state": "已知" },
-    { "type": "unknown", "value": "宿主 ../../plugins/<name> 实际内容与 pnpm 复制行为", "note": "U1：需宿主侧目录清单", "state": "未知" }
+    {
+      "type": "path",
+      "value": "install.sh:126 pkg.dependencies[name] = \"file:../../plugins/\" + name;",
+      "note": "宿主插件目录注入点，无完整性校验",
+      "state": "已知"
+    },
+    {
+      "type": "config",
+      "value": "verify.yml 无 permissions 块；release.yml:33-34 contents: write",
+      "note": "CI 令牌面按默认档位下发",
+      "state": "已知"
+    },
+    {
+      "type": "ci",
+      "value": "release.yml:41/45 · verify.yml:26/29 = @v4 tag",
+      "note": "四处上游 Action 均未按 SHA 固定",
+      "state": "已知"
+    },
+    {
+      "type": "artifact",
+      "value": "CycloneDX 1.7 / 6 组件 / 许可证未声明 6/6",
+      "note": "syft 1.52.0 生成，SBOM 已落盘",
+      "state": "已知"
+    },
+    {
+      "type": "env",
+      "value": "npm whoami exit=1 ENEEDAUTH",
+      "note": "发布凭据缺失（非网络问题），npm ping PONG 1151ms",
+      "state": "已知"
+    },
+    {
+      "type": "unknown",
+      "value": "宿主 ../../plugins/<name> 实际内容与 pnpm 复制行为",
+      "note": "U1：需宿主侧目录清单",
+      "state": "未知"
+    }
   ],
   "risks": [
-    { "id": "R5-01", "title": "宿主插件注入点无完整性校验（file: 依赖）", "severity": "高", "zone": "r5", "evidence": "install.sh:126 直接拼接 file:../../plugins/<name>；install.sh:150-154 rm -rf + ln -sfn", "fix": "注入前比对 sha256 清单并阻断不匹配；改为带校验和的归档分发", "priority": 1 },
-    { "id": "R5-02", "title": "CI 上游 Action 未按 SHA 固定", "severity": "中", "zone": "r5", "evidence": "release.yml:41/45、verify.yml:26/29 全为 @v4", "fix": "四处改成 40 位 commit SHA，并用 dependabot/pinact 维持", "priority": 2 },
-    { "id": "R5-03", "title": "verify.yml 未声明 permissions（按默认档位）", "severity": "中", "zone": "r5", "evidence": "verify.yml 无 permissions 块，对照 release.yml:33-34 contents: write", "fix": "verify.yml 顶部加 permissions: contents: read", "priority": 2 },
-    { "id": "R5-04", "title": "打包器 sha256 未写入 Release 正文", "severity": "中", "zone": "r5", "evidence": "release.yml:52-56 从 main 取打包器，资产无对应摘要", "fix": "打包器 sha256 与 SBOM 一并附在 Release 正文并进签名流程", "priority": 2 },
-    { "id": "R5-05", "title": "零依赖但无锁文件：依赖面与漏洞面均不可机器复现", "severity": "低", "zone": "r5", "evidence": "无 package-lock/pnpm-lock/.npmrc/node_modules；npm audit exit=1 ENOLOCK；依赖四类 0 条", "fix": "维持零依赖并把 syft + supply_audit.mjs 接进 CI 作为可复现替代", "priority": 3 }
+    {
+      "id": "R5-01",
+      "title": "宿主插件注入点无完整性校验（file: 依赖）",
+      "severity": "高",
+      "zone": "r5",
+      "evidence": "install.sh:126 直接拼接 file:../../plugins/<name>；install.sh:150-154 rm -rf + ln -sfn",
+      "fix": "注入前比对 sha256 清单并阻断不匹配；改为带校验和的归档分发",
+      "priority": 1,
+      "status": "已修：install.sh 装后写 .plugin-manifest.sha256，链接前 --verify，MISMATCH 中止（实测 OK RC=0 / MISMATCH RC=1 / NO_MANIFEST RC=3）"
+    },
+    {
+      "id": "R5-02",
+      "title": "CI 上游 Action 未按 SHA 固定",
+      "severity": "中",
+      "zone": "r5",
+      "evidence": "release.yml:41/45、verify.yml:26/29 全为 @v4",
+      "fix": "四处改成 40 位 commit SHA，并用 dependabot/pinact 维持",
+      "priority": 2
+    },
+    {
+      "id": "R5-03",
+      "title": "verify.yml 未声明 permissions（按默认档位）",
+      "severity": "中",
+      "zone": "r5",
+      "evidence": "verify.yml 无 permissions 块，对照 release.yml:33-34 contents: write",
+      "fix": "verify.yml 顶部加 permissions: contents: read",
+      "priority": 2
+    },
+    {
+      "id": "R5-04",
+      "title": "打包器 sha256 未写入 Release 正文",
+      "severity": "中",
+      "zone": "r5",
+      "evidence": "release.yml:52-56 从 main 取打包器，资产无对应摘要",
+      "fix": "打包器 sha256 与 SBOM 一并附在 Release 正文并进签名流程",
+      "priority": 2
+    },
+    {
+      "id": "R5-05",
+      "title": "零依赖但无锁文件：依赖面与漏洞面均不可机器复现",
+      "severity": "低",
+      "zone": "r5",
+      "evidence": "无 package-lock/pnpm-lock/.npmrc/node_modules；npm audit exit=1 ENOLOCK；依赖四类 0 条",
+      "fix": "维持零依赖并把 syft + supply_audit.mjs 接进 CI 作为可复现替代",
+      "priority": 3
+    }
   ]
 }

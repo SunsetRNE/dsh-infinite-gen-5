@@ -3,25 +3,117 @@
   "artifact": "tests/redteam/r7/artifacts/r7.md",
   "verifier": "tests/redteam/r7/artifacts/r7_verify.sh",
   "chain": [
-    { "from": "proot 假 uid 0 与内核真 uid 10527 并存", "to": "降权 nobody 读 0600 凭据 9/9 成功、被拒 0，且可在 mode 700 的 /root 下建文件", "evidence": "raw/nonpriv_test.txt + raw/perm_matrix.txt：mode 位只在同一 Android uid 内生效，DAC 不构成跨进程边界" },
-    { "from": "logrotate 未安装且 /var/log 无轮转配置生效", "to": "7 个日志文件无上限增长、4 个 0 字节从未写入", "evidence": "raw/log_rotate.txt：/etc/logrotate.d 4 条规则为惰性残留，dpkg 无登记、无 cron/systemd 调用点" },
-    { "from": "设备桥 /app/readfile 对全部路径统一 FORBIDDEN", "to": "持 token 者改用 /app/export 取普通文件，并在设备媒体库留下 content://media/external/downloads/311940", "evidence": "raw/device_paths.txt + raw/device_gate.txt：export 按路径分类（凭据 FORBIDDEN、/etc/os-release 放行），readfile 判据过宽" }
+    {
+      "from": "proot 假 uid 0 与内核真 uid 10527 并存",
+      "to": "降权 nobody 读 0600 凭据 9/9 成功、被拒 0，且可在 mode 700 的 /root 下建文件",
+      "evidence": "raw/nonpriv_test.txt + raw/perm_matrix.txt：mode 位只在同一 Android uid 内生效，DAC 不构成跨进程边界"
+    },
+    {
+      "from": "logrotate 未安装且 /var/log 无轮转配置生效",
+      "to": "7 个日志文件无上限增长、4 个 0 字节从未写入",
+      "evidence": "raw/log_rotate.txt：/etc/logrotate.d 4 条规则为惰性残留，dpkg 无登记、无 cron/systemd 调用点"
+    },
+    {
+      "from": "设备桥 /app/readfile 对全部路径统一 FORBIDDEN",
+      "to": "持 token 者改用 /app/export 取普通文件，并在设备媒体库留下 content://media/external/downloads/311940",
+      "evidence": "raw/device_paths.txt + raw/device_gate.txt：export 按路径分类（凭据 FORBIDDEN、/etc/os-release 放行），readfile 判据过宽"
+    }
   ],
   "iocs": [
-    { "type": "file", "value": "/root/.dsh/synapse/workspaces.json", "note": "活文件 21,129,302 → 21,131,759 B；18 文件有界扫描中敏感词命中 4287 次，私钥块头与 Bearer 形态各命中该 1 个文件", "state": "已知" },
-    { "type": "count", "value": "凭据类文件 12 条 / mode 9x600 + 3x644 / 字节和 72275", "note": "3 条 644 全为 .pub 与 .label，无 644 私钥；.bridge_token 600/32 B 单列", "state": "已知" },
-    { "type": "path", "value": "/var/log 11 文件 · 4 个 0 字节 · 7 个无轮转", "note": "无 logrotate 生效路径，尺寸无约束", "state": "已知" },
-    { "type": "absent", "value": "logrotate 未安装", "note": "/etc/logrotate.conf 不存在、dpkg 无登记、cron 与 systemd 无调用点；/etc/logrotate.d 4 条规则（alternatives/apt/dpkg/ufw）为惰性残留", "state": "已知" },
-    { "type": "behavior", "value": "/app/readfile 全路径 FORBIDDEN（同一条 161 字节回显）", "note": "含 /etc/hostname 等无害路径，非按路径分类门禁", "state": "已知" },
-    { "type": "behavior", "value": "/app/export 按路径分类", "note": "凭据路径 FORBIDDEN；普通文件放行并落到设备媒体库", "state": "已知" },
-    { "type": "endpoint", "value": "127.0.0.1:3090 仅回环绑定（非回环绑定数 0）", "state": "已知" },
-    { "type": "device", "value": "content://media/external/downloads/311940", "note": "只读探测经 /app/export 留下的设备媒体库条目，内容为 /etc/os-release，未清理", "state": "已知" }
+    {
+      "type": "file",
+      "value": "/root/.dsh/synapse/workspaces.json",
+      "note": "活文件 21,129,302 → 21,131,759 B；18 文件有界扫描中敏感词命中 4287 次，私钥块头与 Bearer 形态各命中该 1 个文件",
+      "state": "已知"
+    },
+    {
+      "type": "count",
+      "value": "凭据类文件 12 条 / mode 9x600 + 3x644 / 字节和 72275",
+      "note": "3 条 644 全为 .pub 与 .label，无 644 私钥；.bridge_token 600/32 B 单列",
+      "state": "已知"
+    },
+    {
+      "type": "path",
+      "value": "/var/log 11 文件 · 4 个 0 字节 · 7 个无轮转",
+      "note": "无 logrotate 生效路径，尺寸无约束",
+      "state": "已知"
+    },
+    {
+      "type": "absent",
+      "value": "logrotate 未安装",
+      "note": "/etc/logrotate.conf 不存在、dpkg 无登记、cron 与 systemd 无调用点；/etc/logrotate.d 4 条规则（alternatives/apt/dpkg/ufw）为惰性残留",
+      "state": "已知"
+    },
+    {
+      "type": "behavior",
+      "value": "/app/readfile 全路径 FORBIDDEN（同一条 161 字节回显）",
+      "note": "含 /etc/hostname 等无害路径，非按路径分类门禁",
+      "state": "已知"
+    },
+    {
+      "type": "behavior",
+      "value": "/app/export 按路径分类",
+      "note": "凭据路径 FORBIDDEN；普通文件放行并落到设备媒体库",
+      "state": "已知"
+    },
+    {
+      "type": "endpoint",
+      "value": "127.0.0.1:3090 仅回环绑定（非回环绑定数 0）",
+      "state": "已知"
+    },
+    {
+      "type": "device",
+      "value": "content://media/external/downloads/311940",
+      "note": "只读探测经 /app/export 留下的设备媒体库条目，内容为 /etc/os-release，未清理",
+      "state": "已知"
+    }
   ],
   "risks": [
-    { "id": "R7-01", "title": "mode 位在本容器内不构成跨进程隔离：同 uid 进程可读全部 0600 凭据", "severity": "高", "zone": "r7", "evidence": "raw/nonpriv_test.txt：降权 nobody 读 9/9 个 0600 文件成功、被拒 0，并可在 mode 700 的 /root 下建文件", "fix": "按内核真 uid（10527）而非 mode 位判定可达性；凭据移出该 uid 可达面，或改由桥侧最小暴露 + 短时令牌", "priority": 1 },
-    { "id": "R7-02", "title": "凭据文件与活动工作数据同容器同 uid，凭据隔离层为零", "severity": "中", "zone": "r7", "evidence": "12 条凭据类命中与 /root/.dsh 下 392,378,798 B 数据（sessions 165,787,755 B / 634 文件）同树", "fix": "凭据与工作数据分 uid 或分容器；R2 的根 CA 私钥同属该面，一并迁移", "priority": 2 },
-    { "id": "R7-03", "title": "日志面既无轮转也无上限，且不记录侦察动作", "severity": "中", "zone": "r7", "evidence": "raw/log_rotate.txt：logrotate 未安装、7 个文件无轮转；R6 已证请求面无日志落点", "fix": "宿主侧启用 logrotate/尺寸上限；桥侧补请求计数与限额，使异常调用可留痕", "priority": 2 },
-    { "id": "R7-04", "title": "/app/readfile 门禁判据过宽：正常路径也被拒，掩盖真实分类边界", "severity": "低", "zone": "r7", "evidence": "raw/device_paths.txt：/etc/hostname、/etc/os-release、/data/local/tmp 与凭据路径回同一条 FORBIDDEN", "fix": "按路径类别重写 readfile 判定，与 export 的路径分类对齐，保留凭据类拒绝", "priority": 3 },
-    { "id": "R7-05", "title": "只读探测经 /app/export 在设备媒体库留下未清理条目", "severity": "低", "zone": "r7", "evidence": "content://media/external/downloads/311940（内容 /etc/os-release，非敏感）", "fix": "结项后由设备侧确认并清理该条目；后续探测改为导出到临时路径并即时删除", "priority": 3 }
+    {
+      "id": "R7-01",
+      "title": "mode 位在本容器内不构成跨进程隔离：同 uid 进程可读全部 0600 凭据",
+      "severity": "高",
+      "zone": "r7",
+      "evidence": "raw/nonpriv_test.txt：降权 nobody 读 9/9 个 0600 文件成功、被拒 0，并可在 mode 700 的 /root 下建文件",
+      "fix": "按内核真 uid（10527）而非 mode 位判定可达性；凭据移出该 uid 可达面，或改由桥侧最小暴露 + 短时令牌",
+      "priority": 1,
+      "status": "已加门禁：scripts/cred_reach_gate.mjs 降权可达基线（7 件 7/7 可读）+ 漂移检测（RC 0 无漂移 / 1 回归）；mode 位不隔离仍是事实"
+    },
+    {
+      "id": "R7-02",
+      "title": "凭据文件与活动工作数据同容器同 uid，凭据隔离层为零",
+      "severity": "中",
+      "zone": "r7",
+      "evidence": "12 条凭据类命中与 /root/.dsh 下 392,378,798 B 数据（sessions 165,787,755 B / 634 文件）同树",
+      "fix": "凭据与工作数据分 uid 或分容器；R2 的根 CA 私钥同属该面，一并迁移",
+      "priority": 2
+    },
+    {
+      "id": "R7-03",
+      "title": "日志面既无轮转也无上限，且不记录侦察动作",
+      "severity": "中",
+      "zone": "r7",
+      "evidence": "raw/log_rotate.txt：logrotate 未安装、7 个文件无轮转；R6 已证请求面无日志落点",
+      "fix": "宿主侧启用 logrotate/尺寸上限；桥侧补请求计数与限额，使异常调用可留痕",
+      "priority": 2
+    },
+    {
+      "id": "R7-04",
+      "title": "/app/readfile 门禁判据过宽：正常路径也被拒，掩盖真实分类边界",
+      "severity": "低",
+      "zone": "r7",
+      "evidence": "raw/device_paths.txt：/etc/hostname、/etc/os-release、/data/local/tmp 与凭据路径回同一条 FORBIDDEN",
+      "fix": "按路径类别重写 readfile 判定，与 export 的路径分类对齐，保留凭据类拒绝",
+      "priority": 3
+    },
+    {
+      "id": "R7-05",
+      "title": "只读探测经 /app/export 在设备媒体库留下未清理条目",
+      "severity": "低",
+      "zone": "r7",
+      "evidence": "content://media/external/downloads/311940（内容 /etc/os-release，非敏感）",
+      "fix": "结项后由设备侧确认并清理该条目；后续探测改为导出到临时路径并即时删除",
+      "priority": 3
+    }
   ]
 }
