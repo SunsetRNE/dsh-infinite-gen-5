@@ -78,12 +78,15 @@ export const VERSION_ANCHORS = [
 // 而且必须能写「当前版本」那一节（否则最新的改动没处落笔）。
 // VERSIONS.md 是《版本沿革要点》—— UPDATE.md 的压缩版（一版 1–3 行），
 // 同样满篇版本号、同样要能写当前版本那一行；README / HARNESS / description 的指针指向它。
+// docs/oneshot/GATE.md 是《留存闸门结论》——记的是「哪一版内核 + 哪一版评分器下量到的读数」，
+// 版本号在这里是测量条件而不是当前版本指针：发版时若跟着改写，读数就与它测的那棵树脱钩（篡改证据）。
 export const PROSE_ALLOWED_FILES = [
   "package.json",
   "ENV_PROBE.md",
   "CHANGELOG.md",
   "UPDATE.md",
   "VERSIONS.md",
+  "docs/oneshot/GATE.md",
 ];
 
 // 全仓字面量扫描时跳过的目录：依赖 / 生成物 / 运行产物 / 版本库内部。
