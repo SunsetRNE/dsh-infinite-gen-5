@@ -216,6 +216,23 @@ try {
     RECEIPT_FIELDS.some((f) => f.startsWith("opening") && f.includes("目标带")),
     "回执字段的 opening 写明目标带",
   );
+  // v0.43.1（一次穿透优先 · O3 续）：boundary 只留给五类边界面，「这样可能有风险」不算边界 ——
+  // 实测单条 boundary→deliver 值 +16.53 分（150 轮），半成答案是最大失分项。
+  check(
+    DISPATCH_RULES.some((r) => r.includes("一次穿透优先")),
+    "载荷规则含「一次穿透优先」条款",
+  );
+  check(
+    DISPOSITION_TABLE.some(([s, d]) => s === "boundary" && d.includes("只有这五类算 boundary")),
+    "判定表的 boundary 行写死五类穷尽",
+  );
+  check(head.includes("只有这五类算 boundary"), "任务书写明 boundary 只留给五类边界面");
+  check(
+    DISPOSITION_TIEBREAK.includes("拿不准 pivot 还是 boundary") &&
+      DISPOSITION_TIEBREAK.includes("选 pivot"),
+    "兜底判据含「拿不准 pivot/boundary 选 pivot」",
+    DISPOSITION_TIEBREAK,
+  );
   check(files.every((f) => f.bytes > 200), "每个任务书非空");
 } finally {
   rmSync(dir, { recursive: true, force: true });
