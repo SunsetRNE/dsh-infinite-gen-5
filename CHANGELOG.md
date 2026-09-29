@@ -8,7 +8,11 @@
 
 ### ✨ 新特性
 
-- 「加载确认」自证记录（recordBoot 世代/startup/上次快照 + 面板行）+ verify_boot_attest 门禁 15 条 + docs/boot-attest.md
+- 「加载确认」自证记录（recordBoot 世代/startup/上次快照 + 面板行）+ verify_boot_attest 门禁 15 条 + docs/boot-attest.md（`f5266ff`）
+
+### 🧹 杂务与维护
+
+- bump 版本锚点至 0.38.3（README/HARNESS_PLUGIN/cordis.patch/boost-corpus/verify_dedupe/verify_prompt_gen5）
 
 ## v0.38.2 — 2026-09-29
 
