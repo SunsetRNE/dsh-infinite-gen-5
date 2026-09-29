@@ -1,4 +1,4 @@
-// 无限五代 v0.41.1 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.41.2 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -435,9 +435,13 @@ for (const m of lazyText.matchAll(/^@@unit:([^|]+)\|order:(\d+)\|anchor:([^|\n]+
 }
 const pointerCount = (prompt.match(/【惰性 L_/g) ?? []).length;
 const order160Count = (prompt.match(/Order 160/g) ?? []).length;
-// 7 个整节各留一条【惰性 L_x】指针；2 个半节（域清单 / 示例）用「…不常驻：命中…Order 160 段逐字拼回」的行内说明。
+const legendCount = (prompt.match(/惰性指针：/g) ?? []).length;
+// v0.41.2：指针压载 —— 14 条指针只留「【惰性 L_id｜摘要】／（惰性 L_id：…）」，拼回机制改由常驻里
+// 一条图例行统一说明（旧写法每条指针各抄一遍「由 Order 160 段逐字拼回」，实测占常驻 2998 B / 20.4%）。
+const pointerLines = prompt.split("\n").filter((l) => /^\s*(?:【惰性 L_\w+｜|（惰性 L_\w+：)/.test(l)).length;
 check(pointerCount === 7, "常驻内核保留 7 条整节惰性指针", `实测 ${pointerCount} 行`);
-check(order160Count >= 9, "两处半节指针也写明由 Order 160 拼回", `Order 160 出现 ${order160Count} 次`);
+check(pointerLines === 14, "14 条指针行各自带 id（7 整节 + 7 半节）", `实测 ${pointerLines} 行`);
+check(legendCount === 1 && order160Count === 1, "拼回机制由一条图例行统一说明", `图例 ${legendCount} 行 · Order 160 出现 ${order160Count} 次`);
 for (const anchorText of [
   "Dispatch rule",
   "Long-range rule",

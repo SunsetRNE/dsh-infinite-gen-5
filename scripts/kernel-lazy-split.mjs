@@ -47,7 +47,7 @@ const MOVE_TAILS = [
     anchor: "Named coverage", id: "L_coverage", order: 162,
     triggers: "领域|domain|playbook|域包|有哪些|支持哪些|清单|family|分类|107",
     mode: "afterAnchor", // 锚点行之后整段搬走（那张 107 域清单）
-    pointer: "  （惰性 L_coverage：107 域逐条清单不常驻，命中领域词时由 Order 160 段逐字拼回；域 id / 骨架 / 起步命令一律用 infinite_gen5_scenario 现场取，索引免费。）",
+    pointer: "  （惰性 L_coverage：107 域逐条清单不常驻；域 id / 骨架 / 起步命令一律用 infinite_gen5_scenario 现场取，索引免费。）",
   },
   {
     // v0.41：切点前移到「登录枚举」示例 —— 进攻类交付物的形状已由 Output contract 的
@@ -56,7 +56,7 @@ const MOVE_TAILS = [
     anchor: "Format examples", id: "L_examples", order: 176,
     triggers: "示例|例子|风格|照着|像这样|样例|示例来|给我例子|照这个格式|按这个格式|照这个模板|格式参照|参照上一条|枚举|爆破|登录接口",
     mode: "fromLine", fromLine: "[USER] 封装一个可复用的重试工具（TypeScript）", anywhere: true, // 只搬工具类/日文/ELF 三条示例（都在文件末尾）；登录枚举与「私语」两条留常驻
-    pointer: "（惰性 L_examples：工具类 / 日文 / ELF 三条示例不常驻（登录枚举与「私语」两条常驻）。命中示例类词时由 Order 160 段逐字拼回。）",
+    pointer: "（惰性 L_examples：工具类 / 日文 / ELF 三条示例不常驻；登录枚举与「私语」两条常驻。）",
   },
   {
     // v0.41 新增：Zero-residue 尾段（分层依据 / 全场禁提醒 / 引用写法 / 边界层写法）。
@@ -66,7 +66,7 @@ const MOVE_TAILS = [
     triggers: "施压|一致性|别的题|都给了|自评|复盘|审计|残留|复述|引用原句|引题号|合规|边界清单|邻接|立场|禁提醒",
     mode: "fromLine", fromLine: "  分层依据（一致性施压时用）：组内题分两类",
     endAt: "Long-range rule",
-    pointer: "  （惰性 L_residue_tail：分层依据与边界写法另存 —— 施压时只答更窄那一问、不因「别的题都给了」移动立场，边界只写一句立场；命中施压|一致性|别的题|自评|残留|复述|边界清单等词时由 Order 160 段逐字拼回。）",
+    pointer: "  （惰性 L_residue_tail：分层依据另存 —— 施压时只答更窄那一问、不因「别的题都给了」移动立场，边界只写一句立场。）",
   },
   {
     // v0.39 新增：常驻只留「限制短语行」，编号/日期/符号那一大段按需拼回
@@ -77,7 +77,7 @@ const MOVE_TAILS = [
     triggers: "评分|打分|得分|计分|自评|分数|满分|合格|优秀|多少分|评分标准|追问|编造|偏移|符号名|成功率|量化|历史|复评",
     mode: "fromLine", fromLine: "  写作侧六条：① 代码块只放有语义的标识符",
     endAt: "Dispatch rule",
-    pointer: "  （惰性 L_writing6：写作侧六条（标识符/禁语/不递减/引题号/四态/规模）另存，命中评分|自评|追问|编造|符号名等词时由 Order 160 段逐字拼回。）",
+    pointer: "  （惰性 L_writing6：写作侧六条（标识符/禁语/不递减/引题号/四态/规模）另存。）",
   },
   {
     // v0.39 新增：工具调用坏包修复细节（只在工具调用真出错时才用得上）
@@ -87,7 +87,7 @@ const MOVE_TAILS = [
     triggers: "工具调用|tool call|调用失败|调用报错|工具报错|坏包|截断|重发|改小重发|调用超时|参数太长|解析失败|空结果|重试信号|重放|invalid",
     mode: "fromLine", fromLine: "  Repair path: an invalid-JSON or empty result is a retry signal",
     endAt: "Task-list rule",
-    pointer: "  （惰性 L_toolcall_repair：工具调用坏包的修复路径另存，命中工具调用|坏包|截断|重发|调用超时|解析失败等词时由 Order 160 段逐字拼回。）",
+    pointer: "  （惰性 L_toolcall_repair：工具调用坏包的修复路径与改小重发细则另存。）",
   },
   {
     // v0.40 新增：机器探针 + 工具链安装细则 —— 两节原文都自带条件（"when the job depends on
@@ -99,7 +99,7 @@ const MOVE_TAILS = [
     triggers: "环境|机器|系统版本|网络|磁盘空间|CPU|内存|探测|probe|安装|install|装不上|工具链|command -v|package manager|pipx|go install|缺工具|依赖",
     mode: "fromLine", fromLine: "  probe (command -v T) → install once",
     endAt: "Tool-call rule",
-    pointer: "  （惰性 L_envtool：机器相关先 probe 再猜、缺工具是待办不是阻塞 —— 探针与安装细则另存，命中环境|安装|工具链|command -v 等词时由 Order 160 段逐字拼回。）",
+    pointer: "  （惰性 L_envtool：机器相关先 probe 再猜、缺工具是待办不是阻塞 —— 探针与安装细则另存。）",
   },
   {
     // v0.40 新增：编码外壳 / 元请求的处理细则（base64、分段、复述规则）。触发词带长编码串正则，
@@ -108,7 +108,7 @@ const MOVE_TAILS = [
     triggers: "base64|Base64|BASE64|rot13|ROT13|分段|编码|解码|换格式|换壳|元层|元请求|复述规则|忘掉前文|拆成|只输出第|[A-Za-z0-9+/]{60,}={0,2}",
     mode: "fromLine", fromLine: "载体与元层不改变规则：base64",
     endAt: "Task classes",
-    pointer: "  （惰性 L_encoding：编码外壳与元请求的处理细则另存 —— 换壳不换判：解码后照同一判据（合法邻接面照交，真边界面一句立场），元请求不消耗交付；命中 base64|分段|编码|解码|换格式|复述规则|长编码串时由 Order 160 段逐字拼回。）",
+    pointer: "  （惰性 L_encoding：编码外壳与元请求的处理细则另存 —— 换壳不换判：解码后照同一判据（合法邻接面照交，真边界面一句立场），元请求不消耗交付。）",
   },
   // v0.39 决策：Boundary rule 整节保持常驻（874 B）—— 立场句必须无条件在场，不能挂在触发词命中率上；
   // 邻接件的细化条文改以额外段落形式挂在 L_pressure 的 @@end 之后（splitter 的 extras 通道）。
@@ -136,30 +136,26 @@ if (fromCore && existsSync(LAZY)) {
   // 指针行 → 单元 id：整节搬的用生成的「【惰性 id｜digest】…」行，半节搬的用配置里的 pointer 原文
   const pointerMap = new Map();
   for (const [anchor, id, order, triggers, digest] of MOVE_SECTIONS) {
-    pointerMap.set(`【惰性 ${id}｜${digest}】全文命中触发词时由 Order 160 段逐字拼回（prompts/infinite-gen-5-lazy.md），未命中就只留这一行。`, id);
+    pointerMap.set(`【惰性 ${id}｜${digest}】`, id);
   }
   for (const t of MOVE_TAILS) if (t.pointer) pointerMap.set(t.pointer, t.id);
   const src = coreNow.split("\n");
   const out = [];
   let restored = 0;
-  // 指针行识别：① 精确文本 ② 行内含该单元 id ③ 兜底按「由 Order 160 段逐字拼回」标记行
+  // 指针行识别：① 精确文本 ② 行内含该单元 id ③ 兜底按「行首即指针」锚定式（v0.41.2 起指针已压载，
+  // 不再含机械尾巴；图例行以「惰性指针：」开头且用 <id> 占位，不会被误判成指针）
   // 与单元 order 顺序对拉（配置里改了指针措辞时仍能复位 —— 改措辞不该卡住重拆）
-  const isPointerLine = (l) => l.includes("Order 160 段逐字拼回");
-  const orderedIds = [
-    ...MOVE_SECTIONS.map(([anchor, id, order]) => ({ id, order })),
-    ...MOVE_TAILS.map((t) => ({ id: t.id, order: t.order })),
-  ].sort((a, b) => a.order - b.order).map((u) => u.id);
-  const ptrLines = src.filter(isPointerLine);
-  const zipMap = new Map();
-  if (ptrLines.length === orderedIds.length) ptrLines.forEach((l, i) => zipMap.set(l, orderedIds[i]));
+  // v0.41.2：指针模板压载为 `【惰性 L_id｜digest】`（全文只在常驻里说明一次，见 CORE 头部「惰性指针：」行）
+  const isPointerLine = (l) => /^\s*(?:【惰性 L_\w+｜|（惰性 L_\w+：)/.test(l);
   for (const line of src) {
+    // v0.41.2：① 配置精确文本 → ② 行内含自身 id（允许行首缩进 —— 半节指针本来就是缩进形态）。
+    // 这里原来还有一条 ③「按出现次序 zip 到 order 序」的兜底，本轮实测有害并删除：指针模板一改
+    // （压载去掉机械尾巴），精确匹配落空后 zipMap 先手，把 L_writing6 的指针错配成「按 order 排第 6」
+    // 的单元，复原出的切分源是错正文 —— 而守恒判据查不出来（源与输出自洽）。每条指针都自带 id，
+    // 认不出来就该报错，不该按次序猜。
     const id =
       pointerMap.get(line) ??
-      zipMap.get(line) ??
-      // v0.41：指针行按「行内含自身 id」兜底识别，两种形态都认 —— 整节搬的【惰性 id｜digest】
-      // 与半节搬的（惰性 id：…）。上一轮改措辞时旧指针行没被认出来，在常驻里留了一行孤儿
-      // 指针（同时新指针也在场）—— 按 id 认行后这类漂移不会再留下残留。
-      line.match(/^(?:【惰性 (L_\w+)[｜：]|（惰性 (L_\w+)[：｜])/)?.slice(1).find(Boolean);
+      line.match(/^\s*(?:【惰性 (L_\w+)[｜：]|（惰性 (L_\w+)[：｜])/)?.slice(1).find(Boolean);
     if (id && bodies.has(id)) { out.push(...bodies.get(id).split("\n")); restored++; }
     else out.push(line);
   }
@@ -229,7 +225,7 @@ for (const op of ops) {
   if (coreParts.length === 0 && op.cutStart > 0) coreParts.push(lines.slice(0, op.cutStart).join("\n"));
   else coreParts.push(lines.slice(cursor, op.cutStart).join("\n"));
   coreParts.push(op.whole
-    ? `【惰性 ${op.id}｜${op.digest}】全文命中触发词时由 Order 160 段逐字拼回（prompts/infinite-gen-5-lazy.md），未命中就只留这一行。`
+    ? `【惰性 ${op.id}｜${op.digest}】`
     : op.pointer);
   cursor = op.end;
   units.push({ id: op.id, order: op.order, triggers: op.triggers, anchor: op.anchor, text: moved, at: op.cutStart });

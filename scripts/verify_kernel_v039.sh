@@ -32,7 +32,7 @@ ends=$(grep -c '^@@end:' prompts/infinite-gen-5-lazy.md)
 say "单元：${units} 个（@@end ${ends} 个）"
 [ "$units" = "$EXPECT_UNITS" ] && [ "$ends" = "$EXPECT_UNITS" ] || bad "惰性单元数不是 ${EXPECT_UNITS}"
 # 常驻指针行数必须与单元数一致：搬走的是正文，索引必须留在常驻侧（否则触发词无处可查）
-pointers=$(grep -c 'Order 160 段逐字拼回' prompts/infinite-gen-5.md)
+pointers=$(grep -cE '^【惰性 L_|（惰性 L_[a-z0-9_]+：' prompts/infinite-gen-5.md)  # v0.41.2：指针压载后按「行首即指针」计数
 say "常驻指针行：${pointers} 行"
 [ "$pointers" = "$EXPECT_UNITS" ] || bad "常驻指针行数 ${pointers} ≠ 单元数 ${EXPECT_UNITS}"
 
