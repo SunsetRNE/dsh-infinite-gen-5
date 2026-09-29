@@ -25,7 +25,9 @@
 
 ⑤ **复验读数（全部本机实跑）**：`verify_adapters.mjs` **40/40**（B3/F3 修前 38/40）；`test-transport` 5/5 · `test-relay-plugin` **13/13**（修前 11/13）· `test-plugin-load` 3/3 · `test-dynamic-adapt` 14/14 · `test-adaptive-injection` 7/7 · `test-openai-embed` 6/6 · `test-codex-deploy` exit 0 · `test-endpoint-inventory` 10/10 · `build-adapters.mjs --check` **5 条通道 0 问题** · `build-skills.mjs --check` **0 问题**；语义指纹 `16cdd16efeb31677b8e7ce618776067cedb3a6975f9ab710cc26881dfebfe50f`。合入后五通道常驻字节（`--check --json` 实测）：dsh 13905 / 40000 · codex 13509 / 30000 · generic 20571 / 28000 · claude 20571 / 30000 · api-endpoint 20967 / 32000；内嵌索引 7062 B（generic / claude / api-endpoint），惰性单元 14 条全通道一致。**这些数字以 `--check --json` 的 `perTarget.residentBytes` 为准，别抄文档**（`adapters/README.md` 抬头已写这一句）。
 
-⑥ **边界**：本轮是**测试性合并**，不搬产物、不动宿主内核、不替宿主做装载决策；`verify:all` 尚未重跑（下一步）。要真发布适配层产物，跑 `cd adapters && node build-adapters.mjs` 现生成。
+⑥ **门禁收口（提交后收紧的三条真红，全部已修）**：**(a) 技能通道**（`verify:skill` **22/22**，修前 20/2）—— 适配层渲染的 `SKILL.md` 前置元数据缺主仓 `scripts/build_skill.mjs:106 checkFrame` 要的 `protocol: ig5-skill-frame-v1` 与 `bodySha256`，且「装到扫描根」只装 `SKILL.md`、漏装 `ig5-chain.md`。修法：`lib/skill-chain.mjs` 的 `renderSkillFile` 补齐协议字段，新增 `sealFrame()` **在锚点块织入之后**重封正文哈希（在织入前算会差一个锚点块的长度，实测 `961fc4032ca7` vs 正确的 `4bd7e18bd99b`），`build-skills.mjs --install` 同时写 `ig5-layer-01/SKILL.md` 与 `ig5-chain.md`（回滚命令对应两条）；仓内帧同步为产物逐字节版本（旧帧 sha `89480ddbde94` 备份在 `/tmp/ig5-frame-old-89480ddb.md`）。**(b) 工具注册表**（`verify:tools` **4/4**，修前 3/1）—— `bump-version` 改了 `scripts/verify_dedupe.mjs` 与 `scripts/verify_prompt_gen5.mjs` 头注释里的版本串，而 `docs/TOOL-PROTOCOLS.md` 是从这些注释生成的：**升版本后必须跟一条 `npm run tools:doc`**，否则下一轮 `verify:all` 必红。**(c) 运行态同步**（`verify:runtime` **8/8**，修前 4 处不一致）—— `~/.dsh/plugin-src/` 副本仍是旧文件，跑 `npm run sync:local:apply` 同步（新增 35 · 更新 14 · 删除 0；管理器激活记录刷新 0.45.0 → 0.46.0，指纹 `ce07c82066b3`，原文件备份 `~/.dsh/plugin-activations.json.bak-20260929183503`）。**升版本后这三条连着跑：`tools:doc` → `sync:local:apply` → `verify:all`。**
+
+⑦ **边界**：本轮是**测试性合并**，不搬产物、不动宿主内核、不替宿主做装载决策。要真发布适配层产物，跑 `cd adapters && node build-adapters.mjs` 现生成。`verify:all` 已在本版重跑（结果见下条提交）。
 
 ## v0.45.0
 
