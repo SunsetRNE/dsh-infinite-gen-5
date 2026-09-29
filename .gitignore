@@ -20,3 +20,6 @@ tests/oneshot/arm-*/artifacts/demo_*
 
 # 内核拆分前的一次性备份（回滚用；还原走 git 或 scripts/kernel-lazy-split.mjs --restore）
 .kernel-backup/
+
+# 生成器备份件（技能帧 --write 产出的 .bak）
+skills/**/*.bak
