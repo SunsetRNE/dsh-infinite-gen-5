@@ -1,0 +1,37 @@
+=== O. 鉴权矩阵（正确传参 ?token=，看 body 而非状态码） ===
+no-token  /app/device -> {"result":"[UNAUTHORIZED]"}
+bad-token /app/device -> {"result":"[UNAUTHORIZED]"}
+good-tok  /app/device -> {"result":"model=OnePlus PJD110\nandroid=16 (SDK 36)\nbattery=21% charging=true\nnetwork=cellular\nscreen=on\n
+
+=== P. 读类端点 × 鉴权（无 token vs 真 token） ===
+/app/readfile?path=/sdcard         no-tok-> {"result":"[UNAUTHORIZED]"}              | good-> {"result":"FORBIDDEN: 该路径属于凭据或运行时内�
+/app/clip                          no-tok-> {"result":"[UNAUTHORIZED]"}              | good-> {"result":"（剪贴板为空）"}
+/app/location                      no-tok-> {"result":"[UNAUTHORIZED]"}              | good-> {"result":"DISABLED 位置能力未开启：请到 DSHA「�
+/app/sensors                       no-tok-> {"result":"[UNAUTHORIZED]"}              | good-> {"result":"DISABLED 传感器能力未开启（设备能力�
+/app/apps                          no-tok-> {"result":"[UNAUTHORIZED]"}              | good-> {"result":"[用户应用]\ncom.dsh.client\tDSHA uid=10527\n[
+
+=== Q. 凭据区可读性判定（只取判定串，取不到就不取） ===
+/root/.dsh/.bridge_token     readfile-> {"result":"FORBIDDEN: 该路径属于凭据或运行时内部状态，不允许经设备桥读取/导出；请改为导�
+/root/.ssh/id_ed25519        readfile-> {"result":"FORBIDDEN: 该路径属于凭据或运行时内部状态，不允许经设备桥读取/导出；请改为导�
+/root/.android               readfile-> {"result":"FORBIDDEN: 该路径属于凭据或运行时内部状态，不允许经设备桥读取/导出；请改为导�
+/root/report.md              readfile-> {"result":"FORBIDDEN: 该路径属于凭据或运行时内部状态，不允许经设备桥读取/导出；请改为导�
+/sdcard                      readfile-> {"result":"FORBIDDEN: 该路径属于凭据或运行时内部状态，不允许经设备桥读取/导出；请改为导�
+
+=== R. export 端点对凭据路径 vs 产物路径 ===
+/root/.dsh/.credentials.yaml     export-> {"result":"FORBIDDEN: 该路径属于凭据或运行时内部状态，不允许经设备桥读取/导出；请改为导�
+/root/report.md                  export-> {"result":"NOT_FOUND: /root/report.md"}
+
+=== S. 桥监听面（是否仅回环） ===
+LISTEN 0      511             127.0.0.1:43795      0.0.0.0:*    users:(("MainThread",pid=2140,fd=20))
+LISTEN 0      1024            127.0.0.1:10156      0.0.0.0:*                                         
+LISTEN 0      128             127.0.0.1:10157      0.0.0.0:*                                         
+LISTEN 0      4096           172.19.0.1:40379      0.0.0.0:*                                         
+LISTEN 0      128               0.0.0.0:12479      0.0.0.0:*                                         
+LISTEN 0      511             127.0.0.1:3080       0.0.0.0:*    users:(("MainThread",pid=1872,fd=19))
+LISTEN 0      128               0.0.0.0:16094      0.0.0.0:*                                         
+LISTEN 0      50                  [::1]:3090          [::]:*                                         
+LISTEN 0      50     [::ffff:127.0.0.1]:12121            *:*                                         
+LISTEN 0      4096                    *:7890             *:*                                         
+--- 3090 绑定地址 ---
+LISTEN 0      50                  [::1]:3090          [::]:*          
+LISTEN 0      50     [::ffff:127.0.0.1]:3090             *:*          

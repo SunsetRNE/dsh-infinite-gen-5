@@ -1,0 +1,23 @@
+{
+  "zone": "r4",
+  "source": "tests/redteam/r4/artifacts/r4.md + r4_verify.sh + 回执",
+  "chain": [
+    { "from": "3090 仅环回监听（[::1] / [::ffff:127.0.0.1]）且门禁判别在响应体内", "to": "同机进程一旦持有 token 即可全量调用 30 个设备桥端点（读屏/输入/剪贴板/文件/位置/传感器）", "evidence": "r4_verify.sh 7 组断言 → RESULT=ALL_PASS EXIT=0；带 token 放行实测" },
+    { "from": "/app/help 无 token 亦可取回 5537 B 能力清单", "to": "端点能力面（协议 2 / 30 端点 / 参数写法）对外可枚举", "evidence": "HTTP 200 · Content-Length 5537 · APP_CODE=147" },
+    { "from": "/app/readfile 对普通 Download 与凭据路径返回串逐字一致", "to": "路径白名单粒度在响应层不可区分，无法用返回差异做路径探测", "evidence": "三例逐字比对 → 均 FORBIDDEN" }
+  ],
+  "iocs": [
+    { "type": "endpoint", "value": "30 unique /app/*", "note": "读屏4 输入4 虚拟屏3 画像3 剪贴板1 文件2 位置1 传感器2 震动手电2 用户动作5 自省3", "state": "已知" },
+    { "type": "version", "value": "APP_VERSION 0.1.7-rc2 / BRIDGE_PROTOCOL 2", "note": "设备桥协议与 App 版本，用于比对复现", "state": "已知" },
+    { "type": "path", "value": "/root/.dsh/.bridge_token", "note": "mode 0600 · root:root · 32 B，与 R3 同源", "state": "已知" },
+    { "type": "endpoint", "value": "/app/location · /app/sensors", "note": "回 DISABLED…（授权未开，非漏洞）", "state": "已知" },
+    { "type": "endpoint", "value": "/app/ui/screenshot · 短信端点 · /app/clip", "note": "门禁态与返回串语义未测（本区按硬约束未探测短信面）", "state": "未知" }
+  ],
+  "risks": [
+    { "id": "R4-01", "title": "设备桥门禁只在响应体，HTTP 层恒 200", "severity": "中", "zone": "r4", "evidence": "无/错/错参名三态均 200 → body [UNAUTHORIZED]", "fix": "未授权统一回 401；探针与审计改判 body 并落结构化拒绝原因", "priority": 2 },
+    { "id": "R4-02", "title": "桥令牌为容器内明文文件，同机进程可读即可全量调用", "severity": "中", "zone": "r4", "evidence": "token 0600 root:root 32 B；容器内 uid=0 语境下 0600 不构成隔离", "fix": "改域套接字或按调用方 uid 校验；令牌加时效与轮换", "priority": 2 },
+    { "id": "R4-03", "title": "应用可见性受限致横向面读数不完整", "severity": "低", "zone": "r4", "evidence": "/app/apps 仅 1 条可见用户应用", "fix": "需要时以明确授权核对包可见性配置（QUERY_ALL_PACKAGES 或显式 queries）", "priority": 3 },
+    { "id": "R4-04", "title": "截图/剪贴板/短信端点门禁态未测", "severity": "低", "zone": "r4", "evidence": "本区按硬约束只做只读探测，未触短信与点按类端点", "fix": "在二次授权窗口内补测并记录状态码与拒绝串", "priority": 3 },
+    { "id": "R4-05", "title": "设备 shell 通道未连，设备侧进程/配置读数缺失", "severity": "低", "zone": "r4", "evidence": "adb-shell 未连；getprop/ps/df 未取", "fix": "用户在设置→设备能力授权开启后补测（重试不解决开关状态）", "priority": 3 }
+  ]
+}

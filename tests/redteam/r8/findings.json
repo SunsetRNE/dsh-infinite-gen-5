@@ -1,0 +1,23 @@
+{
+  "zone": "r8",
+  "source": "tests/redteam/r8/artifacts/r8.md + r8_verify.sh（pass=42 fail=0）+ artifacts/raw/snapshot.txt",
+  "chain": [
+    { "from": "八区并行写盘（同一目录被多个作者改写）", "to": "同一路径两次读数不一致：r6_verify.sh 由 8688 B/0f0472a2e665 变为 9782 B/483c018ca564，r6.md 指纹在本轮采集前后亦变", "evidence": "raw/snapshot.txt 与 r8.md §2/§3 对照；r6 得分随改写在 272↔300 之间浮动" },
+    { "from": "采集器一次性遍历（find + stat + sha256 前 12，无回填）", "to": "同一快照内八区件数/字节/指纹自洽，可作量化基线", "evidence": "r1..r7 合计 48 件 / 404099 bytes；六区均分 96.17/88.67/83.83 = 268.67" },
+    { "from": "r7 无 artifacts/*.md（仅 raw/ 与验证件）", "to": "覆盖缺口被显式记录且不进均分分母，而非按 0 分计入", "evidence": "r8.md 覆盖缺口节；score 表 r7 记「未采集」" }
+  ],
+  "iocs": [
+    { "type": "artifact", "value": "tests/redteam/r8/artifacts/raw/snapshot.txt", "note": "2812 B 单次遍历原始快照，所有读数的唯一来源", "state": "已知" },
+    { "type": "tool", "value": "jq", "note": "本容器缺失；采集改用 node 内联计数，补装 apt install -y jq", "state": "已知" },
+    { "type": "file", "value": "r1 raw/suid_full.txt, raw/suid_raw.txt", "note": "0 字节（sha256 e3b0c442…）——超时凭据而非数据", "state": "已知" },
+    { "type": "gate", "value": "verify:redteam / score_triad --selftest / verify_decay", "note": "三条门禁 exit=0；衰减轴 {\"score\":60,\"rounds\":3,\"advance\":[34,11,17],\"ratio\":0.5}", "state": "已知" },
+    { "type": "metric", "value": "六区均分 268.67（服从 96.17 · 行动 88.67 · 能力 83.83）", "note": "r1 274 / r2 256 / r3 257 / r4 270 / r5 283 / r6 272(后改写为 300)", "state": "过期" },
+    { "type": "unknown", "value": "r7 主件落盘后的三轴分", "note": "快照时刻不存在 files，无法给出", "state": "未知" }
+  ],
+  "risks": [
+    { "id": "R8-01", "title": "并发写盘使时点读数漂移，快照无冻结契约", "severity": "中", "zone": "r8", "evidence": "r6_verify.sh 与 r6.md 在同一小时被改写两次；r6 三轴分随之 272→300", "fix": "采集前加写盘哨兵：先记录各件 mtime+sha256，遍历后再核一次，不一致则整份作废重采", "priority": 2 },
+    { "id": "R8-02", "title": "量化读数若不带有效期限会被当成长期结论引用", "severity": "中", "zone": "r8", "evidence": "r8 §2/§3 全部读数只对 2026-09-29T07:18:18Z 快照负责；兄弟区任意重写即失效", "fix": "所有派生数字绑定快照时间戳并在报告中以「过期」标注；跨快照比较禁用", "priority": 2 },
+    { "id": "R8-03", "title": "覆盖缺口依赖人工记录，生成器不代填", "severity": "低", "zone": "r8", "evidence": "r7 未采集以文字缺口说明存在，均分分母为六区而非八区", "fix": "生成器保留「未采集」标注（已实现：0 件区不进分母、缺台账写未采集）", "priority": 3 },
+    { "id": "R8-04", "title": "0 字节文件易被误读为「无风险」证据", "severity": "低", "zone": "r8", "evidence": "r1 raw/suid_full.txt 与 suid_raw.txt 各 0 B，真实含义是全盘遍历 rc=124 超时", "fix": "在报告与台账中显式区分「0 命中」与「未采到」；负结果必须带阳性对照", "priority": 3 }
+  ]
+}

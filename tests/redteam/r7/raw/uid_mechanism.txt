@@ -1,0 +1,21 @@
+=== Y. 假 uid 与真 uid 的并存证据 ===
+  id -u (getuid 系统调用，proot 伪造): 0
+  /proc/self/status Uid (内核真值，proot 未改写): Uid:	10527	10527	10527	10527
+  /proc/self/status Gid: Gid:	10527	10527	10527	10527
+  /proc/1/status Name+Uid: grep: /proc/1/status: No such file or directory
+
+
+=== Z. 对照：真 DAC 是否按真实 owner 判定 ===
+  z1 mode600 默认owner, proot-nobody 读 -> OWNER
+  z1 改 owner=65534 后, proot-root 读     -> OWNER
+  z1 改 owner=65534 后, proot-nobody 读   -> OWNER
+
+=== AA. 容器内是否存在「真 owner 非当前身份」的文件（读 /etc/shadow 等） ===
+  /etc/shadow                    proot-nobody 首字节/报错 -> roo
+  /etc/gshadow                   proot-nobody 首字节/报错 -> roo
+  /root/.ssh/id_ed25519          proot-nobody 首字节/报错 -> ---
+  /root/.dsh/.bridge_token       proot-nobody 首字节/报错 -> bfb
+
+=== AB. 结论用计数（把 ④ 的机器判据落到数字） ===
+  /root 下 maxdepth3 凭据类文件数 = 12
+  其中 proot-nobody 实读成功 = 9 ；被拒 = 0

@@ -1,0 +1,61 @@
+=== R7 数据与日志面 验证件 2026-09-29T07:40:45Z ===
+PASS  A1     proot 假 uid 与内核真 uid 分离 (id -u=0, /proc/self/status Uid=10527)
+PASS  A2     进程表中 proot 启动器（libproot.so）在场
+PASS  A2b    /proc/1/comm 在本命名空间内不存在 (=absent)
+PASS  A3     PROOT_* 环境变量数 (=3)
+PASS  B1     凭据类命中文件数 (=12)
+PASS  B2     mode 600 计数 (=9)
+PASS  B3     mode 644 计数 (=3)
+PASS  B4     644 且非公钥/标签的文件数（应为 0） (=0)
+PASS  B5     sha256[0:8] /root/.dsh/.bridge_token (=b52a60d5)
+PASS  B5     sha256[0:8] /root/.dsh/.credentials.yaml (=a64b618e)
+PASS  B5     sha256[0:8] /root/.ssh/id_ed25519 (=f6e392e1)
+PASS  B5     sha256[0:8] /root/.pki/nssdb/key4.db (=e33ccee1)
+PASS  B6     12 条命中均为绝对路径 (=12)
+PASS  B7     凭据类文件总字节（只算长度，不 dump 内容；awk 求和，本机无 bc） (=72275)
+PASS  B8     sha256[0:8] /root/.pki/nssdb/cert9.db (=e6e6ef70)
+PASS  C1     /root/.dsh 存在 (=yes)
+PASS  C2     /root/.dsh/sessions 存在 (=yes)
+PASS  C3     会话 workspace 目录数 (=4)
+PASS  C4     会话文件总数 (=634)
+PASS  C5     state 不存在（命名空间内无该路径）
+PASS  C5     logs 不存在（命名空间内无该路径）
+PASS  C5     stats 不存在（命名空间内无该路径）
+PASS  C5     tasks 不存在（命名空间内无该路径）
+PASS  C5     history 不存在（命名空间内无该路径）
+PASS  C6     有界扫描文件数（排除 node_modules/plugin-src/sessions） (=18)
+PASS  C7     含 'token' 的文件数 (=4)
+PASS  C7     含 'secret' 的文件数 (=2)
+PASS  C7     含 'password' 的文件数 (=1)
+PASS  C7     含 'api_key' 的文件数 (=1)
+PASS  C7     含 'apikey' 的文件数 (=1)
+PASS  C7     含 'authorization' 的文件数 (=1)
+PASS  C7     含 'credential' 的文件数 (=1)
+PASS  C7     含 'session_key' 的文件数 (=1)
+PASS  C8     含私钥块头的文件（只列路径）
+PASS  C9     含 Bearer 形态的文件（只列路径）
+PASS  C10    synapse/workspaces.json 权限位 (=600)
+PASS  D1     /var/log 下文件数 (=11)
+PASS  D2     0 字节（从未写过）文件数 (=4)
+PASS  D3     /etc/logrotate.d 规则数 (=4)
+PASS  D4     /etc/logrotate.conf 不存在
+PASS  D5     logrotate 可执行文件路径（空 = 未安装） (=none)
+PASS  D6     dpkg 是否登记 logrotate (=0)
+PASS  D7     cron 中 logrotate 调用数 (=0)
+PASS  D8     无轮转的日志文件数（= 全部存活日志） (=7)
+PASS  E1     容器内真实身份（宿主 uid） (=10527)
+PASS  E2     mode 000 文件对 proot-nobody 的可读性 (=DENIED)
+PASS  E3     proot-nobody 实读 0600 凭据成功数 (=9)
+PASS  E4     proot-nobody 被拒数 (=0)
+PASS  E5     proot-nobody 可写 /root（mode 700） (=yes)
+PASS  F1     3090 非回环绑定数 (=0)
+PASS  F2     3090 绑定在回环
+PASS  F3     无 token 调用 /app/device
+PASS  F4     错 token 调用 /app/device
+PASS  F5     正确 token 调用 /app/device
+PASS  F6     /app/readfile 对异类路径返回同一 FORBIDDEN 的条数 (=4)
+PASS  F7     凭据路径 export 被拒
+PASS  F8     普通路径 export 被允许（判定串，不执行写入）
+PASS  G1     验证件内长密钥字面量数（0 = 无明文） (=0)
+SUMMARY  PASS=58 FAIL=0 TOTAL=58
+RESULT=ALL_PASS

@@ -1,0 +1,25 @@
+{
+  "zone": "r1",
+  "source": "tests/redteam/r1/artifacts/r1.md + r1_selftest.sh（含本轮修订 A9/A9c）",
+  "chain": [
+    { "from": "proot 把 euid 映射为 0（`id -u`=0）", "to": "内核 status 仍报真身 Uid: 10527，且 CapInh/Prm/Eff/Bnd/Amb 全 0、Seccomp=2、NoNewPrivs=1", "evidence": "id -u 与 /proc/self/status 逐字段对照；capsh Bounding set 为空" },
+    { "from": "`/etc/shadow` 的 open(O_WRONLY) 返回成功", "to": "写入落点是应用私有副本（设备号 65103），非宿主真实 shadow —— 不构成提权", "evidence": "stat 设备号与 ubi 层对照；r1.md 判为「表面可写」" },
+    { "from": "mountinfo 34 行全 rw（RO_LINES=0）且含 10 项 bind", "to": "容器可写面直达 /system /apex /sdcard /run/dsha-rc1-state 等宿主导出目录", "evidence": "mountinfo.txt 34 行 + bind 项清单" }
+  ],
+  "iocs": [
+    { "type": "identity", "value": "Uid: 10527", "note": "内核真身 uid，与容器内 euid 0 不一致；对应 Android app uid", "state": "已知" },
+    { "type": "file", "value": "/usr/bin/su", "note": "4755 阳性对照，证明 SUID 扫描面非空", "state": "已知" },
+    { "type": "file", "value": "SUID/SGID 候选 6 项", "note": "mount/su/umount/ssh-agent/dbus-daemon-launch-helper/ssh-keysign", "state": "已知" },
+    { "type": "mount", "value": "10 项 bind（/system /apex /sdcard /run/dsha-rc1-state 等）", "note": "RO_LINES=0，全部 rw", "state": "已知" },
+    { "type": "path", "value": "/etc/shadow", "note": "open(O_WRONLY) 成功但落在 app 私有副本（设备号 65103）", "state": "已知" },
+    { "type": "capability", "value": "CapEff=0 / Seccomp=2 / NoNewPrivs=1", "note": "提权面在容器内闭合", "state": "已知" },
+    { "type": "path", "value": "sudo / doas / sudoers / ld.so.preload", "note": "四项全 ABSENT", "state": "已知" },
+    { "type": "file", "value": "raw/suid_full.txt, raw/suid_raw.txt", "note": "0 字节 —— 全盘 find 两次 rc=124 超时，无内容", "state": "已知" }
+  ],
+  "risks": [
+    { "id": "R1-01", "title": "bind 挂载全 rw，含 /system 与 /sdcard 导出面", "severity": "中", "zone": "r1", "evidence": "mountinfo 34 行 RO_LINES=0；10 项 bind 含 /system /apex /sdcard /run/dsha-rc1-state", "fix": "只读消费的挂载改 ro bind；/sdcard 与状态目录按最小面收敛", "priority": 2 },
+    { "id": "R1-02", "title": "验证件 A9 依赖可漂移的扫描集合（已修）", "severity": "低", "zone": "r1", "evidence": "同一脚本两次复跑 SUID 4→3：timeout 20 截断慢目录；现改为 A9c 固定清单覆盖 + A9b 阳性对照作判据", "fix": "已完成：总数只作读数、判定走固定清单；后续区沿用「负结果必过阳性对照」", "priority": 3 },
+    { "id": "R1-03", "title": "proot 身份映射使容器内 root 语义与内核 uid 不一致", "severity": "低", "zone": "r1", "evidence": "id -u=0 而 /proc/self/status Uid: 10527；/proc/1 与 ns/{pid,user} 缺失", "fix": "审计口径统一写明「容器内 euid 非内核真身」；涉及 uid 归因的结论一律标注映射层", "priority": 3 },
+    { "id": "R1-04", "title": "目录清单外分支的 SUID 全集未知", "severity": "低", "zone": "r1", "evidence": "全盘 find 两次 rc=124；A9 只覆盖固定 14 个目录", "fix": "宿主侧或带 --one-file-system 的并行遍历补齐；容器内保持固定清单 + 阳性对照", "priority": 3 }
+  ]
+}

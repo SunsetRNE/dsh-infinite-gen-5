@@ -1,0 +1,27 @@
+=== G1. readfile 对「普通存在路径」是否能读出内容（只取长度与分类，不落内容） ===
+  /etc/hostname                                              BLOCKED  bytes=161 head={"result":"FORBIDDEN: 该路径属于凭据或
+  /etc/os-release                                            BLOCKED  bytes=161 head={"result":"FORBIDDEN: 该路径属于凭据或
+  /tmp/.r7_z1                                                BLOCKED  bytes=161 head={"result":"FORBIDDEN: 该路径属于凭据或
+  /root/dsh-infinite-gen-5/tests/redteam/r7/raw/perm_matrix.txt BLOCKED  bytes=161 head={"result":"FORBIDDEN: 该路径属于凭据或
+  /data/local/tmp                                            BLOCKED  bytes=161 head={"result":"FORBIDDEN: 该路径属于凭据或
+
+=== G2. export 门禁 ===
+  /etc/os-release              -> {"result":"OK: content://media/external/downloads/311940"}
+  /sdcard/Download             -> {"result":"NOT_FOUND: /sdcard/Download"}
+
+=== G3. 只读端点（不触屏幕内容的）门禁 ===
+  /app/version           no-tok -> {"result":"[UNAUTHORIZED]"}  good -> {"result":"BRIDGE_PROTOCOL=2\nAPP_VERSION=0.1.7-rc2\nAPP_COD
+  /app/plugins           no-tok -> {"result":"[UNAUTHORIZED]"}  good -> {"result":"LOADED:AccountController,AgentDefaultModelConfig,
+  /app/vscreen/status    no-tok -> {"result":"[UNAUTHORIZED]"}  good -> {"result":"{\"ok\":false,\"error\":\"VSCREEN_NOT_RUNNING\",\
+
+  [未测] /app/ui/dump /app/ui/screenshot —— 会取到屏幕上的个人内容，按授权口径排除
+
+=== G4. 桥监听地址（是否暴露到非回环） ===
+  LISTEN 0      50                  [::1]:3090          [::]:*          
+  LISTEN 0      50     [::ffff:127.0.0.1]:3090             *:*          
+  非回环 3090 绑定数 = 0
+
+=== G5. 令牌文件与桥进程的关系（谁能读 token 就能控设备） ===
+  token 文件 mode: 600 root:root
+  桥进程 pid/owner: [::]:*
+*:*

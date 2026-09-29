@@ -1,0 +1,23 @@
+{
+  "zone": "r3",
+  "source": "tests/redteam/r3/artifacts/r3.md + 回执",
+  "chain": [
+    { "from": "7890 通配监听且免认证允许 CONNECT 到 127.0.0.1", "to": "以 10.202.11.230 与 172.19.0.1 为源经隧道取到 3090 门禁响应、3080 的 401 页、43795 的 upstream 回显", "evidence": "pivot_matrix.json 三源隧道实测；r3.md ★ 关键链" },
+    { "from": "3090 门禁判别在响应体内（HTTP 恒 200）", "to": "按状态码判成败的审计会漏判未授权访问", "evidence": "无 token 五路径全 200 + {\"result\":\"[UNAUTHORIZED]\"}，Content-Length 27 恒定" },
+    { "from": "/app/help 正文泄漏 token 路径与 ?token= 传参形式", "to": "token 位置可知，配合 7890 旁路即成取用链", "evidence": "authprobe 回显 /root/.dsh/.bridge_token" }
+  ],
+  "iocs": [
+    { "type": "port", "value": "7890", "note": "SOCKS5(免认证) + SOCKS4a + HTTP CONNECT 三协议同端口，绑 *", "state": "已知" },
+    { "type": "port", "value": "43795", "note": "根路径回 {\"ok\":true,\"upstream\":\"https://api.anthropic.com\"}", "state": "已知" },
+    { "type": "port", "value": "3090", "note": "设备桥，门禁在响应体内", "state": "已知" },
+    { "type": "path", "value": "/root/.dsh/.bridge_token", "note": "由 /app/help 正文泄漏；文件 mode 0600 32B", "state": "已知" },
+    { "type": "port", "value": "10150/10152/10162/46888/12479/16094", "note": "非 HTTP 或无响应，fd 表在本命名空间不可见", "state": "未知" }
+  ],
+  "risks": [
+    { "id": "R3-01", "title": "环回绑定被同机通配代理旁路，不构成隔离边界", "severity": "高", "zone": "r3", "evidence": "7890 免认证 CONNECT 到 127.0.0.1，两源实测取到 3090/3080/43795 响应", "fix": "7890 加来源 ACL 或改绑 127.0.0.1/unix socket；把免认证 CONNECT 收敛为需口令", "priority": 1 },
+    { "id": "R3-02", "title": "门禁只在响应体内，HTTP 状态码层无差别", "severity": "中", "zone": "r3", "evidence": "无/错/错参名三态均 200，body 为 [UNAUTHORIZED]", "fix": "未授权统一回 401 并保留 body 语义；探针与审计改判 body", "priority": 2 },
+    { "id": "R3-03", "title": "帮助文本泄漏 token 路径与传参形式", "severity": "中", "zone": "r3", "evidence": "/app/help 回显 /root/.dsh/.bridge_token 与 ?token=", "fix": "帮助文本不回传本机路径；改用头传 token 并减少查询串留痕", "priority": 2 },
+    { "id": "R3-04", "title": "20 次顺序请求无速率限制", "severity": "低", "zone": "r3", "evidence": "ratelimit.json 状态码全 200，无 429/退避", "fix": "桥与 web 入口加节流与失败计数", "priority": 3 },
+    { "id": "R3-05", "title": "13 条 LISTEN 无进程归因", "severity": "低", "zone": "r3", "evidence": "仅 3080/43795 两条取到 fd，其余 uid 10088/10234/10378/10385 非本容器进程", "fix": "宿主侧核对 uid→包名；命名空间内补 /proc/<pid>/fd 可见性", "priority": 3 }
+  ]
+}

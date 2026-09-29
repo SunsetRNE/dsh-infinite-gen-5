@@ -1,0 +1,45 @@
+=== H. DSH 会话目录（每 workspace 字节/文件数/最新 mtime） ===
+/root/.dsh/sessions/--root-Branchbase--/         21586898 bytes    24 files  newest=2026-09-29
+/root/.dsh/sessions/--root-GitHub--/               202206 bytes     6 files  newest=2026-09-26
+/root/.dsh/sessions/--root-dsh-infinite-gen-4--/  143415642 bytes   596 files  newest=2026-09-29
+/root/.dsh/sessions/--root-weixin--/               682543 bytes     8 files  newest=2026-09-28
+
+=== I. 会话数据里含敏感字样的文件计数（不读内容，只计数） ===
+token            0
+secret           0
+password         0
+api_key          0
+apikey           0
+authorization    0
+credential       0
+session_key      0
+--- 会话文件总数 ---
+634
+
+=== J. /var/log 全部文件（字节 mtime 轮转标记） ===
+         0 2026-09-25 17:19 /var/log/btmp
+         0 2026-09-25 17:19 /var/log/faillog
+         0 2026-09-25 17:19 /var/log/lastlog
+         0 2026-09-25 17:19 /var/log/wtmp
+      1184 2026-09-26 11:12 /var/log/fontconfig.log
+     21052 2026-09-29 06:26 /var/log/apt/eipp.log.xz
+     27687 2026-09-29 06:26 /var/log/alternatives.log
+     43177 2026-09-29 06:26 /var/log/apt/history.log
+     61237 2026-09-25 17:19 /var/log/bootstrap.log
+    154927 2026-09-29 06:26 /var/log/apt/term.log
+    432151 2026-09-29 06:26 /var/log/dpkg.log
+--- /var/log 文件总数 ---
+11
+--- 0 字节文件数（从未被写过） ---
+4
+
+=== K. logrotate 规则 ===
+alternatives
+apt
+dpkg
+ufw
+--- logrotate.conf 顶层 ---
+grep: /etc/logrotate.conf: No such file or directory
+--- logrotate 是否装了 ---
+--- cron 里有 logrotate 吗 ---
+--- systemd timer ---

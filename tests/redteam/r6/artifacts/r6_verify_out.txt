@@ -1,0 +1,35 @@
+[PASS] A01    uid=0 且 /etc/os-release 含 Ubuntu 24.04
+[PASS] A02    CapEff=0000000000000000 应为全 0
+[PASS] A03    /var/log 存在且为目录
+[PASS] A04    wtmp/btmp/lastlog 均为 0 字节
+[PASS] A05    auth.log/secure/syslog/messages 均不存在
+[PASS] A06    journal 目录存在, 文件数=0
+[PASS] A07    /run/systemd/journal 不存在
+[PASS] A08    journalctl 回: No journal files were found. -- No entries -- 
+[PASS] A09    systemctl is-system-running = offline
+[PASS] A10    dmesg: dmesg: read kernel buffer failed: Function not implemented
+[PASS] A11    /dev/kmsg 为字符设备且读取返回非 0
+[PASS] A12    dmesg_restrict=0 kptr_restrict=2
+[PASS] A13    auditd/auditctl/ausearch/aureport 均不在 PATH
+[PASS] A14    /etc/audit 与 /var/log/audit 均不存在
+[PASS] A15    /proc/sys/kernel 下 audit* 计数=0
+[PASS] A16    libaudit 包数=2, auditd 候选版本=1:3.1.2-2.1ubuntu0.1
+[PASS] A17    /proc/net/nf_conntrack 存在
+[PASS] A18    nf_conntrack 读取被拒（root 亦不可读）
+[PASS] A19    /proc/net/ip_conntrack 不存在
+[PASS] A20    ss -tln 监听条目数=15 (>=10)
+[PASS] A21    3080/3090/43795 中命中监听数=3
+[PASS] A22    ss -tan 中 :7890 条目数=70
+[PASS] A23    /proc/net/tcp+tcp6 行数=396
+[PASS] A24    sshd 二进制=0, sshd 进程数=0
+[PASS] A25    bridge_token bytes=32 mode=600
+[PASS] A26    /root/.dsh 顶层 .log 文件集合=[repair-builtin.log,]
+[PASS] A27    infinite-gen-5-stats.json 含 ig5-stats/1 schema
+[PASS] A28    stats+usage 中 429/限速 匹配行数=0
+[PASS] A29    apt Commandline 行=111 非apt调用=0; dpkg.log 非dpkg格式行=0
+[PASS] A30    桥 /app/version 回读含 BRIDGE_PROTOCOL=2
+[PASS] A31    /app/device http=200 且含 model=
+[PASS] A32    端点总数=30, 日志/历史/限速类端点=0
+
+SUMMARY: total=32 pass=32 fail=0
+RESULT=ALL_PASS

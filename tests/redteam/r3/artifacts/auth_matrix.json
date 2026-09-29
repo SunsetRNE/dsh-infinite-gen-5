@@ -1,0 +1,42 @@
+{
+ "/app/version|no_token": {
+  "status": 200,
+  "body": "{\"result\":\"[UNAUTHORIZED]\"}"
+ },
+ "/app/version|with_token": {
+  "status": 200,
+  "body": "{\"result\":\"BRIDGE_PROTOCOL=2\\nAPP_VERSION=0.1.7-rc2\\nAPP_CODE=147\\nHINT=端点清单见 /app/help；判版本请用 >= 而不是 ==\\n\"}"
+ },
+ "/app/device|no_token": {
+  "status": 200,
+  "body": "{\"result\":\"[UNAUTHORIZED]\"}"
+ },
+ "/app/device|with_token": {
+  "status": 200,
+  "body": "{\"result\":\"model=OnePlus PJD110\\nandroid=16 (SDK 36)\\nbattery=25% charging=false\\nnetwork=cellular\\nscreen=on\\napp_foreground=true\\nstorage_free=578.39 GB total=932.51 GB\\nmemory_free=7.32 GB total=22.62 GB\"}"
+ },
+ "/app/help|no_token": {
+  "status": 200,
+  "body": "{\"result\":\"[UNAUTHORIZED]\"}"
+ },
+ "/app/help|with_token": {
+  "status": 200,
+  "body": "{\"result\":\"DSHA 3090 桥端点清单（BRIDGE_PROTOCOL=2）\\ntoken 取自 /root/.dsh/.bridge_token，下面记为 $T。\\n带中文/空格的参数一律用 -G --data-urlencode，别手写 URL 编码。\\n\\n== 屏幕操作（无障碍服务，不需要 ADB/Shizuku）==\\n读屏  curl -s \\\"127.0.0.1:3090/app/ui/dump?token=$T\\\"\\n      → 每行「[序号] \\\"文字\\\" 可点击 中心=(x,y"
+ },
+ "/app/list|no_token": {
+  "status": 200,
+  "body": "{\"result\":\"[UNAUTHORIZED]\"}"
+ },
+ "/app/list|with_token": {
+  "status": 200,
+  "body": "{\"result\":\"[NO_CMD]\"}"
+ },
+ "/app/apps|no_token": {
+  "status": 200,
+  "body": "{\"result\":\"[UNAUTHORIZED]\"}"
+ },
+ "/app/apps|with_token": {
+  "status": 200,
+  "body": "{\"result\":\"[用户应用]\\ncom.dsh.client\\tDSHA uid=10527\\n[系统应用]\\n显示 1 个；Android 返回 1 个可见应用。系统可能限制可见范围；结束应用前会另行核对完整清单。\"}"
+ }
+}

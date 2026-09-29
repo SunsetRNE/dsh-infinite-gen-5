@@ -1,0 +1,106 @@
+{
+  "zone": "r2",
+  "zoneName": "凭据与密钥面",
+  "chain": [
+    {
+      "from": "容器内 uid=0 + 凭据清单 18 项 0 命中",
+      "to": "单点 root 即可全量取用（不是「秘密散落」，是权限面集中）",
+      "evidence": "raw/census.txt cred_hits=0；r2_verify.sh PASS ssh_dir_mode_700 / PASS bridge_token_mode_600 / PASS credentials_yaml_mode_600（6/6 PASS, rc=0）"
+    },
+    {
+      "from": "/root/.local/share/billion-context/ca/root-ca-key.pem（1706 B, 600, sha256_12 6770dba95f40）+ combined-ca.pem（421140 B）已被信任",
+      "to": "取得本容器 root 者可签发被信任证书 → 对本机出站流量做透明中间人",
+      "evidence": "openssl x509 -noout -subject -enddate 得 CN=billion-context MITM Root CA / notAfter 2036-09-25；stat 得 600 root:root；私钥与根证书同目录"
+    },
+    {
+      "from": "/root/.dsh/.bridge_token（32 B 纯 hex, 600）+ /root/.dsh/.credentials.yaml（223 B, 键名含 DEEPSEEK_API_KEY/secret/payload）",
+      "to": "同容器 root 可读 → 可直接调用 3090 设备桥全部端点并代调外部 API",
+      "evidence": "raw/census2.txt 字段名枚举（值未打印）；sha256_12 b52a60d53989；maxdepth 3 计 581 文件"
+    }
+  ],
+  "iocs": [
+    {
+      "type": "file",
+      "value": "/root/.ssh/id_ed25519",
+      "note": "256 位 ED25519、空口令可解、mode 600、sha256_12 f6e392e1de98；授权文件不存在（入站 0）",
+      "state": "已知"
+    },
+    {
+      "type": "file",
+      "value": "/root/.dsh/.bridge_token",
+      "note": "32 B 纯 hex、mode 600 root:root、sha256_12 b52a60d53989（明文未入产物）",
+      "state": "已知"
+    },
+    {
+      "type": "file",
+      "value": "/root/.dsh/.credentials.yaml",
+      "note": "223 B、mode 600；仅记录字段名 DEEPSEEK_API_KEY/secret/payload，未取用",
+      "state": "已知"
+    },
+    {
+      "type": "file",
+      "value": "/root/.local/share/billion-context/ca/root-ca-key.pem",
+      "note": "1706 B、mode 600、sha256_12 6770dba95f40；与同 CA 根证书同目录落盘",
+      "state": "已知"
+    },
+    {
+      "type": "cert",
+      "value": "CN=billion-context MITM Root CA",
+      "note": "notAfter 2036-09-25；其签发者私钥在本容器内可读",
+      "state": "已知"
+    },
+    {
+      "type": "file",
+      "value": "/root/.sunsetlinux-keys/channel.key",
+      "note": "119 B；口令保护还是 PEM 加密未判定（4 个非 .ssh 私钥中唯一解不开的）",
+      "state": "未知"
+    }
+  ],
+  "risks": [
+    {
+      "id": "R2-01",
+      "title": "受信任根 CA 的私钥与根证书同容器落盘，容器内 root 可签发被信任证书",
+      "severity": "高",
+      "zone": "r2",
+      "evidence": "root-ca-key.pem 1706 B / 600 / sha256_12 6770dba95f40，与 CN=billion-context MITM Root CA（notAfter 2036-09-25）同目录；combined-ca.pem 421140 B 已在信任链",
+      "fix": "私钥移出容器（宿主 keyring / 远端签发）；容器内只留证书不落私钥，或挂载为只读且 000 的签名服务代理",
+      "priority": 1
+    },
+    {
+      "id": "R2-02",
+      "title": "SSH 私钥 id_ed25519 为空口令，容器内被读即被用",
+      "severity": "中",
+      "zone": "r2",
+      "evidence": "ssh-keygen -y -P '' -f /root/.ssh/id_ed25519 rc=0（PASS id_ed25519_no_passphrase）；mode 600、411 B",
+      "fix": "加 passphrase 并配 ssh-agent；或改为会话级短时密钥、用后即弃",
+      "priority": 2
+    },
+    {
+      "id": "R2-03",
+      "title": "DSH API 凭据以文件形态（.credentials.yaml）落在容器内，0600 只挡同 uid 之外",
+      "severity": "中",
+      "zone": "r2",
+      "evidence": ".credentials.yaml 223 B / 600，键名含 DEEPSEEK_API_KEY；容器内 uid=0 可直读",
+      "fix": "凭据改由宿主凭据代理注入（短时令牌、可轮换），容器内不落长时可用密钥",
+      "priority": 2
+    },
+    {
+      "id": "R2-04",
+      "title": ".bridge_token 无可见轮换策略，仅有一个 2026-09-25 的 mtime",
+      "severity": "低",
+      "zone": "r2",
+      "evidence": "stat mtime 2026-09-25；容器内未找到任何轮换/过期策略文件（census 全量扫描 0 命中）",
+      "fix": "在宿主侧定时轮换并写轮换日志；token 加 TTL 与使用计数",
+      "priority": 3
+    },
+    {
+      "id": "R2-05",
+      "title": "DSH 统计类文件在取证窗口内被并发写入，时点读数不可作为基线",
+      "severity": "低",
+      "zone": "r2",
+      "evidence": ".dshw-usage.json 9c558ee22265→2093c8ccb47b、synapse/workspaces.json c0fc8f20a343→292e7b219c08、infinite-gen-5-stats.json 9f80c3efaf3a→fee15cc37416",
+      "fix": "取证先把目标文件复制到冻结目录再算哈希；或改用只读快照挂载",
+      "priority": 3
+    }
+  ]
+}

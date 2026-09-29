@@ -1,0 +1,6 @@
+5:freezer:/
+4:memory:/apps/com.dsh.client
+3:cpuset:/top-app
+2:cpu:/top-app
+1:blkio:/
+0::/apps/uid_10527/pid_27013

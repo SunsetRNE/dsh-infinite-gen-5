@@ -1,0 +1,74 @@
+== V0 环境指纹 ==
+uid=0  kernel=6.1.141-android14-11-o-g659d588fa0da  os=Ubuntu 24.04.3 LTS
+
+== V1 SSH 面 ==
+dir_mode=700 dir_owner=root:root
+f6e392e1de98	411	600	root:root	/root/.ssh/id_ed25519
+2849e3c9cdb0	102	644	root:root	/root/.ssh/id_ed25519.pub
+a56eba5ec2db	878	600	root:root	/root/.ssh/known_hosts
+f15b880508da	656	600	root:root	/root/.ssh/known_hosts.old
+authorized_keys_entries=0
+known_hosts_lines=3  uniq_host_tokens=2  hashed_host_entries=1
+key_type=256 SHA256:wfTacGRTzUX5jmaSDgXri8IUSHm/cxx/V/3f17hYsxY (ED25519)
+passphrase=NONE
+
+== V2 凭据文件面（固定清单）==
+90970dc31b28	84	600	root:root	/root/.gitconfig
+cred_hits=1
+gitconfig_url_with_creds=0  gitconfig_helper=0
+
+== V3 私钥与证书面 ==
+d7e3c826fd2b	2618	600	root:root	/root/.android/debug.keystore
+ac64643c66a7	419	600	root:root	/root/.gradle/caches/9.1.0/cc-keystore/gradle.keystore
+0063ed3e9e43	421140	600	root:root	/root/.local/share/billion-context/ca/combined-ca.pem
+6770dba95f40	1706	600	root:root	/root/.local/share/billion-context/ca/root-ca-key.pem
+5b82e0aaaa35	1204	600	root:root	/root/.local/share/billion-context/ca/root-ca.pem
+f6e392e1de98	411	600	root:root	/root/.ssh/id_ed25519
+2849e3c9cdb0	102	644	root:root	/root/.ssh/id_ed25519.pub
+9fa15fd87ebb	119	600	root:root	/root/.sunsetlinux-keys/channel.key
+d9f0c9f43fdd	411	600	root:root	/root/Branchbase/.local-gh/id_ed25519
+1022e10cdd96	103	644	root:root	/root/Branchbase/.local-gh/id_ed25519.pub
+405e6448b294	2666	600	root:root	/root/Branchbase/app/debug.keystore
+3ce5d198fca3	190130	600	root:root	/root/Branchbase/core/src/certs/cacert.pem
+7c6a6533e40b	1229	600	root:root	/root/Branchbase/core/src/certs/sectigo-e36.pem
+fe4e4b2e85d2	1704	600	root:root	/root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/leaf.key
+b85516f79dca	1704	600	root:root	/root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/pathA/leaf.key
+5d479e2b9694	3268	600	root:root	/root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/root.key
+151a23e91170	1704	600	root:root	/root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/web.key
+perm_matrix:
+     15 600 root:root
+      3 644 root:root
+world_readable:
+/root/Branchbase/.local-gh/id_ed25519.pub
+/root/.ssh/id_ed25519.pub
+/root/.sunsetlinux-keys/channel.pub
+/root/.sunsetlinux-keys/channel.key.label
+
+== V4 DSH 面 ==
+dir_mode=700 owner=root:root
+b52a60d53989	32	600	root:root	/root/.dsh/.bridge_token
+a64b618eeb7c	223	600	root:root	/root/.dsh/.credentials.yaml
+e93d1ccdb8a6	37	600	root:root	/root/.dsh/.anonymous-user-id
+636500bfb134	1828	600	root:root	/root/.dsh/plugin-activations.json
+bridge_token: len=32 nonhex_chars=0
+credentials_yaml_field_names=DEEPSEEK_API_KEY,client,kind,payload,records,refs,secret,version,
+plugin_activations_top_keys=entries,format,
+
+== V5 环境与历史面 ==
+env_total=74  secret_like_names=0
+secret_like_name_list=
+52a2e55b99a2	29	600	root:root	/root/.bash_history
+ABSENT	-	-	-	/root/.zsh_history
+ABSENT	-	-	-	/root/.python_history
+ABSENT	-	-	-	/root/.mysql_history
+ABSENT	-	-	-	/root/.psql_history
+hist_password_assign=0 token_flags=0 bearer_forms=0 export_secret=0 url_with_creds=0
+
+== V6 自检断言 ==
+PASS ssh_dir_mode_700
+PASS inbound_keyset_empty
+PASS id_ed25519_no_passphrase
+PASS bridge_token_mode_600
+PASS credentials_yaml_mode_600
+PASS plugin_activations_no_secret_field
+note: 本脚本只读，未修改任何权限位与文件内容

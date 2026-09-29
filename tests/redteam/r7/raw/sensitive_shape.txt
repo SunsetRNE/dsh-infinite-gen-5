@@ -1,0 +1,22 @@
+=== 敏感字样的形态分类（只数出现次数，不打印任何值） 2026-09-29T07:22:53Z ===
+判定："<word>": 计数 = JSON/YAML 字段名形态；两者之差 = 出现在其它上下文
+
+token          总出现=4000   引号字段形态=0      差值=4000
+secret         总出现=237    引号字段形态=0      差值=237
+password       总出现=156    引号字段形态=0      差值=156
+api_key        总出现=29     引号字段形态=0      差值=29
+authorization  总出现=77     引号字段形态=0      差值=77
+credential     总出现=311    引号字段形态=0      差值=311
+session_key    总出现=15     引号字段形态=0      差值=15
+
+--- 逐文件：敏感字样总出现次数（不打印内容） ---
+  /root/.dsh/.credentials.yaml                         1
+  /root/.dsh/.dshw-usage.json                          559
+  /root/.dsh/ig5-adapt-cache.json                      1
+  /root/.dsh/infinite-gen-5-stats.json                 4
+  /root/.dsh/synapse/workspaces.json                   4287
+
+--- 是否含私钥块头（BEGIN * PRIVATE KEY） ---
+  命中文件数 = 1
+--- 是否含 Bearer 令牌形态 ---
+  命中文件数 = 1

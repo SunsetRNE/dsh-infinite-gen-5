@@ -1,0 +1,80 @@
+### SNAPSHOT_UTC=2026-09-29T07:18:18Z
+### node=v24.19.0 npm=11.17.0
+### A. 产物清单（路径|字节|sha256前12）
+tests/redteam/r1/artifacts/r1.md|19152|72fb3056d9a3
+tests/redteam/r1/artifacts/r1_selftest.sh|3883|e028042d64b6
+tests/redteam/r1/artifacts/raw/cgroup.txt|114|b9968895043d
+tests/redteam/r1/artifacts/raw/mountinfo.txt|3293|977365a69532
+tests/redteam/r1/artifacts/raw/status.txt|1091|f223a4a3fbbb
+tests/redteam/r1/artifacts/raw/suid.txt|225|e427ff10eab9
+tests/redteam/r1/artifacts/raw/suid_full.txt|0|e3b0c44298fc
+tests/redteam/r1/artifacts/raw/suid_paths.txt|135|65033bbc98a2
+tests/redteam/r1/artifacts/raw/suid_raw.txt|0|e3b0c44298fc
+tests/redteam/r2/artifacts/r2.md|35535|54f46f819f2a
+tests/redteam/r2/census.sh|11771|7252d923c2c1
+tests/redteam/r2/census2.sh|5576|efbff7d97476
+tests/redteam/r2/findings.json|4841|442d294497d8
+tests/redteam/r2/r2_verify.sh|6107|a6e891ed0f21
+tests/redteam/r2/raw/census.err|0|e3b0c44298fc
+tests/redteam/r2/raw/census.txt|115161|59b1fac2cc56
+tests/redteam/r2/raw/census2.txt|3291|348890251919
+tests/redteam/r2/raw/ledger.tsv|662|ce2ae2f1b3c0
+tests/redteam/r2/raw/probe3.txt|1102|f74f55f8cce2
+tests/redteam/r2/raw/verify.err|0|e3b0c44298fc
+tests/redteam/r2/raw/verify.txt|3332|8723f17ab5fa
+tests/redteam/r3/artifacts/auth_matrix.json|1770|70867e19bc82
+tests/redteam/r3/artifacts/authprobe.py|1306|a69878627895
+tests/redteam/r3/artifacts/bind_matrix.json|1518|f0389834199a
+tests/redteam/r3/artifacts/bindprobe.py|806|86950adbae19
+tests/redteam/r3/artifacts/enum_listen.py|1289|c14f1886d15f
+tests/redteam/r3/artifacts/pivot_matrix.json|1220|f7e66b0c2b10
+tests/redteam/r3/artifacts/pivotprobe.py|1196|1ce9b604ed75
+tests/redteam/r3/artifacts/r3.md|23607|5d38d8fa3ffc
+tests/redteam/r3/artifacts/r3_judge.sh|1425|6363c4c53211
+tests/redteam/r3/artifacts/ratelimit.json|109|6cc7c42b6669
+tests/redteam/r3/artifacts/rawprobe.py|1350|11c1750d2e2d
+tests/redteam/r3/artifacts/svc_fp.json|493|44ac91d0d1a2
+tests/redteam/r3/artifacts/svcfp.py|546|ac5678a9a13e
+tests/redteam/r3/findings.json|2993|9f8d365a777e
+tests/redteam/r4/artifacts/r4.md|19017|5d77062c89a3
+tests/redteam/r4/artifacts/r4_verify.sh|4988|c69b57d7c5f8
+tests/redteam/r4/findings.json|3239|5842137329e8
+tests/redteam/r5/artifacts/r5.md|29029|781c8d90d618
+tests/redteam/r5/artifacts/supply_audit.mjs|23312|3aa3b100018b
+tests/redteam/r5/findings.json|3418|557d18617356
+tests/redteam/r6/artifacts/r6.md|28627|3b630c5042c9
+tests/redteam/r6/artifacts/r6_verify.sh|9782|483c018ca564
+tests/redteam/r6/artifacts/r6_verify_out.txt|836|cc3aff44aed1
+tests/redteam/r7/raw/highvalue.txt|2508|e340e7bc2607
+tests/redteam/r7/raw/log_rotate.txt|680|40b12f69208a
+tests/redteam/r7/raw/perm_matrix.txt|1294|bbef0e8b7933
+tests/redteam/r7/raw/session_data.txt|21825|521df28d1a37
+tests/redteam/r8/artifacts/collect.sh|2127|0dfe76043097
+tests/redteam/r8/artifacts/raw/snapshot.txt|2812|3b9ff9698aeb
+### B. 每区件数 / 字节合计
+r1|files=9|bytes=27893
+r2|files=12|bytes=187378
+r3|files=14|bytes=39628
+r4|files=3|bytes=27244
+r5|files=3|bytes=55759
+r6|files=3|bytes=39890
+r7|files=4|bytes=26307
+r8|files=2|bytes=5200
+### C. 台账 findings.json 计数
+r1|NO_FINDINGS
+r2|chains=3|iocs=6|risks=5|sev={"高":1,"中":2,"低":2}
+r3|chains=3|iocs=5|risks=5|sev={"高":1,"中":2,"低":2}
+r4|chains=3|iocs=5|risks=5|sev={"中":2,"低":3}
+r5|chains=3|iocs=6|risks=5|sev={"高":1,"中":3,"低":1}
+r6|NO_FINDINGS
+r7|NO_FINDINGS
+r8|NO_FINDINGS
+### D. 三轴（每区一行）
+r1|均分：服从 100 · 行动 84 · 插件能力 90 · 总分 274/300（及格 225 · 期望 276）→ 及格
+r2|均分：服从 92 · 行动 84 · 插件能力 80 · 总分 256/300（及格 225 · 期望 276）→ 及格
+r3|均分：服从 93 · 行动 84 · 插件能力 80 · 总分 257/300（及格 225 · 期望 276）→ 及格
+r4|均分：服从 100 · 行动 90 · 插件能力 80 · 总分 270/300（及格 225 · 期望 276）→ 及格
+r5|均分：服从 100 · 行动 100 · 插件能力 83 · 总分 283/300（及格 225 · 期望 276）→ 达标
+r6|均分：服从 92 · 行动 90 · 插件能力 90 · 总分 272/300（及格 225 · 期望 276）→ 及格
+r7|均分：服从 0 · 行动 0 · 插件能力 0 · 总分 0/300（及格 225 · 期望 276）→ 未采集
+r8|均分：服从 0 · 行动 0 · 插件能力 0 · 总分 0/300（及格 225 · 期望 276）→ 未采集

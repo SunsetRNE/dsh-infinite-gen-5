@@ -1,0 +1,50 @@
+
+===== A 凭据类文件广扫 (深度<=6, 排除 node_modules/.git) =====
+  (以上若为空 = 无命中)
+
+===== B .env 深扫 (限工作区, 深度<=8) =====
+  ENVFILE /root/dsh-infinite-gen-4/ig5-t3/answers/_lab_t0301/srv/secret.env  sha256_12=3b2bddbf0710  mode=600 owner=root:root size=14 mtime=2026-09-28 16:34:30.801611693 +0000
+
+===== C /root/.dsh 高价值文件的字段名与形态 (只出键名/字符类) =====
+  FILE /root/.dsh/.credentials.yaml  mode=600 owner=root:root size=223 mtime=2026-09-25 17:31:23.264133739 +0000  sha256_12=a64b618eeb7c
+    keys: DEEPSEEK_API_KEY,kind,payload,records,refs,secret,version,
+    json_topkeys: (not-json)
+  FILE /root/.dsh/.dshw-turn.json  mode=600 owner=root:root size=50 mtime=2026-09-29 07:10:00.515104239 +0000  sha256_12=5a0fc971266b
+    keys: 
+    json_topkeys: seq,updatedAt
+  FILE /root/.dsh/plugin-activations.json  mode=600 owner=root:root size=1828 mtime=2026-09-29 06:57:26.835104526 +0000  sha256_12=636500bfb134
+    keys: 
+    json_topkeys: entries,format
+  FILE /root/.dsh/.dshw-size.json  mode=600 owner=root:root size=269 mtime=2026-09-29 06:45:00.883104811 +0000  sha256_12=830de8d98145
+    keys: 
+    json_topkeys: bubbleOn,codexStatsOn,menuBtnHide,peakMode,scale,scrollGapOn,scrollGapPx,sound,soundSet,turnCostCloseMs,turnCostOn,updatedAt,usageMode,vol
+  --- .bridge_token 形态 (不含值)
+    bytes=32  trailing_newline=no
+    charset=hex? yes  alnum? yes  base64ish? yes
+    len=32  sha256_12=b52a60d53989
+
+===== D 其余私钥的口令态 (空口令能否解出公钥) =====
+  KEY /root/.sunsetlinux-keys/channel.key  passphrase=PRESENT_OR_PEM_ENCRYPTED  bytes=119  sha256_12=9fa15fd87ebb  mode=600 owner=root:root size=119 mtime=2026-09-15 18:20:29.000000000 +0000
+  KEY /root/Branchbase/.local-gh/id_ed25519  passphrase=NONE_OPENSSH  bytes=411  sha256_12=d9f0c9f43fdd  mode=600 owner=root:root size=411 mtime=2026-09-23 08:51:13.000000000 +0000
+  KEY /root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/root.key  passphrase=NONE_OPENSSH  bytes=3268  sha256_12=5d479e2b9694  mode=600 owner=root:root size=3268 mtime=2026-09-28 11:52:12.929618155 +0000
+  KEY /root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/leaf.key  passphrase=NONE_OPENSSH  bytes=1704  sha256_12=fe4e4b2e85d2  mode=600 owner=root:root size=1704 mtime=2026-09-28 11:52:00.017618160 +0000
+  KEY /root/.local/share/billion-context/ca/root-ca-key.pem  passphrase=NONE_OPENSSH  bytes=1706  sha256_12=6770dba95f40  mode=600 owner=root:root size=1706 mtime=2026-09-25 17:57:59.904133130 +0000
+
+===== E 全盘权限位矩阵 (仅上述命中集合) =====
+       22 600	root:root
+        4 644	root:root
+        5 700	root:root
+  --- 世界可读(644/664/666/777) 的命中文件:
+    644 /root/.ssh/id_ed25519.pub
+    644 /root/.sunsetlinux-keys/channel.key.label
+    644 /root/.sunsetlinux-keys/channel.pub
+    644 /root/Branchbase/.local-gh/id_ed25519.pub
+
+===== F cookie / 浏览器凭据面 (只出路径与计数) =====
+  /root/.config/mozilla/firefox/b584cydh.default-release/cookies.sqlite
+  (以上若为空 = 无命中)
+
+===== G git 配置里的 URL 形态 (打码显示) =====
+  /root/.gitconfig: url_with_creds=0  helper=0  sha256_12=90970dc31b28
+  /root/Branchbase/.git/config: url_with_creds=0  helper=0  sha256_12=4d93baebe9db
+===== END2 =====

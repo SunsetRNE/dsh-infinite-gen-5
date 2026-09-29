@@ -1,0 +1,28 @@
+== P1 env-file ==
+mode=600 owner=root:root size=14
+token,
+== P2 cookie ==
+/root/.config/mozilla/firefox/b584cydh.default-release/cookies.sqlite mode=600 owner=root:root size=98304 mtime=2026-09-26 11:17:59.993667507 +0000
+== P3 authorized_keys ==
+ls: cannot access '/root/.ssh/authorized_keys': No such file or directory
+ls: cannot access '/root/.ssh/authorized_keys2': No such file or directory
+== P4 sunsetlinux ==
+total 24
+drwx------.  2 root root 3440 Sep 15 18:20 .
+drwx------. 37 root root 8192 Sep 29 07:10 ..
+-rw-------.  1 root root  119 Sep 15 18:20 channel.key
+-rw-r--r--.  1 root root   46 Sep 15 18:20 channel.key.label
+-rw-r--r--.  1 root root   45 Sep 15 18:20 channel.pub
+== P5 ca dir ==
+total 427
+drwx------. 2 root root   3440 Sep 25 17:57 .
+drwx------. 4 root root   3440 Sep 25 17:57 ..
+-rw-------. 1 root root 421140 Sep 29 05:58 combined-ca.pem
+-rw-------. 1 root root   1706 Sep 25 17:57 root-ca-key.pem
+-rw-------. 1 root root   1204 Sep 25 17:57 root-ca.pem
+== P6 anon-id ==
+mode=600 size=37
+== P7 known_hosts 形态 ==
+      3 3
+      2 PLAINTEXT_HOST
+      1 |PLAINTEXT_HOST

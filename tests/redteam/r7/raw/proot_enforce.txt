@@ -1,0 +1,20 @@
+=== V. 权限位强制性对照实验（决定 ④ 的结论方向） ===
+-rw-------. 1 root root 25 Sep 29 07:19 /tmp/.r7_probe_000
+  nobody 读 mode000 文件 -> head: cannot open '/tmp/.r7_probe_000' for reading: Permission denied
+
+  nobody 写 mode000 文件 -> sh: 1: cannot create /tmp/.r7_probe_000: Permission denied
+  (exit=0)
+  nobody 写 /root/ 目录    ->   (exit=0)
+-rw-r--r--. 1 root root 0 Sep 29 07:19 /root/.r7_probe_dir
+  -> 目录写入成功，权限位未强制
+
+=== W. 是不是 proot 在模拟 uid（查 proot 痕迹） ===
+Uid:	10527	10527	10527	10527
+Gid:	10527	10527	10527	10527
+  PROOT_* env: 3
+  /proc/1/comm:       3 proot
+  real /proc/1/status Uid: 
+=== X. /proc/self 与宿主 uid 的差异（同进程两侧读数） ===
+  id -u: 0
+  stat -c %u /proc/self: 0
+  /etc/passwd 里 root uid: 0

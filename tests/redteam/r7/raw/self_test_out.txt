@@ -1,0 +1,10 @@
+=== R7 数据与日志面 验证件 2026-09-29T07:40:44Z ===
+PASS  S1    语法自检（bash -n）
+PASS  S2    断言辅助函数 ok 已定义
+PASS  S2    断言辅助函数 no 已定义
+PASS  S2    断言辅助函数 chk 已定义
+PASS  S2    断言辅助函数 has 已定义
+PASS  S3    断言条数 = 41（≥40）
+PASS  S4    本件无明文密钥字面量
+SUMMARY_SELFTEST  PASS=4 FAIL=0 TOTAL=4
+RESULT=SELF_TEST_OK

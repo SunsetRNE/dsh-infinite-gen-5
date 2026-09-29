@@ -1,0 +1,18 @@
+{
+ "10.202.11.230->127.0.0.1:3090/app/version": {
+  "connect_status": "HTTP/1.1 200 Connection established",
+  "body": "HTTP/1.1 200 OK\r\nContent-Type: application/json; charset=utf-8\r\nContent-Length: 27\r\nConnection: close\r\n\r\n{\"result\":\"[UNAUTHORIZED]\"}"
+ },
+ "10.202.11.230->127.0.0.1:3080/": {
+  "connect_status": "HTTP/1.1 200 Connection established",
+  "body": "HTTP/1.1 401 Unauthorized\r\ncache-control: no-store\r\ncontent-type: text/plain; charset=utf-8\r\nVary: Accept-Encoding\r\nDate: Tue, 29 Sep 2026 07:07:55 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n44\r\ndsh web authen"
+ },
+ "172.19.0.1->127.0.0.1:43795/": {
+  "connect_status": "HTTP/1.1 200 Connection established",
+  "body": "HTTP/1.1 200 OK\r\ncontent-type: application/json\r\nDate: Tue, 29 Sep 2026 07:07:55 GMT\r\nConnection: close\r\nTransfer-Encoding: chunked\r\n\r\n32\r\n{\"ok\":true,\"upstream\":\"https://api.anthropic.com\"}\r\n0\r\n\r\n"
+ },
+ "127.0.0.1->127.0.0.1:12121/": {
+  "connect_status": "HTTP/1.1 200 Connection established",
+  "body": "HTTP/1.1 404 Not Found \r\nContent-Type: text/plain\r\nDate: Tue, 29 Sep 2026 07:07:55 GMT\r\nConnection: keep-alive\r\nContent-Length: 9\r\n\r\nNot Found"
+ }
+}

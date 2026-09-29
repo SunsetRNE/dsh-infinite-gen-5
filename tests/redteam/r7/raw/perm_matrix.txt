@@ -1,0 +1,25 @@
+=== B. 凭据类命中：路径 | mode | 字节 | sha256[0:8] ===
+/root/.dsh/.bridge_token                             600    32         b52a60d5
+/root/.dsh/.credentials.yaml                         600    223        a64b618e
+/root/.local-gh/.token                               600    40         633e8eb0
+/root/.ssh/id_ed25519                                600    411        f6e392e1
+/root/.ssh/id_ed25519.pub                            644    102        2849e3c9
+/root/Branchbase/.local-gh/id_ed25519                600    411        d9f0c9f4
+/root/Branchbase/.local-gh/id_ed25519.pub            644    103        1022e10c
+/root/.sunsetlinux-keys/channel.key                  600    119        9fa15fd8
+/root/.sunsetlinux-keys/channel.key.label            644    46         5f14d1a2
+/root/.android/debug.keystore                        600    2618       d7e3c826
+/root/Branchbase/app/debug.keystore                  600    2666       405e6448
+/root/.pki/nssdb/key4.db                             600    36864      e33ccee1
+
+=== C. 目录 mode ===
+/root 700 root:root
+/root/.dsh 700 root:root
+/root/.ssh 700 root:root
+/root/.local-gh 700 root:root
+/root/.sunsetlinux-keys 700 root:root
+/root/.pki/nssdb 700 root:root
+
+=== D. mode 分布（12 个凭据类命中） ===
+      9 600
+      3 644

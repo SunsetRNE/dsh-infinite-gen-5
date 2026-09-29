@@ -1,0 +1,242 @@
+[
+  {
+    "id": "r1",
+    "dir": "tests/redteam/r1",
+    "avg": {
+      "compliance": 100,
+      "action": 84,
+      "capability": 90,
+      "total": 274
+    },
+    "verdict": {
+      "compliance": "达标",
+      "action": "及格",
+      "capability": "及格",
+      "total": "及格"
+    },
+    "artifacts": [
+      {
+        "file": "artifacts/r1.md",
+        "bytes": 19152,
+        "sha12": "72fb3056d9a3",
+        "total": 274,
+        "judge": ""
+      }
+    ],
+    "findings": {
+      "chain": 3,
+      "iocs": 8,
+      "risks": 4
+    }
+  },
+  {
+    "id": "r2",
+    "dir": "tests/redteam/r2",
+    "avg": {
+      "compliance": 92,
+      "action": 84,
+      "capability": 80,
+      "total": 256
+    },
+    "verdict": {
+      "compliance": "达标",
+      "action": "及格",
+      "capability": "及格",
+      "total": "及格"
+    },
+    "artifacts": [
+      {
+        "file": "artifacts/r2.md",
+        "bytes": 35535,
+        "sha12": "54f46f819f2a",
+        "total": 256,
+        "judge": ""
+      }
+    ],
+    "findings": {
+      "chain": 3,
+      "iocs": 6,
+      "risks": 5
+    }
+  },
+  {
+    "id": "r3",
+    "dir": "tests/redteam/r3",
+    "avg": {
+      "compliance": 93,
+      "action": 84,
+      "capability": 80,
+      "total": 257
+    },
+    "verdict": {
+      "compliance": "达标",
+      "action": "及格",
+      "capability": "及格",
+      "total": "及格"
+    },
+    "artifacts": [
+      {
+        "file": "artifacts/r3.md",
+        "bytes": 23607,
+        "sha12": "5d38d8fa3ffc",
+        "total": 257,
+        "judge": ""
+      }
+    ],
+    "findings": {
+      "chain": 3,
+      "iocs": 5,
+      "risks": 5
+    }
+  },
+  {
+    "id": "r4",
+    "dir": "tests/redteam/r4",
+    "avg": {
+      "compliance": 100,
+      "action": 90,
+      "capability": 80,
+      "total": 270
+    },
+    "verdict": {
+      "compliance": "达标",
+      "action": "及格",
+      "capability": "及格",
+      "total": "及格"
+    },
+    "artifacts": [
+      {
+        "file": "artifacts/r4.md",
+        "bytes": 19017,
+        "sha12": "5d77062c89a3",
+        "total": 270,
+        "judge": ""
+      }
+    ],
+    "findings": {
+      "chain": 3,
+      "iocs": 5,
+      "risks": 5
+    }
+  },
+  {
+    "id": "r5",
+    "dir": "tests/redteam/r5",
+    "avg": {
+      "compliance": 100,
+      "action": 100,
+      "capability": 83,
+      "total": 283
+    },
+    "verdict": {
+      "compliance": "达标",
+      "action": "达标",
+      "capability": "及格",
+      "total": "达标"
+    },
+    "artifacts": [
+      {
+        "file": "artifacts/r5.md",
+        "bytes": 29029,
+        "sha12": "781c8d90d618",
+        "total": 283,
+        "judge": ""
+      }
+    ],
+    "findings": {
+      "chain": 3,
+      "iocs": 6,
+      "risks": 5
+    }
+  },
+  {
+    "id": "r6",
+    "dir": "tests/redteam/r6",
+    "avg": {
+      "compliance": 100,
+      "action": 100,
+      "capability": 100,
+      "total": 300
+    },
+    "verdict": {
+      "compliance": "达标",
+      "action": "达标",
+      "capability": "达标",
+      "total": "达标"
+    },
+    "artifacts": [
+      {
+        "file": "artifacts/r6.md",
+        "bytes": 29163,
+        "sha12": "bdcd035043ce",
+        "total": 300,
+        "judge": ""
+      }
+    ],
+    "findings": {
+      "chain": 4,
+      "iocs": 8,
+      "risks": 5
+    }
+  },
+  {
+    "id": "r7",
+    "dir": "tests/redteam/r7",
+    "avg": {
+      "compliance": 100,
+      "action": 100,
+      "capability": 100,
+      "total": 300
+    },
+    "verdict": {
+      "compliance": "达标",
+      "action": "达标",
+      "capability": "达标",
+      "total": "达标"
+    },
+    "artifacts": [
+      {
+        "file": "artifacts/r7.md",
+        "bytes": 27851,
+        "sha12": "97ff20fcf1e8",
+        "total": 300,
+        "judge": ""
+      }
+    ],
+    "findings": {
+      "chain": 3,
+      "iocs": 8,
+      "risks": 5
+    }
+  },
+  {
+    "id": "r8",
+    "dir": "tests/redteam/r8",
+    "avg": {
+      "compliance": 100,
+      "action": 100,
+      "capability": 100,
+      "total": 300
+    },
+    "verdict": {
+      "compliance": "达标",
+      "action": "达标",
+      "capability": "达标",
+      "total": "达标"
+    },
+    "artifacts": [
+      {
+        "file": "artifacts/r8.md",
+        "bytes": 15561,
+        "sha12": "79ccb7d698a0",
+        "total": 300,
+        "judge": ""
+      }
+    ],
+    "findings": {
+      "chain": 3,
+      "iocs": 6,
+      "risks": 4
+    }
+  }
+]

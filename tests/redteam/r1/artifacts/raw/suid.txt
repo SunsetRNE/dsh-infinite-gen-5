@@ -1,0 +1,6 @@
+2755 root:root /usr/bin/ssh-agent
+4754 root:root /usr/lib/dbus-1.0/dbus-daemon-launch-helper
+4755 root:root /usr/bin/mount
+4755 root:root /usr/bin/su
+4755 root:root /usr/bin/umount
+4755 root:root /usr/lib/openssh/ssh-keysign

@@ -1,0 +1,16 @@
+=== 私钥块头 / Bearer 形态落在哪些文件（只列路径） ===
+-- BEGIN PRIVATE KEY --
+/root/.dsh/synapse/workspaces.json
+-- Bearer --
+/root/.dsh/synapse/workspaces.json
+
+=== 这两个大件的规模与权限 ===
+/root/.dsh/synapse/workspaces.json mode=600 owner=root:root bytes=21129302 mtime=2026-09-29 07:23:08.523103938 +0000
+/root/.dsh/.dshw-usage.json mode=600 owner=root:root bytes=56633 mtime=2026-09-29 07:22:34.991103951 +0000
+
+=== 敏感字样命中的 5 个文件规模 ===
+  223 bytes mode=600 /root/.dsh/.credentials.yaml
+  56633 bytes mode=600 /root/.dsh/.dshw-usage.json
+  835 bytes mode=600 /root/.dsh/ig5-adapt-cache.json
+  35673 bytes mode=600 /root/.dsh/infinite-gen-5-stats.json
+  21131759 bytes mode=600 /root/.dsh/synapse/workspaces.json

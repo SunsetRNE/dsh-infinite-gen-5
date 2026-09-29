@@ -1,0 +1,24 @@
+=== 含敏感字样文件计数（grep -lI，只列路径与计数，不读内容） 2026-09-29T07:22:40Z ===
+扫描范围：/root/.dsh maxdepth=2 且后缀 json/yaml/yml/log，排除 node_modules、plugin-src、sessions/
+扫描文件数 = 18
+
+token          命中文件数 = 4
+                 /root/.dsh/.dshw-usage.json
+                 /root/.dsh/ig5-adapt-cache.json
+                 /root/.dsh/infinite-gen-5-stats.json
+                 /root/.dsh/synapse/workspaces.json
+secret         命中文件数 = 2
+                 /root/.dsh/.credentials.yaml
+                 /root/.dsh/synapse/workspaces.json
+password       命中文件数 = 1
+                 /root/.dsh/synapse/workspaces.json
+api_key        命中文件数 = 1
+                 /root/.dsh/synapse/workspaces.json
+apikey         命中文件数 = 1
+                 /root/.dsh/synapse/workspaces.json
+authorization  命中文件数 = 1
+                 /root/.dsh/synapse/workspaces.json
+credential     命中文件数 = 1
+                 /root/.dsh/synapse/workspaces.json
+session_key    命中文件数 = 1
+                 /root/.dsh/synapse/workspaces.json

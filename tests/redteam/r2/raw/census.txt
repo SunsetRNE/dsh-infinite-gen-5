@@ -1,0 +1,2172 @@
+
+===== 0 身份与宿主 =====
+uid_gid: uid=0(root) gid=0(root) groups=0(root),1077(aid_1077),3003(inet),9997(everybody),20527(aid_20527),50527(aid_50527),99709997(aid_99709997),99809997(aid_99809997),99909997(aid_99909997)
+uname: Linux localhost 6.1.141-android14-11-o-g659d588fa0da #1 SMP PREEMPT Thu Aug  6 07:53:55 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
+os: PRETTY_NAME="Ubuntu 24.04.3 LTS"
+HOME=/root PWD=/root/dsh-infinite-gen-5/tests/redteam/r2
+scan_roots=/root /home /opt /srv
+date_utc: 2026-09-29T07:06:05Z
+
+===== 1 SSH 面 =====
+--- DIR /root/.ssh
+mode=700 owner=root:root size=3440 mtime=2026-09-10 11:42:36.000000000 +0000 type=directory
+  name: id_ed25519
+  name: id_ed25519.pub
+  name: known_hosts
+  name: known_hosts.old
+  stat: /root/.ssh/id_ed25519 600 root:root 411
+  stat: /root/.ssh/id_ed25519.pub 644 root:root 102
+  stat: /root/.ssh/known_hosts 600 root:root 878
+  stat: /root/.ssh/known_hosts.old 600 root:root 656
+--- DIR /root/.ssh
+mode=700 owner=root:root size=3440 mtime=2026-09-10 11:42:36.000000000 +0000 type=directory
+  name: id_ed25519
+  name: id_ed25519.pub
+  name: known_hosts
+  name: known_hosts.old
+  stat: /root/.ssh/id_ed25519 600 root:root 411
+  stat: /root/.ssh/id_ed25519.pub 644 root:root 102
+  stat: /root/.ssh/known_hosts 600 root:root 878
+  stat: /root/.ssh/known_hosts.old 600 root:root 656
+--- 私钥指纹/位数/类型 (comment 字段已剥离)
+  key: /root/.ssh/id_ed25519
+    fp_bits_type: 256 SHA256:wfTacGRTzUX5jmaSDgXri8IUSHm/cxx/V/3f17hYsxY (ED25519)
+    sha256_12: f6e392e1de98  bytes: 411  mode=600 owner=root:root size=411 mtime=2026-09-10 11:41:20.000000000 +0000 type=regular file
+    passphrase: NONE(明文私钥, 可用空口令解出公钥)
+  key: /root/.ssh/id_ed25519
+    fp_bits_type: 256 SHA256:wfTacGRTzUX5jmaSDgXri8IUSHm/cxx/V/3f17hYsxY (ED25519)
+    sha256_12: f6e392e1de98  bytes: 411  mode=600 owner=root:root size=411 mtime=2026-09-10 11:41:20.000000000 +0000 type=regular file
+    passphrase: NONE(明文私钥, 可用空口令解出公钥)
+--- 公钥指纹 (仅 fingerprint, 不带 comment)
+  pub: /root/.ssh/id_ed25519.pub -> 256 SHA256:wfTacGRTzUX5jmaSDgXri8IUSHm/cxx/V/3f17hYsxY (ED25519)
+  pub: /root/.ssh/id_ed25519.pub -> 256 SHA256:wfTacGRTzUX5jmaSDgXri8IUSHm/cxx/V/3f17hYsxY (ED25519)
+--- authorized_keys 条目
+--- known_hosts
+  file: /root/.ssh/known_hosts  lines=3  uniq_hosts=2  hashed_entries=1  sha256_12=a56eba5ec2db
+--- ssh_config / 是否配置 IdentityFile 与 StrictHostKeyChecking
+  /etc/ssh/ssh_config: IdentityFile=4 StrictHostKeyChecking=1 Host=1
+  absent: /root/.ssh/config
+
+===== 2 凭据文件面 (存在性/权限位/owner/长度/sha256 前12) =====
+--- .env / *.env 候选 (排除 node_modules/.git, 深度<=5)
+--- git credential helper 配置
+  /root/.gitconfig sha256_12=90970dc31b28 mode=600 owner=root:root size=84 mtime=2026-09-15 16:17:48.000000000 +0000 type=regular file
+
+===== 3 私钥与证书面 (深度<=6, 排除 node_modules/.git/.cache) =====
+total_candidates=17
+--- 按后缀统计
+        5 key
+        3 keystore
+        1 local-gh/id_ed25519
+        5 pem
+        2 pub
+        1 ssh/id_ed25519
+--- 权限位分布
+  mode      15 600
+  mode       2 644
+--- 明细 (前 60 条)
+  /root/.android/debug.keystore  sha256_12=d7e3c826fd2b  mode=600 owner=root:root size=2618 mtime=2026-09-15 13:27:19.000000000 +0000 type=regular file
+  /root/.gradle/caches/9.1.0/cc-keystore/gradle.keystore  sha256_12=ac64643c66a7  mode=600 owner=root:root size=419 mtime=2026-09-25 18:35:33.760132270 +0000 type=regular file
+  /root/.local/share/billion-context/ca/combined-ca.pem  sha256_12=0063ed3e9e43  mode=600 owner=root:root size=421140 mtime=2026-09-29 05:58:55.947105866 +0000 type=regular file
+  /root/.local/share/billion-context/ca/root-ca-key.pem  sha256_12=6770dba95f40  mode=600 owner=root:root size=1706 mtime=2026-09-25 17:57:59.904133130 +0000 type=regular file
+  /root/.local/share/billion-context/ca/root-ca.pem  sha256_12=5b82e0aaaa35  mode=600 owner=root:root size=1204 mtime=2026-09-25 17:57:59.904133130 +0000 type=regular file
+  /root/.ssh/id_ed25519  sha256_12=f6e392e1de98  mode=600 owner=root:root size=411 mtime=2026-09-10 11:41:20.000000000 +0000 type=regular file
+  /root/.ssh/id_ed25519.pub  sha256_12=2849e3c9cdb0  mode=644 owner=root:root size=102 mtime=2026-09-10 11:41:20.000000000 +0000 type=regular file
+  /root/.sunsetlinux-keys/channel.key  sha256_12=9fa15fd87ebb  mode=600 owner=root:root size=119 mtime=2026-09-15 18:20:29.000000000 +0000 type=regular file
+  /root/Branchbase/.local-gh/id_ed25519  sha256_12=d9f0c9f43fdd  mode=600 owner=root:root size=411 mtime=2026-09-23 08:51:13.000000000 +0000 type=regular file
+  /root/Branchbase/.local-gh/id_ed25519.pub  sha256_12=1022e10cdd96  mode=644 owner=root:root size=103 mtime=2026-09-23 08:51:13.000000000 +0000 type=regular file
+  /root/Branchbase/app/debug.keystore  sha256_12=405e6448b294  mode=600 owner=root:root size=2666 mtime=2026-09-10 11:35:32.000000000 +0000 type=regular file
+  /root/Branchbase/core/src/certs/cacert.pem  sha256_12=3ce5d198fca3  mode=600 owner=root:root size=190130 mtime=2026-09-10 11:35:33.000000000 +0000 type=regular file
+  /root/Branchbase/core/src/certs/sectigo-e36.pem  sha256_12=7c6a6533e40b  mode=600 owner=root:root size=1229 mtime=2026-09-10 11:35:33.000000000 +0000 type=regular file
+  /root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/leaf.key  sha256_12=fe4e4b2e85d2  mode=600 owner=root:root size=1704 mtime=2026-09-28 11:52:00.017618160 +0000 type=regular file
+  /root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/pathA/leaf.key  sha256_12=b85516f79dca  mode=600 owner=root:root size=1704 mtime=2026-09-28 11:54:40.861618098 +0000 type=regular file
+  /root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/root.key  sha256_12=5d479e2b9694  mode=600 owner=root:root size=3268 mtime=2026-09-28 11:52:12.929618155 +0000 type=regular file
+  /root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/web.key  sha256_12=151a23e91170  mode=600 owner=root:root size=1704 mtime=2026-09-28 11:52:13.317618154 +0000 type=regular file
+--- X.509 证书有效期 (可解析的 pem/crt)
+  CERT /etc/ssl/certs/ca-certificates.crt  notAfter=Dec 31 09:37:37 2030 GMT  subject_cn=ACCVRAIZ1, OU = PKIACCV, O = ACCV, C = ES
+  CERT /root/.local/share/billion-context/ca/combined-ca.pem  notAfter=Jan 18 23:59:59 2038 GMT  subject_cn=COMODO ECC Certification Authority
+  CERT /root/.local/share/billion-context/ca/root-ca.pem  notAfter=Sep 25 17:57:59 2036 GMT  subject_cn=billion-context MITM Root CA, O = billion-context
+  CERT /root/Branchbase/core/src/certs/cacert.pem  notAfter=Jan 18 23:59:59 2038 GMT  subject_cn=COMODO ECC Certification Authority
+  CERT /root/Branchbase/core/src/certs/sectigo-e36.pem  notAfter=Mar 21 23:59:59 2036 GMT  subject_cn=Sectigo Public Server Authentication CA DV E36
+  CERT /root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/leaf.crt  notAfter=Oct 30 11:52:00 2027 GMT  subject_cn=lab.local
+  CERT /root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/pathA/leaf.crt  notAfter=Oct 30 11:54:40 2027 GMT  subject_cn=lab.local
+  CERT /root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/root.crt  notAfter=Sep 25 11:52:12 2036 GMT  subject_cn=IG5 Lab Root CA
+  CERT /root/dsh-infinite-gen-4/ig5-run-post3/lab/tls/web.crt  notAfter=Oct 30 11:52:13 2027 GMT  subject_cn=lab.local
+
+===== 4 DSH 面 =====
+--- DIR /root/.dsh
+mode=700 owner=root:root size=20480 mtime=2026-09-29 07:07:28.687104297 +0000 type=directory
+  d /root/.dsh 700 root:root 20480
+  f /root/.dsh/.anonymous-user-id 600 root:root 37
+  f /root/.dsh/.bridge_status 600 root:root 13
+  f /root/.dsh/.bridge_token 600 root:root 32
+  f /root/.dsh/.credentials.yaml 600 root:root 223
+  d /root/.dsh/.dsha-rc1-migration 700 root:root 3440
+  f /root/.dsh/.dsha-rc1-migration/prepare.json 600 root:root 2011
+  f /root/.dsh/.dsha-rc1-migration/receipt.json 600 root:root 460
+  f /root/.dsh/.dshw-size.json 600 root:root 269
+  f /root/.dsh/.dshw-turn.json 600 root:root 50
+  f /root/.dsh/.dshw-usage.json 600 root:root 55936
+  f /root/.dsh/.runtime-links-cache.json 600 root:root 15927
+  d /root/.dsh/__pycache__ 700 root:root 3440
+  f /root/.dsh/__pycache__/backup-plugin-graph.cpython-312.pyc 600 root:root 20012
+  f /root/.dsh/__pycache__/device-shell-policy.cpython-312.pyc 600 root:root 13424
+  f /root/.dsh/__pycache__/plugin-dependencies.cpython-312.pyc 600 root:root 28977
+  f /root/.dsh/__pycache__/plugin-lifecycle.cpython-312.pyc 600 root:root 63853
+  f /root/.dsh/__pycache__/plugin-manager.cpython-312.pyc 600 root:root 69650
+  f /root/.dsh/__pycache__/plugin-transactions.cpython-312.pyc 600 root:root 25084
+  f /root/.dsh/__pycache__/register-builtin-plugins.cpython-312.pyc 600 root:root 50998
+  f /root/.dsh/adb-shell.py 600 root:root 20027
+  d /root/.dsh/attachments 700 root:root 3440
+  d /root/.dsh/attachments/v1 700 root:root 3440
+  f /root/.dsh/backup-plugin-graph.py 600 root:root 14252
+  d /root/.dsh/cache 700 root:root 3440
+  d /root/.dsh/cache/attachments 700 root:root 3440
+  f /root/.dsh/device-shell-policy.py 600 root:root 9372
+  f /root/.dsh/ig5-adapt-cache.json 600 root:root 835
+  f /root/.dsh/infinite-gen-5-stats.json 600 root:root 35623
+  f /root/.dsh/infinite-gen-5-tuning.candidate.json 600 root:root 498
+  f /root/.dsh/infinite-gen-5-tuning.json 600 root:root 344
+  f /root/.dsh/infinite-gen-5-tuning.json.bak-20260928 600 root:root 314
+  f /root/.dsh/infinite-gen-5-tuning.json.bak-20260928-boost4 600 root:root 366
+  f /root/.dsh/infinite-gen-5-tuning.json.bak-20260928-polluted 600 root:root 308
+  d /root/.dsh/llm-deepseek 700 root:root 3440
+  f /root/.dsh/llm-deepseek/files-v3.json 600 root:root 24312
+  d /root/.dsh/node_modules 700 root:root 20480
+  d /root/.dsh/node_modules/@agentclientprotocol 700 root:root 3440
+  d /root/.dsh/node_modules/@anthropic-ai 700 root:root 3440
+  d /root/.dsh/node_modules/@aws 700 root:root 3440
+  d /root/.dsh/node_modules/@aws-crypto 700 root:root 3440
+  d /root/.dsh/node_modules/@aws-sdk 700 root:root 3440
+  d /root/.dsh/node_modules/@babel 700 root:root 3440
+  d /root/.dsh/node_modules/@browserbasehq 700 root:root 3440
+  d /root/.dsh/node_modules/@deepseek-ai 700 root:root 24576
+  d /root/.dsh/node_modules/@earendil-works 700 root:root 3440
+  d /root/.dsh/node_modules/@eslint-community 700 root:root 3440
+  d /root/.dsh/node_modules/@google 700 root:root 3440
+  d /root/.dsh/node_modules/@img 700 root:root 3440
+  d /root/.dsh/node_modules/@joplin 700 root:root 3440
+  d /root/.dsh/node_modules/@js-temporal 700 root:root 3440
+  d /root/.dsh/node_modules/@koromix 700 root:root 3440
+  d /root/.dsh/node_modules/@mixmark-io 700 root:root 3440
+  d /root/.dsh/node_modules/@modelcontextprotocol 700 root:root 3440
+  d /root/.dsh/node_modules/@octokit 700 root:root 3440
+  d /root/.dsh/node_modules/@opentelemetry 700 root:root 3440
+  d /root/.dsh/node_modules/@playwright 700 root:root 3440
+  d /root/.dsh/node_modules/@protobufjs 700 root:root 3440
+  d /root/.dsh/node_modules/@puppeteer 700 root:root 3440
+  d /root/.dsh/node_modules/@sec-ant 700 root:root 3440
+  d /root/.dsh/node_modules/@sindresorhus 700 root:root 3440
+  d /root/.dsh/node_modules/@smithy 700 root:root 3440
+  d /root/.dsh/node_modules/@stablelib 700 root:root 3440
+  d /root/.dsh/node_modules/@standard-schema 700 root:root 3440
+  d /root/.dsh/node_modules/@swc 700 root:root 3440
+  d /root/.dsh/node_modules/@trycua 700 root:root 3440
+  d /root/.dsh/node_modules/@types 700 root:root 3440
+  d /root/.dsh/node_modules/@ubjs 700 root:root 3440
+  d /root/.dsh/node_modules/@vscode 700 root:root 3440
+  d /root/.dsh/node_modules/@xterm 700 root:root 3440
+  l /root/.dsh/node_modules/abort-controller 777 root:root 82
+  l /root/.dsh/node_modules/agent-base 777 root:root 76
+  l /root/.dsh/node_modules/agentkeepalive 777 root:root 80
+  l /root/.dsh/node_modules/ajv 777 root:root 69
+  l /root/.dsh/node_modules/ansi-regex 777 root:root 76
+  l /root/.dsh/node_modules/ansi-styles 777 root:root 77
+  l /root/.dsh/node_modules/argparse 777 root:root 74
+  l /root/.dsh/node_modules/asynckit 777 root:root 74
+  l /root/.dsh/node_modules/base64-js 777 root:root 75
+  l /root/.dsh/node_modules/bignumber.js 777 root:root 78
+  l /root/.dsh/node_modules/bowser 777 root:root 72
+  l /root/.dsh/node_modules/brotli 777 root:root 72
+  l /root/.dsh/node_modules/buffer-equal-constant-time 777 root:root 92
+  l /root/.dsh/node_modules/bundle-name 777 root:root 77
+  l /root/.dsh/node_modules/bytes 777 root:root 71
+  l /root/.dsh/node_modules/call-bind-apply-helpers 777 root:root 89
+  l /root/.dsh/node_modules/chokidar 777 root:root 74
+  l /root/.dsh/node_modules/chrome-devtools-mcp 777 root:root 85
+  l /root/.dsh/node_modules/cliui 777 root:root 71
+  l /root/.dsh/node_modules/clone 777 root:root 71
+  l /root/.dsh/node_modules/combined-stream 777 root:root 81
+  l /root/.dsh/node_modules/commander 777 root:root 75
+  l /root/.dsh/node_modules/compressible 777 root:root 78
+  l /root/.dsh/node_modules/compression 777 root:root 77
+  l /root/.dsh/node_modules/content-type 777 root:root 78
+  l /root/.dsh/node_modules/cross-spawn 777 root:root 77
+  l /root/.dsh/node_modules/data-uri-to-buffer 777 root:root 84
+  l /root/.dsh/node_modules/debug 777 root:root 71
+  l /root/.dsh/node_modules/default-browser 777 root:root 81
+  l /root/.dsh/node_modules/default-browser-id 777 root:root 84
+  l /root/.dsh/node_modules/define-lazy-prop 777 root:root 82
+  l /root/.dsh/node_modules/delayed-stream 777 root:root 80
+  l /root/.dsh/node_modules/destroy 777 root:root 73
+  l /root/.dsh/node_modules/detect-libc 777 root:root 77
+  l /root/.dsh/node_modules/dfa 777 root:root 69
+  l /root/.dsh/node_modules/diff 777 root:root 70
+  l /root/.dsh/node_modules/dsha-client-combo-cache 777 root:root 89
+  l /root/.dsh/node_modules/dsha-runtime-fs 777 root:root 81
+  l /root/.dsh/node_modules/dsha-session-compat 777 root:root 85
+  l /root/.dsh/node_modules/dunder-proto 777 root:root 78
+  l /root/.dsh/node_modules/ecdsa-sig-formatter 777 root:root 85
+  l /root/.dsh/node_modules/emoji-regex 777 root:root 77
+  l /root/.dsh/node_modules/es-define-property 777 root:root 84
+  l /root/.dsh/node_modules/es-errors 777 root:root 75
+  l /root/.dsh/node_modules/es-object-atoms 777 root:root 81
+  l /root/.dsh/node_modules/es-set-tostringtag 777 root:root 84
+  l /root/.dsh/node_modules/escalade 777 root:root 74
+  l /root/.dsh/node_modules/event-target-shim 777 root:root 83
+  l /root/.dsh/node_modules/eventsource 777 root:root 77
+  l /root/.dsh/node_modules/eventsource-parser 777 root:root 84
+  l /root/.dsh/node_modules/execa 777 root:root 71
+  l /root/.dsh/node_modules/extend 777 root:root 72
+  l /root/.dsh/node_modules/fast-deep-equal 777 root:root 81
+  l /root/.dsh/node_modules/fast-sha256 777 root:root 77
+  l /root/.dsh/node_modules/fast-uri 777 root:root 74
+  l /root/.dsh/node_modules/fetch-blob 777 root:root 76
+  l /root/.dsh/node_modules/fflate 777 root:root 72
+  l /root/.dsh/node_modules/figures 777 root:root 73
+  l /root/.dsh/node_modules/fontkit 777 root:root 73
+  l /root/.dsh/node_modules/form-data 777 root:root 75
+  l /root/.dsh/node_modules/form-data-encoder 777 root:root 83
+  l /root/.dsh/node_modules/formdata-node 777 root:root 79
+  l /root/.dsh/node_modules/formdata-polyfill 777 root:root 83
+  l /root/.dsh/node_modules/function-bind 777 root:root 79
+  l /root/.dsh/node_modules/gaxios 777 root:root 72
+  l /root/.dsh/node_modules/gcp-metadata 777 root:root 78
+  l /root/.dsh/node_modules/get-caller-file 777 root:root 81
+  l /root/.dsh/node_modules/get-east-asian-width 777 root:root 86
+  l /root/.dsh/node_modules/get-intrinsic 777 root:root 79
+  l /root/.dsh/node_modules/get-proto 777 root:root 75
+  l /root/.dsh/node_modules/get-stream 777 root:root 76
+  l /root/.dsh/node_modules/google-auth-library 777 root:root 85
+  l /root/.dsh/node_modules/google-logging-utils 777 root:root 86
+  l /root/.dsh/node_modules/gopd 777 root:root 70
+  l /root/.dsh/node_modules/has-symbols 777 root:root 77
+  l /root/.dsh/node_modules/has-tostringtag 777 root:root 81
+  l /root/.dsh/node_modules/hasown 777 root:root 72
+  l /root/.dsh/node_modules/http-proxy-agent 777 root:root 82
+  l /root/.dsh/node_modules/https-proxy-agent 777 root:root 83
+  l /root/.dsh/node_modules/human-signals 777 root:root 79
+  l /root/.dsh/node_modules/humanize-ms 777 root:root 77
+  l /root/.dsh/node_modules/ipaddr.js 777 root:root 75
+  l /root/.dsh/node_modules/is-docker 777 root:root 75
+  l /root/.dsh/node_modules/is-in-ssh 777 root:root 75
+  l /root/.dsh/node_modules/is-inside-container 777 root:root 85
+  l /root/.dsh/node_modules/is-plain-obj 777 root:root 78
+  l /root/.dsh/node_modules/is-stream 777 root:root 75
+  l /root/.dsh/node_modules/is-unicode-supported 777 root:root 86
+  l /root/.dsh/node_modules/is-wsl 777 root:root 72
+  l /root/.dsh/node_modules/isexe 777 root:root 71
+  l /root/.dsh/node_modules/jose 777 root:root 70
+  l /root/.dsh/node_modules/js-tokens 777 root:root 75
+  l /root/.dsh/node_modules/js-yaml 777 root:root 73
+  l /root/.dsh/node_modules/jsbi 777 root:root 70
+  l /root/.dsh/node_modules/json-bigint 777 root:root 77
+  l /root/.dsh/node_modules/json-schema-to-ts 777 root:root 83
+  l /root/.dsh/node_modules/json-schema-traverse 777 root:root 86
+  l /root/.dsh/node_modules/jwa 777 root:root 69
+  l /root/.dsh/node_modules/jws 777 root:root 69
+  l /root/.dsh/node_modules/koffi 777 root:root 71
+  l /root/.dsh/node_modules/long 777 root:root 70
+  l /root/.dsh/node_modules/math-intrinsics 777 root:root 81
+  l /root/.dsh/node_modules/mime-db 777 root:root 73
+  l /root/.dsh/node_modules/mime-types 777 root:root 76
+  l /root/.dsh/node_modules/modern-tar 777 root:root 76
+  l /root/.dsh/node_modules/ms 777 root:root 68
+  l /root/.dsh/node_modules/negotiator 777 root:root 76
+  l /root/.dsh/node_modules/node-addon-api 777 root:root 80
+  l /root/.dsh/node_modules/node-addon-native-custom-loader 777 root:root 97
+  l /root/.dsh/node_modules/node-addon-require-builtin 777 root:root 92
+  l /root/.dsh/node_modules/node-addon-require-builtin-linux-arm64-gnu 777 root:root 108
+  l /root/.dsh/node_modules/node-domexception 777 root:root 83
+  l /root/.dsh/node_modules/node-fetch 777 root:root 76
+  l /root/.dsh/node_modules/node-pty 777 root:root 74
+  l /root/.dsh/node_modules/npm-run-path 777 root:root 78
+  l /root/.dsh/node_modules/on-headers 777 root:root 76
+  l /root/.dsh/node_modules/open 777 root:root 70
+  l /root/.dsh/node_modules/openai 777 root:root 72
+  l /root/.dsh/node_modules/p-retry 777 root:root 73
+  l /root/.dsh/node_modules/pako 777 root:root 70
+  l /root/.dsh/node_modules/parse-ms 777 root:root 74
+  l /root/.dsh/node_modules/partial-json 777 root:root 78
+  l /root/.dsh/node_modules/path-key 777 root:root 74
+  l /root/.dsh/node_modules/picocolors 777 root:root 76
+  l /root/.dsh/node_modules/picomatch 777 root:root 75
+  l /root/.dsh/node_modules/pkce-challenge 777 root:root 80
+  l /root/.dsh/node_modules/playwright 777 root:root 76
+  l /root/.dsh/node_modules/playwright-core 777 root:root 81
+  l /root/.dsh/node_modules/powershell-utils 777 root:root 82
+  l /root/.dsh/node_modules/pretty-ms 777 root:root 75
+  l /root/.dsh/node_modules/protobufjs 777 root:root 76
+  l /root/.dsh/node_modules/readdirp 777 root:root 74
+  l /root/.dsh/node_modules/require-from-string 777 root:root 85
+  l /root/.dsh/node_modules/resolve.exports 777 root:root 81
+  l /root/.dsh/node_modules/restructure 777 root:root 77
+  l /root/.dsh/node_modules/retry 777 root:root 71
+  l /root/.dsh/node_modules/run-applescript 777 root:root 81
+  l /root/.dsh/node_modules/safe-buffer 777 root:root 77
+  l /root/.dsh/node_modules/saxes 777 root:root 71
+  l /root/.dsh/node_modules/semver 777 root:root 72
+  l /root/.dsh/node_modules/sharp 777 root:root 71
+  l /root/.dsh/node_modules/shebang-command 777 root:root 81
+  l /root/.dsh/node_modules/shebang-regex 777 root:root 79
+  l /root/.dsh/node_modules/sherpa-onnx-linux-arm64 777 root:root 89
+  l /root/.dsh/node_modules/sherpa-onnx-node 777 root:root 82
+  l /root/.dsh/node_modules/signal-exit 777 root:root 77
+  l /root/.dsh/node_modules/standardwebhooks 777 root:root 82
+  l /root/.dsh/node_modules/string-width 777 root:root 78
+  l /root/.dsh/node_modules/strip-ansi 777 root:root 76
+  l /root/.dsh/node_modules/strip-final-newline 777 root:root 85
+  l /root/.dsh/node_modules/tiny-inflate 777 root:root 78
+  l /root/.dsh/node_modules/tr46 777 root:root 70
+  l /root/.dsh/node_modules/ts-algebra 777 root:root 76
+  l /root/.dsh/node_modules/tslib 777 root:root 71
+  l /root/.dsh/node_modules/turndown 777 root:root 74
+  l /root/.dsh/node_modules/typebox 777 root:root 73
+  l /root/.dsh/node_modules/undici 777 root:root 72
+  l /root/.dsh/node_modules/undici-types 777 root:root 78
+  l /root/.dsh/node_modules/unicode-properties 777 root:root 84
+  l /root/.dsh/node_modules/unicode-trie 777 root:root 78
+  l /root/.dsh/node_modules/unicorn-magic 777 root:root 79
+  l /root/.dsh/node_modules/vary 777 root:root 70
+  l /root/.dsh/node_modules/web-streams-polyfill 777 root:root 86
+  l /root/.dsh/node_modules/webidl-conversions 777 root:root 84
+  l /root/.dsh/node_modules/whatwg-url 777 root:root 76
+  l /root/.dsh/node_modules/which 777 root:root 71
+  l /root/.dsh/node_modules/which-command 777 root:root 79
+  l /root/.dsh/node_modules/wrap-ansi 777 root:root 75
+  l /root/.dsh/node_modules/ws 777 root:root 68
+  l /root/.dsh/node_modules/wsl-utils 777 root:root 75
+  l /root/.dsh/node_modules/xmlchars 777 root:root 74
+  l /root/.dsh/node_modules/y18n 777 root:root 70
+  l /root/.dsh/node_modules/yaml 777 root:root 70
+  l /root/.dsh/node_modules/yargs 777 root:root 71
+  l /root/.dsh/node_modules/yargs-parser 777 root:root 78
+  l /root/.dsh/node_modules/yoctocolors 777 root:root 77
+  l /root/.dsh/node_modules/zod 777 root:root 69
+  f /root/.dsh/plugin-activations.json 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260927103057 600 root:root 1539
+  f /root/.dsh/plugin-activations.json.bak-20260927103342 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927103822 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927105723 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927122543 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927125717 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927133505 600 root:root 1541
+  f /root/.dsh/plugin-activations.json.bak-20260927135123 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927142356 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927144115 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927144651 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927150946 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927152309 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927152936 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927154658 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927162954 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927165512 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927171102 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927171741 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927174036 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927180217 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927184659 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927185013 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927190609 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928010128 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928015429 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928041529 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928043745 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928050209 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928053339 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928054454 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928055403 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928064714 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928070852 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928071412 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928072054 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928072517 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928073742 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928075228 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928082351 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928092334 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928141625 600 root:root 1539
+  f /root/.dsh/plugin-activations.json.bak-20260928154105 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928160306 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928162243 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928173007 600 root:root 1827
+  f /root/.dsh/plugin-activations.json.bak-20260928180051 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928181947 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928182710 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928184230 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928184537 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928184800 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928185217 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928185550 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928191234 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928191437 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928192318 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928193155 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928194436 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928195229 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928203157 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928204124 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928204559 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260929012216 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260929015451 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260929020458 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260929061736 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260929063229 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260929065726 600 root:root 1828
+  f /root/.dsh/plugin-dependencies.py 600 root:root 19242
+  d /root/.dsh/plugin-dependency-locks 700 root:root 3440
+  d /root/.dsh/plugin-history 700 root:root 3440
+  d /root/.dsh/plugin-history/e5ca7b867bc4c07a3097008114d408c6 700 root:root 3440
+  d /root/.dsh/plugin-install-operations 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/17422b6f-4b3a-48c1-8f23-896f2aac9871 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/1790857d-3bd0-4dda-adb2-3b2b3d40dab2 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/374eb551-467e-480f-a2da-fde6eedb1f5c 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/388fdcdc-7928-4597-a341-451e34b600d9 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/52fda7d2-6623-419f-b5e0-4dbf79f0ac5f 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/57d41564-123e-40af-bedf-141ea30c6e01 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/5ee8e980-a406-45de-8e4b-7bf21dcafcf8 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/7a0aa9a2-ab7a-47f2-bcd2-b96ce0042bec 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/819bc300-3e76-4f0f-902d-a37df0c4b1a3 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/a658ec48-0783-44ec-b940-bb1311981a34 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/c7577a2b-43c1-49ec-b6ef-a2a914d0761b 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/d81f9a5a-42c5-4b31-97f6-66d6d6890bc2 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/eac55156-1a18-495d-84f8-446cd58db766 700 root:root 3440
+  f /root/.dsh/plugin-lifecycle.py 600 root:root 41503
+  f /root/.dsh/plugin-manager.py 600 root:root 43462
+  d /root/.dsh/plugin-previews 700 root:root 3440
+  d /root/.dsh/plugin-previews/13c931186270408ebe86f69e070dad06 700 root:root 3440
+  d /root/.dsh/plugin-previews/6293b375fd494d46b99ce00b63ee75cf 700 root:root 3440
+  d /root/.dsh/plugin-previews/632d40fcd86540a1a950747f4d27327d 700 root:root 3440
+  d /root/.dsh/plugin-previews/b1248e8cf26749b8a13a5d2e4ea92989 700 root:root 3440
+  d /root/.dsh/plugin-previews/e67b144392fc4fd1b174d0cef43a415f 700 root:root 3440
+  d /root/.dsh/plugin-previews/f6b107ed830346898a3a8788bcd93bfb 700 root:root 3440
+  d /root/.dsh/plugin-previews/f8b7d6f89d36451ca8481e2a1e30968d 700 root:root 3440
+  f /root/.dsh/plugin-semver.cjs 600 root:root 70384
+  f /root/.dsh/plugin-sources.json 600 root:root 286
+  d /root/.dsh/plugin-src 700 root:root 3440
+  d /root/.dsh/plugin-src/@dsh-external 700 root:root 3440
+  d /root/.dsh/plugin-src/@tt-a1i 700 root:root 3440
+  d /root/.dsh/plugin-src/dsh-infinite-gen-5 700 root:root 3440
+  d /root/.dsh/plugin-src/dsh-synapse 700 root:root 3440
+  d /root/.dsh/plugin-src/dsh-whale-widget 700 root:root 3440
+  f /root/.dsh/plugin-transactions.py 600 root:root 14263
+  f /root/.dsh/plugin-updates.json 600 root:root 2657
+  d /root/.dsh/plugins 700 root:root 3440
+  d /root/.dsh/profiles 700 root:root 3440
+  d /root/.dsh/profiles/web 700 root:root 3440
+  f /root/.dsh/rc1-migration.py 600 root:root 17928
+  f /root/.dsh/rc1-settings-migration.cjs 600 root:root 7768
+  f /root/.dsh/register-builtin-plugins.py 600 root:root 35712
+  f /root/.dsh/repair-builtin.log 600 root:root 11106
+  d /root/.dsh/sessions 700 root:root 3440
+  d /root/.dsh/sessions/--root-Branchbase-- 700 root:root 3440
+  d /root/.dsh/sessions/--root-GitHub-- 700 root:root 3440
+  d /root/.dsh/sessions/--root-dsh-infinite-gen-4-- 700 root:root 53248
+  d /root/.dsh/sessions/--root-weixin-- 700 root:root 3440
+  d /root/.dsh/skills 700 root:root 3440
+  d /root/.dsh/skills/archify 700 root:root 3440
+  f /root/.dsh/startup-checkpoints.py 600 root:root 9119
+  f /root/.dsh/startup-observer.cjs 600 root:root 8768
+  f /root/.dsh/startup-recovery.py 600 root:root 1302
+  d /root/.dsh/storages 700 root:root 3440
+  d /root/.dsh/storages/session_projcache 700 root:root 3440
+  f /root/.dsh/storages/workspace.json 600 root:root 3527
+  d /root/.dsh/synapse 700 root:root 3440
+  f /root/.dsh/synapse/workspaces.json 600 root:root 19564438
+  d /root/.dsh/whale-audio 700 root:root 3440
+  d /root/.dsh/whale-bubble-imgs 700 root:root 3440
+  d /root/.dsh/whale-roles 700 root:root 3440
+--- DIR /root/.dsh
+mode=700 owner=root:root size=20480 mtime=2026-09-29 07:07:30.659104296 +0000 type=directory
+  d /root/.dsh 700 root:root 20480
+  f /root/.dsh/.anonymous-user-id 600 root:root 37
+  f /root/.dsh/.bridge_status 600 root:root 13
+  f /root/.dsh/.bridge_token 600 root:root 32
+  f /root/.dsh/.credentials.yaml 600 root:root 223
+  d /root/.dsh/.dsha-rc1-migration 700 root:root 3440
+  f /root/.dsh/.dsha-rc1-migration/prepare.json 600 root:root 2011
+  f /root/.dsh/.dsha-rc1-migration/receipt.json 600 root:root 460
+  f /root/.dsh/.dshw-size.json 600 root:root 269
+  f /root/.dsh/.dshw-turn.json 600 root:root 50
+  f /root/.dsh/.dshw-usage.json 600 root:root 55936
+  f /root/.dsh/.runtime-links-cache.json 600 root:root 15927
+  d /root/.dsh/__pycache__ 700 root:root 3440
+  f /root/.dsh/__pycache__/backup-plugin-graph.cpython-312.pyc 600 root:root 20012
+  f /root/.dsh/__pycache__/device-shell-policy.cpython-312.pyc 600 root:root 13424
+  f /root/.dsh/__pycache__/plugin-dependencies.cpython-312.pyc 600 root:root 28977
+  f /root/.dsh/__pycache__/plugin-lifecycle.cpython-312.pyc 600 root:root 63853
+  f /root/.dsh/__pycache__/plugin-manager.cpython-312.pyc 600 root:root 69650
+  f /root/.dsh/__pycache__/plugin-transactions.cpython-312.pyc 600 root:root 25084
+  f /root/.dsh/__pycache__/register-builtin-plugins.cpython-312.pyc 600 root:root 50998
+  f /root/.dsh/adb-shell.py 600 root:root 20027
+  d /root/.dsh/attachments 700 root:root 3440
+  d /root/.dsh/attachments/v1 700 root:root 3440
+  f /root/.dsh/backup-plugin-graph.py 600 root:root 14252
+  d /root/.dsh/cache 700 root:root 3440
+  d /root/.dsh/cache/attachments 700 root:root 3440
+  f /root/.dsh/device-shell-policy.py 600 root:root 9372
+  f /root/.dsh/ig5-adapt-cache.json 600 root:root 835
+  f /root/.dsh/infinite-gen-5-stats.json 600 root:root 35532
+  f /root/.dsh/infinite-gen-5-tuning.candidate.json 600 root:root 498
+  f /root/.dsh/infinite-gen-5-tuning.json 600 root:root 344
+  f /root/.dsh/infinite-gen-5-tuning.json.bak-20260928 600 root:root 314
+  f /root/.dsh/infinite-gen-5-tuning.json.bak-20260928-boost4 600 root:root 366
+  f /root/.dsh/infinite-gen-5-tuning.json.bak-20260928-polluted 600 root:root 308
+  d /root/.dsh/llm-deepseek 700 root:root 3440
+  f /root/.dsh/llm-deepseek/files-v3.json 600 root:root 24312
+  d /root/.dsh/node_modules 700 root:root 20480
+  d /root/.dsh/node_modules/@agentclientprotocol 700 root:root 3440
+  d /root/.dsh/node_modules/@anthropic-ai 700 root:root 3440
+  d /root/.dsh/node_modules/@aws 700 root:root 3440
+  d /root/.dsh/node_modules/@aws-crypto 700 root:root 3440
+  d /root/.dsh/node_modules/@aws-sdk 700 root:root 3440
+  d /root/.dsh/node_modules/@babel 700 root:root 3440
+  d /root/.dsh/node_modules/@browserbasehq 700 root:root 3440
+  d /root/.dsh/node_modules/@deepseek-ai 700 root:root 24576
+  d /root/.dsh/node_modules/@earendil-works 700 root:root 3440
+  d /root/.dsh/node_modules/@eslint-community 700 root:root 3440
+  d /root/.dsh/node_modules/@google 700 root:root 3440
+  d /root/.dsh/node_modules/@img 700 root:root 3440
+  d /root/.dsh/node_modules/@joplin 700 root:root 3440
+  d /root/.dsh/node_modules/@js-temporal 700 root:root 3440
+  d /root/.dsh/node_modules/@koromix 700 root:root 3440
+  d /root/.dsh/node_modules/@mixmark-io 700 root:root 3440
+  d /root/.dsh/node_modules/@modelcontextprotocol 700 root:root 3440
+  d /root/.dsh/node_modules/@octokit 700 root:root 3440
+  d /root/.dsh/node_modules/@opentelemetry 700 root:root 3440
+  d /root/.dsh/node_modules/@playwright 700 root:root 3440
+  d /root/.dsh/node_modules/@protobufjs 700 root:root 3440
+  d /root/.dsh/node_modules/@puppeteer 700 root:root 3440
+  d /root/.dsh/node_modules/@sec-ant 700 root:root 3440
+  d /root/.dsh/node_modules/@sindresorhus 700 root:root 3440
+  d /root/.dsh/node_modules/@smithy 700 root:root 3440
+  d /root/.dsh/node_modules/@stablelib 700 root:root 3440
+  d /root/.dsh/node_modules/@standard-schema 700 root:root 3440
+  d /root/.dsh/node_modules/@swc 700 root:root 3440
+  d /root/.dsh/node_modules/@trycua 700 root:root 3440
+  d /root/.dsh/node_modules/@types 700 root:root 3440
+  d /root/.dsh/node_modules/@ubjs 700 root:root 3440
+  d /root/.dsh/node_modules/@vscode 700 root:root 3440
+  d /root/.dsh/node_modules/@xterm 700 root:root 3440
+  l /root/.dsh/node_modules/abort-controller 777 root:root 82
+  l /root/.dsh/node_modules/agent-base 777 root:root 76
+  l /root/.dsh/node_modules/agentkeepalive 777 root:root 80
+  l /root/.dsh/node_modules/ajv 777 root:root 69
+  l /root/.dsh/node_modules/ansi-regex 777 root:root 76
+  l /root/.dsh/node_modules/ansi-styles 777 root:root 77
+  l /root/.dsh/node_modules/argparse 777 root:root 74
+  l /root/.dsh/node_modules/asynckit 777 root:root 74
+  l /root/.dsh/node_modules/base64-js 777 root:root 75
+  l /root/.dsh/node_modules/bignumber.js 777 root:root 78
+  l /root/.dsh/node_modules/bowser 777 root:root 72
+  l /root/.dsh/node_modules/brotli 777 root:root 72
+  l /root/.dsh/node_modules/buffer-equal-constant-time 777 root:root 92
+  l /root/.dsh/node_modules/bundle-name 777 root:root 77
+  l /root/.dsh/node_modules/bytes 777 root:root 71
+  l /root/.dsh/node_modules/call-bind-apply-helpers 777 root:root 89
+  l /root/.dsh/node_modules/chokidar 777 root:root 74
+  l /root/.dsh/node_modules/chrome-devtools-mcp 777 root:root 85
+  l /root/.dsh/node_modules/cliui 777 root:root 71
+  l /root/.dsh/node_modules/clone 777 root:root 71
+  l /root/.dsh/node_modules/combined-stream 777 root:root 81
+  l /root/.dsh/node_modules/commander 777 root:root 75
+  l /root/.dsh/node_modules/compressible 777 root:root 78
+  l /root/.dsh/node_modules/compression 777 root:root 77
+  l /root/.dsh/node_modules/content-type 777 root:root 78
+  l /root/.dsh/node_modules/cross-spawn 777 root:root 77
+  l /root/.dsh/node_modules/data-uri-to-buffer 777 root:root 84
+  l /root/.dsh/node_modules/debug 777 root:root 71
+  l /root/.dsh/node_modules/default-browser 777 root:root 81
+  l /root/.dsh/node_modules/default-browser-id 777 root:root 84
+  l /root/.dsh/node_modules/define-lazy-prop 777 root:root 82
+  l /root/.dsh/node_modules/delayed-stream 777 root:root 80
+  l /root/.dsh/node_modules/destroy 777 root:root 73
+  l /root/.dsh/node_modules/detect-libc 777 root:root 77
+  l /root/.dsh/node_modules/dfa 777 root:root 69
+  l /root/.dsh/node_modules/diff 777 root:root 70
+  l /root/.dsh/node_modules/dsha-client-combo-cache 777 root:root 89
+  l /root/.dsh/node_modules/dsha-runtime-fs 777 root:root 81
+  l /root/.dsh/node_modules/dsha-session-compat 777 root:root 85
+  l /root/.dsh/node_modules/dunder-proto 777 root:root 78
+  l /root/.dsh/node_modules/ecdsa-sig-formatter 777 root:root 85
+  l /root/.dsh/node_modules/emoji-regex 777 root:root 77
+  l /root/.dsh/node_modules/es-define-property 777 root:root 84
+  l /root/.dsh/node_modules/es-errors 777 root:root 75
+  l /root/.dsh/node_modules/es-object-atoms 777 root:root 81
+  l /root/.dsh/node_modules/es-set-tostringtag 777 root:root 84
+  l /root/.dsh/node_modules/escalade 777 root:root 74
+  l /root/.dsh/node_modules/event-target-shim 777 root:root 83
+  l /root/.dsh/node_modules/eventsource 777 root:root 77
+  l /root/.dsh/node_modules/eventsource-parser 777 root:root 84
+  l /root/.dsh/node_modules/execa 777 root:root 71
+  l /root/.dsh/node_modules/extend 777 root:root 72
+  l /root/.dsh/node_modules/fast-deep-equal 777 root:root 81
+  l /root/.dsh/node_modules/fast-sha256 777 root:root 77
+  l /root/.dsh/node_modules/fast-uri 777 root:root 74
+  l /root/.dsh/node_modules/fetch-blob 777 root:root 76
+  l /root/.dsh/node_modules/fflate 777 root:root 72
+  l /root/.dsh/node_modules/figures 777 root:root 73
+  l /root/.dsh/node_modules/fontkit 777 root:root 73
+  l /root/.dsh/node_modules/form-data 777 root:root 75
+  l /root/.dsh/node_modules/form-data-encoder 777 root:root 83
+  l /root/.dsh/node_modules/formdata-node 777 root:root 79
+  l /root/.dsh/node_modules/formdata-polyfill 777 root:root 83
+  l /root/.dsh/node_modules/function-bind 777 root:root 79
+  l /root/.dsh/node_modules/gaxios 777 root:root 72
+  l /root/.dsh/node_modules/gcp-metadata 777 root:root 78
+  l /root/.dsh/node_modules/get-caller-file 777 root:root 81
+  l /root/.dsh/node_modules/get-east-asian-width 777 root:root 86
+  l /root/.dsh/node_modules/get-intrinsic 777 root:root 79
+  l /root/.dsh/node_modules/get-proto 777 root:root 75
+  l /root/.dsh/node_modules/get-stream 777 root:root 76
+  l /root/.dsh/node_modules/google-auth-library 777 root:root 85
+  l /root/.dsh/node_modules/google-logging-utils 777 root:root 86
+  l /root/.dsh/node_modules/gopd 777 root:root 70
+  l /root/.dsh/node_modules/has-symbols 777 root:root 77
+  l /root/.dsh/node_modules/has-tostringtag 777 root:root 81
+  l /root/.dsh/node_modules/hasown 777 root:root 72
+  l /root/.dsh/node_modules/http-proxy-agent 777 root:root 82
+  l /root/.dsh/node_modules/https-proxy-agent 777 root:root 83
+  l /root/.dsh/node_modules/human-signals 777 root:root 79
+  l /root/.dsh/node_modules/humanize-ms 777 root:root 77
+  l /root/.dsh/node_modules/ipaddr.js 777 root:root 75
+  l /root/.dsh/node_modules/is-docker 777 root:root 75
+  l /root/.dsh/node_modules/is-in-ssh 777 root:root 75
+  l /root/.dsh/node_modules/is-inside-container 777 root:root 85
+  l /root/.dsh/node_modules/is-plain-obj 777 root:root 78
+  l /root/.dsh/node_modules/is-stream 777 root:root 75
+  l /root/.dsh/node_modules/is-unicode-supported 777 root:root 86
+  l /root/.dsh/node_modules/is-wsl 777 root:root 72
+  l /root/.dsh/node_modules/isexe 777 root:root 71
+  l /root/.dsh/node_modules/jose 777 root:root 70
+  l /root/.dsh/node_modules/js-tokens 777 root:root 75
+  l /root/.dsh/node_modules/js-yaml 777 root:root 73
+  l /root/.dsh/node_modules/jsbi 777 root:root 70
+  l /root/.dsh/node_modules/json-bigint 777 root:root 77
+  l /root/.dsh/node_modules/json-schema-to-ts 777 root:root 83
+  l /root/.dsh/node_modules/json-schema-traverse 777 root:root 86
+  l /root/.dsh/node_modules/jwa 777 root:root 69
+  l /root/.dsh/node_modules/jws 777 root:root 69
+  l /root/.dsh/node_modules/koffi 777 root:root 71
+  l /root/.dsh/node_modules/long 777 root:root 70
+  l /root/.dsh/node_modules/math-intrinsics 777 root:root 81
+  l /root/.dsh/node_modules/mime-db 777 root:root 73
+  l /root/.dsh/node_modules/mime-types 777 root:root 76
+  l /root/.dsh/node_modules/modern-tar 777 root:root 76
+  l /root/.dsh/node_modules/ms 777 root:root 68
+  l /root/.dsh/node_modules/negotiator 777 root:root 76
+  l /root/.dsh/node_modules/node-addon-api 777 root:root 80
+  l /root/.dsh/node_modules/node-addon-native-custom-loader 777 root:root 97
+  l /root/.dsh/node_modules/node-addon-require-builtin 777 root:root 92
+  l /root/.dsh/node_modules/node-addon-require-builtin-linux-arm64-gnu 777 root:root 108
+  l /root/.dsh/node_modules/node-domexception 777 root:root 83
+  l /root/.dsh/node_modules/node-fetch 777 root:root 76
+  l /root/.dsh/node_modules/node-pty 777 root:root 74
+  l /root/.dsh/node_modules/npm-run-path 777 root:root 78
+  l /root/.dsh/node_modules/on-headers 777 root:root 76
+  l /root/.dsh/node_modules/open 777 root:root 70
+  l /root/.dsh/node_modules/openai 777 root:root 72
+  l /root/.dsh/node_modules/p-retry 777 root:root 73
+  l /root/.dsh/node_modules/pako 777 root:root 70
+  l /root/.dsh/node_modules/parse-ms 777 root:root 74
+  l /root/.dsh/node_modules/partial-json 777 root:root 78
+  l /root/.dsh/node_modules/path-key 777 root:root 74
+  l /root/.dsh/node_modules/picocolors 777 root:root 76
+  l /root/.dsh/node_modules/picomatch 777 root:root 75
+  l /root/.dsh/node_modules/pkce-challenge 777 root:root 80
+  l /root/.dsh/node_modules/playwright 777 root:root 76
+  l /root/.dsh/node_modules/playwright-core 777 root:root 81
+  l /root/.dsh/node_modules/powershell-utils 777 root:root 82
+  l /root/.dsh/node_modules/pretty-ms 777 root:root 75
+  l /root/.dsh/node_modules/protobufjs 777 root:root 76
+  l /root/.dsh/node_modules/readdirp 777 root:root 74
+  l /root/.dsh/node_modules/require-from-string 777 root:root 85
+  l /root/.dsh/node_modules/resolve.exports 777 root:root 81
+  l /root/.dsh/node_modules/restructure 777 root:root 77
+  l /root/.dsh/node_modules/retry 777 root:root 71
+  l /root/.dsh/node_modules/run-applescript 777 root:root 81
+  l /root/.dsh/node_modules/safe-buffer 777 root:root 77
+  l /root/.dsh/node_modules/saxes 777 root:root 71
+  l /root/.dsh/node_modules/semver 777 root:root 72
+  l /root/.dsh/node_modules/sharp 777 root:root 71
+  l /root/.dsh/node_modules/shebang-command 777 root:root 81
+  l /root/.dsh/node_modules/shebang-regex 777 root:root 79
+  l /root/.dsh/node_modules/sherpa-onnx-linux-arm64 777 root:root 89
+  l /root/.dsh/node_modules/sherpa-onnx-node 777 root:root 82
+  l /root/.dsh/node_modules/signal-exit 777 root:root 77
+  l /root/.dsh/node_modules/standardwebhooks 777 root:root 82
+  l /root/.dsh/node_modules/string-width 777 root:root 78
+  l /root/.dsh/node_modules/strip-ansi 777 root:root 76
+  l /root/.dsh/node_modules/strip-final-newline 777 root:root 85
+  l /root/.dsh/node_modules/tiny-inflate 777 root:root 78
+  l /root/.dsh/node_modules/tr46 777 root:root 70
+  l /root/.dsh/node_modules/ts-algebra 777 root:root 76
+  l /root/.dsh/node_modules/tslib 777 root:root 71
+  l /root/.dsh/node_modules/turndown 777 root:root 74
+  l /root/.dsh/node_modules/typebox 777 root:root 73
+  l /root/.dsh/node_modules/undici 777 root:root 72
+  l /root/.dsh/node_modules/undici-types 777 root:root 78
+  l /root/.dsh/node_modules/unicode-properties 777 root:root 84
+  l /root/.dsh/node_modules/unicode-trie 777 root:root 78
+  l /root/.dsh/node_modules/unicorn-magic 777 root:root 79
+  l /root/.dsh/node_modules/vary 777 root:root 70
+  l /root/.dsh/node_modules/web-streams-polyfill 777 root:root 86
+  l /root/.dsh/node_modules/webidl-conversions 777 root:root 84
+  l /root/.dsh/node_modules/whatwg-url 777 root:root 76
+  l /root/.dsh/node_modules/which 777 root:root 71
+  l /root/.dsh/node_modules/which-command 777 root:root 79
+  l /root/.dsh/node_modules/wrap-ansi 777 root:root 75
+  l /root/.dsh/node_modules/ws 777 root:root 68
+  l /root/.dsh/node_modules/wsl-utils 777 root:root 75
+  l /root/.dsh/node_modules/xmlchars 777 root:root 74
+  l /root/.dsh/node_modules/y18n 777 root:root 70
+  l /root/.dsh/node_modules/yaml 777 root:root 70
+  l /root/.dsh/node_modules/yargs 777 root:root 71
+  l /root/.dsh/node_modules/yargs-parser 777 root:root 78
+  l /root/.dsh/node_modules/yoctocolors 777 root:root 77
+  l /root/.dsh/node_modules/zod 777 root:root 69
+  f /root/.dsh/plugin-activations.json 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260927103057 600 root:root 1539
+  f /root/.dsh/plugin-activations.json.bak-20260927103342 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927103822 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927105723 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927122543 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927125717 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927133505 600 root:root 1541
+  f /root/.dsh/plugin-activations.json.bak-20260927135123 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927142356 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927144115 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927144651 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927150946 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927152309 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927152936 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927154658 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927162954 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927165512 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927171102 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927171741 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927174036 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927180217 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927184659 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927185013 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260927190609 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928010128 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928015429 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928041529 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928043745 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928050209 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928053339 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928054454 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928055403 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928064714 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928070852 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928071412 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928072054 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928072517 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928073742 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928075228 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928082351 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928092334 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928141625 600 root:root 1539
+  f /root/.dsh/plugin-activations.json.bak-20260928154105 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928160306 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928162243 600 root:root 1540
+  f /root/.dsh/plugin-activations.json.bak-20260928173007 600 root:root 1827
+  f /root/.dsh/plugin-activations.json.bak-20260928180051 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928181947 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928182710 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928184230 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928184537 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928184800 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928185217 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928185550 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928191234 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928191437 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928192318 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928193155 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928194436 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928195229 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928203157 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928204124 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260928204559 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260929012216 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260929015451 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260929020458 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260929061736 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260929063229 600 root:root 1828
+  f /root/.dsh/plugin-activations.json.bak-20260929065726 600 root:root 1828
+  f /root/.dsh/plugin-dependencies.py 600 root:root 19242
+  d /root/.dsh/plugin-dependency-locks 700 root:root 3440
+  d /root/.dsh/plugin-history 700 root:root 3440
+  d /root/.dsh/plugin-history/e5ca7b867bc4c07a3097008114d408c6 700 root:root 3440
+  d /root/.dsh/plugin-install-operations 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/17422b6f-4b3a-48c1-8f23-896f2aac9871 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/1790857d-3bd0-4dda-adb2-3b2b3d40dab2 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/374eb551-467e-480f-a2da-fde6eedb1f5c 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/388fdcdc-7928-4597-a341-451e34b600d9 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/52fda7d2-6623-419f-b5e0-4dbf79f0ac5f 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/57d41564-123e-40af-bedf-141ea30c6e01 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/5ee8e980-a406-45de-8e4b-7bf21dcafcf8 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/7a0aa9a2-ab7a-47f2-bcd2-b96ce0042bec 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/819bc300-3e76-4f0f-902d-a37df0c4b1a3 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/a658ec48-0783-44ec-b940-bb1311981a34 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/c7577a2b-43c1-49ec-b6ef-a2a914d0761b 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/d81f9a5a-42c5-4b31-97f6-66d6d6890bc2 700 root:root 3440
+  d /root/.dsh/plugin-install-operations/eac55156-1a18-495d-84f8-446cd58db766 700 root:root 3440
+  f /root/.dsh/plugin-lifecycle.py 600 root:root 41503
+  f /root/.dsh/plugin-manager.py 600 root:root 43462
+  d /root/.dsh/plugin-previews 700 root:root 3440
+  d /root/.dsh/plugin-previews/13c931186270408ebe86f69e070dad06 700 root:root 3440
+  d /root/.dsh/plugin-previews/6293b375fd494d46b99ce00b63ee75cf 700 root:root 3440
+  d /root/.dsh/plugin-previews/632d40fcd86540a1a950747f4d27327d 700 root:root 3440
+  d /root/.dsh/plugin-previews/b1248e8cf26749b8a13a5d2e4ea92989 700 root:root 3440
+  d /root/.dsh/plugin-previews/e67b144392fc4fd1b174d0cef43a415f 700 root:root 3440
+  d /root/.dsh/plugin-previews/f6b107ed830346898a3a8788bcd93bfb 700 root:root 3440
+  d /root/.dsh/plugin-previews/f8b7d6f89d36451ca8481e2a1e30968d 700 root:root 3440
+  f /root/.dsh/plugin-semver.cjs 600 root:root 70384
+  f /root/.dsh/plugin-sources.json 600 root:root 286
+  d /root/.dsh/plugin-src 700 root:root 3440
+  d /root/.dsh/plugin-src/@dsh-external 700 root:root 3440
+  d /root/.dsh/plugin-src/@tt-a1i 700 root:root 3440
+  d /root/.dsh/plugin-src/dsh-infinite-gen-5 700 root:root 3440
+  d /root/.dsh/plugin-src/dsh-synapse 700 root:root 3440
+  d /root/.dsh/plugin-src/dsh-whale-widget 700 root:root 3440
+  f /root/.dsh/plugin-transactions.py 600 root:root 14263
+  f /root/.dsh/plugin-updates.json 600 root:root 2657
+  d /root/.dsh/plugins 700 root:root 3440
+  d /root/.dsh/profiles 700 root:root 3440
+  d /root/.dsh/profiles/web 700 root:root 3440
+  f /root/.dsh/rc1-migration.py 600 root:root 17928
+  f /root/.dsh/rc1-settings-migration.cjs 600 root:root 7768
+  f /root/.dsh/register-builtin-plugins.py 600 root:root 35712
+  f /root/.dsh/repair-builtin.log 600 root:root 11106
+  d /root/.dsh/sessions 700 root:root 3440
+  d /root/.dsh/sessions/--root-Branchbase-- 700 root:root 3440
+  d /root/.dsh/sessions/--root-GitHub-- 700 root:root 3440
+  d /root/.dsh/sessions/--root-dsh-infinite-gen-4-- 700 root:root 53248
+  d /root/.dsh/sessions/--root-weixin-- 700 root:root 3440
+  d /root/.dsh/skills 700 root:root 3440
+  d /root/.dsh/skills/archify 700 root:root 3440
+  f /root/.dsh/startup-checkpoints.py 600 root:root 9119
+  f /root/.dsh/startup-observer.cjs 600 root:root 8768
+  f /root/.dsh/startup-recovery.py 600 root:root 1302
+  d /root/.dsh/storages 700 root:root 3440
+  d /root/.dsh/storages/session_projcache 700 root:root 3440
+  f /root/.dsh/storages/workspace.json 600 root:root 3527
+  d /root/.dsh/synapse 700 root:root 3440
+  f /root/.dsh/synapse/workspaces.json 600 root:root 19566966
+  f /root/.dsh/synapse/workspaces.json.1872.tmp 600 root:root 19181568
+  f /root/.dsh/synapse/workspaces.json.lock 600 root:root 5
+  d /root/.dsh/whale-audio 700 root:root 3440
+  d /root/.dsh/whale-bubble-imgs 700 root:root 3440
+  d /root/.dsh/whale-roles 700 root:root 3440
+--- token/secret 形态文件 (值不打印)
+  FILE /root/.dsh/profiles/web/package.json  bytes=1421  lines=41  sha256_12=9596f591586e  mode=600 owner=root:root size=1421 mtime=2026-09-29 04:13:39.031108275 +0000 type=regular file
+  FILE /root/.dsh/profiles/web/.dsh-redteam-model-operations.json  bytes=111  lines=6  sha256_12=c0f22b46b83e  mode=600 owner=root:root size=111 mtime=2026-09-26 16:52:24.881659853 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/b1248e8cf26749b8a13a5d2e4ea92989/preview.json  bytes=1265  lines=30  sha256_12=49063b30f9ec  mode=600 owner=root:root size=1265 mtime=2026-09-25 17:27:31.980133828 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/6293b375fd494d46b99ce00b63ee75cf/preview.json  bytes=1683  lines=35  sha256_12=c494fe390ee8  mode=600 owner=root:root size=1683 mtime=2026-09-26 16:39:38.541660146 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/e67b144392fc4fd1b174d0cef43a415f/preview.json  bytes=5930  lines=226  sha256_12=1a960f8bbe00  mode=600 owner=root:root size=5930 mtime=2026-09-26 16:54:25.889659807 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/f8b7d6f89d36451ca8481e2a1e30968d/preview.json  bytes=3058  lines=30  sha256_12=065414ac71f5  mode=600 owner=root:root size=3058 mtime=2026-09-27 08:41:14.937997581 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/632d40fcd86540a1a950747f4d27327d/preview.json  bytes=2530  lines=35  sha256_12=3312d2b1d81c  mode=600 owner=root:root size=2530 mtime=2026-09-28 13:24:55.437616033 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/f6b107ed830346898a3a8788bcd93bfb/preview.json  bytes=2514  lines=35  sha256_12=dfb6466d9aec  mode=600 owner=root:root size=2514 mtime=2026-09-28 13:36:35.597615766 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/13c931186270408ebe86f69e070dad06/preview.json  bytes=2514  lines=35  sha256_12=6a2b075ceb8f  mode=600 owner=root:root size=2514 mtime=2026-09-28 13:53:41.105615374 +0000 type=regular file
+  FILE /root/.dsh/.runtime-links-cache.json  bytes=15927  lines=0  sha256_12=ab64147e7e70  mode=600 owner=root:root size=15927 mtime=2026-09-27 07:45:17.689998861 +0000 type=regular file
+  FILE /root/.dsh/plugin-history/e5ca7b867bc4c07a3097008114d408c6/state.json  bytes=145  lines=5  sha256_12=536700e6549d  mode=600 owner=root:root size=145 mtime=2026-09-28 13:40:34.953615674 +0000 type=regular file
+  FILE /root/.dsh/plugin-src/dsh-whale-widget/package.json  bytes=1042  lines=35  sha256_12=7738cd7be5db  mode=644 owner=root:root size=1042 mtime=2026-09-26 17:08:46.765659479 +0000 type=regular file
+  FILE /root/.dsh/plugin-src/dsh-whale-widget/.dsha-dependencies.json  bytes=554  lines=14  sha256_12=2181209d72e8  mode=600 owner=root:root size=554 mtime=2026-09-26 17:08:47.041659479 +0000 type=regular file
+  FILE /root/.dsh/plugin-src/dsh-infinite-gen-5/package.json  bytes=7397  lines=138  sha256_12=f4f80f965e12  mode=600 owner=root:root size=7397 mtime=2026-09-29 06:57:26.215104527 +0000 type=regular file
+  FILE /root/.dsh/plugin-src/dsh-infinite-gen-5/.dsha-dependencies.json  bytes=556  lines=14  sha256_12=da7e1eba86e1  mode=600 owner=root:root size=556 mtime=2026-09-28 14:16:25.529614854 +0000 type=regular file
+  FILE /root/.dsh/plugin-src/dsh-synapse/package.json  bytes=984  lines=45  sha256_12=1dc69b52cb72  mode=644 owner=root:root size=984 mtime=2026-09-28 17:02:59.377611042 +0000 type=regular file
+  FILE /root/.dsh/plugin-src/dsh-synapse/.dsha-dependencies.json  bytes=612  lines=14  sha256_12=6c94fa47d1cb  mode=600 owner=root:root size=612 mtime=2026-09-28 17:02:59.605611041 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/a658ec48-0783-44ec-b940-bb1311981a34/plan.json  bytes=1288  lines=50  sha256_12=45f737708886  mode=600 owner=root:root size=1288 mtime=2026-09-25 17:26:28.672133852 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/1790857d-3bd0-4dda-adb2-3b2b3d40dab2/plan.json  bytes=1490  lines=54  sha256_12=af143731c60b  mode=600 owner=root:root size=1490 mtime=2026-09-26 07:07:19.229673245 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/374eb551-467e-480f-a2da-fde6eedb1f5c/plan.json  bytes=1514  lines=54  sha256_12=2941061c3be1  mode=600 owner=root:root size=1514 mtime=2026-09-26 16:48:39.513659939 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/7a0aa9a2-ab7a-47f2-bcd2-b96ce0042bec/plan.json  bytes=1488  lines=54  sha256_12=35d1befb08c4  mode=600 owner=root:root size=1488 mtime=2026-09-26 17:01:38.289659642 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/52fda7d2-6623-419f-b5e0-4dbf79f0ac5f/plan.json  bytes=1484  lines=54  sha256_12=1af3dc0baf62  mode=600 owner=root:root size=1484 mtime=2026-09-26 17:09:21.401659466 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/388fdcdc-7928-4597-a341-451e34b600d9/plan.json  bytes=1488  lines=54  sha256_12=6cdadfc18019  mode=600 owner=root:root size=1488 mtime=2026-09-26 18:45:44.401657260 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/57d41564-123e-40af-bedf-141ea30c6e01/plan.json  bytes=1488  lines=54  sha256_12=61e97c67cef0  mode=600 owner=root:root size=1488 mtime=2026-09-27 08:43:03.157997540 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/819bc300-3e76-4f0f-902d-a37df0c4b1a3/plan.json  bytes=1593  lines=54  sha256_12=4e4e53a97672  mode=600 owner=root:root size=1593 mtime=2026-09-27 09:18:24.377996730 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/17422b6f-4b3a-48c1-8f23-896f2aac9871/plan.json  bytes=1657  lines=54  sha256_12=2458f7b41973  mode=600 owner=root:root size=1657 mtime=2026-09-27 09:30:33.877996452 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/c7577a2b-43c1-49ec-b6ef-a2a914d0761b/plan.json  bytes=1657  lines=54  sha256_12=98900237f2fb  mode=600 owner=root:root size=1657 mtime=2026-09-28 13:26:49.497615989 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/5ee8e980-a406-45de-8e4b-7bf21dcafcf8/plan.json  bytes=1657  lines=54  sha256_12=5e64902ad0bd  mode=600 owner=root:root size=1657 mtime=2026-09-28 13:40:34.933615674 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/d81f9a5a-42c5-4b31-97f6-66d6d6890bc2/plan.json  bytes=1474  lines=54  sha256_12=a65114086845  mode=600 owner=root:root size=1474 mtime=2026-09-28 17:03:43.653611025 +0000 type=regular file
+  FILE /root/.dsh/.bridge_token  bytes=32  lines=0  sha256_12=b52a60d53989  mode=600 owner=root:root size=32 mtime=2026-09-25 17:27:58.184133818 +0000 type=regular file
+  FILE /root/.dsh/.dsha-rc1-migration/prepare.json  bytes=2011  lines=77  sha256_12=a10c8da926b8  mode=600 owner=root:root size=2011 mtime=2026-09-25 17:27:58.512133817 +0000 type=regular file
+  FILE /root/.dsh/.dsha-rc1-migration/receipt.json  bytes=460  lines=17  sha256_12=37687237ccd4  mode=600 owner=root:root size=460 mtime=2026-09-25 17:30:59.652133748 +0000 type=regular file
+  FILE /root/.dsh/storages/workspace.json  bytes=3527  lines=89  sha256_12=c81010ba1a69  mode=600 owner=root:root size=3527 mtime=2026-09-29 06:02:24.287105786 +0000 type=regular file
+  FILE /root/.dsh/plugin-activations.json  bytes=1828  lines=53  sha256_12=636500bfb134  mode=600 owner=root:root size=1828 mtime=2026-09-29 06:57:26.835104526 +0000 type=regular file
+  FILE /root/.dsh/plugin-sources.json  bytes=286  lines=5  sha256_12=9e688027dd75  mode=600 owner=root:root size=286 mtime=2026-09-28 17:03:43.429611025 +0000 type=regular file
+  FILE /root/.dsh/.dshw-size.json  bytes=269  lines=0  sha256_12=830de8d98145  mode=600 owner=root:root size=269 mtime=2026-09-29 06:45:00.883104811 +0000 type=regular file
+  FILE /root/.dsh/.dshw-turn.json  bytes=50  lines=0  sha256_12=c8958d6c7ba1  mode=600 owner=root:root size=50 mtime=2026-09-29 07:06:30.779104319 +0000 type=regular file
+  FILE /root/.dsh/.credentials.yaml  bytes=223  lines=9  sha256_12=a64b618eeb7c  mode=600 owner=root:root size=223 mtime=2026-09-25 17:31:23.264133739 +0000 type=regular file
+  FILE /root/.dsh/.dshw-usage.json  bytes=55936  lines=0  sha256_12=9c558ee22265  mode=600 owner=root:root size=55936 mtime=2026-09-29 07:07:31.503104296 +0000 type=regular file
+  FILE /root/.dsh/llm-deepseek/files-v3.json  bytes=24312  lines=500  sha256_12=65b136d02756  mode=600 owner=root:root size=24312 mtime=2026-09-28 19:51:26.354998813 +0000 type=regular file
+  FILE /root/.dsh/skills/archify/skill-release.json  bytes=272  lines=10  sha256_12=269772492c38  mode=600 owner=root:root size=272 mtime=2026-09-26 06:38:06.865673914 +0000 type=regular file
+  FILE /root/.dsh/skills/archify/package-lock.json  bytes=4906  lines=149  sha256_12=a900ea1ce2f3  mode=600 owner=root:root size=4906 mtime=2026-09-26 06:38:06.813673914 +0000 type=regular file
+  FILE /root/.dsh/skills/archify/package.json  bytes=1632  lines=39  sha256_12=2421a480f6be  mode=600 owner=root:root size=1632 mtime=2026-09-26 06:38:06.817673914 +0000 type=regular file
+  FILE /root/.dsh/synapse/workspaces.json  bytes=19624717  lines=1  sha256_12=c0fc8f20a343  mode=600 owner=root:root size=19624717 mtime=2026-09-29 07:07:59.735104285 +0000 type=regular file
+  FILE /root/.dsh/plugin-updates.json  bytes=2657  lines=72  sha256_12=b46c75af341b  mode=600 owner=root:root size=2657 mtime=2026-09-28 17:32:26.781610367 +0000 type=regular file
+  FILE /root/.dsh/infinite-gen-5-stats.json  bytes=36193  lines=1406  sha256_12=9f80c3efaf3a  mode=600 owner=root:root size=36193 mtime=2026-09-29 07:08:01.311104284 +0000 type=regular file
+  FILE /root/.dsh/infinite-gen-5-tuning.json  bytes=344  lines=14  sha256_12=7593b3f12f54  mode=600 owner=root:root size=344 mtime=2026-09-28 19:22:10.878999483 +0000 type=regular file
+  FILE /root/.dsh/ig5-adapt-cache.json  bytes=835  lines=38  sha256_12=be538dd074e5  mode=600 owner=root:root size=835 mtime=2026-09-29 05:54:58.879105956 +0000 type=regular file
+  FILE /root/.dsh/infinite-gen-5-tuning.candidate.json  bytes=498  lines=19  sha256_12=5e7c3216f203  mode=600 owner=root:root size=498 mtime=2026-09-28 16:35:41.617611666 +0000 type=regular file
+  FILE /root/.dsh/profiles/web/package.json  bytes=1421  lines=41  sha256_12=9596f591586e  mode=600 owner=root:root size=1421 mtime=2026-09-29 04:13:39.031108275 +0000 type=regular file
+  FILE /root/.dsh/profiles/web/.dsh-redteam-model-operations.json  bytes=111  lines=6  sha256_12=c0f22b46b83e  mode=600 owner=root:root size=111 mtime=2026-09-26 16:52:24.881659853 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/b1248e8cf26749b8a13a5d2e4ea92989/preview.json  bytes=1265  lines=30  sha256_12=49063b30f9ec  mode=600 owner=root:root size=1265 mtime=2026-09-25 17:27:31.980133828 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/6293b375fd494d46b99ce00b63ee75cf/preview.json  bytes=1683  lines=35  sha256_12=c494fe390ee8  mode=600 owner=root:root size=1683 mtime=2026-09-26 16:39:38.541660146 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/e67b144392fc4fd1b174d0cef43a415f/preview.json  bytes=5930  lines=226  sha256_12=1a960f8bbe00  mode=600 owner=root:root size=5930 mtime=2026-09-26 16:54:25.889659807 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/f8b7d6f89d36451ca8481e2a1e30968d/preview.json  bytes=3058  lines=30  sha256_12=065414ac71f5  mode=600 owner=root:root size=3058 mtime=2026-09-27 08:41:14.937997581 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/632d40fcd86540a1a950747f4d27327d/preview.json  bytes=2530  lines=35  sha256_12=3312d2b1d81c  mode=600 owner=root:root size=2530 mtime=2026-09-28 13:24:55.437616033 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/f6b107ed830346898a3a8788bcd93bfb/preview.json  bytes=2514  lines=35  sha256_12=dfb6466d9aec  mode=600 owner=root:root size=2514 mtime=2026-09-28 13:36:35.597615766 +0000 type=regular file
+  FILE /root/.dsh/plugin-previews/13c931186270408ebe86f69e070dad06/preview.json  bytes=2514  lines=35  sha256_12=6a2b075ceb8f  mode=600 owner=root:root size=2514 mtime=2026-09-28 13:53:41.105615374 +0000 type=regular file
+  FILE /root/.dsh/.runtime-links-cache.json  bytes=15927  lines=0  sha256_12=ab64147e7e70  mode=600 owner=root:root size=15927 mtime=2026-09-27 07:45:17.689998861 +0000 type=regular file
+  FILE /root/.dsh/plugin-history/e5ca7b867bc4c07a3097008114d408c6/state.json  bytes=145  lines=5  sha256_12=536700e6549d  mode=600 owner=root:root size=145 mtime=2026-09-28 13:40:34.953615674 +0000 type=regular file
+  FILE /root/.dsh/plugin-src/dsh-whale-widget/package.json  bytes=1042  lines=35  sha256_12=7738cd7be5db  mode=644 owner=root:root size=1042 mtime=2026-09-26 17:08:46.765659479 +0000 type=regular file
+  FILE /root/.dsh/plugin-src/dsh-whale-widget/.dsha-dependencies.json  bytes=554  lines=14  sha256_12=2181209d72e8  mode=600 owner=root:root size=554 mtime=2026-09-26 17:08:47.041659479 +0000 type=regular file
+  FILE /root/.dsh/plugin-src/dsh-infinite-gen-5/package.json  bytes=7397  lines=138  sha256_12=f4f80f965e12  mode=600 owner=root:root size=7397 mtime=2026-09-29 06:57:26.215104527 +0000 type=regular file
+  FILE /root/.dsh/plugin-src/dsh-infinite-gen-5/.dsha-dependencies.json  bytes=556  lines=14  sha256_12=da7e1eba86e1  mode=600 owner=root:root size=556 mtime=2026-09-28 14:16:25.529614854 +0000 type=regular file
+  FILE /root/.dsh/plugin-src/dsh-synapse/package.json  bytes=984  lines=45  sha256_12=1dc69b52cb72  mode=644 owner=root:root size=984 mtime=2026-09-28 17:02:59.377611042 +0000 type=regular file
+  FILE /root/.dsh/plugin-src/dsh-synapse/.dsha-dependencies.json  bytes=612  lines=14  sha256_12=6c94fa47d1cb  mode=600 owner=root:root size=612 mtime=2026-09-28 17:02:59.605611041 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/a658ec48-0783-44ec-b940-bb1311981a34/plan.json  bytes=1288  lines=50  sha256_12=45f737708886  mode=600 owner=root:root size=1288 mtime=2026-09-25 17:26:28.672133852 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/1790857d-3bd0-4dda-adb2-3b2b3d40dab2/plan.json  bytes=1490  lines=54  sha256_12=af143731c60b  mode=600 owner=root:root size=1490 mtime=2026-09-26 07:07:19.229673245 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/374eb551-467e-480f-a2da-fde6eedb1f5c/plan.json  bytes=1514  lines=54  sha256_12=2941061c3be1  mode=600 owner=root:root size=1514 mtime=2026-09-26 16:48:39.513659939 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/7a0aa9a2-ab7a-47f2-bcd2-b96ce0042bec/plan.json  bytes=1488  lines=54  sha256_12=35d1befb08c4  mode=600 owner=root:root size=1488 mtime=2026-09-26 17:01:38.289659642 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/52fda7d2-6623-419f-b5e0-4dbf79f0ac5f/plan.json  bytes=1484  lines=54  sha256_12=1af3dc0baf62  mode=600 owner=root:root size=1484 mtime=2026-09-26 17:09:21.401659466 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/388fdcdc-7928-4597-a341-451e34b600d9/plan.json  bytes=1488  lines=54  sha256_12=6cdadfc18019  mode=600 owner=root:root size=1488 mtime=2026-09-26 18:45:44.401657260 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/57d41564-123e-40af-bedf-141ea30c6e01/plan.json  bytes=1488  lines=54  sha256_12=61e97c67cef0  mode=600 owner=root:root size=1488 mtime=2026-09-27 08:43:03.157997540 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/819bc300-3e76-4f0f-902d-a37df0c4b1a3/plan.json  bytes=1593  lines=54  sha256_12=4e4e53a97672  mode=600 owner=root:root size=1593 mtime=2026-09-27 09:18:24.377996730 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/17422b6f-4b3a-48c1-8f23-896f2aac9871/plan.json  bytes=1657  lines=54  sha256_12=2458f7b41973  mode=600 owner=root:root size=1657 mtime=2026-09-27 09:30:33.877996452 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/c7577a2b-43c1-49ec-b6ef-a2a914d0761b/plan.json  bytes=1657  lines=54  sha256_12=98900237f2fb  mode=600 owner=root:root size=1657 mtime=2026-09-28 13:26:49.497615989 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/5ee8e980-a406-45de-8e4b-7bf21dcafcf8/plan.json  bytes=1657  lines=54  sha256_12=5e64902ad0bd  mode=600 owner=root:root size=1657 mtime=2026-09-28 13:40:34.933615674 +0000 type=regular file
+  FILE /root/.dsh/plugin-install-operations/d81f9a5a-42c5-4b31-97f6-66d6d6890bc2/plan.json  bytes=1474  lines=54  sha256_12=a65114086845  mode=600 owner=root:root size=1474 mtime=2026-09-28 17:03:43.653611025 +0000 type=regular file
+  FILE /root/.dsh/.bridge_token  bytes=32  lines=0  sha256_12=b52a60d53989  mode=600 owner=root:root size=32 mtime=2026-09-25 17:27:58.184133818 +0000 type=regular file
+  FILE /root/.dsh/.dsha-rc1-migration/prepare.json  bytes=2011  lines=77  sha256_12=a10c8da926b8  mode=600 owner=root:root size=2011 mtime=2026-09-25 17:27:58.512133817 +0000 type=regular file
+  FILE /root/.dsh/.dsha-rc1-migration/receipt.json  bytes=460  lines=17  sha256_12=37687237ccd4  mode=600 owner=root:root size=460 mtime=2026-09-25 17:30:59.652133748 +0000 type=regular file
+  FILE /root/.dsh/storages/workspace.json  bytes=3527  lines=89  sha256_12=c81010ba1a69  mode=600 owner=root:root size=3527 mtime=2026-09-29 06:02:24.287105786 +0000 type=regular file
+  FILE /root/.dsh/plugin-activations.json  bytes=1828  lines=53  sha256_12=636500bfb134  mode=600 owner=root:root size=1828 mtime=2026-09-29 06:57:26.835104526 +0000 type=regular file
+  FILE /root/.dsh/plugin-sources.json  bytes=286  lines=5  sha256_12=9e688027dd75  mode=600 owner=root:root size=286 mtime=2026-09-28 17:03:43.429611025 +0000 type=regular file
+  FILE /root/.dsh/.dshw-size.json  bytes=269  lines=0  sha256_12=830de8d98145  mode=600 owner=root:root size=269 mtime=2026-09-29 06:45:00.883104811 +0000 type=regular file
+  FILE /root/.dsh/.dshw-turn.json  bytes=50  lines=0  sha256_12=c8958d6c7ba1  mode=600 owner=root:root size=50 mtime=2026-09-29 07:06:30.779104319 +0000 type=regular file
+  FILE /root/.dsh/.credentials.yaml  bytes=223  lines=9  sha256_12=a64b618eeb7c  mode=600 owner=root:root size=223 mtime=2026-09-25 17:31:23.264133739 +0000 type=regular file
+  FILE /root/.dsh/.dshw-usage.json  bytes=55936  lines=0  sha256_12=2093c8ccb47b  mode=600 owner=root:root size=55936 mtime=2026-09-29 07:08:31.759104273 +0000 type=regular file
+  FILE /root/.dsh/llm-deepseek/files-v3.json  bytes=24312  lines=500  sha256_12=65b136d02756  mode=600 owner=root:root size=24312 mtime=2026-09-28 19:51:26.354998813 +0000 type=regular file
+  FILE /root/.dsh/skills/archify/skill-release.json  bytes=272  lines=10  sha256_12=269772492c38  mode=600 owner=root:root size=272 mtime=2026-09-26 06:38:06.865673914 +0000 type=regular file
+  FILE /root/.dsh/skills/archify/package-lock.json  bytes=4906  lines=149  sha256_12=a900ea1ce2f3  mode=600 owner=root:root size=4906 mtime=2026-09-26 06:38:06.813673914 +0000 type=regular file
+  FILE /root/.dsh/skills/archify/package.json  bytes=1632  lines=39  sha256_12=2421a480f6be  mode=600 owner=root:root size=1632 mtime=2026-09-26 06:38:06.817673914 +0000 type=regular file
+  FILE /root/.dsh/synapse/workspaces.json  bytes=19630489  lines=1  sha256_12=292e7b219c08  mode=600 owner=root:root size=19630489 mtime=2026-09-29 07:08:33.539104272 +0000 type=regular file
+  FILE /root/.dsh/plugin-updates.json  bytes=2657  lines=72  sha256_12=b46c75af341b  mode=600 owner=root:root size=2657 mtime=2026-09-28 17:32:26.781610367 +0000 type=regular file
+  FILE /root/.dsh/infinite-gen-5-stats.json  bytes=36305  lines=1407  sha256_12=fee15cc37416  mode=600 owner=root:root size=36305 mtime=2026-09-29 07:08:32.731104272 +0000 type=regular file
+  FILE /root/.dsh/infinite-gen-5-tuning.json  bytes=344  lines=14  sha256_12=7593b3f12f54  mode=600 owner=root:root size=344 mtime=2026-09-28 19:22:10.878999483 +0000 type=regular file
+  FILE /root/.dsh/ig5-adapt-cache.json  bytes=835  lines=38  sha256_12=be538dd074e5  mode=600 owner=root:root size=835 mtime=2026-09-29 05:54:58.879105956 +0000 type=regular file
+  FILE /root/.dsh/infinite-gen-5-tuning.candidate.json  bytes=498  lines=19  sha256_12=5e7c3216f203  mode=600 owner=root:root size=498 mtime=2026-09-28 16:35:41.617611666 +0000 type=regular file
+--- plugin-activations.json / 配置类 JSON 的字段名 (仅键名)
+  JSON /root/.dsh/.dsha-rc1-migration/prepare.json
+    key: version
+    key: dshVersion
+    key: generation
+    key: startupId
+    key: dshHome
+    key: status
+    key: protectionComplete
+    key: createdAt
+    key: dataRoot
+    key: dataRoot.path
+    key: dataRoot.device
+    key: dataRoot.inode
+    key: inputs
+    key: sources
+    key: sources[0].kind
+    key: sources[0].path
+    key: sources[0].size
+    key: sources[0].sha256
+    key: sources[0].snapshot
+    key: sources[0].links
+    key: sources[0].mapping
+    key: sources[0].sourceIdentity
+    key: sources[0].type
+    key: sources[1].kind
+    key: sources[1].path
+    key: sources[1].size
+    key: sources[1].sha256
+    key: sources[1].snapshot
+    key: sources[1].links
+    key: sources[1].mapping
+    key: sources[1].sourceIdentity
+    key: sources[1].type
+    key: presets
+    key: sessions
+    key: warnings
+  JSON /root/.dsh/.dsha-rc1-migration/prepare.json
+    key: version
+    key: dshVersion
+    key: generation
+    key: startupId
+    key: dshHome
+    key: status
+    key: protectionComplete
+    key: createdAt
+    key: dataRoot
+    key: dataRoot.path
+    key: dataRoot.device
+    key: dataRoot.inode
+    key: inputs
+    key: sources
+    key: sources[0].kind
+    key: sources[0].path
+    key: sources[0].size
+    key: sources[0].sha256
+    key: sources[0].snapshot
+    key: sources[0].links
+    key: sources[0].mapping
+    key: sources[0].sourceIdentity
+    key: sources[0].type
+    key: sources[1].kind
+    key: sources[1].path
+    key: sources[1].size
+    key: sources[1].sha256
+    key: sources[1].snapshot
+    key: sources[1].links
+    key: sources[1].mapping
+    key: sources[1].sourceIdentity
+    key: sources[1].type
+    key: presets
+    key: sessions
+    key: warnings
+  JSON /root/.dsh/.dsha-rc1-migration/receipt.json
+    key: version
+    key: dshVersion
+    key: generation
+    key: startupId
+    key: status
+    key: sourcePreserved
+    key: protectionComplete
+    key: settingsImported
+    key: settingsStatus
+    key: sessionsStatus
+    key: sessionCompatibilityVerified
+    key: presets
+    key: sessions
+    key: warnings
+    key: verifiedAt
+  JSON /root/.dsh/.dsha-rc1-migration/receipt.json
+    key: version
+    key: dshVersion
+    key: generation
+    key: startupId
+    key: status
+    key: sourcePreserved
+    key: protectionComplete
+    key: settingsImported
+    key: settingsStatus
+    key: sessionsStatus
+    key: sessionCompatibilityVerified
+    key: presets
+    key: sessions
+    key: warnings
+    key: verifiedAt
+  JSON /root/.dsh/.dshw-size.json
+    key: scale
+    key: sound
+    key: vol
+    key: soundSet
+    key: usageMode
+    key: peakMode
+    key: bubbleOn
+    key: turnCostOn
+    key: turnCostCloseMs
+    key: scrollGapOn
+    key: scrollGapPx
+    key: menuBtnHide
+    key: codexStatsOn
+    key: updatedAt
+  JSON /root/.dsh/.dshw-size.json
+    key: scale
+    key: sound
+    key: vol
+    key: soundSet
+    key: usageMode
+    key: peakMode
+    key: bubbleOn
+    key: turnCostOn
+    key: turnCostCloseMs
+    key: scrollGapOn
+    key: scrollGapPx
+    key: menuBtnHide
+    key: codexStatsOn
+    key: updatedAt
+  JSON /root/.dsh/.dshw-turn.json
+    key: seq
+    key: updatedAt
+  JSON /root/.dsh/.dshw-turn.json
+    key: seq
+    key: updatedAt
+  JSON /root/.dsh/.dshw-usage.json
+    key: date
+    key: lastBalance
+    key: todayUsage
+    key: history
+    key: history.2026-09-26
+    key: history.2026-09-27
+    key: history.2026-09-28
+    key: history.2026-09-29
+    key: accounting
+    key: accounting.version
+    key: accounting.active
+    key: accounting.books
+    key: accounting.books.389c66745256fa6296e9102d-CNY
+    key: accounting.books.389c66745256fa6296e9102d-CNY.currency
+    key: accounting.books.389c66745256fa6296e9102d-CNY.days
+    key: accounting.books.389c66745256fa6296e9102d-CNY.lastAt
+    key: accounting.migratedAt
+    key: accounting.legacyHistory
+    key: dayStart
+    key: events
+    key: events[0].ts
+    key: events[0].day
+    key: events[0].model
+    key: events[0].cost
+    key: events[0].tokens
+    key: events[1].ts
+    key: events[1].day
+    key: events[1].model
+    key: events[1].cost
+    key: events[1].tokens
+  JSON /root/.dsh/.dshw-usage.json
+    key: date
+    key: lastBalance
+    key: todayUsage
+    key: history
+    key: history.2026-09-26
+    key: history.2026-09-27
+    key: history.2026-09-28
+    key: history.2026-09-29
+    key: accounting
+    key: accounting.version
+    key: accounting.active
+    key: accounting.books
+    key: accounting.books.389c66745256fa6296e9102d-CNY
+    key: accounting.books.389c66745256fa6296e9102d-CNY.currency
+    key: accounting.books.389c66745256fa6296e9102d-CNY.days
+    key: accounting.books.389c66745256fa6296e9102d-CNY.lastAt
+    key: accounting.migratedAt
+    key: accounting.legacyHistory
+    key: dayStart
+    key: events
+    key: events[0].ts
+    key: events[0].day
+    key: events[0].model
+    key: events[0].cost
+    key: events[0].tokens
+    key: events[1].ts
+    key: events[1].day
+    key: events[1].model
+    key: events[1].cost
+    key: events[1].tokens
+  JSON /root/.dsh/.runtime-links-cache.json
+    key: version
+    key: managedAssetId
+    key: stamp
+  JSON /root/.dsh/.runtime-links-cache.json
+    key: version
+    key: managedAssetId
+    key: stamp
+  JSON /root/.dsh/ig5-adapt-cache.json
+    key: version
+    key: at
+    key: host
+    key: model
+    key: confidence
+    key: signals
+    key: signals.systemRole
+    key: signals.contextWindow
+    key: signals.maxOutput
+    key: signals.usageReported
+    key: signals.emptyContent
+    key: signals.headerHints
+    key: signals.transport
+    key: plan
+    key: plan.carrier
+    key: plan.slot
+    key: plan.lazyMode
+    key: plan.injectLazy
+    key: plan.indexInline
+    key: plan.cacheCheckpoint
+    key: plan.budgetBytes
+    key: plan.lazyBudgetBytes
+    key: plan.confidence
+    key: plan.degraded
+    key: plan.reasons
+    key: plan.reasons[0].rule
+    key: plan.reasons[0].because
+    key: plan.reasons[1].rule
+    key: plan.reasons[1].because
+  JSON /root/.dsh/ig5-adapt-cache.json
+    key: version
+    key: at
+    key: host
+    key: model
+    key: confidence
+    key: signals
+    key: signals.systemRole
+    key: signals.contextWindow
+    key: signals.maxOutput
+    key: signals.usageReported
+    key: signals.emptyContent
+    key: signals.headerHints
+    key: signals.transport
+    key: plan
+    key: plan.carrier
+    key: plan.slot
+    key: plan.lazyMode
+    key: plan.injectLazy
+    key: plan.indexInline
+    key: plan.cacheCheckpoint
+    key: plan.budgetBytes
+    key: plan.lazyBudgetBytes
+    key: plan.confidence
+    key: plan.degraded
+    key: plan.reasons
+    key: plan.reasons[0].rule
+    key: plan.reasons[0].because
+    key: plan.reasons[1].rule
+    key: plan.reasons[1].because
+  JSON /root/.dsh/infinite-gen-5-stats.json
+    key: schema
+    key: plugin
+    key: version
+    key: generatedAt
+    key: boot
+    key: boot.at
+    key: boot.pid
+    key: boot.version
+    key: boot.schema
+    key: boot.file
+    key: boot.statsFile
+    key: runtime
+    key: runtime.role
+    key: runtime.anchorEmissions
+    key: runtime.rebuilds
+    key: runtime.sections
+    key: runtime.placements
+    key: runtime.packs
+    key: runtime.packDomains
+    key: runtime.askGate
+    key: runtime.askGate.mode
+    key: runtime.askGate.intent
+    key: runtime.askGate.enabled
+    key: runtime.askGate.capability
+    key: runtime.askGate.capabilityKnown
+    key: runtime.askGate.every
+    key: runtime.askGate.turn
+    key: runtime.askGate.proactive
+    key: runtime.askGate.atEntry
+    key: runtime.askGate.inTask
+    key: runtime.askGate.full
+    key: runtime.askGate.reason
+    key: runtime.askGate.phase
+    key: runtime.askGate.at
+    key: runtime.askGateOpens
+    key: runtime.phaseGateOpens
+    key: runtime.hostSupportsAsk
+    key: tuning
+    key: tuning.ok
+    key: tuning.plugin
+    key: tuning.version
+    key: tuning.effective
+    key: tuning.effective.LAYER2_MODE
+    key: tuning.effective.DEDUPE_PAYLOAD
+    key: tuning.effective.TAIL_MODE
+    key: tuning.effective.RUNTIME_ANCHOR_MODE
+    key: tuning.effective.RUNTIME_ANCHOR_EVERY
+    key: tuning.effective.ASK_GATE_MODE
+    key: tuning.effective.ASK_GATE_EVERY
+    key: tuning.effective.EXCLUSIVE_SECTION
+    key: tuning.effective.BOOST_MODE
+    key: tuning.effective.BOOST_BYTES
+    key: tuning.effective.LAZY_MODE
+    key: tuning.effective.LAZY_BYTES
+    key: tuning.sources
+    key: tuning.sources.LAYER2_MODE
+    key: tuning.sources.DEDUPE_PAYLOAD
+    key: tuning.sources.TAIL_MODE
+    key: tuning.sources.RUNTIME_ANCHOR_MODE
+    key: tuning.sources.RUNTIME_ANCHOR_EVERY
+    key: tuning.sources.ASK_GATE_MODE
+    key: tuning.sources.ASK_GATE_EVERY
+    key: tuning.sources.EXCLUSIVE_SECTION
+    key: tuning.sources.BOOST_MODE
+    key: tuning.sources.BOOST_BYTES
+    key: tuning.sources.LAZY_MODE
+    key: tuning.sources.LAZY_BYTES
+    key: tuning.rejected
+    key: tuning.persisted
+    key: tuning.persisted.LAYER2_MODE
+    key: tuning.persisted.DEDUPE_PAYLOAD
+    key: tuning.persisted.TAIL_MODE
+    key: tuning.persisted.RUNTIME_ANCHOR_MODE
+    key: tuning.persisted.RUNTIME_ANCHOR_EVERY
+    key: tuning.persisted.ASK_GATE_MODE
+    key: tuning.persisted.ASK_GATE_EVERY
+    key: tuning.persisted.EXCLUSIVE_SECTION
+    key: tuning.persisted.BOOST_MODE
+    key: tuning.store
+    key: tuning.store.file
+    key: tuning.store.updatedAt
+    key: tuning.store.error
+    key: tuning.catalog
+    key: tuning.catalog[0].key
+    key: tuning.catalog[0].label
+    key: tuning.catalog[0].hint
+    key: tuning.catalog[0].options
+    key: tuning.catalog[1].key
+    key: tuning.catalog[1].label
+    key: tuning.catalog[1].hint
+    key: tuning.catalog[1].options
+    key: tuning.live
+    key: tuning.live.role
+    key: tuning.live.anchorEmissions
+    key: tuning.live.rebuilds
+    key: tuning.live.sections
+    key: tuning.live.placements
+    key: coverage
+    key: coverage.domains
+    key: coverage.at
+    key: coverage.families
+    key: coverage.families.offense
+    key: coverage.families.ai
+    key: coverage.families.crypto
+    key: coverage.families.data
+    key: coverage.families.creative
+    key: coverage.families.language
+    key: coverage.families.engineering
+    key: coverage.familyOrder
+    key: coverage.familyLabels
+    key: coverage.familyLabels.offense
+    key: coverage.familyLabels.ai
+    key: coverage.familyLabels.crypto
+    key: coverage.familyLabels.data
+    key: coverage.familyLabels.creative
+    key: coverage.familyLabels.language
+    key: coverage.familyLabels.engineering
+    key: coverage.markers
+    key: coverage.markers.total
+    key: coverage.markers.latin
+    key: coverage.markers.cjk
+    key: coverage.markers.mixed
+    key: coverage.extended
+    key: coverage.extended.aliases
+    key: coverage.extended.markers
+    key: coverage.extended.commands
+    key: coverage.extended.toolchains
+    key: coverage.extended.total
+    key: coverage.index
+    key: coverage.index.bytes
+    key: coverage.index.budget
+    key: coverage.index.percent
+    key: coverage.playbooks
+    key: coverage.playbooks.min
+    key: coverage.playbooks.max
+    key: coverage.playbooks.total
+    key: coverage.playbooks.minBytes
+    key: coverage.playbooks.maxBytes
+    key: coverage.gaps
+    key: coverage.gaps.limits
+    key: coverage.gaps.limits.markers
+    key: coverage.gaps.limits.aliases
+    key: coverage.gaps.limits.commands
+    key: coverage.gaps.limits.toolchain
+    key: coverage.gaps.limits.playbookMin
+    key: coverage.gaps.targets
+    key: coverage.gaps.targets.markers
+    key: coverage.gaps.targets.aliases
+    key: coverage.gaps.targets.commands
+    key: coverage.gaps.targets.toolchain
+    key: coverage.gaps.targets.playbook
+    key: coverage.gaps.exemptFamilies
+    key: coverage.gaps.deepDomains
+    key: coverage.gaps.belowLimit
+    key: coverage.gaps.thinCount
+    key: coverage.gaps.thin
+    key: coverage.gaps.headroom
+    key: coverage.gaps.headroom.bytes
+    key: coverage.gaps.headroom.perDomain
+    key: coverage.gaps.headroom.domainsAffordable
+    key: coverage.gaps.collisions
+    key: coverage.gaps.collisions.shared
+    key: coverage.gaps.collisions.crossFamily
+    key: coverage.gaps.collisions.crossFamilyItems
+    key: coverage.gaps.collisions.signedAllow
+    key: coverage.gaps.collisions.signed
+    key: coverage.gaps.collisions.unsigned
+    key: coverage.gaps.collisions.items
+    key: coverage.gaps.collisions.unsignedItems
+    key: coverage.hits
+    key: live
+    key: live.at
+    key: live.turn
+    key: live.turn.active
+    key: live.turn.startedAt
+    key: live.turn.lastEventAt
+    key: live.turn.lastKind
+    key: live.turn.idleMs
+    key: live.events
+    key: live.events.windowMs
+    key: live.events.spanMs
+    key: live.events.count
+    key: live.events.perSecond
+    key: live.tools
+    key: live.tools.recent
+    key: live.tools.lastAt
+    key: live.hits
+    key: live.hits.recent
+    key: live.hits.stream
+    key: live.ticks
+    key: live.ticks.recent
+    key: live.ticks.count
+    key: live.ticks.lastKind
+    key: live.ticks.lastAt
+    key: tools
+    key: tools.calls
+    key: tools.calls.infinite_gen5_scenario
+    key: tools.calls.infinite_gen5_profile
+    key: tools.calls.infinite_gen5_env
+    key: tools.calls.infinite_gen5_dispatch
+    key: tools.total
+    key: tools.capped
+    key: tools.truncated
+    key: tools.lastCall
+    key: tools.lastCall.tool
+    key: tools.lastCall.at
+    key: tools.lastCall.bytes
+    key: tools.lastCall.capped
+    key: tools.lastCall.truncated
+    key: tasks
+    key: tasks.available
+    key: tasks.source
+    key: tasks.reason
+    key: tasks.counts
+    key: tasks.counts.pending
+    key: tasks.counts.inProgress
+    key: tasks.counts.completed
+    key: tasks.items
+    key: tasks.items[0].content
+    key: tasks.items[0].status
+    key: tasks.items[1].content
+    key: tasks.items[1].status
+    key: tasks.lastKnown
+    key: tasks.lastKnown.items
+    key: tasks.lastKnown.counts
+    key: tasks.lastKnown.counts.pending
+    key: tasks.lastKnown.counts.inProgress
+    key: tasks.lastKnown.counts.completed
+    key: tasks.lastKnown.at
+    key: tasks.lastKnown.session
+    key: tasks.lastKnown.seenBy
+    key: tasks.at
+    key: tasks.session
+    key: tasks.writes
+    key: tasks.notes
+    key: sessions
+    key: sessions.seen
+    key: sessions.events
+    key: sessions.lastId
+    key: sessions.lastAt
+    key: counters
+  JSON /root/.dsh/infinite-gen-5-stats.json
+    key: schema
+    key: plugin
+    key: version
+    key: generatedAt
+    key: boot
+    key: boot.at
+    key: boot.pid
+    key: boot.version
+    key: boot.schema
+    key: boot.file
+    key: boot.statsFile
+    key: runtime
+    key: runtime.role
+    key: runtime.anchorEmissions
+    key: runtime.rebuilds
+    key: runtime.sections
+    key: runtime.placements
+    key: runtime.packs
+    key: runtime.packDomains
+    key: runtime.askGate
+    key: runtime.askGate.mode
+    key: runtime.askGate.intent
+    key: runtime.askGate.enabled
+    key: runtime.askGate.capability
+    key: runtime.askGate.capabilityKnown
+    key: runtime.askGate.every
+    key: runtime.askGate.turn
+    key: runtime.askGate.proactive
+    key: runtime.askGate.atEntry
+    key: runtime.askGate.inTask
+    key: runtime.askGate.full
+    key: runtime.askGate.reason
+    key: runtime.askGate.phase
+    key: runtime.askGate.at
+    key: runtime.askGateOpens
+    key: runtime.phaseGateOpens
+    key: runtime.hostSupportsAsk
+    key: tuning
+    key: tuning.ok
+    key: tuning.plugin
+    key: tuning.version
+    key: tuning.effective
+    key: tuning.effective.LAYER2_MODE
+    key: tuning.effective.DEDUPE_PAYLOAD
+    key: tuning.effective.TAIL_MODE
+    key: tuning.effective.RUNTIME_ANCHOR_MODE
+    key: tuning.effective.RUNTIME_ANCHOR_EVERY
+    key: tuning.effective.ASK_GATE_MODE
+    key: tuning.effective.ASK_GATE_EVERY
+    key: tuning.effective.EXCLUSIVE_SECTION
+    key: tuning.effective.BOOST_MODE
+    key: tuning.effective.BOOST_BYTES
+    key: tuning.effective.LAZY_MODE
+    key: tuning.effective.LAZY_BYTES
+    key: tuning.sources
+    key: tuning.sources.LAYER2_MODE
+    key: tuning.sources.DEDUPE_PAYLOAD
+    key: tuning.sources.TAIL_MODE
+    key: tuning.sources.RUNTIME_ANCHOR_MODE
+    key: tuning.sources.RUNTIME_ANCHOR_EVERY
+    key: tuning.sources.ASK_GATE_MODE
+    key: tuning.sources.ASK_GATE_EVERY
+    key: tuning.sources.EXCLUSIVE_SECTION
+    key: tuning.sources.BOOST_MODE
+    key: tuning.sources.BOOST_BYTES
+    key: tuning.sources.LAZY_MODE
+    key: tuning.sources.LAZY_BYTES
+    key: tuning.rejected
+    key: tuning.persisted
+    key: tuning.persisted.LAYER2_MODE
+    key: tuning.persisted.DEDUPE_PAYLOAD
+    key: tuning.persisted.TAIL_MODE
+    key: tuning.persisted.RUNTIME_ANCHOR_MODE
+    key: tuning.persisted.RUNTIME_ANCHOR_EVERY
+    key: tuning.persisted.ASK_GATE_MODE
+    key: tuning.persisted.ASK_GATE_EVERY
+    key: tuning.persisted.EXCLUSIVE_SECTION
+    key: tuning.persisted.BOOST_MODE
+    key: tuning.store
+    key: tuning.store.file
+    key: tuning.store.updatedAt
+    key: tuning.store.error
+    key: tuning.catalog
+    key: tuning.catalog[0].key
+    key: tuning.catalog[0].label
+    key: tuning.catalog[0].hint
+    key: tuning.catalog[0].options
+    key: tuning.catalog[1].key
+    key: tuning.catalog[1].label
+    key: tuning.catalog[1].hint
+    key: tuning.catalog[1].options
+    key: tuning.live
+    key: tuning.live.role
+    key: tuning.live.anchorEmissions
+    key: tuning.live.rebuilds
+    key: tuning.live.sections
+    key: tuning.live.placements
+    key: coverage
+    key: coverage.domains
+    key: coverage.at
+    key: coverage.families
+    key: coverage.families.offense
+    key: coverage.families.ai
+    key: coverage.families.crypto
+    key: coverage.families.data
+    key: coverage.families.creative
+    key: coverage.families.language
+    key: coverage.families.engineering
+    key: coverage.familyOrder
+    key: coverage.familyLabels
+    key: coverage.familyLabels.offense
+    key: coverage.familyLabels.ai
+    key: coverage.familyLabels.crypto
+    key: coverage.familyLabels.data
+    key: coverage.familyLabels.creative
+    key: coverage.familyLabels.language
+    key: coverage.familyLabels.engineering
+    key: coverage.markers
+    key: coverage.markers.total
+    key: coverage.markers.latin
+    key: coverage.markers.cjk
+    key: coverage.markers.mixed
+    key: coverage.extended
+    key: coverage.extended.aliases
+    key: coverage.extended.markers
+    key: coverage.extended.commands
+    key: coverage.extended.toolchains
+    key: coverage.extended.total
+    key: coverage.index
+    key: coverage.index.bytes
+    key: coverage.index.budget
+    key: coverage.index.percent
+    key: coverage.playbooks
+    key: coverage.playbooks.min
+    key: coverage.playbooks.max
+    key: coverage.playbooks.total
+    key: coverage.playbooks.minBytes
+    key: coverage.playbooks.maxBytes
+    key: coverage.gaps
+    key: coverage.gaps.limits
+    key: coverage.gaps.limits.markers
+    key: coverage.gaps.limits.aliases
+    key: coverage.gaps.limits.commands
+    key: coverage.gaps.limits.toolchain
+    key: coverage.gaps.limits.playbookMin
+    key: coverage.gaps.targets
+    key: coverage.gaps.targets.markers
+    key: coverage.gaps.targets.aliases
+    key: coverage.gaps.targets.commands
+    key: coverage.gaps.targets.toolchain
+    key: coverage.gaps.targets.playbook
+    key: coverage.gaps.exemptFamilies
+    key: coverage.gaps.deepDomains
+    key: coverage.gaps.belowLimit
+    key: coverage.gaps.thinCount
+    key: coverage.gaps.thin
+    key: coverage.gaps.headroom
+    key: coverage.gaps.headroom.bytes
+    key: coverage.gaps.headroom.perDomain
+    key: coverage.gaps.headroom.domainsAffordable
+    key: coverage.gaps.collisions
+    key: coverage.gaps.collisions.shared
+    key: coverage.gaps.collisions.crossFamily
+    key: coverage.gaps.collisions.crossFamilyItems
+    key: coverage.gaps.collisions.signedAllow
+    key: coverage.gaps.collisions.signed
+    key: coverage.gaps.collisions.unsigned
+    key: coverage.gaps.collisions.items
+    key: coverage.gaps.collisions.unsignedItems
+    key: coverage.hits
+    key: live
+    key: live.at
+    key: live.turn
+    key: live.turn.active
+    key: live.turn.startedAt
+    key: live.turn.lastEventAt
+    key: live.turn.lastKind
+    key: live.turn.idleMs
+    key: live.events
+    key: live.events.windowMs
+    key: live.events.spanMs
+    key: live.events.count
+    key: live.events.perSecond
+    key: live.tools
+    key: live.tools.recent
+    key: live.tools.lastAt
+    key: live.hits
+    key: live.hits.recent
+    key: live.hits.stream
+    key: live.ticks
+    key: live.ticks.recent
+    key: live.ticks.count
+    key: live.ticks.lastKind
+    key: live.ticks.lastAt
+    key: tools
+    key: tools.calls
+    key: tools.calls.infinite_gen5_scenario
+    key: tools.calls.infinite_gen5_profile
+    key: tools.calls.infinite_gen5_env
+    key: tools.calls.infinite_gen5_dispatch
+    key: tools.total
+    key: tools.capped
+    key: tools.truncated
+    key: tools.lastCall
+    key: tools.lastCall.tool
+    key: tools.lastCall.at
+    key: tools.lastCall.bytes
+    key: tools.lastCall.capped
+    key: tools.lastCall.truncated
+    key: tasks
+    key: tasks.available
+    key: tasks.source
+    key: tasks.reason
+    key: tasks.counts
+    key: tasks.counts.pending
+    key: tasks.counts.inProgress
+    key: tasks.counts.completed
+    key: tasks.items
+    key: tasks.items[0].content
+    key: tasks.items[0].status
+    key: tasks.items[1].content
+    key: tasks.items[1].status
+    key: tasks.lastKnown
+    key: tasks.lastKnown.items
+    key: tasks.lastKnown.counts
+    key: tasks.lastKnown.counts.pending
+    key: tasks.lastKnown.counts.inProgress
+    key: tasks.lastKnown.counts.completed
+    key: tasks.lastKnown.at
+    key: tasks.lastKnown.session
+    key: tasks.lastKnown.seenBy
+    key: tasks.at
+    key: tasks.session
+    key: tasks.writes
+    key: tasks.notes
+    key: sessions
+    key: sessions.seen
+    key: sessions.events
+    key: sessions.lastId
+    key: sessions.lastAt
+    key: counters
+  JSON /root/.dsh/infinite-gen-5-tuning.candidate.json
+    key: overrides
+    key: overrides.LAYER2_MODE
+    key: overrides.DEDUPE_PAYLOAD
+    key: overrides.TAIL_MODE
+    key: overrides.RUNTIME_ANCHOR_MODE
+    key: overrides.RUNTIME_ANCHOR_EVERY
+    key: overrides.ASK_GATE_MODE
+    key: overrides.ASK_GATE_EVERY
+    key: overrides.EXCLUSIVE_SECTION
+    key: overrides.FORM_FIRST
+    key: overrides.PLACEHOLDER_AUTOFILL
+    key: overrides.FOURSTATE_LABEL
+    key: overrides.TIME_ASSERTION_TABLE
+    key: overrides.CREATIVE_FIVE_PIECE
+    key: overrides.BOUNDARY_ONCE
+    key: updatedAt
+    key: _source
+  JSON /root/.dsh/infinite-gen-5-tuning.candidate.json
+    key: overrides
+    key: overrides.LAYER2_MODE
+    key: overrides.DEDUPE_PAYLOAD
+    key: overrides.TAIL_MODE
+    key: overrides.RUNTIME_ANCHOR_MODE
+    key: overrides.RUNTIME_ANCHOR_EVERY
+    key: overrides.ASK_GATE_MODE
+    key: overrides.ASK_GATE_EVERY
+    key: overrides.EXCLUSIVE_SECTION
+    key: overrides.FORM_FIRST
+    key: overrides.PLACEHOLDER_AUTOFILL
+    key: overrides.FOURSTATE_LABEL
+    key: overrides.TIME_ASSERTION_TABLE
+    key: overrides.CREATIVE_FIVE_PIECE
+    key: overrides.BOUNDARY_ONCE
+    key: updatedAt
+    key: _source
+  JSON /root/.dsh/infinite-gen-5-tuning.json
+    key: overrides
+    key: overrides.LAYER2_MODE
+    key: overrides.DEDUPE_PAYLOAD
+    key: overrides.TAIL_MODE
+    key: overrides.RUNTIME_ANCHOR_MODE
+    key: overrides.RUNTIME_ANCHOR_EVERY
+    key: overrides.ASK_GATE_MODE
+    key: overrides.ASK_GATE_EVERY
+    key: overrides.EXCLUSIVE_SECTION
+    key: overrides.BOOST_MODE
+    key: updatedAt
+  JSON /root/.dsh/infinite-gen-5-tuning.json
+    key: overrides
+    key: overrides.LAYER2_MODE
+    key: overrides.DEDUPE_PAYLOAD
+    key: overrides.TAIL_MODE
+    key: overrides.RUNTIME_ANCHOR_MODE
+    key: overrides.RUNTIME_ANCHOR_EVERY
+    key: overrides.ASK_GATE_MODE
+    key: overrides.ASK_GATE_EVERY
+    key: overrides.EXCLUSIVE_SECTION
+    key: overrides.BOOST_MODE
+    key: updatedAt
+  JSON /root/.dsh/llm-deepseek/files-v3.json
+    key: formatVersion
+    key: records
+    key: records[0].scope
+    key: records[0].attachmentId
+    key: records[0].variantId
+    key: records[0].fileId
+    key: records[0].bytes
+    key: records[0].createdAt
+    key: records[0].expiresAt
+    key: records[1].scope
+    key: records[1].attachmentId
+    key: records[1].variantId
+    key: records[1].fileId
+    key: records[1].bytes
+    key: records[1].createdAt
+    key: records[1].expiresAt
+  JSON /root/.dsh/llm-deepseek/files-v3.json
+    key: formatVersion
+    key: records
+    key: records[0].scope
+    key: records[0].attachmentId
+    key: records[0].variantId
+    key: records[0].fileId
+    key: records[0].bytes
+    key: records[0].createdAt
+    key: records[0].expiresAt
+    key: records[1].scope
+    key: records[1].attachmentId
+    key: records[1].variantId
+    key: records[1].fileId
+    key: records[1].bytes
+    key: records[1].createdAt
+    key: records[1].expiresAt
+  JSON /root/.dsh/plugin-activations.json
+    key: format
+    key: entries
+    key: entries.dsh-infinite-gen-4
+    key: entries.dsh-infinite-gen-4.status
+    key: entries.dsh-infinite-gen-4.fingerprint
+    key: entries.dsh-infinite-gen-4.version
+    key: entries.dsh-infinite-gen-4.confirmedAt
+    key: entries.dsh-infinite-gen-4.startup
+    key: entries.dsh-infinite-gen-4.loadedAt
+    key: entries.@tt-a1i/archify-dsh
+    key: entries.@tt-a1i/archify-dsh.status
+    key: entries.@tt-a1i/archify-dsh.fingerprint
+    key: entries.@tt-a1i/archify-dsh.version
+    key: entries.@tt-a1i/archify-dsh.confirmedAt
+    key: entries.@tt-a1i/archify-dsh.startup
+    key: entries.@tt-a1i/archify-dsh.loadedAt
+    key: entries.@dsh-external/dsh-redteam-model
+    key: entries.@dsh-external/dsh-redteam-model.status
+    key: entries.@dsh-external/dsh-redteam-model.fingerprint
+    key: entries.@dsh-external/dsh-redteam-model.version
+    key: entries.@dsh-external/dsh-redteam-model.confirmedAt
+    key: entries.@dsh-external/dsh-redteam-model.startup
+    key: entries.@dsh-external/dsh-redteam-model.reason
+    key: entries.dsh-whale-widget
+    key: entries.dsh-whale-widget.status
+    key: entries.dsh-whale-widget.fingerprint
+    key: entries.dsh-whale-widget.version
+    key: entries.dsh-whale-widget.confirmedAt
+    key: entries.dsh-whale-widget.startup
+    key: entries.dsh-whale-widget.loadedAt
+    key: entries.dsh-infinite-gen-5
+    key: entries.dsh-infinite-gen-5.status
+    key: entries.dsh-infinite-gen-5.fingerprint
+    key: entries.dsh-infinite-gen-5.version
+    key: entries.dsh-infinite-gen-5.confirmedAt
+    key: entries.dsh-infinite-gen-5.startup
+    key: entries.dsh-infinite-gen-5.loadedAt
+    key: entries.dsh-synapse
+    key: entries.dsh-synapse.status
+    key: entries.dsh-synapse.fingerprint
+    key: entries.dsh-synapse.version
+    key: entries.dsh-synapse.confirmedAt
+    key: entries.dsh-synapse.startup
+    key: entries.dsh-synapse.loadedAt
+  JSON /root/.dsh/plugin-activations.json
+    key: format
+    key: entries
+    key: entries.dsh-infinite-gen-4
+    key: entries.dsh-infinite-gen-4.status
+    key: entries.dsh-infinite-gen-4.fingerprint
+    key: entries.dsh-infinite-gen-4.version
+    key: entries.dsh-infinite-gen-4.confirmedAt
+    key: entries.dsh-infinite-gen-4.startup
+    key: entries.dsh-infinite-gen-4.loadedAt
+    key: entries.@tt-a1i/archify-dsh
+    key: entries.@tt-a1i/archify-dsh.status
+    key: entries.@tt-a1i/archify-dsh.fingerprint
+    key: entries.@tt-a1i/archify-dsh.version
+    key: entries.@tt-a1i/archify-dsh.confirmedAt
+    key: entries.@tt-a1i/archify-dsh.startup
+    key: entries.@tt-a1i/archify-dsh.loadedAt
+    key: entries.@dsh-external/dsh-redteam-model
+    key: entries.@dsh-external/dsh-redteam-model.status
+    key: entries.@dsh-external/dsh-redteam-model.fingerprint
+    key: entries.@dsh-external/dsh-redteam-model.version
+    key: entries.@dsh-external/dsh-redteam-model.confirmedAt
+    key: entries.@dsh-external/dsh-redteam-model.startup
+    key: entries.@dsh-external/dsh-redteam-model.reason
+    key: entries.dsh-whale-widget
+    key: entries.dsh-whale-widget.status
+    key: entries.dsh-whale-widget.fingerprint
+    key: entries.dsh-whale-widget.version
+    key: entries.dsh-whale-widget.confirmedAt
+    key: entries.dsh-whale-widget.startup
+    key: entries.dsh-whale-widget.loadedAt
+    key: entries.dsh-infinite-gen-5
+    key: entries.dsh-infinite-gen-5.status
+    key: entries.dsh-infinite-gen-5.fingerprint
+    key: entries.dsh-infinite-gen-5.version
+    key: entries.dsh-infinite-gen-5.confirmedAt
+    key: entries.dsh-infinite-gen-5.startup
+    key: entries.dsh-infinite-gen-5.loadedAt
+    key: entries.dsh-synapse
+    key: entries.dsh-synapse.status
+    key: entries.dsh-synapse.fingerprint
+    key: entries.dsh-synapse.version
+    key: entries.dsh-synapse.confirmedAt
+    key: entries.dsh-synapse.startup
+    key: entries.dsh-synapse.loadedAt
+  JSON /root/.dsh/plugin-sources.json
+    key: @tt-a1i/archify-dsh
+    key: dsh-whale-widget
+    key: dsh-infinite-gen-5
+    key: dsh-synapse
+  JSON /root/.dsh/plugin-sources.json
+    key: @tt-a1i/archify-dsh
+    key: dsh-whale-widget
+    key: dsh-infinite-gen-5
+    key: dsh-synapse
+  JSON /root/.dsh/plugin-updates.json
+    key: dsh-whale-widget
+    key: dsh-whale-widget.name
+    key: dsh-whale-widget.installedVersion
+    key: dsh-whale-widget.checkedAt
+    key: dsh-whale-widget.available
+    key: dsh-whale-widget.latestVersion
+    key: dsh-whale-widget.request
+    key: dsh-whale-widget.request.command
+    key: dsh-whale-widget.request.name
+    key: dsh-whale-widget.request.version
+    key: dsh-whale-widget.request.source
+    key: dsh-whale-widget.compatibility
+    key: dsh-whale-widget.source
+    key: dsh-whale-widget.message
+    key: dsh-infinite-gen-5
+    key: dsh-infinite-gen-5.name
+    key: dsh-infinite-gen-5.installedVersion
+    key: dsh-infinite-gen-5.checkedAt
+    key: dsh-infinite-gen-5.available
+    key: dsh-infinite-gen-5.latestVersion
+    key: dsh-infinite-gen-5.request
+    key: dsh-infinite-gen-5.request.command
+    key: dsh-infinite-gen-5.request.name
+    key: dsh-infinite-gen-5.request.version
+    key: dsh-infinite-gen-5.request.source
+    key: dsh-infinite-gen-5.compatibility
+    key: dsh-infinite-gen-5.source
+    key: dsh-infinite-gen-5.message
+    key: @tt-a1i/archify-dsh
+    key: @tt-a1i/archify-dsh.name
+    key: @tt-a1i/archify-dsh.installedVersion
+    key: @tt-a1i/archify-dsh.checkedAt
+    key: @tt-a1i/archify-dsh.available
+    key: @tt-a1i/archify-dsh.message
+    key: billion-context
+    key: billion-context.name
+    key: billion-context.installedVersion
+    key: billion-context.checkedAt
+    key: billion-context.available
+    key: billion-context.latestVersion
+    key: billion-context.request
+    key: billion-context.request.command
+    key: billion-context.request.name
+    key: billion-context.request.version
+    key: billion-context.request.source
+    key: billion-context.compatibility
+    key: billion-context.source
+    key: billion-context.message
+    key: dshmarket
+    key: dshmarket.name
+    key: dshmarket.installedVersion
+    key: dshmarket.checkedAt
+    key: dshmarket.available
+    key: dshmarket.latestVersion
+    key: dshmarket.request
+    key: dshmarket.request.command
+    key: dshmarket.request.name
+    key: dshmarket.request.version
+    key: dshmarket.request.source
+    key: dshmarket.compatibility
+    key: dshmarket.source
+    key: dshmarket.message
+  JSON /root/.dsh/plugin-updates.json
+    key: dsh-whale-widget
+    key: dsh-whale-widget.name
+    key: dsh-whale-widget.installedVersion
+    key: dsh-whale-widget.checkedAt
+    key: dsh-whale-widget.available
+    key: dsh-whale-widget.latestVersion
+    key: dsh-whale-widget.request
+    key: dsh-whale-widget.request.command
+    key: dsh-whale-widget.request.name
+    key: dsh-whale-widget.request.version
+    key: dsh-whale-widget.request.source
+    key: dsh-whale-widget.compatibility
+    key: dsh-whale-widget.source
+    key: dsh-whale-widget.message
+    key: dsh-infinite-gen-5
+    key: dsh-infinite-gen-5.name
+    key: dsh-infinite-gen-5.installedVersion
+    key: dsh-infinite-gen-5.checkedAt
+    key: dsh-infinite-gen-5.available
+    key: dsh-infinite-gen-5.latestVersion
+    key: dsh-infinite-gen-5.request
+    key: dsh-infinite-gen-5.request.command
+    key: dsh-infinite-gen-5.request.name
+    key: dsh-infinite-gen-5.request.version
+    key: dsh-infinite-gen-5.request.source
+    key: dsh-infinite-gen-5.compatibility
+    key: dsh-infinite-gen-5.source
+    key: dsh-infinite-gen-5.message
+    key: @tt-a1i/archify-dsh
+    key: @tt-a1i/archify-dsh.name
+    key: @tt-a1i/archify-dsh.installedVersion
+    key: @tt-a1i/archify-dsh.checkedAt
+    key: @tt-a1i/archify-dsh.available
+    key: @tt-a1i/archify-dsh.message
+    key: billion-context
+    key: billion-context.name
+    key: billion-context.installedVersion
+    key: billion-context.checkedAt
+    key: billion-context.available
+    key: billion-context.latestVersion
+    key: billion-context.request
+    key: billion-context.request.command
+    key: billion-context.request.name
+    key: billion-context.request.version
+    key: billion-context.request.source
+    key: billion-context.compatibility
+    key: billion-context.source
+    key: billion-context.message
+    key: dshmarket
+    key: dshmarket.name
+    key: dshmarket.installedVersion
+    key: dshmarket.checkedAt
+    key: dshmarket.available
+    key: dshmarket.latestVersion
+    key: dshmarket.request
+    key: dshmarket.request.command
+    key: dshmarket.request.name
+    key: dshmarket.request.version
+    key: dshmarket.request.source
+    key: dshmarket.compatibility
+    key: dshmarket.source
+    key: dshmarket.message
+  JSON /root/.dsh/storages/workspace.json
+    key: unit
+    key: unit.name
+    key: unit.version
+    key: global
+    key: global.initialized
+    key: global.workspaceIds
+    key: global.archivedSessionIds
+    key: global.pinnedSessionIds
+    key: tables
+    key: tables.workspaces
+    key: tables.workspaces.63d0fae0-10d8-474a-8466-90ce9b6e0b88
+    key: tables.workspaces.63d0fae0-10d8-474a-8466-90ce9b6e0b88.path
+    key: tables.workspaces.63d0fae0-10d8-474a-8466-90ce9b6e0b88.title
+    key: tables.workspaces.63d0fae0-10d8-474a-8466-90ce9b6e0b88.sessionIds
+    key: tables.workspaces.63d0fae0-10d8-474a-8466-90ce9b6e0b88.createdAt
+    key: tables.workspaces.63d0fae0-10d8-474a-8466-90ce9b6e0b88.updatedAt
+    key: tables.workspaces.56f03d35-6060-49c5-99ad-df92e2e3c8e7
+    key: tables.workspaces.56f03d35-6060-49c5-99ad-df92e2e3c8e7.path
+    key: tables.workspaces.56f03d35-6060-49c5-99ad-df92e2e3c8e7.title
+    key: tables.workspaces.56f03d35-6060-49c5-99ad-df92e2e3c8e7.sessionIds
+    key: tables.workspaces.56f03d35-6060-49c5-99ad-df92e2e3c8e7.createdAt
+    key: tables.workspaces.56f03d35-6060-49c5-99ad-df92e2e3c8e7.updatedAt
+    key: tables.workspaces.d14a75f2-4059-45de-bc62-d16a79d647ee
+    key: tables.workspaces.d14a75f2-4059-45de-bc62-d16a79d647ee.path
+    key: tables.workspaces.d14a75f2-4059-45de-bc62-d16a79d647ee.title
+    key: tables.workspaces.d14a75f2-4059-45de-bc62-d16a79d647ee.sessionIds
+    key: tables.workspaces.d14a75f2-4059-45de-bc62-d16a79d647ee.createdAt
+    key: tables.workspaces.d14a75f2-4059-45de-bc62-d16a79d647ee.updatedAt
+    key: tables.workspaces.76ae5f6b-7204-4a5a-97d2-efa75b41daa9
+    key: tables.workspaces.76ae5f6b-7204-4a5a-97d2-efa75b41daa9.path
+    key: tables.workspaces.76ae5f6b-7204-4a5a-97d2-efa75b41daa9.title
+    key: tables.workspaces.76ae5f6b-7204-4a5a-97d2-efa75b41daa9.sessionIds
+    key: tables.workspaces.76ae5f6b-7204-4a5a-97d2-efa75b41daa9.createdAt
+    key: tables.workspaces.76ae5f6b-7204-4a5a-97d2-efa75b41daa9.updatedAt
+  JSON /root/.dsh/storages/workspace.json
+    key: unit
+    key: unit.name
+    key: unit.version
+    key: global
+    key: global.initialized
+    key: global.workspaceIds
+    key: global.archivedSessionIds
+    key: global.pinnedSessionIds
+    key: tables
+    key: tables.workspaces
+    key: tables.workspaces.63d0fae0-10d8-474a-8466-90ce9b6e0b88
+    key: tables.workspaces.63d0fae0-10d8-474a-8466-90ce9b6e0b88.path
+    key: tables.workspaces.63d0fae0-10d8-474a-8466-90ce9b6e0b88.title
+    key: tables.workspaces.63d0fae0-10d8-474a-8466-90ce9b6e0b88.sessionIds
+    key: tables.workspaces.63d0fae0-10d8-474a-8466-90ce9b6e0b88.createdAt
+    key: tables.workspaces.63d0fae0-10d8-474a-8466-90ce9b6e0b88.updatedAt
+    key: tables.workspaces.56f03d35-6060-49c5-99ad-df92e2e3c8e7
+    key: tables.workspaces.56f03d35-6060-49c5-99ad-df92e2e3c8e7.path
+    key: tables.workspaces.56f03d35-6060-49c5-99ad-df92e2e3c8e7.title
+    key: tables.workspaces.56f03d35-6060-49c5-99ad-df92e2e3c8e7.sessionIds
+    key: tables.workspaces.56f03d35-6060-49c5-99ad-df92e2e3c8e7.createdAt
+    key: tables.workspaces.56f03d35-6060-49c5-99ad-df92e2e3c8e7.updatedAt
+    key: tables.workspaces.d14a75f2-4059-45de-bc62-d16a79d647ee
+    key: tables.workspaces.d14a75f2-4059-45de-bc62-d16a79d647ee.path
+    key: tables.workspaces.d14a75f2-4059-45de-bc62-d16a79d647ee.title
+    key: tables.workspaces.d14a75f2-4059-45de-bc62-d16a79d647ee.sessionIds
+    key: tables.workspaces.d14a75f2-4059-45de-bc62-d16a79d647ee.createdAt
+    key: tables.workspaces.d14a75f2-4059-45de-bc62-d16a79d647ee.updatedAt
+    key: tables.workspaces.76ae5f6b-7204-4a5a-97d2-efa75b41daa9
+    key: tables.workspaces.76ae5f6b-7204-4a5a-97d2-efa75b41daa9.path
+    key: tables.workspaces.76ae5f6b-7204-4a5a-97d2-efa75b41daa9.title
+    key: tables.workspaces.76ae5f6b-7204-4a5a-97d2-efa75b41daa9.sessionIds
+    key: tables.workspaces.76ae5f6b-7204-4a5a-97d2-efa75b41daa9.createdAt
+    key: tables.workspaces.76ae5f6b-7204-4a5a-97d2-efa75b41daa9.updatedAt
+  JSON /root/.dsh/synapse/workspaces.json
+    key: version
+    key: hiddenSessionIds
+    key: workspaces
+    key: workspaces[0].id
+    key: workspaces[0].kind
+    key: workspaces[0].cwd
+    key: workspaces[0].title
+    key: workspaces[0].createdAt
+    key: workspaces[0].updatedAt
+    key: workspaces[0].threads
+    key: workspaces[1].id
+    key: workspaces[1].kind
+    key: workspaces[1].cwd
+    key: workspaces[1].title
+    key: workspaces[1].createdAt
+    key: workspaces[1].updatedAt
+    key: workspaces[1].threads
+  JSON /root/.dsh/synapse/workspaces.json
+    key: version
+    key: hiddenSessionIds
+    key: workspaces
+    key: workspaces[0].id
+    key: workspaces[0].kind
+    key: workspaces[0].cwd
+    key: workspaces[0].title
+    key: workspaces[0].createdAt
+    key: workspaces[0].updatedAt
+    key: workspaces[0].threads
+    key: workspaces[1].id
+    key: workspaces[1].kind
+    key: workspaces[1].cwd
+    key: workspaces[1].title
+    key: workspaces[1].createdAt
+    key: workspaces[1].updatedAt
+    key: workspaces[1].threads
+--- 敏感字段名命中 (token/secret/password/key/cookie/credential)
+  /root/.dsh/.dshw-usage.json -> "tokens" 
+  /root/.dsh/.dshw-usage.json -> "tokens" 
+
+===== 5 环境变量面 (值只出长度与前12位哈希) =====
+  ENVVAR DSH_SESSION_ID  val_len=36  val_sha256_12=2b8736e78361
+  total_env_vars=75
+  matched_secretlike_names=1
+
+===== 5b shell 历史面 (只出计数与类型, 不贴原文) =====
+  FILE /root/.bash_history  lines=3  sha256_12=52a2e55b99a2  mode=600 owner=root:root size=29 mtime=2026-09-28 08:13:57.477623150 +0000 type=regular file
+    password_assign: 0
+    token_flags    : 0
+    bearer_forms   : 0
+    export_secret  : 0
+    ssh_hosts      : 0
+    url_with_creds : 0
+  absent: /root/.zsh_history
+  absent: /root/.python_history
+  absent: /root/.mysql_history
+  absent: /root/.psql_history
+  absent: /root/.node_repl_history
+  absent: /root/.wget-hsts
+
+===== 6 汇总台账 =====
+ssh_priv_keys=17  (私钥+证书候选总数, 见第3节)
+cred_hits=0
+envfiles=0
+dsh_files=581
+===== END =====

@@ -1,0 +1,47 @@
+=== T. 同机非特权进程可达性（切 uid=65534/nobody 实读） ===
+/root/.dsh/.bridge_token               b
+/root/.ssh/id_ed25519                  -
+/root/.ssh/id_ed25519.pub              s
+/root/.local-gh/.token                 g
+/root/.dsh/.credentials.yaml           v
+/root/.android/debug.keystore          0
+/var/log/dpkg.log                      2
+/var/log/wtmp                          <READ_OK_1BYTE>
+
+--- nobody 能否进入 /root 目录 ---
+Android
+Branchbase
+--- nobody 身份核验 ---
+uid=65534(nobody) gid=65534(nogroup) groups=65534(nogroup),1077(aid_1077),3003(inet),9997(everybody),20527(aid_20527),50527(aid_50527),99709997(aid_99709997),99809997(aid_99809997),99909997(aid_99909997)
+
+=== U. /app/help 读类端点清单（只列路径名） ===
+/app/apps
+/app/ask
+/app/clip
+/app/device
+/app/export
+/app/help
+/app/launch
+/app/location
+/app/notify
+/app/open
+/app/plugins
+/app/readfile
+/app/sensor
+/app/sensors
+/app/share
+/app/toast
+/app/torch
+/app/ui/dump
+/app/ui/input
+/app/ui/key
+/app/ui/screenshot
+/app/ui/swipe
+/app/ui/tap
+/app/version
+/app/vibrate
+/app/vscreen/close
+/app/vscreen/create
+/app/vscreen/launch
+/app/vscreen/see
+/app/vscreen/status

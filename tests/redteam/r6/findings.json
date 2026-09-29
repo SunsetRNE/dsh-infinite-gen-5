@@ -1,0 +1,27 @@
+{
+  "zone": "r6",
+  "source": "tests/redteam/r6/artifacts/r6.md + r6_verify.sh（A01–A32 全过）",
+  "chain": [
+    { "from": "无 rsyslog / journald 落盘（systemd offline、journal 文件 0）", "to": "通用日志面不可检出：/var/log 只剩 dpkg/apt/alternatives 三个 writer", "evidence": "/var/log 清单 432151/43177/27687 B；dmesg 回 Function not implemented" },
+    { "from": "侦察连接只留 `ss -tan` 瞬时条目（TIME-WAIT 135→153→203 浮动）", "to": "事后无法复盘：连接记录无历史、无载荷、无发起方归因", "evidence": "两轮 ss 快照计数；无 conntrack 读权限" },
+    { "from": "`/proc/net/nf_conntrack` mode 640", "to": "容器内 uid=0 也读不到连接追踪 —— 网络取证需宿主侧放行", "evidence": "读操作返回权限拒绝；r6.md 网络面结论" },
+    { "from": "审计面组件全缺（auditd/auditctl/ausearch/aureport，/etc/audit 与 /var/log/audit 不存在）", "to": "`apt install auditd` 也起不来（CapEff=0），审计能力在容器内无解", "evidence": "命令缺席清单 + /proc/sys/kernel 无 audit* 条目" }
+  ],
+  "iocs": [
+    { "type": "path", "value": "/var/log/dpkg.log, apt/, alternatives.log", "note": "仅存三名 writer，sha256 前缀 82dac047…88a7", "state": "已知" },
+    { "type": "path", "value": "wtmp / btmp / lastlog", "note": "恒 0 字节，无 sshd 二进制与进程", "state": "已知" },
+    { "type": "path", "value": "/root/.dsh/repair-builtin.log", "note": "该目录唯一 .log，无请求日志；限速/429 计数器不存在", "state": "已知" },
+    { "type": "path", "value": "/proc/net/nf_conntrack", "note": "mode 640，uid=0 仍不可读", "state": "已知" },
+    { "type": "process", "value": "pid 1872 / pid 2140", "note": "ss -tanp 归因 3080 与 43795；侦察连接与正常连接同形", "state": "已知" },
+    { "type": "port", "value": "3080=22 / 3090=62 / 43795=14 / 12121=1 / 7890=89", "note": "ss -tan 端口条目快照，含 TIME-WAIT 浮动", "state": "已知" },
+    { "type": "tool", "value": "auditd/auditctl/ausearch/aureport", "note": "全缺；CapEff=0 致容器内不可安装启用", "state": "已知" },
+    { "type": "unknown", "value": "宿主侧日志副本 / 设备 logcat 桥请求记录", "note": "本轮未授权采集", "state": "未知" }
+  ],
+  "risks": [
+    { "id": "R6-01", "title": "容器内五类面无落痕，动作事后不可复盘", "severity": "高", "zone": "r6", "evidence": "通用/认证/审计三面判为不可检出；仅连接表瞬时条目与 JSON 状态文件 mtime 两处痕迹", "fix": "留痕改由宿主侧承担：Android 内核 audit + netfilter 日志，或设备 logcat 抓桥请求", "priority": 1 },
+    { "id": "R6-02", "title": "nf_conntrack 权限 640，连容器内 uid=0 也读不了", "severity": "中", "zone": "r6", "evidence": "读操作权限拒绝；无替代网络取证源", "fix": "宿主放宽该文件权限或提供只读导出端点；容器内不设补偿", "priority": 2 },
+    { "id": "R6-03", "title": "桥侧无请求日志与限速计数，越权调用无痕", "severity": "中", "zone": "r6", "evidence": "/app/help 30 端点中日志/历史类为 0；429 计数器「不存在」而非值为 0", "fix": "桥增加只读审计端点或落 access log（含 token 指纹而非明文）", "priority": 2 },
+    { "id": "R6-04", "title": "侦察连接与正常连接同形，归因仅靠瞬时快照", "severity": "低", "zone": "r6", "evidence": "ss -tanp 可见 pid，但无 5-tuple 历史；TIME-WAIT 到期即消失", "fix": "宿主侧记录 5-tuple 历史；或桥侧记来源端口与时间戳", "priority": 3 },
+    { "id": "R6-05", "title": "认证面证据链空缺（wtmp/btmp/lastlog 恒 0）", "severity": "低", "zone": "r6", "evidence": "无 sshd；三个文件 0 字节", "fix": "如确有本地登录面需求，再引入带 wtmp 的登录守护并纳入留痕口径", "priority": 3 }
+  ]
+}

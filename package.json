@@ -83,6 +83,7 @@
     "verify:lazy:coverage": "node scripts/lazy_coverage.mjs --gate",
     "verify:oneshot": "node scripts/oneshot_harness.mjs --selftest && node scripts/score_oneshot.mjs --selftest && node scripts/oneshot_report.mjs --selftest",
     "verify:triad": "node scripts/score_triad.mjs --selftest && node scripts/verify_decay.mjs tests/decay/z1",
+    "verify:redteam": "node scripts/redteam_report.mjs --selftest",
     "verify:runtime": "node scripts/verify_runtime_sync.mjs --self-test && node scripts/verify_runtime_sync.mjs",
     "verify:density": "node scripts/verify_density.mjs",
     "verify:tuning": "node scripts/verify_tuning.mjs",
@@ -117,7 +118,7 @@
     "baseline:eval": "node scripts/eval-corpus.mjs --write-baseline",
     "verify:eval": "node scripts/verify_eval.mjs",
     "verify:dispatch": "node scripts/verify_dispatch.mjs",
-    "verify:all": "npm run harness:check && npm run verify:version && npm run verify:notes && npm run verify:gen5 && npm run verify:gen51 && npm run verify:dispatch && npm run verify:dedupe && npm run verify:injection && npm run verify:boost && npm run verify:lazy && npm run verify:lazy:coverage && npm run verify:density && npm run verify:tuning && npm run verify:breach && npm run verify:t6-mechanism && npm run verify:scenarios && npm run verify:vocab && npm run verify:scenario-tool && npm run verify:tool-budget && npm run verify:stats-panel && npm run verify:ui && npm run verify:ui:size && npm run verify:env && npm run verify:eval && npm run gate:eval && npm run verify:oneshot && npm run verify:triad && npm run verify:runtime && npm run verify:sync && npm run verify:install",
+    "verify:all": "npm run harness:check && npm run verify:version && npm run verify:notes && npm run verify:gen5 && npm run verify:gen51 && npm run verify:dispatch && npm run verify:dedupe && npm run verify:injection && npm run verify:boost && npm run verify:lazy && npm run verify:lazy:coverage && npm run verify:density && npm run verify:tuning && npm run verify:breach && npm run verify:t6-mechanism && npm run verify:scenarios && npm run verify:vocab && npm run verify:scenario-tool && npm run verify:tool-budget && npm run verify:stats-panel && npm run verify:ui && npm run verify:ui:size && npm run verify:env && npm run verify:eval && npm run gate:eval && npm run verify:oneshot && npm run verify:triad && npm run verify:redteam && npm run verify:runtime && npm run verify:sync && npm run verify:install",
     "release:pack": "node scripts/package-release.mjs",
     "verify:ui:size": "node scripts/verify_card_size.mjs"
   },

@@ -1,0 +1,9 @@
+f15b880508da	656	600	root:root	/root/.ssh/known_hosts.old
+5f14d1a28a21	46	644	root:root	/root/.sunsetlinux-keys/channel.key.label
+b965117e4bfe	45	644	root:root	/root/.sunsetlinux-keys/channel.pub
+e93d1ccdb8a6	37	600	root:root	/root/.dsh/.anonymous-user-id
+8025bc0fb104	98304	600	root:root	/root/.config/mozilla/firefox/b584cydh.default-release/cookies.sqlite
+5b82e0aaaa35	1204	600	root:root	/root/.local/share/billion-context/ca/root-ca.pem
+0063ed3e9e43	421140	600	root:root	/root/.local/share/billion-context/ca/combined-ca.pem
+1022e10cdd96	103	644	root:root	/root/Branchbase/.local-gh/id_ed25519.pub
+4d93baebe9db	323	600	root:root	/root/Branchbase/.git/config
