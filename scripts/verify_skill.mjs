@@ -14,7 +14,7 @@ import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 import { homedir } from "node:os";
-import { FIRST_LINE_TEXT, COMPACTION_EVENT_TYPES } from "../anchor-armor.mjs";
+import { CONTRACT_SHORT, FIRST_LINE_TEXT, COMPACTION_EVENT_TYPES } from "../anchor-armor.mjs";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, "..");
@@ -78,6 +78,9 @@ if (!distExists && !installed.length) {
     check(text.startsWith("---\n"), "技能文件以 YAML 前置元数据开头");
     check(new RegExp(`^name: ${SKILL_ID}$`, "m").test(text), "前置元数据 name 是 kebab-case 技能 id", text.slice(0, 60));
     check(/^description: .\S/m.test(text), "前置元数据有非空 description");
+    // v0.38.0：契约短形必须同时落在 description 里 —— 宿主每轮把技能目录（name +
+    // description）发给模型，这条路径不依赖技能被装载，也不随正文裁剪消失。
+    check(text.includes(CONTRACT_SHORT), "description 里带契约短形（技能目录每轮可见）", `短形 ${CONTRACT_SHORT.length} 字符`);
     check(text.includes(FIRST_LINE_TEXT), "技能正文逐字节含首句层契约（FIRST_LINE_TEXT）", `契约 ${FIRST_LINE_TEXT.length} 字符`);
     const named = COMPACTION_EVENT_TYPES.filter((t) => text.includes(t));
     check(named.length >= 3, "技能正文点名压缩事件（≥3 条）", `命中 ${named.length}/${COMPACTION_EVENT_TYPES.length}`);
@@ -99,6 +102,7 @@ if (!distExists && !installed.length) {
     );
     const text = live.toString("utf8");
     check(text.includes(FIRST_LINE_TEXT), `${r.id}：副本含首句层契约`);
+    check(text.includes(CONTRACT_SHORT), `${r.id}：副本 description 含契约短形`);
   }
   for (const r of roots.filter((x) => x.rootExists && !x.skillPresent)) {
     skips.push(`${r.id}（${r.path}）未装 —— 属正常：多个扫描根只需装一个`);
