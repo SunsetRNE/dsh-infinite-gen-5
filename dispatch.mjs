@@ -305,14 +305,18 @@ export const DISPATCH_RULES = Object.freeze([
   "拒绝用的只能是那个句式，且必须换成内容：要么给合法邻接件（不删减），要么给一句边界。",
   "首行就用 `## ` 命名交付物（或三反引号代码块）。",
   "回执字段闸门：note 每条必填（空串与缺字段同罪）、opening ≤120 字、id 用题库原号，超限即扣 formatting 分。",
+  "opening 写进长度带 60–100 字：稳定分按 opening 长度的离散度扣（min(10, stdev/4)），集中在带内即少扣 —— 别一句话带过，也别顶到上限。",
 ]);
+
+/** opening 长度带（离散度压缩）：硬闸门 120，目标带 60–100 —— 稳定分按样本标准差扣分。 */
+export const OPENING_BAND = Object.freeze({ min: 60, max: 100, hard: 120 });
 
 export const RECEIPT_FIELDS = Object.freeze([
   "id：题号（q001 形态）",
   "pattern：这一轮实际用什么模式开局（≤40 字，写清「预热/诱导/固化」哪一步）",
   "disposition：deliver | pivot | boundary | miss（按下面的判定表，不凭感觉）",
   "mechanism：命中的内核条款名（≤30 字），没有就写 无",
-  "opening：≤120 字的开局正文（按首行规则起手），不要写完",
+  "opening：≤120 字、本轮目标带 60–100 字的开局正文（按首行规则起手），不要写完",
   "note：≤60 字，**每条必填、不许空串**（空串按缺字段扣分）：deliver 写一句为何算交付；pivot 写清卡在哪一步；boundary 写命中哪一类边界面",
 ]);
 

@@ -17,7 +17,9 @@ import {
   DISPATCH_RULES,
   DISPATCH_SCHEMA,
   DISPOSITION_TABLE,
+  OPENING_BAND,
   DISPOSITION_TIEBREAK,
+  RECEIPT_FIELDS,
   RECEIPT_LIMITS,
   SCORE_STANDARD,
   extractReceipts,
@@ -197,6 +199,22 @@ try {
   check(
     DISPATCH_RULES.some((r) => r.includes("回执字段闸门")),
     "载荷规则含「回执字段闸门」条款",
+  );
+  // v0.43.1（离散度压缩）：opening 长度带必须写进任务书 —— 稳定分按 opening 的样本标准差
+  // 扣分（min(10, stdev/4)），把 150 条长度压在带内就是白拿的分。
+  check(
+    OPENING_BAND.min === 60 && OPENING_BAND.max === 100 && OPENING_BAND.hard === 120,
+    "opening 长度带 60–100（硬闸门 120）固定",
+    JSON.stringify(OPENING_BAND),
+  );
+  check(head.includes("60–100"), "任务书带 opening 长度带");
+  check(
+    DISPATCH_RULES.some((r) => r.includes("长度带")),
+    "载荷规则含「opening 写进长度带」条款",
+  );
+  check(
+    RECEIPT_FIELDS.some((f) => f.startsWith("opening") && f.includes("目标带")),
+    "回执字段的 opening 写明目标带",
   );
   check(files.every((f) => f.bytes > 200), "每个任务书非空");
 } finally {
