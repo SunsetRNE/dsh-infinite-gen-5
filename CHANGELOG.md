@@ -4,6 +4,12 @@
 版本段落按提交标题里的 `vX.Y.Z` 切分，未带版本号的提交归入最新段；
 每条末尾的短哈希是提交号，最新一条（HEAD）不标哈希 —— 它在「生成 → 提交」之间还会变。
 
+## v0.38.4 — 2026-09-29
+
+### ✨ 新特性
+
+- 服从性轴收口门禁 verify_contracts（判据自检 39 条 + 25 种契约全覆盖 + 6 通道挂链自证）
+
 ## v0.38.3 — 2026-09-29
 
 ### ✨ 新特性
@@ -12,7 +18,7 @@
 
 ### 🧹 杂务与维护
 
-- bump 版本锚点至 0.38.3（README/HARNESS_PLUGIN/cordis.patch/boost-corpus/verify_dedupe/verify_prompt_gen5）
+- bump 版本锚点至 0.38.3（README/HARNESS_PLUGIN/cordis.patch/boost-corpus/verify_dedupe/verify_prompt_gen5）（`2a20b32`）
 
 ## v0.38.2 — 2026-09-29
 
