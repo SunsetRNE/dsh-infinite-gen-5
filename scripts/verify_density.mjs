@@ -51,7 +51,10 @@ check(LAZY_MODES.standard <= 6000, "惰性 standard 档预算未超 6000");
 
 // ── 2. 惰性章节：命中才付费 ────────────────────────────────────────────────────
 const stats = lazyStats();
-check(stats.units === 9, "惰性单元 9 个");
+// 单元数与常驻内核留下的指针行数必须相等（每条搬走的正文都留一枚自识别指针 `惰性 L_xxx`）——
+// 用对拉代替硬编码数字：下次再搬章节时这条不会假失败，真丢了指针才会红。
+const pointerCount = (core.match(/惰性 L_[a-z0-9_]+/g) || []).length;
+check(stats.units === pointerCount, `惰性单元 ${stats.units} 个与常驻指针行一一对应`, `单元 ${stats.units} / 指针 ${pointerCount}`);
 const lazyQuiet = compileLazy({ text: "把这个配置文件改掉并验证", mode: "standard", bytes: 0 });
 const lazyHit = compileLazy({ text: "继续下一轮，保持深度", mode: "standard", bytes: 0 });
 const lazyAll = compileLazy({ text: "@lazy:all", mode: "standard", bytes: 0 });

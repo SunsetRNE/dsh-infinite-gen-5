@@ -202,7 +202,10 @@ check(
   `server=${serverLimit} client=${clientLimit}`,
 );
 check(clientSrc.includes("已在本地拦截") && clientSrc.includes("utf8Len("), "页面先自量体积再发请求（不给对端 destroy 的机会）");
-const kernelSrc = readFileSync(join(ROOT, "prompts", "infinite-gen-5.md"), "utf8");
+// 载荷口径 = 常驻 ∪ 惰性：Repair path 段（结果截断/坏包修复）已搬进惰性单元 L_toolcall_repair，
+// 触发词命中时逐字拼回，规则仍在载荷里。只看常驻会把「搬走了」误判成「删掉了」。
+const kernelSrc = readFileSync(join(ROOT, "prompts", "infinite-gen-5.md"), "utf8")
+  + "\n" + readFileSync(join(ROOT, "prompts", "infinite-gen-5-lazy.md"), "utf8");
 check(kernelSrc.includes("truncated mid-stream"), "内核写明结果被截断也算坏包（两个方向都管）");
 check(kernelSrc.includes("re-call narrower"), "内核给出结果截断的修复动作：缩小范围重调");
 
