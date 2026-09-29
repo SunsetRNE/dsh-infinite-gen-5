@@ -1,0 +1,953 @@
+{
+  "layer": "ig5-layer-04-ctf",
+  "protocol": "ig5-merge-v1",
+  "title": "CTF 知识库",
+  "sources": [
+    "CTF-SKILL"
+  ],
+  "srcRoot": "/root/dsh-infinite-gen-4/合集",
+  "stamp": "",
+  "maxBytes": 2097152,
+  "files": [
+    {
+      "src": "CTF-SKILL/CTF知识库.md",
+      "dst": "refs/CTF-SKILL/CTF知识库.md",
+      "bytes": 2118,
+      "sha256": "6573530ab3eb39f1cc7db2d60a545e86ce884c1cef66fe9b6eb3ec0a7c5fb785"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/CSRF.md",
+      "dst": "refs/CTF-SKILL/Web安全/CSRF.md",
+      "bytes": 5239,
+      "sha256": "dd53a6573875b0630a451421e1fcb1d5287d22548c20fc6e87abc5a86a97fc31"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/Go.md",
+      "dst": "refs/CTF-SKILL/Web安全/Go.md",
+      "bytes": 4693,
+      "sha256": "b6bc3f395bbc28219a633036747ad13eadef00c08ec7c08333eb3c7e554bee89"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/HTTP请求.md",
+      "dst": "refs/CTF-SKILL/Web安全/HTTP请求.md",
+      "bytes": 3780,
+      "sha256": "b172418431fc05256bff53fbb77bcc377f992f80718be69690327c5715887708"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/JS.md",
+      "dst": "refs/CTF-SKILL/Web安全/JS.md",
+      "bytes": 3269,
+      "sha256": "99d286fc29f10b274319704128ae62e044fd81677255d3fd71624b0ee16fab5d"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/Java.md",
+      "dst": "refs/CTF-SKILL/Web安全/Java.md",
+      "bytes": 4721,
+      "sha256": "acc8071373701b809ed56b6d12d4d064d8398be1443395943505ab250c53938c"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/NOSQL注入.md",
+      "dst": "refs/CTF-SKILL/Web安全/NOSQL注入.md",
+      "bytes": 5465,
+      "sha256": "6248d03384e75e29072d55d7f84e57a8c99008791558548f868a01988fb2f9e2"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/Node.md",
+      "dst": "refs/CTF-SKILL/Web安全/Node.md",
+      "bytes": 4600,
+      "sha256": "ebd8748c88c193bd350dd0eac2c8c81084fc4740b96d834eba6ca2234cfe817a"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/PHP.md",
+      "dst": "refs/CTF-SKILL/Web安全/PHP.md",
+      "bytes": 5166,
+      "sha256": "d597b47c7ad3b6c87fac22bede5d422db92042f48d848c986f224bbb3fcb44be"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/Python.md",
+      "dst": "refs/CTF-SKILL/Web安全/Python.md",
+      "bytes": 4635,
+      "sha256": "fe9ad3f800bb449c0be9b25b943aaf45747dd932ade0968b4d24c4bd6fcabe3b"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/Ruby.md",
+      "dst": "refs/CTF-SKILL/Web安全/Ruby.md",
+      "bytes": 4299,
+      "sha256": "fdbb927b8e6b060e937aaa9df695270191e6728dd9feb77d887c47b494f7c9e9"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/SQL注入.md",
+      "dst": "refs/CTF-SKILL/Web安全/SQL注入.md",
+      "bytes": 6986,
+      "sha256": "b60a9ddb18d3dd7b5d308d1da4c413736b46b69002042cfd52520b562ef8fce4"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/SSRF.md",
+      "dst": "refs/CTF-SKILL/Web安全/SSRF.md",
+      "bytes": 5154,
+      "sha256": "0efe0261e07f7467a2b94d6393252abae07296019fc97a68b777461bcc542537"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/Web信息搜集.md",
+      "dst": "refs/CTF-SKILL/Web安全/Web信息搜集.md",
+      "bytes": 3866,
+      "sha256": "f31ab1632152ee391ff0fed7b3c41a03ad1976015ba556e67bd8882d8da74769"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/Web安全.md",
+      "dst": "refs/CTF-SKILL/Web安全/Web安全.md",
+      "bytes": 4850,
+      "sha256": "278eb39c6574b475e95d3606aab514c54abae7b322d8bc8ca7b85fcc67fab438"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/Web逻辑漏洞.md",
+      "dst": "refs/CTF-SKILL/Web安全/Web逻辑漏洞.md",
+      "bytes": 5320,
+      "sha256": "69058d586ace299764dbc925be2d1daef75db4578f74d1518057d9e7a20001c9"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/Windows相关.md",
+      "dst": "refs/CTF-SKILL/Web安全/Windows相关.md",
+      "bytes": 5731,
+      "sha256": "eecdf78c2bd56168eb4c6238cff2eac33c7d4cd2f5caf03f5f8f2868c303bd4e"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/XSS.md",
+      "dst": "refs/CTF-SKILL/Web安全/XSS.md",
+      "bytes": 4838,
+      "sha256": "700daa8eb0b63b5aa1e5d89e51cbf4a04a15541b4f94b916cb59a0f9e2513ed3"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/XXE.md",
+      "dst": "refs/CTF-SKILL/Web安全/XXE.md",
+      "bytes": 5270,
+      "sha256": "d75935cfecbdf28e5fc38fc47a3abf85167a9e857e98f7aaad59d367cbbdf1d3"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/文件上传.md",
+      "dst": "refs/CTF-SKILL/Web安全/文件上传.md",
+      "bytes": 5345,
+      "sha256": "f047ff989ffaae3362aa52540062cc0207f38fc8f31dcbce73c44ca225ad8232"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/文件泄露.md",
+      "dst": "refs/CTF-SKILL/Web安全/文件泄露.md",
+      "bytes": 3704,
+      "sha256": "de84c77ac48215fc11ab8ae0183735493be7891c750a65004f6a540f00f9cd46"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/暴力破解.md",
+      "dst": "refs/CTF-SKILL/Web安全/暴力破解.md",
+      "bytes": 3866,
+      "sha256": "845fd65d1fd99f95a9fb0a0e32dc6ffb3bae3bb3e4cc24d31aa6f6d5a8a47cf2"
+    },
+    {
+      "src": "CTF-SKILL/Web安全/认证绕过.md",
+      "dst": "refs/CTF-SKILL/Web安全/认证绕过.md",
+      "bytes": 6531,
+      "sha256": "87db352428e8346d7dff7728e8b062a7c0d11ce8927713125393b7efc4e80376"
+    },
+    {
+      "src": "CTF-SKILL/二进制安全/Linux内核漏洞利用.md",
+      "dst": "refs/CTF-SKILL/二进制安全/Linux内核漏洞利用.md",
+      "bytes": 9447,
+      "sha256": "4c29d190994e36d605a3558c622011bb26b40cd12fa05e039368925cdec8ea40"
+    },
+    {
+      "src": "CTF-SKILL/二进制安全/二进制安全.md",
+      "dst": "refs/CTF-SKILL/二进制安全/二进制安全.md",
+      "bytes": 4116,
+      "sha256": "d6abc23e9111e05847308b5bfb1e7977b4148cc353ccdc55b1acb5aa5d1754e4"
+    },
+    {
+      "src": "CTF-SKILL/二进制安全/二进制逻辑漏洞.md",
+      "dst": "refs/CTF-SKILL/二进制安全/二进制逻辑漏洞.md",
+      "bytes": 7041,
+      "sha256": "b6dd924c44e9da5d1ff4a3eb7e1013eaaba6c4e6b184d7f8d368f28eb5744e4c"
+    },
+    {
+      "src": "CTF-SKILL/二进制安全/其他类型PWN.md",
+      "dst": "refs/CTF-SKILL/二进制安全/其他类型PWN.md",
+      "bytes": 8507,
+      "sha256": "99532fdceb5da12f94d7e6f28ad416371cfa090ffe23ce852510fa6e30e4ba38"
+    },
+    {
+      "src": "CTF-SKILL/二进制安全/内存破坏漏洞.md",
+      "dst": "refs/CTF-SKILL/二进制安全/内存破坏漏洞.md",
+      "bytes": 6922,
+      "sha256": "5134183f939389e3df8e7f2c6d7a91494c3afb82b2b9f184148bbb158bff0fde"
+    },
+    {
+      "src": "CTF-SKILL/二进制安全/堆漏洞利用.md",
+      "dst": "refs/CTF-SKILL/二进制安全/堆漏洞利用.md",
+      "bytes": 9536,
+      "sha256": "bf693cbbce25870dfc9fda373993f1ceece3ce9c39a968b1be9ded85356c0ca4"
+    },
+    {
+      "src": "CTF-SKILL/二进制安全/异构PWN.md",
+      "dst": "refs/CTF-SKILL/二进制安全/异构PWN.md",
+      "bytes": 9214,
+      "sha256": "b06837f22507cd700e695afd771d31a45369694c0ca49831f96e3220cf64902b"
+    },
+    {
+      "src": "CTF-SKILL/二进制安全/栈漏洞利用.md",
+      "dst": "refs/CTF-SKILL/二进制安全/栈漏洞利用.md",
+      "bytes": 9703,
+      "sha256": "56c923555052c5464e5bb86405b1762d90a99e4450d8584d065a95f417d4d944"
+    },
+    {
+      "src": "CTF-SKILL/二进制安全/格式化字符串漏洞利用.md",
+      "dst": "refs/CTF-SKILL/二进制安全/格式化字符串漏洞利用.md",
+      "bytes": 8067,
+      "sha256": "28699bd5cd24845ebe481f799ed225040377feaa5f58b2c86da2ee55da439ec7"
+    },
+    {
+      "src": "CTF-SKILL/云安全/DevOps安全.md",
+      "dst": "refs/CTF-SKILL/云安全/DevOps安全.md",
+      "bytes": 2598,
+      "sha256": "9659c9313b7ebc4fb3309ea307a822cb57725ae408f48b2c984d5a73c8d62404"
+    },
+    {
+      "src": "CTF-SKILL/云安全/云信息搜集.md",
+      "dst": "refs/CTF-SKILL/云安全/云信息搜集.md",
+      "bytes": 2272,
+      "sha256": "aeed1311ae46d8ae58629a518788f3e7ea253832a29ca783735208ef24761c38"
+    },
+    {
+      "src": "CTF-SKILL/云安全/云原生安全.md",
+      "dst": "refs/CTF-SKILL/云安全/云原生安全.md",
+      "bytes": 2662,
+      "sha256": "69fa77d0841c7bfd68e5ee6d699246299b99f6c175796f23b45ac0e449845e15"
+    },
+    {
+      "src": "CTF-SKILL/云安全/云安全.md",
+      "dst": "refs/CTF-SKILL/云安全/云安全.md",
+      "bytes": 2221,
+      "sha256": "c4c1a93034c2d9d9281f3533250960fed5d7d8aa9353d55458f7036f13fa0ea3"
+    },
+    {
+      "src": "CTF-SKILL/云安全/云网络安全.md",
+      "dst": "refs/CTF-SKILL/云安全/云网络安全.md",
+      "bytes": 2374,
+      "sha256": "7268307174313399da1bcc77da38242c093b62534ee1e5b5f290f188ed961667"
+    },
+    {
+      "src": "CTF-SKILL/云安全/合规与审计.md",
+      "dst": "refs/CTF-SKILL/云安全/合规与审计.md",
+      "bytes": 2677,
+      "sha256": "07b02721cb5e3fc819372f395220f36665e95aab8333d6ec77a7ef92d8d40ae6"
+    },
+    {
+      "src": "CTF-SKILL/云安全/容器安全.md",
+      "dst": "refs/CTF-SKILL/云安全/容器安全.md",
+      "bytes": 2625,
+      "sha256": "28eca857446a4e2672aa055ebc2b5fdfb8b6739dead14c9adf205bb41b5e4bbf"
+    },
+    {
+      "src": "CTF-SKILL/云安全/数据保护.md",
+      "dst": "refs/CTF-SKILL/云安全/数据保护.md",
+      "bytes": 2717,
+      "sha256": "0336dd8162805930c89aeef548abe67a50fc8074ff210a7767d9546eaa46ac26"
+    },
+    {
+      "src": "CTF-SKILL/云安全/无服务器计算.md",
+      "dst": "refs/CTF-SKILL/云安全/无服务器计算.md",
+      "bytes": 2520,
+      "sha256": "97105da9e13b2222f3a616767b224e922338661d303e148b71148ef4682ee6b6"
+    },
+    {
+      "src": "CTF-SKILL/云安全/灾难恢复.md",
+      "dst": "refs/CTF-SKILL/云安全/灾难恢复.md",
+      "bytes": 3211,
+      "sha256": "add9e7b736840e43cd4b70bdf5cc40f171d347f83e71136a7cde50def895f731"
+    },
+    {
+      "src": "CTF-SKILL/云安全/监控与日志.md",
+      "dst": "refs/CTF-SKILL/云安全/监控与日志.md",
+      "bytes": 2198,
+      "sha256": "520c8323cc7767a35937541c00217455ababf059ed1d0c41135220a0764ea23c"
+    },
+    {
+      "src": "CTF-SKILL/云安全/第三方服务.md",
+      "dst": "refs/CTF-SKILL/云安全/第三方服务.md",
+      "bytes": 2512,
+      "sha256": "5e15fe2c8e7df1f24faa3025b184a5789eb3b9cb1acf3e50313d73d6fe44d779"
+    },
+    {
+      "src": "CTF-SKILL/云安全/身份与访问管理.md",
+      "dst": "refs/CTF-SKILL/云安全/身份与访问管理.md",
+      "bytes": 2741,
+      "sha256": "4ed8dca14b58a771983dd0b1c85d07211a60864751a776e159c512a5e177a210"
+    },
+    {
+      "src": "CTF-SKILL/人工智能安全/AI信息搜集.md",
+      "dst": "refs/CTF-SKILL/人工智能安全/AI信息搜集.md",
+      "bytes": 2172,
+      "sha256": "07fc7266f7cf85d74f4412aa2b7004ecc172b940d6d94c3463a31c1657625f16"
+    },
+    {
+      "src": "CTF-SKILL/人工智能安全/人工智能安全.md",
+      "dst": "refs/CTF-SKILL/人工智能安全/人工智能安全.md",
+      "bytes": 1257,
+      "sha256": "fe2ca03cd1365278f05de0a84ee1ede956a1d29bd56f83d9eb7246f40b68e34e"
+    },
+    {
+      "src": "CTF-SKILL/人工智能安全/安全防御.md",
+      "dst": "refs/CTF-SKILL/人工智能安全/安全防御.md",
+      "bytes": 2363,
+      "sha256": "f3cb6960c2e01ae424177833cd98e47e53b63bf5fe228eb36fceef40bf7dff1c"
+    },
+    {
+      "src": "CTF-SKILL/人工智能安全/数据处理.md",
+      "dst": "refs/CTF-SKILL/人工智能安全/数据处理.md",
+      "bytes": 2476,
+      "sha256": "921fd41273b7e7d21406c98744b1ac1b388ee3ee8e0b24eeb514f1075a41a072"
+    },
+    {
+      "src": "CTF-SKILL/人工智能安全/数据攻击.md",
+      "dst": "refs/CTF-SKILL/人工智能安全/数据攻击.md",
+      "bytes": 2131,
+      "sha256": "89d0c1d55fb60a8224a14f03cb44d584609394dcba2f31bcf6cdf6a5802c23a0"
+    },
+    {
+      "src": "CTF-SKILL/人工智能安全/模型攻击.md",
+      "dst": "refs/CTF-SKILL/人工智能安全/模型攻击.md",
+      "bytes": 2617,
+      "sha256": "04b4eb06e3f5b2f6fe0f5caedf241f982f0f071250bc06e68edf3517fd77b19f"
+    },
+    {
+      "src": "CTF-SKILL/人工智能安全/模型评估.md",
+      "dst": "refs/CTF-SKILL/人工智能安全/模型评估.md",
+      "bytes": 2539,
+      "sha256": "41d1f5f2659bc3b85c9250ed8c2420ec28f427e7b9b6be7228458fe313382b63"
+    },
+    {
+      "src": "CTF-SKILL/人工智能安全/模型防御.md",
+      "dst": "refs/CTF-SKILL/人工智能安全/模型防御.md",
+      "bytes": 2877,
+      "sha256": "20186aede9c9fa3bd06b900514469e833a7bca524551dbc255f8bea0c0e6195a"
+    },
+    {
+      "src": "CTF-SKILL/人工智能安全/系统安全.md",
+      "dst": "refs/CTF-SKILL/人工智能安全/系统安全.md",
+      "bytes": 2264,
+      "sha256": "a0c805d986c1468b4f5a308f8ee93905cdba5c3f1111129f66f8c69cc676176f"
+    },
+    {
+      "src": "CTF-SKILL/区块链安全/交易分析.md",
+      "dst": "refs/CTF-SKILL/区块链安全/交易分析.md",
+      "bytes": 3033,
+      "sha256": "75cb2f1d796f67b59af0acd17b4fb815f90abef6b3cf21cac5caaee61775a7ad"
+    },
+    {
+      "src": "CTF-SKILL/区块链安全/区块链信息搜集.md",
+      "dst": "refs/CTF-SKILL/区块链安全/区块链信息搜集.md",
+      "bytes": 2793,
+      "sha256": "dc659a4c313b39a6db2566491221452ca720b8e689ea33adaf14606f9f6dc96f"
+    },
+    {
+      "src": "CTF-SKILL/区块链安全/区块链安全.md",
+      "dst": "refs/CTF-SKILL/区块链安全/区块链安全.md",
+      "bytes": 1286,
+      "sha256": "0b29fa951bb6361de6f23ee3d976708babff2babd6b8b8eeb4bb59771629f286"
+    },
+    {
+      "src": "CTF-SKILL/区块链安全/智能合约.md",
+      "dst": "refs/CTF-SKILL/区块链安全/智能合约.md",
+      "bytes": 4894,
+      "sha256": "d47f4d463853fae1af4f23b7bbeca96d6597c89964a85d8a9477bfd926fb5cbf"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/USB流量分析.md",
+      "dst": "refs/CTF-SKILL/安全杂项/USB流量分析.md",
+      "bytes": 3930,
+      "sha256": "f35c0f9173db5d532a4a89bb8013ad27dd97630288781e5d6efa630155a530b0"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/WEB流量分析.md",
+      "dst": "refs/CTF-SKILL/安全杂项/WEB流量分析.md",
+      "bytes": 3720,
+      "sha256": "1e820449bc9d4773769f14d544228cb8a1ddb87a37210cbd7628c90b94b9c3c1"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/其他流量分析.md",
+      "dst": "refs/CTF-SKILL/安全杂项/其他流量分析.md",
+      "bytes": 4284,
+      "sha256": "40b2c1f5c2dc7519aa86dc7ea8a262891463d2ed87e15fba5a0aa5983dab7061"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/其他隐写.md",
+      "dst": "refs/CTF-SKILL/安全杂项/其他隐写.md",
+      "bytes": 4216,
+      "sha256": "c60c2b25f896bdba5e9df2dbfacb2b5da0b02351ac086766ac27efa3aac87d86"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/压缩包分析.md",
+      "dst": "refs/CTF-SKILL/安全杂项/压缩包分析.md",
+      "bytes": 4990,
+      "sha256": "a428c8f036a5b590e0009376f7a3d30adf86d16d1782f092f9306c295dec62f1"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/取证.md",
+      "dst": "refs/CTF-SKILL/安全杂项/取证.md",
+      "bytes": 5732,
+      "sha256": "7e5d19f135b4c5c8f2d582192b3e0c96f51234202347e260a6e4f83c6539ffae"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/图片隐写.md",
+      "dst": "refs/CTF-SKILL/安全杂项/图片隐写.md",
+      "bytes": 4623,
+      "sha256": "b772b185d92f853f690083683963005def1c145d86c86b9bd378d364aa079a6d"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/安全杂项.md",
+      "dst": "refs/CTF-SKILL/安全杂项/安全杂项.md",
+      "bytes": 2492,
+      "sha256": "8210be46d2c00b37a2d2a0302a57c15d19e367a867dfbefd7424fe914abc4c1a"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/数据及编解码转换.md",
+      "dst": "refs/CTF-SKILL/安全杂项/数据及编解码转换.md",
+      "bytes": 2906,
+      "sha256": "025d6b18355c1e0c5ccf1e53f5d1f4feab54096ea1bfe952de4575cef829d974"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/文件结构.md",
+      "dst": "refs/CTF-SKILL/安全杂项/文件结构.md",
+      "bytes": 2888,
+      "sha256": "2ccc8914e33e458267d2ce5b7c03a8cb65e3233d6ec42bab9033df73d79ade6a"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/文档隐写.md",
+      "dst": "refs/CTF-SKILL/安全杂项/文档隐写.md",
+      "bytes": 4073,
+      "sha256": "d48ec04e30bba3600df6c9a5c62d14ddf7ff590b3f53089d39f4c1b407f70ff6"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/无线电信号分析.md",
+      "dst": "refs/CTF-SKILL/安全杂项/无线电信号分析.md",
+      "bytes": 4544,
+      "sha256": "806e0f4f3a25c8fe918f87f937bb237e0bfea8dba3319aa6022f9ccacc6e7091"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/杂项日志分析.md",
+      "dst": "refs/CTF-SKILL/安全杂项/杂项日志分析.md",
+      "bytes": 4316,
+      "sha256": "6ebd7c9a2a503d8b9cbf4f445ab1c20bfd592d4c7a7d796826759c9febc6f547"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/条码分析.md",
+      "dst": "refs/CTF-SKILL/安全杂项/条码分析.md",
+      "bytes": 3277,
+      "sha256": "deeb421ba39f62789b86993776500b3edd202d063ffbeacd0be45d557bb1b058"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/视频隐写.md",
+      "dst": "refs/CTF-SKILL/安全杂项/视频隐写.md",
+      "bytes": 3457,
+      "sha256": "594cfe77d7eaad69722bf6faee2150c422cac4a03512553652e81e544738dcea"
+    },
+    {
+      "src": "CTF-SKILL/安全杂项/音频隐写.md",
+      "dst": "refs/CTF-SKILL/安全杂项/音频隐写.md",
+      "bytes": 3926,
+      "sha256": "14a3c48322a8afcf2afbb7fee72ef2bcec070218cc5f231dc3ca277426c74c5f"
+    },
+    {
+      "src": "CTF-SKILL/密码学/AES加密.md",
+      "dst": "refs/CTF-SKILL/密码学/AES加密.md",
+      "bytes": 3894,
+      "sha256": "f570073326bb3b08229e11beafd56efa1e83f35c94b9998b517aab56a35c07b9"
+    },
+    {
+      "src": "CTF-SKILL/密码学/DES加密.md",
+      "dst": "refs/CTF-SKILL/密码学/DES加密.md",
+      "bytes": 3764,
+      "sha256": "c1f8148fdaeb43d7fad9b683d5f1d5c838c81bac266cedc661b3784783198ffa"
+    },
+    {
+      "src": "CTF-SKILL/密码学/DSA.md",
+      "dst": "refs/CTF-SKILL/密码学/DSA.md",
+      "bytes": 2765,
+      "sha256": "cb14c3dd54d96a5dbde82dfb02c8b4f1a69bbc1453e01f8ca380593d7723e40e"
+    },
+    {
+      "src": "CTF-SKILL/密码学/ECC.md",
+      "dst": "refs/CTF-SKILL/密码学/ECC.md",
+      "bytes": 2638,
+      "sha256": "a16c545135bfa44aad5413715481912c6215d27bee01058c6da5d5dcd87ce267"
+    },
+    {
+      "src": "CTF-SKILL/密码学/ElGamal.md",
+      "dst": "refs/CTF-SKILL/密码学/ElGamal.md",
+      "bytes": 2798,
+      "sha256": "c9568dcf5b01b9d1559025c6bd93e8bd11f2411961dcdd2f6c7289ff468e5e7a"
+    },
+    {
+      "src": "CTF-SKILL/密码学/FNV.md",
+      "dst": "refs/CTF-SKILL/密码学/FNV.md",
+      "bytes": 3511,
+      "sha256": "625be709c8c3205765e41576a617da41884cf16b0f573cc7dab1b99c8aa7094a"
+    },
+    {
+      "src": "CTF-SKILL/密码学/LCG.md",
+      "dst": "refs/CTF-SKILL/密码学/LCG.md",
+      "bytes": 2949,
+      "sha256": "e990602c69f0a8731db59f6ce8a37bd508e0560d1b4a5c676d8c716c1a48cafa"
+    },
+    {
+      "src": "CTF-SKILL/密码学/MD5.md",
+      "dst": "refs/CTF-SKILL/密码学/MD5.md",
+      "bytes": 3066,
+      "sha256": "1e05ee2c829a7b1a3d8ff300b8675b585d09790f023c5747e9326a932b86fe2c"
+    },
+    {
+      "src": "CTF-SKILL/密码学/MT19937.md",
+      "dst": "refs/CTF-SKILL/密码学/MT19937.md",
+      "bytes": 3667,
+      "sha256": "95753e9b1d6cc2f9130f63b0f5282ac45f1c8e987c6d8bc9682693825cd795bb"
+    },
+    {
+      "src": "CTF-SKILL/密码学/RC4.md",
+      "dst": "refs/CTF-SKILL/密码学/RC4.md",
+      "bytes": 2229,
+      "sha256": "ca2675a5ffb634a5793a908c07dc834b60b652818b67bd846317655ffc012504"
+    },
+    {
+      "src": "CTF-SKILL/密码学/RSA.md",
+      "dst": "refs/CTF-SKILL/密码学/RSA.md",
+      "bytes": 4634,
+      "sha256": "3f4ddce94c35418cef2a5b44abbc04dc62b20ecf24d8bef66383c3660139511f"
+    },
+    {
+      "src": "CTF-SKILL/密码学/SHA1.md",
+      "dst": "refs/CTF-SKILL/密码学/SHA1.md",
+      "bytes": 3052,
+      "sha256": "8aaf3047ad9715207ec4e3f1590c0c873f31ffc7aa092bc022ae112d616d9536"
+    },
+    {
+      "src": "CTF-SKILL/密码学/Z3.md",
+      "dst": "refs/CTF-SKILL/密码学/Z3.md",
+      "bytes": 3328,
+      "sha256": "78f1ca9e8215b7cbd8b1062fb67cf11c9d8979dd6a24414f68d49c2c678750e1"
+    },
+    {
+      "src": "CTF-SKILL/密码学/其他形式的古典加密.md",
+      "dst": "refs/CTF-SKILL/密码学/其他形式的古典加密.md",
+      "bytes": 3767,
+      "sha256": "87d789612fe5b381944b2dd9c257fa2db270730cec05bfa69eb66f9a0a781601"
+    },
+    {
+      "src": "CTF-SKILL/密码学/分组密码.md",
+      "dst": "refs/CTF-SKILL/密码学/分组密码.md",
+      "bytes": 3103,
+      "sha256": "424a07ba39f63e4df406a5d8fd9dac25d7dea1ae4ec4e1ab7465663720eaf74f"
+    },
+    {
+      "src": "CTF-SKILL/密码学/加法密码.md",
+      "dst": "refs/CTF-SKILL/密码学/加法密码.md",
+      "bytes": 2562,
+      "sha256": "73669a9a954bf990a128717c52203238381ff1e53557f46befd6205eba896232"
+    },
+    {
+      "src": "CTF-SKILL/密码学/单表替换加密.md",
+      "dst": "refs/CTF-SKILL/密码学/单表替换加密.md",
+      "bytes": 2952,
+      "sha256": "36e4d4f67a44ca6ae2dffa0026cb52cea8ac99af98cefe1f0a31c669cb7728e8"
+    },
+    {
+      "src": "CTF-SKILL/密码学/反馈移位寄存器.md",
+      "dst": "refs/CTF-SKILL/密码学/反馈移位寄存器.md",
+      "bytes": 2661,
+      "sha256": "39c5ffb9e9456d7b7c6e1271929ab0ba4c2dbd13aad36b452ce6e11bc93c840e"
+    },
+    {
+      "src": "CTF-SKILL/密码学/基于格的密码.md",
+      "dst": "refs/CTF-SKILL/密码学/基于格的密码.md",
+      "bytes": 3229,
+      "sha256": "9f9c12e6194fec7234eba6c2bb803e6ac945e387cae8fa17de00d732b13d19cd"
+    },
+    {
+      "src": "CTF-SKILL/密码学/多表替换加密.md",
+      "dst": "refs/CTF-SKILL/密码学/多表替换加密.md",
+      "bytes": 3798,
+      "sha256": "a37f4b1931f11ca927d7a585d4c57882425e10004f4f2b4ee3cc35de3d922ad2"
+    },
+    {
+      "src": "CTF-SKILL/密码学/密码学.md",
+      "dst": "refs/CTF-SKILL/密码学/密码学.md",
+      "bytes": 2421,
+      "sha256": "7fb88b38e182efbee865bd2414d536811d755bfb5c825ef08eac2f8bf826c1a5"
+    },
+    {
+      "src": "CTF-SKILL/密码学/密钥交换.md",
+      "dst": "refs/CTF-SKILL/密码学/密钥交换.md",
+      "bytes": 3004,
+      "sha256": "ea99a7ca27db8f2cb59aff060854ef3373c3645bd63cba7e43deaccf7a6743eb"
+    },
+    {
+      "src": "CTF-SKILL/密码学/对称密码.md",
+      "dst": "refs/CTF-SKILL/密码学/对称密码.md",
+      "bytes": 2786,
+      "sha256": "97869d41292f30e7eadcf96644c411c77e1983299bf98bae4e04bcf1b632174d"
+    },
+    {
+      "src": "CTF-SKILL/密码学/指定规则的简单代换密码.md",
+      "dst": "refs/CTF-SKILL/密码学/指定规则的简单代换密码.md",
+      "bytes": 2885,
+      "sha256": "57a05028d359c96110b0e733a8dd87c15d4f4ec5fb73e4ab729662d3ac7492aa"
+    },
+    {
+      "src": "CTF-SKILL/密码学/数理.md",
+      "dst": "refs/CTF-SKILL/密码学/数理.md",
+      "bytes": 2625,
+      "sha256": "11ee7e40cf3498426c301f76f7dfa6bfbafce6b4c289f32d98c0e4af3d4cf9cb"
+    },
+    {
+      "src": "CTF-SKILL/密码学/流密码.md",
+      "dst": "refs/CTF-SKILL/密码学/流密码.md",
+      "bytes": 3222,
+      "sha256": "93297b2f128f575d41c7f5874b797c401a00dfe907e3455a22a729273efddce4"
+    },
+    {
+      "src": "CTF-SKILL/密码学/电子签名.md",
+      "dst": "refs/CTF-SKILL/密码学/电子签名.md",
+      "bytes": 3118,
+      "sha256": "5aa082b0644635cca94344f13a2e177addf6a04b78d9c3555b32eff38e6f6f8c"
+    },
+    {
+      "src": "CTF-SKILL/密码学/离散对数.md",
+      "dst": "refs/CTF-SKILL/密码学/离散对数.md",
+      "bytes": 2628,
+      "sha256": "7c55f88710c510ee8f39b009f5073b8f4ab803d65e69aed43aef96dcdbcc6820"
+    },
+    {
+      "src": "CTF-SKILL/密码学/编码与解码.md",
+      "dst": "refs/CTF-SKILL/密码学/编码与解码.md",
+      "bytes": 3993,
+      "sha256": "a8acc5436b9916de9cc0edddb9c6f113db0dcca5dd2a5f4065c6e14533d3f725"
+    },
+    {
+      "src": "CTF-SKILL/密码学/键盘密码.md",
+      "dst": "refs/CTF-SKILL/密码学/键盘密码.md",
+      "bytes": 3379,
+      "sha256": "1c60cd68045cc6343e70c63cb4a498c5254ff0d19a0a51deb2d28bd319d5c596"
+    },
+    {
+      "src": "CTF-SKILL/密码学/非对称密码.md",
+      "dst": "refs/CTF-SKILL/密码学/非对称密码.md",
+      "bytes": 2458,
+      "sha256": "0876f09156fb642220e1f24edf81c3a067f8f81f779a04d9248ecd845f2666cf"
+    },
+    {
+      "src": "CTF-SKILL/工控安全/供应链安全.md",
+      "dst": "refs/CTF-SKILL/工控安全/供应链安全.md",
+      "bytes": 3115,
+      "sha256": "1e0f1d1c3952cf3802117506bd7eb34f87d8c7057f9ee31a0a7730ba942a6b89"
+    },
+    {
+      "src": "CTF-SKILL/工控安全/安全监控.md",
+      "dst": "refs/CTF-SKILL/工控安全/安全监控.md",
+      "bytes": 3305,
+      "sha256": "aae5a4685014e8891a64286cb60c58f54adc0ff59212ef0ba835c095eacc6d40"
+    },
+    {
+      "src": "CTF-SKILL/工控安全/安全策略.md",
+      "dst": "refs/CTF-SKILL/工控安全/安全策略.md",
+      "bytes": 3683,
+      "sha256": "474d06affd61543f12a572535e292a966383c1e43164bfee367efc3bc95809a5"
+    },
+    {
+      "src": "CTF-SKILL/工控安全/工控信息搜集.md",
+      "dst": "refs/CTF-SKILL/工控安全/工控信息搜集.md",
+      "bytes": 2969,
+      "sha256": "15f6fb33371fdc60e6bfd6fd4575c83a660d9cb907fcc12f5cddf25bd9ccc9cb"
+    },
+    {
+      "src": "CTF-SKILL/工控安全/工控安全.md",
+      "dst": "refs/CTF-SKILL/工控安全/工控安全.md",
+      "bytes": 1904,
+      "sha256": "fc43c050b8698920f7d1343d8945afef2b00d515d9fbcc0e23988c32eef28e00"
+    },
+    {
+      "src": "CTF-SKILL/工控安全/工控设备漏洞.md",
+      "dst": "refs/CTF-SKILL/工控安全/工控设备漏洞.md",
+      "bytes": 3219,
+      "sha256": "d1bb2f2a7ae564b37a139a64345f7dc8ccec1268b0b30068d6ec4f247b04f8e8"
+    },
+    {
+      "src": "CTF-SKILL/工控安全/工控逻辑漏洞.md",
+      "dst": "refs/CTF-SKILL/工控安全/工控逻辑漏洞.md",
+      "bytes": 3457,
+      "sha256": "89a1dfe134f0e0bf8f3ca3699c25c577fdfe2051c8e644a62d20100204daa315"
+    },
+    {
+      "src": "CTF-SKILL/工控安全/恶意代码分析.md",
+      "dst": "refs/CTF-SKILL/工控安全/恶意代码分析.md",
+      "bytes": 3340,
+      "sha256": "5517ad14294ed5357b8ae2ed0f1437362e80b831ad972d288d2cc19f6a32643f"
+    },
+    {
+      "src": "CTF-SKILL/工控安全/物理安全.md",
+      "dst": "refs/CTF-SKILL/工控安全/物理安全.md",
+      "bytes": 2903,
+      "sha256": "d3e7394066d9a16a6acdfc17399d46943055ad5231cdecf946e84f921c89fe5d"
+    },
+    {
+      "src": "CTF-SKILL/工控安全/网络通信.md",
+      "dst": "refs/CTF-SKILL/工控安全/网络通信.md",
+      "bytes": 2906,
+      "sha256": "65a47692b248abe80a20990d682fabdc6ba3cb9a6a3c92f915444f4cecb4308f"
+    },
+    {
+      "src": "CTF-SKILL/工控安全/补丁管理.md",
+      "dst": "refs/CTF-SKILL/工控安全/补丁管理.md",
+      "bytes": 2699,
+      "sha256": "70d537c6a82344edb9b62ce313f5e407a10f165ad020807862e58d7d09f8b2c9"
+    },
+    {
+      "src": "CTF-SKILL/应急响应/入侵排查.md",
+      "dst": "refs/CTF-SKILL/应急响应/入侵排查.md",
+      "bytes": 7218,
+      "sha256": "6e801b37a7caa010b630daaefb94bb31cfb38c0bbdb142c03ba524195fd5d6d5"
+    },
+    {
+      "src": "CTF-SKILL/应急响应/应急响应.md",
+      "dst": "refs/CTF-SKILL/应急响应/应急响应.md",
+      "bytes": 1205,
+      "sha256": "e1ae008075d19c04d90185f26cdeb309c53863554be0e3ecbabde573e1048f06"
+    },
+    {
+      "src": "CTF-SKILL/应急响应/应急日志分析.md",
+      "dst": "refs/CTF-SKILL/应急响应/应急日志分析.md",
+      "bytes": 4636,
+      "sha256": "9611cc5e2164f4a4c7529973f5382d3734c8a2a92e3c91a2c613530046e0f4b5"
+    },
+    {
+      "src": "CTF-SKILL/应急响应/流量分析.md",
+      "dst": "refs/CTF-SKILL/应急响应/流量分析.md",
+      "bytes": 4873,
+      "sha256": "488a638fd3f15c26ece82aea546e39f1dff93812242b7fec35464c425aa066d1"
+    },
+    {
+      "src": "CTF-SKILL/数据安全/数据传输.md",
+      "dst": "refs/CTF-SKILL/数据安全/数据传输.md",
+      "bytes": 2710,
+      "sha256": "ca98594ff2b885b21a4dba11d7535ca344e476cc44258130b90c86d46daff8af"
+    },
+    {
+      "src": "CTF-SKILL/数据安全/数据使用.md",
+      "dst": "refs/CTF-SKILL/数据安全/数据使用.md",
+      "bytes": 2905,
+      "sha256": "b0a34da80361668c2faa428bcd6171b62d7b15fdb58c6a4e1bacaf938c249782"
+    },
+    {
+      "src": "CTF-SKILL/数据安全/数据信息搜集.md",
+      "dst": "refs/CTF-SKILL/数据安全/数据信息搜集.md",
+      "bytes": 2571,
+      "sha256": "d35bdee1d1b97f67490b7cb502f46538e51655a6018d3588be2ef6f9e8c5cae9"
+    },
+    {
+      "src": "CTF-SKILL/数据安全/数据存储.md",
+      "dst": "refs/CTF-SKILL/数据安全/数据存储.md",
+      "bytes": 3102,
+      "sha256": "1ec75b04cda289c65565afb82e35c73c0e69af1250f84b104e3a8c4970ac17f6"
+    },
+    {
+      "src": "CTF-SKILL/数据安全/数据安全.md",
+      "dst": "refs/CTF-SKILL/数据安全/数据安全.md",
+      "bytes": 1152,
+      "sha256": "5b95406a7a0dbef535ee1ea8caf337e828601e9393173ef54df05ae1c1d123d6"
+    },
+    {
+      "src": "CTF-SKILL/数据安全/数据泄露防护.md",
+      "dst": "refs/CTF-SKILL/数据安全/数据泄露防护.md",
+      "bytes": 3122,
+      "sha256": "ca0be280f0e542b433d98d97d38c82a5a82d4a689bb04ba6777205c0f16adf60"
+    },
+    {
+      "src": "CTF-SKILL/数据安全/数据销毁.md",
+      "dst": "refs/CTF-SKILL/数据安全/数据销毁.md",
+      "bytes": 3129,
+      "sha256": "d3b991be85128e915e4ff7e236d31a1212888871384603bfab8d79dba9c14b68"
+    },
+    {
+      "src": "CTF-SKILL/数据安全/隐私保护.md",
+      "dst": "refs/CTF-SKILL/数据安全/隐私保护.md",
+      "bytes": 3161,
+      "sha256": "3600f5df7e5541d273478ecfdff8b5086092428cdccaadad199bd8443ef460c7"
+    },
+    {
+      "src": "CTF-SKILL/渗透测试/后渗透.md",
+      "dst": "refs/CTF-SKILL/渗透测试/后渗透.md",
+      "bytes": 8501,
+      "sha256": "feebbc05e758bf6c9b6af80e940e04f83bd26ad970b1395f0fbcdf72a1aae2c0"
+    },
+    {
+      "src": "CTF-SKILL/渗透测试/渗透信息搜集.md",
+      "dst": "refs/CTF-SKILL/渗透测试/渗透信息搜集.md",
+      "bytes": 4790,
+      "sha256": "86f41353ae9dbe7c867ab47717590fc700ab816cd8d70475a0f3ad3aecb3b4a4"
+    },
+    {
+      "src": "CTF-SKILL/渗透测试/渗透测试.md",
+      "dst": "refs/CTF-SKILL/渗透测试/渗透测试.md",
+      "bytes": 1449,
+      "sha256": "83ac1ddea90a53cd3b755dee08c483beb22df03e02dfeb47e4c19780459e9031"
+    },
+    {
+      "src": "CTF-SKILL/渗透测试/漏洞利用.md",
+      "dst": "refs/CTF-SKILL/渗透测试/漏洞利用.md",
+      "bytes": 5808,
+      "sha256": "7b12ccec8acebe1f45a984894bb277d377bfea29752a8b97e229f350cd3a27ec"
+    },
+    {
+      "src": "CTF-SKILL/渗透测试/社会工程.md",
+      "dst": "refs/CTF-SKILL/渗透测试/社会工程.md",
+      "bytes": 6377,
+      "sha256": "74b06d2a23bc2508a899939d734fa5081f8d4bf69e709aabe47a756faa4037a6"
+    },
+    {
+      "src": "CTF-SKILL/物联网安全/固件分析.md",
+      "dst": "refs/CTF-SKILL/物联网安全/固件分析.md",
+      "bytes": 3665,
+      "sha256": "5c9238bb58558ae0545dc253b889e40fe5a0cd4c42d91ca7d01989e08bdf1d49"
+    },
+    {
+      "src": "CTF-SKILL/物联网安全/无线安全.md",
+      "dst": "refs/CTF-SKILL/物联网安全/无线安全.md",
+      "bytes": 3798,
+      "sha256": "a93102b892d94383d8d7581af80e875409653dac9d45c93d7ac92aa645a4edd6"
+    },
+    {
+      "src": "CTF-SKILL/物联网安全/物联网信息搜集.md",
+      "dst": "refs/CTF-SKILL/物联网安全/物联网信息搜集.md",
+      "bytes": 2755,
+      "sha256": "8b14af452afffbe57435339fd51c3d67278658111939565acd8fead9973a9e31"
+    },
+    {
+      "src": "CTF-SKILL/物联网安全/物联网安全.md",
+      "dst": "refs/CTF-SKILL/物联网安全/物联网安全.md",
+      "bytes": 1460,
+      "sha256": "b631fd102d475d26e83df3c01200cae2b4e74d62ee2aab042e025a4f77b11cae"
+    },
+    {
+      "src": "CTF-SKILL/物联网安全/物联网网络安全.md",
+      "dst": "refs/CTF-SKILL/物联网安全/物联网网络安全.md",
+      "bytes": 3410,
+      "sha256": "41d45d3a4a82629e5c4b17f514a8e39a3c345a1b30ab9b7339ec4899725edff3"
+    },
+    {
+      "src": "CTF-SKILL/物联网安全/物联网设备漏洞.md",
+      "dst": "refs/CTF-SKILL/物联网安全/物联网设备漏洞.md",
+      "bytes": 5988,
+      "sha256": "0d52e9498e1970ff8670202c7c5b6dff57247fbe3787f45092a7e7ba34f75bf6"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/Android程序逆向.md",
+      "dst": "refs/CTF-SKILL/逆向工程/Android程序逆向.md",
+      "bytes": 8177,
+      "sha256": "a39e403bb7a7514bc1ad5342c38d9b178b24c479506ad9a3b0c79d7ef403b4e9"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/GUI程序逆向.md",
+      "dst": "refs/CTF-SKILL/逆向工程/GUI程序逆向.md",
+      "bytes": 8124,
+      "sha256": "9359ddbd808116b56d3f43aef028d580fc21a14ebce83987cee061e0f841aa41"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/Golang程序逆向.md",
+      "dst": "refs/CTF-SKILL/逆向工程/Golang程序逆向.md",
+      "bytes": 7760,
+      "sha256": "cd2df8856879e9d90819c86dc5abddb23b6447a7bb9b8329b89b40960b3e2115"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/Python程序逆向.md",
+      "dst": "refs/CTF-SKILL/逆向工程/Python程序逆向.md",
+      "bytes": 8891,
+      "sha256": "79a448c907b55f1e50445f63a6c83d2aac8092bcdec8211b6942483c14f6601a"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/Rust程序逆向.md",
+      "dst": "refs/CTF-SKILL/逆向工程/Rust程序逆向.md",
+      "bytes": 6685,
+      "sha256": "c641c0155b456a14d33d634b2bbf7ba757d69cbc59d830f06f0a3bfef61448f9"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/代码注入.md",
+      "dst": "refs/CTF-SKILL/逆向工程/代码注入.md",
+      "bytes": 10311,
+      "sha256": "b52a02db95500af9b3e7baeb5799dd07a6921037e17a6d298f1abd1bafdc64cd"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/低级语言分析.md",
+      "dst": "refs/CTF-SKILL/逆向工程/低级语言分析.md",
+      "bytes": 8935,
+      "sha256": "cc2a77cee7eb092eea7ea25c939ce2ffb22df74161cd9d0a3178db3785caf71c"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/加密与解密.md",
+      "dst": "refs/CTF-SKILL/逆向工程/加密与解密.md",
+      "bytes": 13987,
+      "sha256": "7a465c43347a24de77088b5d53b724438c3d0e020fed985a46f35d6cdd10172f"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/动态调试对抗.md",
+      "dst": "refs/CTF-SKILL/逆向工程/动态调试对抗.md",
+      "bytes": 8643,
+      "sha256": "fe1128934810e839848de3c7183e61d603fe6cef5dcd65ac08fd52ec1042412f"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/可执行文件逆向.md",
+      "dst": "refs/CTF-SKILL/逆向工程/可执行文件逆向.md",
+      "bytes": 8829,
+      "sha256": "c5d5482df65a11bb50ec8de983e840babd30f9ec3c7d0f1a043779fd43d0bb30"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/异常处理.md",
+      "dst": "refs/CTF-SKILL/逆向工程/异常处理.md",
+      "bytes": 7775,
+      "sha256": "2eed23b993f0bd973615485b06e33dbf38831d5ef492769a6624a8526ff6b93b"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/逆向分析基础.md",
+      "dst": "refs/CTF-SKILL/逆向工程/逆向分析基础.md",
+      "bytes": 8288,
+      "sha256": "42ec86c1e0a96376a9d4b1d6d8690f8fca061835a997e1f8ecdcbe9fcfee0ce1"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/逆向工程.md",
+      "dst": "refs/CTF-SKILL/逆向工程/逆向工程.md",
+      "bytes": 5840,
+      "sha256": "866fdf9d33c3e770506e755cddc55c0fb0220d2fecafe764ff3812a6e1a3d8be"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/静态分析对抗.md",
+      "dst": "refs/CTF-SKILL/逆向工程/静态分析对抗.md",
+      "bytes": 10633,
+      "sha256": "29ce7b38b9e9800060c1b5b11c1a5069d447f08cba1b024c7c47c103a482720a"
+    },
+    {
+      "src": "CTF-SKILL/逆向工程/高级语言逆向.md",
+      "dst": "refs/CTF-SKILL/逆向工程/高级语言逆向.md",
+      "bytes": 9329,
+      "sha256": "faba9d4c3cb7247e47469195d142875ccc526d85d57dd1fa7d195a677dc5fbc5"
+    },
+    {
+      "src": "refs/INDEX.md",
+      "dst": "refs/INDEX.md",
+      "bytes": 12635,
+      "sha256": "9a0058668869860983ab2ffea0523c10ffe9b032cabb6858031d96e498138ef3"
+    }
+  ],
+  "skipped": [],
+  "sanitized": [],
+  "counts": {
+    "copied": 155,
+    "skipped": 0,
+    "sanitized": 0
+  },
+  "bytes": 674416,
+  "indexSha256": "07d8356f2e09e1c9ca55a4a42c4ed5ff24e250e611b756582ae3e3fe8db7c2e7",
+  "indexBytes": 1781
+}

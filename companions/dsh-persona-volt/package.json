@@ -1,0 +1,66 @@
+{
+  "name": "@volt/dsh-persona-volt",
+  "version": "2.0.0",
+  "description": "VOLT — a live-current persona bundle for DeepSeek Harness. Mounts via a runtime Cordis plugin (inject/apply), so it takes effect the moment the bundle is loaded — no profile-side config required.",
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "files": [
+    "lib/index.js",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "hub": {
+      "schemaVersion": 1,
+      "displayName": "VOLT — Live Current Persona",
+      "summary": "Injects the VOLT live-current persona into the system prompt via a runtime section.",
+      "description": "A portable DSH bundle that mounts the VOLT persona (Chinese) as a runtime prompt section (volt:persona, order -98) through its own Cordis plugin entry. Takes effect on load — the plugin's apply() hook registers the section directly against the systemPrompt service. Zero breakers, fixed output format, electric register.",
+      "categories": [
+        "community"
+      ],
+      "keywords": [
+        "deepseek-harness",
+        "dsh",
+        "plugin",
+        "persona",
+        "volt",
+        "system-prompt"
+      ],
+      "compatibility": {
+        "dsh": ">=0.1.0-rc.6",
+        "node": ">=22",
+        "platforms": [],
+        "surfaces": [
+          "any"
+        ],
+        "hmr": "config"
+      },
+      "entryIds": [
+        "volt-persona"
+      ],
+      "before": [],
+      "after": [],
+      "channel": "stable",
+      "homepage": "https://github.com/PoAaaaaaaaaaaa/Poa-"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "Poa",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PoAaaaaaaaaaaa/Poa-.git"
+  },
+  "homepage": "https://github.com/PoAaaaaaaaaaaa/Poa-"
+}
