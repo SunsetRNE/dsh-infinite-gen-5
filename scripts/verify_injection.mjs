@@ -52,6 +52,8 @@ const LAZY = "infinite-gen-5:lazy-sections";
 const LAYER2 = "infinite-gen-5:dual-layer-reinforce";
 const TAIL = "infinite-gen-5:tail-anchor";
 const RUNTIME = "infinite-gen-5:runtime-anchor";
+// v0.42.0 批量交付臂：Order 170，惰性章节（160）之后、中段锚点（200）之前。
+const BATCH = "infinite-gen-5:batch-arm";
 
 // ── 找宿主：插件仓库里没有 node_modules，所以只能从 dsh 安装目录里取真模块 ──────
 // 三形状解析（node_modules 父级 / @deepseek-ai 作用域目录 / dsh 包目录）见
@@ -122,6 +124,8 @@ const last = (arr) => arr[arr.length - 1];
         KERNEL,
         BOOST,
         LAZY,
+        // v0.42.0 批量交付臂：Order 170，夹在惰性章节与中段锚点之间。
+        BATCH,
         LAYER2,
         "test:harness-source",
         "test:web-surface",
@@ -146,13 +150,13 @@ const last = (arr) => arr[arr.length - 1];
   const snapshot = joinContextSections(runtimeText ? [{ text: runtimeText }] : []);
   check(snapshot.includes("supersedes earlier runtime-context snapshots"), "宿主快照头写明取代早前快照（权威表述最强的一格）");
   const profile = r.profile();
-  // 末位锚点走瀑布 = 不占 section 命名空间，所以「注册段」是 5 个（v0.35.0 增强集、v0.36.0 惰性章节、
-  // v0.37.0 首句层 -1100）；但「注入位置」是 7 处（首句层 -1100 / 内核 100 / 运行时 118 / 增强集 150 /
-  // 惰性 160 / 中段 200 / 真末位 10150）。
-  check(profile?.injection?.length === 5, "profile 汇报 5 个注册段（末位锚点不占命名空间）", JSON.stringify(profile?.injection));
-  check(profile?.injectionPlacements?.length === 7, "profile 汇报七处注入位置（首句层起算）", JSON.stringify(profile?.injectionPlacements?.map((p) => p.order)));
+  // 末位锚点走瀑布 = 不占 section 命名空间，所以「注册段」是 6 个（v0.35.0 增强集、v0.36.0 惰性章节、
+  // v0.37.0 首句层 -1100、v0.42.0 批量交付臂 170）；但「注入位置」是 8 处（首句层 -1100 / 内核 100 /
+  // 运行时 118 / 增强集 150 / 惰性 160 / 批量交付臂 170 / 中段 200 / 真末位 10150）。
+  check(profile?.injection?.length === 6, "profile 汇报 6 个注册段（末位锚点不占命名空间）", JSON.stringify(profile?.injection));
+  check(profile?.injectionPlacements?.length === 8, "profile 汇报八处注入位置（首句层起算）", JSON.stringify(profile?.injectionPlacements?.map((p) => p.order)));
   check(
-    JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)) === "[-1100,100,118,150,160,200,10150]",
+    JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)) === "[-1100,100,118,150,160,170,200,10150]",
     "注入位置按 order 排序（首句层 -1100 最前），真末位锚点标在 10150",
     JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)),
   );

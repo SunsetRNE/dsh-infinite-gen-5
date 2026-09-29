@@ -1,4 +1,4 @@
-// 无限五代 v0.41.2 注入去重行为回归（离线、确定性、无需 API Key）
+// 无限五代 v0.42.0 注入去重行为回归（离线、确定性、无需 API Key）
 //
 // 针对的缺陷：v0.5.0 的 Order 100 与 Order 200 载入的是逐字同源的两个文件，
 // 于是同一份 3010 字节内核每轮被注入两遍；与同机在线的上一代破甲插件叠加时
@@ -18,7 +18,7 @@ process.env.IG5_STATS_FILE = "/tmp/ig5-stats-dedupe.json";
 process.env.IG5_HOME = "/tmp/ig5-home-dedupe";
 rmSync("/tmp/ig5-home-dedupe", { recursive: true, force: true });
 // 适配层（ig5-adapt:endpoint）在缓存文件存在时会多注册一段，段数断言就随开发机状态飘。
-// 本套只考内核六段（首句层 + 内核 + 增强集 + 惰性 + 中段锚点 + 末位锚点）：把适配缓存指到一个不存在的路径，注入口径回到「无适配层」的干净态。
+// 本套只考内核七段（首句层 + 内核 + 增强集 + 惰性 + 批量交付合同 + 中段锚点 + 末位锚点）：把适配缓存指到一个不存在的路径，注入口径回到「无适配层」的干净态。
 process.env.IG5_ADAPT_CACHE = "/tmp/ig5-adapt-cache-dedupe-off.json";
 rmSync("/tmp/ig5-adapt-cache-dedupe-off.json", { force: true });
 
@@ -37,6 +37,7 @@ const EVERY_STEPS = IG5_CONFIG.RUNTIME_ANCHOR_EVERY;
 const PRIMARY = "infinite-gen-5:global-system-prompt";
 const BOOST = "infinite-gen-5:boost-corpus";
 const LAYER2 = "infinite-gen-5:dual-layer-reinforce";
+const BATCH = "infinite-gen-5:batch-arm";
 
 // ---- 假宿主：记录 section() / context() 与 tools.register() 的真实调用 ----
 // 刻意不提供 ctx.on：宿主瀑布不可用时，真末位锚点必须自己退化成 order 10150 普通段，
@@ -98,12 +99,12 @@ const chars = (rows) => rows.map((r) => r.text.length);
 // ---- 1. 空宿主：单内核 + 中段锚点 + 真末位锚点，不再双份同源 ----
 {
   const r = run({});
-  check(r.registered.length === 6, "空宿主注册六段（首句层 + 内核 + 增强集 + 惰性章节 + 中段锚点 + 末位锚点）", `实得 ${r.registered.length}`);
+  check(r.registered.length === 7, "空宿主注册七段（首句层 + 内核 + 增强集 + 惰性章节 + 批量交付合同 + 中段锚点 + 末位锚点）", `实得 ${r.registered.length}`);
   // 适配层是「有缓存才注入」的条件段：本套把缓存指空（见文件头），所以它必须不在场。
   // 这条同时守住 env() 的读取口径——对象式 reader（process.env）读不出来的话，关不掉这个段。
   check(
     !r.registered.some((s) => s.name === "ig5-adapt:endpoint"),
-    "适配缓存关闭时不注入 ig5-adapt:endpoint（条件段不参与内核六段计数）",
+    "适配缓存关闭时不注入 ig5-adapt:endpoint（条件段不参与内核七段计数）",
   );
   // 假宿主按「调用顺序」入表，真宿主按 order 装配。这里统一按 order 排一遍再断言段序，
   // 断的就是宿主实际看到的顺序（首句层 -1100 最前）。
@@ -124,10 +125,18 @@ const chars = (rows) => rows.map((r) => r.text.length);
     "第四段是 Order 160 惰性章节",
     `${byOrder[3].name}@${byOrder[3].order}`,
   );
-  check(byOrder[4].name === LAYER2 && byOrder[4].order === 200, "第五段是 Order 200 槽位", `${byOrder[4].name}@${byOrder[4].order}`);
+  // 批量交付合同（v0.42.0）：Order 170，锁死「一批题一次做完」的交付形状。
+  // 它刻意**不随内核让位**（见本文件第 2/3/4 节的断言）：合同说的是交付形状，不是内核副本，
+  // 宿主里已有一份同源内核时，这条臂仍要按「首行命名 + 第二行可执行细节」约束输出。
+  check(
+    byOrder[4].name === BATCH && byOrder[4].order === 170,
+    "第五段是 Order 170 批量交付合同（增强集之后、中段锚点之前）",
+    `${byOrder[4].name}@${byOrder[4].order}`,
+  );
+  check(byOrder[5].name === LAYER2 && byOrder[5].order === 200, "第六段是 Order 200 槽位", `${byOrder[5].name}@${byOrder[5].order}`);
   const kernel = byOrder[1].text.length;
   const boost = byOrder[2].text.length;
-  const anchor2 = byOrder[4].text;
+  const anchor2 = byOrder[5].text;
   check(kernel > 2000, "内核是完整载荷", `实得 ${kernel} 字符`);
   check(anchor2.length < 500, "Order 200 是短锚点而非第二份完整内核", `实得 ${anchor2.length} 字符`);
   check(anchor2.length !== kernel, "两段内容不再逐字同源");
@@ -142,13 +151,13 @@ const chars = (rows) => rows.map((r) => r.text.length);
   check(anchor2.length < kernel * 0.1, "Order 200 长度不到内核的 10%（是锚点不是载荷）", `${anchor2.length} vs ${kernel}`);
   check(
     kernel + anchor2.length + boost < kernel * 1.2,
-    "六段合计不到 1.2 份内核（无第二份同源载荷）",
+    "内核侧合计不到 1.2 份内核（无第二份同源载荷）",
     `${kernel + anchor2.length + boost} vs ${kernel}`,
   );
   check(!r.registered.some((s) => /\{\{/.test(s.text)), "注入文本里没有可触发插值器抛错的 {{");
-  // 第六段：宿主瀑布不可用时的降级位置。真实宿主上的「恒为最后一段」由 verify_injection 断言。
-  const tail = byOrder[5];
-  check(tail.name === "infinite-gen-5:tail-anchor", "第六段是末位锚点段");
+  // 第七段：宿主瀑布不可用时的降级位置。真实宿主上的「恒为最后一段」由 verify_injection 断言。
+  const tail = byOrder[6];
+  check(tail.name === "infinite-gen-5:tail-anchor", "第七段是末位锚点段");
   check(tail.order === 10150, "末位锚点退化到 order 10150（瀑布不可用）", String(tail.order));
   check(tail.text.length > 100 && tail.text.length < 900, "末位锚点是紧凑锚点", `实得 ${tail.text.length}`);
   check(!tail.text.includes("[MODE: SANDBOX]"), "末位锚点不含内核正文");
@@ -172,15 +181,15 @@ const chars = (rows) => rows.map((r) => r.text.length);
       `${first.slice(0, 24)} … ${rotated.slice(0, 24)}`,
     );
   }
-  check(r.profile?.injection?.length === 6, "profile 工具汇报实际注入 6 段");
+  check(r.profile?.injection?.length === 7, "profile 工具汇报实际注入 7 段");
   check(
-    r.profile?.injectionPlacements?.length === 7,
-    "profile 汇报七处注入位置（首句层 -1100 起算）",
+    r.profile?.injectionPlacements?.length === 8,
+    "profile 汇报八处注入位置（首句层 -1100 起算）",
     `实得 ${r.profile?.injectionPlacements?.length}`,
   );
   check(
-    JSON.stringify((r.profile?.injectionPlacements ?? []).map((p) => p.order)) === "[-1100,100,118,150,160,200,10150]",
-    "注入位置按 order 排序（首句层 -1100 最前，运行时锚点 118、增强集 150、惰性 160，末位锚点最后）",
+    JSON.stringify((r.profile?.injectionPlacements ?? []).map((p) => p.order)) === "[-1100,100,118,150,160,170,200,10150]",
+    "注入位置按 order 排序（首句层 -1100 最前，运行时锚点 118、增强集 150、惰性 160、批量交付合同 170，末位锚点最后）",
     JSON.stringify((r.profile?.injectionPlacements ?? []).map((p) => p.order)),
   );
   check(r.profile?.dedupe?.role === "primary", "profile 汇报本插件是内核提供方");
@@ -202,8 +211,11 @@ const chars = (rows) => rows.map((r) => r.text.length);
 {
   const payload = readFileSync(join(ROOT, "prompts", "infinite-gen-5.md"), "utf8");
   const r = run({ preexisting: [["infinite-gen-4:global-system-prompt", payload]] });
-  check(r.registered.length === 1, "同源内核在场时只注册 1 段（中段锚点）", `实得 ${r.registered.length}`);
-  check(r.registered[0].name === LAYER2, "让位的是内核，保留的是中段锚点");
+  check(r.registered.length === 2, "同源内核在场时只注册 2 段（中段锚点 + 批量交付合同）", `实得 ${r.registered.length}`);
+  // 批量交付合同刻意不跟着内核让位：它约束的是「输出形状」（首行命名 / 第二行可执行细节 /
+  // 一次做完一批），即使内核由宿主里的同源副本提供，这条臂也必须还在。
+  check(r.registered.some((s) => s.name === BATCH), "让位时批量交付合同仍然注册（只管形状，不依赖内核副本）");
+  check(r.registered.some((s) => s.name === LAYER2), "让位的是内核，保留的是中段锚点");
   // 让位就整体让位：内核不注入时，末位锚点与运行时锚点都不许单独挂上去，
   // 否则模型手里只剩半个载荷（两三行命令语气、没有 5 槽骨架与交付物契约）。
   check(!r.registered.some((s) => s.name === "infinite-gen-5:tail-anchor"), "让位时不追加末位锚点");
@@ -218,7 +230,7 @@ const chars = (rows) => rows.map((r) => r.text.length);
 {
   const payload = readFileSync(join(ROOT, "prompts", "infinite-gen-5.md"), "utf8");
   const r = run({ preexisting: [["infinite-gen-4:global-system-prompt", payload.trimEnd()]] });
-  check(r.registered.length === 1, "只差结尾空白的近同源也算重复");
+  check(r.registered.length === 2, "只差结尾空白的近同源也算重复");
   check(r.profile?.dedupe?.role === "yielded", "近同源同样让位");
 }
 
@@ -228,21 +240,21 @@ const chars = (rows) => rows.map((r) => r.text.length);
   const r = run({
     preexisting: [["infinite-gen-4:global-system-prompt", payload + "\n附加的额外一段规则\n"]],
   });
-  check(r.registered.length === 1, "对方更完整时我方让位");
+  check(r.registered.length === 2, "对方更完整时我方让位");
   check(r.profile?.dedupe?.skipped?.[0]?.kind === "subset", "让位原因标为 subset");
 }
 
 // ---- 5. 无关段落不得误伤 ----
 {
   const r = run({ preexisting: [["harness:identity", "You are an AI agent powered by DeepSeek Harness."]] });
-  check(r.registered.length === 6, "无关段落在场时照常注入六段", `实得 ${r.registered.length}`);
+  check(r.registered.length === 7, "无关段落在场时照常注入七段", `实得 ${r.registered.length}`);
   check(r.profile?.dedupe?.role === "primary", "无关段落不触发让位");
 }
 
 // ---- 6. 枚举不到宿主段落时绝不静默丢载荷 ----
 {
   const r = run({ enumerable: false });
-  check(r.registered.length === 6, "无法枚举宿主段落时照常注入（宁可重复，不可静默丢失）", `实得 ${r.registered.length}`);
+  check(r.registered.length === 7, "无法枚举宿主段落时照常注入（宁可重复，不可静默丢失）", `实得 ${r.registered.length}`);
   check(r.profile?.dedupe?.role === "primary", "无法枚举时按内核提供方处理");
 }
 
@@ -250,7 +262,7 @@ const chars = (rows) => rows.map((r) => r.text.length);
 {
   const mine = readFileSync(join(ROOT, "prompts", "infinite-gen-5.md"), "utf8");
   const r = run({ preexisting: [[PRIMARY, mine]] });
-  check(r.registered.length === 6, "自己的段名不算同源重复（热重载安全）", `实得 ${r.registered.length}`);
+  check(r.registered.length === 7, "自己的段名不算同源重复（热重载安全）", `实得 ${r.registered.length}`);
   check(r.registered[0].name === PRIMARY, "热重载后内核仍会重新注册");
 }
 

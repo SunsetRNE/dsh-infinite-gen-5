@@ -55,6 +55,12 @@ const SystemPrompt = promptModule.default;
 const plugin = await import(new URL("../index.js", import.meta.url).href);
 const { IG5_CONFIG } = plugin;
 const DEFAULTS = { ...IG5_CONFIG };
+// v0.42.0：IG5_CONFIG 里多了两个 Batch Arm 档位键（BATCH_ARM_MODE / BATCH_ARM_MIN），
+// 它们刻意不进 TUNING_CATALOG（那会牵动 TUNABLE_KEYS 与条目数断言），设置页的生效值里
+// 自然不会出现。所以「reset 后生效值 = 文件默认」只比可调集，不整表比。
+const TUNABLE_DEFAULTS = Object.fromEntries(
+  Object.entries(DEFAULTS).filter(([key]) => !key.startsWith("BATCH_ARM_")),
+);
 const restore = () => Object.assign(IG5_CONFIG, DEFAULTS);
 
 // ── 演习台：真宿主 systemPrompt + 假 webServer（只记录注册了什么路由）──
@@ -269,7 +275,7 @@ const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
   // ---- 6. reset 复位 ----
   const reset = await callRoute(r.route.handler, { token, method: "POST", body: JSON.stringify({ reset: true }) });
   const afterReset = await r.names();
-  check(reset.status === 200 && JSON.stringify(reset.body?.effective) === JSON.stringify(DEFAULTS), "reset 后生效值回到文件默认", JSON.stringify(reset.body?.effective));
+  check(reset.status === 200 && JSON.stringify(reset.body?.effective) === JSON.stringify(TUNABLE_DEFAULTS), "reset 后生效值回到文件默认（可调集）", JSON.stringify(reset.body?.effective));
   check(afterReset.includes(LAYER2), "reset 后 Order 200 段回来了", JSON.stringify(afterReset));
   check(Object.keys(JSON.parse(readFileSync(STORE, "utf8")).overrides).length === 0, "reset 后落盘文件里没有遗留覆盖");
 }

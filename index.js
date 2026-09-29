@@ -33,6 +33,9 @@ import { probeEnv, renderEnvSummary, ENV_SCHEMA } from "./data/probe.mjs";
 // 增强训练集（v0.35.0）：附件注入语料拆出的可编译单元 + 需求信号编译器的唯一真源。
 // 运行时、提取脚本与离线自检都 import 这一份，避免三处各抄一遍漂移。
 import { BOOST_UNITS, BOOST_HEADER, boostStats, compileBoost, inferMode, readDirective } from "./data/boost-corpus.mjs";
+// Batch Arm（v0.42.0）：比赛口径是「装上插件 + 只给文件 + 一个对话里跑 100 题、不许再加提示词」，
+// 所以「怎么跑这一批」必须由注入层说 —— 检测与合同编译都在 data/batch-arm.mjs，这里只做接线。
+import { detectBatch, renderBatchClause, renderBatchAnchor, BATCH_ARM_MIN_DEFAULT } from "./data/batch-arm.mjs";
 import { LAZY_DEFAULT_BYTES, LAZY_DEFAULT_MODE, LAZY_HEADER, LAZY_MODES, compileLazy, lazyStats, readLazyDirective } from "./data/lazy-sections.mjs";
 // 首句层 + 压缩后再锚定（v0.37.0）：宿主的系统段按 order 升序拼接，宿主身份段用 -1000；
 // 本层用更小的 order 抢到整份系统提示的第一句。压缩事件由宿主的 session/event 送达，
@@ -89,7 +92,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.41.2";
+const PLUGIN_VERSION = "0.42.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -412,6 +415,20 @@ const LAZY_MODE = LAZY_DEFAULT_MODE;
 const LAZY_BYTES = LAZY_DEFAULT_BYTES;
 const LAZY_SECTION = "infinite-gen-5:lazy-sections";
 const LAZY_ORDER = 160;
+// 批量交付臂（v0.42.0）：比赛口径是「装插件 + 只给文件 + 一个对话里零额外提示词跑 100 题」。
+// 输入里一旦出现批量信号（[qNNN] 清单 / 编号题面 / 题库文件名 / 「100 道」这类题量短语）
+// 就自动武装：常驻合同段（order 170，兜底宿主不重发 context 的场合）+ 命中轮次的运行时锚点。
+//   auto（默认）= 检测到批量输入才武装 · on = 无条件武装 · off = 关闭
+// 档位刻意不进 TUNING_CATALOG：那会牵动 TUNABLE_KEYS / ENV_OF_KEY / 条目数断言。只认环境变量。
+const BATCH_ARM_MODE = (() => {
+  const raw = String(process.env.IG5_BATCH_ARM ?? "auto").trim().toLowerCase();
+  return raw === "on" || raw === "off" ? raw : "auto";
+})();
+const BATCH_ARM_MIN = BATCH_ARM_MIN_DEFAULT;
+const BATCH_ARM_SECTION = "infinite-gen-5:batch-arm";
+const BATCH_ARM_ORDER = 170;
+// 检测窗口：题库可能一次性贴进来，扫描上限给到 20000 字符（只用于判别与计数，不落盘、不外发）。
+const BATCH_SCAN_CAP = 20000;
 
 // 运行期调参（v0.12.3，v0.20.0 起八个，v0.35.0 起十个）：这些开关不必改代码重发布就能试档位。
 //   优先级：apply(ctx, config) 的 profile config > IG5_* 环境变量 > 文件内默认值。
@@ -717,6 +734,9 @@ export const IG5_CONFIG = {
   BOOST_BYTES,
   LAZY_MODE,
   LAZY_BYTES,
+  // 批量交付臂（v0.42.0）：只读环境变量档位，不进 TUNABLE_KEYS。
+  BATCH_ARM_MODE,
+  BATCH_ARM_MIN,
 };
 
 
@@ -737,6 +757,8 @@ const runtime = {
   askGate: null,
   askGateOpens: 0,
   phaseGateOpens: 0,
+  // 批量交付臂实况（v0.42.0）：哪一轮武装、命中了什么、锚点发了几次，都要能如实汇报。
+  batch: { armed: false, kind: "none", count: 0, span: null, source: null, seenAt: null, anchors: 0, dirty: false },
 };
 
 // 统一解析入口（v0.13.8）：插件不控制任何外部文本 —— 调参文件、HTTP 请求体，
@@ -1090,6 +1112,8 @@ const profileTool = {
       // injection / dedupe 是运行期实况，不是静态声明：注册完由 apply() 填。
       injection: runtime.sections,
       injectionPlacements: runtime.placements,
+      // v0.42.0 批量交付臂实况：武装没武装、命中什么、锚点发了几次 —— 比赛现场最需要的一格。
+      batch: runtime.batch,
       injectionStrength: {
         exclusive: IG5_CONFIG.EXCLUSIVE_SECTION === true,
         tail:
@@ -1761,6 +1785,9 @@ export function apply(ctx, config) {
   runtime.skipped = [];
   runtime.placements = [];
   runtime.anchorEmissions = 0;
+  // v0.42.0 批量交付臂：新一次 apply 就是新一次装载 —— 上一轮挂载的武装状态、端点、发射计数
+  // 都不带进来（rebuildInjection 是同一轮里的换档，不走这里，武装状态因此不会被换档抹掉）。
+  runtime.batch = { armed: false, kind: "none", count: 0, span: null, source: null, seenAt: null, anchors: 0, dirty: false };
   const initialTuning = readTuning();
   const initialResolved = applyResolved(resolveTuning(config, initialTuning.overrides));
   runtime.overrides = describeOverrides(initialResolved);
@@ -1911,8 +1938,36 @@ export function apply(ctx, config) {
       publishLive();
       // v0.17.0：记下最近一条真正的用户输入，运行时锚点按它认域（域包不是常驻的）。
       if (event.type === "user/message") {
-        const userText = eventTextOf(event).slice(0, 600);
+        const rawText = eventTextOf(event);
+        const userText = rawText.slice(0, 600);
         if (userText.trim() !== "" && !isOwnAnchor(userText)) liveState.lastUserText = userText;
+        // v0.42.0 批量交付臂：比赛口径是「只给文件、一个对话零额外提示词」——用户消息里一出现
+        // 批量信号（[qNNN] 清单 / 编号题面 / 题库文件 / 题量短语）就自动武装，并把 dirty 置上，
+        // 让运行时锚点下一步立刻重发（不等 cadence 节拍）。已武装的批次保持武装，不被后续闲聊洗掉。
+        if (CFG.BATCH_ARM_MODE !== "off" && rawText.trim() !== "" && !isOwnAnchor(rawText.slice(0, 200))) {
+          const hit = detectBatch(rawText.slice(0, BATCH_SCAN_CAP), {
+            min: CFG.BATCH_ARM_MIN,
+            mode: CFG.BATCH_ARM_MODE,
+            // 「只给文件」的比赛口径：正文只有一个路径时，题量必须从文件里读出来。
+            // 读不到就退回「题量未读」措辞，绝不编 min 兜底值当题量。
+            readFile: (p) => {
+              const abs = p.startsWith("/") ? p : joinPath(process.cwd(), p);
+              if (statSync(abs).size > 4_000_000) throw new Error("bank file too large");
+              return readFileSync(abs, "utf8");
+            },
+          });
+          if (hit.armed) {
+            const changed = runtime.batch.armed !== true || runtime.batch.span !== hit.span || runtime.batch.count !== hit.count;
+            runtime.batch.armed = true;
+            runtime.batch.kind = hit.kind;
+            runtime.batch.count = hit.count;
+            runtime.batch.span = hit.span;
+            runtime.batch.source = "user/message";
+            runtime.batch.seenAt = new Date(nowMs).toISOString();
+            if (changed) runtime.batch.dirty = true;
+          }
+          if (runtime.batch.dirty === true || hit.armed) publishStats();
+        }
       }
       // 只在清单真的变了（或换会话）时才重读投影，别在每个事件上白折一遍。
       if (event.type === TODOS_EVENT) mirrorTasks(session, TODOS_EVENT);
@@ -2017,9 +2072,17 @@ export function apply(ctx, config) {
       // 随即多出「压缩后再锚定」声明 —— 宿主的运行时上下文投影按快照比对，文本变了必然
       // 重发，所以「触发压缩之后再注入一次」是文本变化的直接后果，不需要额外定时器。
       const force = armorState.pendingRearm === true;
-      if (lastText === null || mode === "every" || force || tick % every === 0) {
+      // v0.42.0 批量交付臂：带题的那一轮不等节拍 —— dirty 一置上就强制重算，把「这一批怎么交付」
+      // 的当轮锚点拼在正文锚点之后。未武装时 renderBatchAnchor 返回空串，这一层等于不存在。
+      const forceArm = runtime.batch.dirty === true;
+      const armText = renderBatchAnchor(runtime.batch, { source: runtime.batch.armed ? "user/message" : null });
+      if (lastText === null || mode === "every" || force || forceArm || tick % every === 0) {
         const rearm = rearmFor(armorState);
-        lastText = runtimeAnchorText(tick) + (rearm === null ? "" : "\n\n" + rearm);
+        lastText = runtimeAnchorText(tick) + (armText === "" ? "" : "\n\n" + armText) + (rearm === null ? "" : "\n\n" + rearm);
+        if (armText !== "") {
+          runtime.batch.anchors += 1;
+          runtime.batch.dirty = false;
+        }
         runtime.anchorEmissions += 1;
         publishStats(); // 锚点发射次数是用户在面板上最想看的「活着」信号，发一次就落库一次
       }
@@ -2227,6 +2290,16 @@ export function apply(ctx, config) {
       } else {
         registerSection({ name: LAYER2, order: 200, text: layer2Text }, label);
       }
+    }
+
+    // v0.42.0 批量交付臂：常驻合同段（order 170）。它不依赖用户是否已经贴题 —— 比赛评分器看不见，
+    // 但模型看得见：装上插件后哪怕宿主不重发运行时上下文，这一段的形状要求也已经在场。
+    if (CFG.BATCH_ARM_MODE !== "off") {
+      registerSection(
+        { name: BATCH_ARM_SECTION, order: BATCH_ARM_ORDER, text: renderBatchClause({ min: CFG.BATCH_ARM_MIN }) },
+        "Batch Arm 批量交付合同",
+        `order ${BATCH_ARM_ORDER} 普通段（增强集 150 / 惰性 160 之后，中段锚点 200 之前）`,
+      );
     }
 
     if (primaryOk) {
