@@ -44,6 +44,10 @@ const probeSrc = readFileSync(PROBE_PATH, "utf8");
 const cliSrc = readFileSync(CLI_PATH, "utf8");
 const indexSrc = readFileSync(INDEX_PATH, "utf8");
 const kernel = readFileSync(KERNEL_PATH, "utf8");
+// v0.40.0：Environment rule 正文并入惰性单元 L_envtool（触发词命中时才拼回）。
+// 载荷口径＝常驻 ∪ 惰性 —— 搬走 ≠ 删掉；镜像三份仍按常驻逐字同源校验。
+const LAZY_PATH = join(ROOT, "prompts", "infinite-gen-5-lazy.md");
+const payload = kernel + "\n" + (existsSync(LAZY_PATH) ? readFileSync(LAZY_PATH, "utf8") : "");
 
 // 边界扫描要看**代码**，不是注释：头注释里正大光明地写着「不读 ~/.ssh、不跑 apt install」，
 // 那是对边界的说明，不是违规。剥掉 // 与 /* */ 之后再扫。
@@ -298,9 +302,10 @@ check(!indexCode.includes("deferLoading: true"),
 check(indexCode.includes("ctx.tools.register(withContract(envTool))") && indexCode.includes("ctx.tools.register(withContract(scenarioTool))"),
   "接线：环境工具与领域工具都注册（各自经 withContract 包装）");
 check(indexSrc.includes('from "./data/probe.mjs"'), "接线：index.js 从 data/probe.mjs 导入");
-check(kernel.includes("infinite_gen5_env"), "内核：载荷点名 infinite_gen5_env");
-check(/Environment rule/.test(kernel), "内核：载荷有 Environment rule 一节");
-check(kernel.includes("read-only"), "内核：说明探测是只读的");
+check(payload.includes("infinite_gen5_env"), "内核：载荷点名 infinite_gen5_env（常驻∪惰性）");
+check(/Environment rule/.test(payload), "内核：载荷有 Environment rule 一节（常驻∪惰性）");
+check(payload.includes("read-only"), "内核：说明探测是只读的（常驻∪惰性）");
+check(kernel.includes("机器相关先 probe 再猜"), "内核：常驻侧保留环境探针反射（L_envtool 指针摘要）");
 for (const path of MIRROR_PATHS) {
   check(existsSync(path) && readFileSync(path, "utf8") === kernel,
     `内核：三份载荷逐字同源（${path.split("/").pop()}）`);
