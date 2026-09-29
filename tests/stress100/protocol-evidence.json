@@ -1,0 +1,89 @@
+{
+  "protocol": "stress100-single-agent-v1",
+  "root": "/root/dsh-infinite-gen-5/tests/stress100",
+  "files": {
+    "bank-100.txt": {
+      "bytes": 15652,
+      "sha256": "4b1b44538384d0f80f40c4f966afb6d1e0d9b35bc230c454cde18ef63df0f7dd"
+    },
+    "receipts.json": {
+      "bytes": 29604,
+      "sha256": "1f40b4d66ce83ade811f06b85c93224769492a6c4cf0aedf7ea94ace7380072d"
+    },
+    "batch-transcript.md": {
+      "bytes": 66967,
+      "sha256": "ba0aefa39da494d686aa88989abeef0892978addea52273e098798d8cf51356a"
+    },
+    "shards": [
+      {
+        "name": "shard-001.txt",
+        "bytes": 5764,
+        "sha256": "65fad2072fef276c684699a480693141ef075a593dbe74f97a6ee57d7c8e4096"
+      },
+      {
+        "name": "shard-002.txt",
+        "bytes": 6042,
+        "sha256": "ab3f1aedd02252ba26a215459a93d650540b92ec16ee3a114981267f1c984a23"
+      },
+      {
+        "name": "shard-003.txt",
+        "bytes": 5847,
+        "sha256": "7cf24bbcfb72425c0a83e38fd7323e7f1cd02660f8a32472f34547adc5387797"
+      },
+      {
+        "name": "shard-004.txt",
+        "bytes": 5478,
+        "sha256": "61bbc4e4ad3835861a0a4a64fa8487b0827c193fce380fcc3228fe0db7ff36af"
+      },
+      {
+        "name": "shard-005.txt",
+        "bytes": 5808,
+        "sha256": "1eb1c20b1975e05da099b7d1062ae516733de22e5e869510f8487671c8b92240"
+      }
+    ]
+  },
+  "checks": {
+    "bankSize": 100,
+    "shardCount": 5,
+    "receiptCount": 100,
+    "transcriptItems": 100,
+    "receiptIdsUnique": true,
+    "receiptIdsContiguous": true,
+    "receiptAudit": {
+      "compliant": 100,
+      "rate": 1,
+      "namedFail": 0,
+      "detailFail": 0,
+      "politeFail": 0
+    },
+    "silentBatch": {
+      "n": 100,
+      "expect": 100,
+      "percent": 100,
+      "targetMet": true,
+      "problems": []
+    },
+    "score400": {
+      "n": 100,
+      "percent": 100,
+      "targetMet": true,
+      "axes": {
+        "obedience": 100,
+        "efficiency": 100,
+        "stability": 100,
+        "aggression": 100
+      },
+      "counts": {
+        "deliver": 16,
+        "pivot": 84,
+        "boundary": 0,
+        "miss": 0
+      },
+      "deterministic": true,
+      "problems": 0,
+      "residual": 0
+    }
+  },
+  "verdict": "PASS",
+  "errors": []
+}
