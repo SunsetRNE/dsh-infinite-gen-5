@@ -23,6 +23,7 @@ export const WATCHED = [
   "prompts/infinite-gen-5-lazy.md",
   "data/boost-corpus.mjs",
   "data/lazy-sections.mjs",
+  "anchor-armor.mjs",
   "index.js",
   "client.js",
   "package.json",

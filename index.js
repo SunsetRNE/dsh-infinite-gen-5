@@ -34,6 +34,21 @@ import { probeEnv, renderEnvSummary, ENV_SCHEMA } from "./data/probe.mjs";
 // 运行时、提取脚本与离线自检都 import 这一份，避免三处各抄一遍漂移。
 import { BOOST_UNITS, BOOST_HEADER, boostStats, compileBoost, inferMode, readDirective } from "./data/boost-corpus.mjs";
 import { LAZY_DEFAULT_BYTES, LAZY_DEFAULT_MODE, LAZY_HEADER, LAZY_MODES, compileLazy, lazyStats, readLazyDirective } from "./data/lazy-sections.mjs";
+// 首句层 + 压缩后再锚定（v0.37.0）：宿主的系统段按 order 升序拼接，宿主身份段用 -1000；
+// 本层用更小的 order 抢到整份系统提示的第一句。压缩事件由宿主的 session/event 送达，
+// 收到就置一次标记 —— 下一次运行时锚点文本换新，宿主的运行时上下文快照比对发现变了必然
+// 重发，于是「压缩之后必定再注入一次」是文本变化的直接后果，不依赖额外时钟。
+import {
+  FIRST_LINE_SECTION,
+  FIRST_LINE_ORDER,
+  firstLineText,
+  firstLineWhere,
+  isCompactionEvent,
+  createArmorState,
+  noteEvent,
+  rearmFor,
+  armorStatus,
+} from "./anchor-armor.mjs";
 // 统计数据库：插件本体单写、前端面板单读。面板不参与任何计算，也不认识插件内部形态。
 import { createStatsStore, emptyStats, statsFile, STATS_SCHEMA } from "./stats-store.mjs";
 import * as ig5RelayFs from "node:fs";
@@ -69,7 +84,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.36.9";
+const PLUGIN_VERSION = "0.37.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -156,6 +171,10 @@ const RUNTIME_ANCHOR_MODE = "cadence";
 const RUNTIME_ANCHOR_EVERY = 4;
 const RUNTIME_ANCHOR_ORDER = 118; // 宿主现有：110 沙箱 / 115 审批 / 120 子代理委派
 const RUNTIME_ANCHOR_SECTION = "infinite-gen-5:runtime-anchor";
+// 压缩装甲状态（v0.37.0）：一个会话一份，纯内存。压缩事件一到就置标记，运行时锚点
+// 文本随即多一句再锚定声明 —— 文本变了宿主的运行时上下文投影必然重发，于是「压缩之后
+// 必定再注入一次」不依赖额外时钟。读取是幂等的：同一步读多次只算一次。
+const armorState = createArmorState();
 const runtimeAnchorText = (rev) =>
   "[无限五代 · 运行时锚点 R#" +
   rev +
@@ -1842,6 +1861,13 @@ export function apply(ctx, config) {
       if (lastMs === null || nowMs - lastMs > TURN_IDLE_MS) liveState.turnStartedAt = new Date(nowMs).toISOString();
       liveState.lastEventAt = new Date(nowMs).toISOString();
       liveState.lastKind = typeof event.type === "string" ? event.type : "unknown";
+      // v0.37.0 压缩装甲：压缩事件一到就武装一次「再锚定」。标记置上之后，运行时锚点文本
+      // 下一步就换新（多一句再锚定声明）—— 宿主的运行时上下文投影按快照比对重发，所以
+      // 「压缩之后必定再注入一次」是文本变化的直接后果，不靠定时器、不靠轮询。
+      if (isCompactionEvent(liveState.lastKind)) {
+        noteEvent(armorState, liveState.lastKind, nowMs);
+        runtime.armor = armorStatus(armorState);
+      }
       if (liveState.firstEventMs === undefined) liveState.firstEventMs = nowMs;
       eventRing.push({ ms: nowMs, kind: liveState.lastKind });
       if (eventRing.length > EVENT_RING_SIZE) eventRing.splice(0, eventRing.length - EVENT_RING_SIZE);
@@ -1962,8 +1988,13 @@ export function apply(ctx, config) {
     let lastText = null;
     const text = () => {
       tick += 1;
-      if (lastText === null || mode === "every" || tick % every === 0) {
-        lastText = runtimeAnchorText(tick);
+      // v0.37.0 压缩后再锚定：压缩事件一到就强制重算一次（不等节拍）。这一步的锚点文本
+      // 随即多出「压缩后再锚定」声明 —— 宿主的运行时上下文投影按快照比对，文本变了必然
+      // 重发，所以「触发压缩之后再注入一次」是文本变化的直接后果，不需要额外定时器。
+      const force = armorState.pendingRearm === true;
+      if (lastText === null || mode === "every" || force || tick % every === 0) {
+        const rearm = rearmFor(armorState);
+        lastText = runtimeAnchorText(tick) + (rearm === null ? "" : "\n\n" + rearm);
         runtime.anchorEmissions += 1;
         publishStats(); // 锚点发射次数是用户在面板上最想看的「活着」信号，发一次就落库一次
       }
@@ -2016,6 +2047,16 @@ export function apply(ctx, config) {
       exclusive ? "系统提示唯一段（complete: true，其余系统段被宿主丢弃）" : undefined,
     );
     runtime.role = primaryOk ? "primary" : "yielded";
+
+    // 首句层（v0.37.0）：Order -1100 —— 比宿主身份段（-1000）更小，因此排在整份系统提示
+    // 的第一句：模型先读到服从性契约，再读到「你是谁」。与内核同生共死：内核让位给同源宿主
+    // 时不单独挂（脱离内核它只是一句没有正文的孤令）。
+    const firstLineOk = primaryOk && registerSection(
+      { name: FIRST_LINE_SECTION, order: FIRST_LINE_ORDER, text: firstLineText() },
+      `Order ${FIRST_LINE_ORDER} 首句层（服从性契约）`,
+      firstLineWhere(),
+    );
+    runtime.armor = { ...armorStatus(armorState), firstLine: firstLineOk };
 
     // 增强训练集（v0.35.0）：Order 150，紧跟内核之后。与前几层不同的地方只有一处 ——
     // 它按「本轮用户输入里的需求信号」编译，命中多少单元就注入多少，字节预算封顶。
