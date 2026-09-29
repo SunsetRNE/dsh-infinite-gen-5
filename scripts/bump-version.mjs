@@ -72,11 +72,16 @@ for (const { file, name, re, count = 1 } of VERSION_ANCHORS) {
     problems.push(`${name}：同一处锚点里出现多个版本号 v${stray.join(" / v")}（${file}）—— 手工对齐后再跑`);
     continue;
   }
-  if (!ALIGN && (found !== OLD || stray.length)) {
-    problems.push(`${name}：文件里是 v${(stray.length ? stray : [found]).join(" / v")}，package.json 是 ${OLD} —— 先跑 npm run verify:version 对齐`);
+  if (found === NEW && !stray.length) continue; // 已经是目标号：不进计划（对齐模式下多数锚点走这条）
+  // 改写模式下锚点写着旧号是**正常状态**，不是问题 —— 这里曾按 stray.length 判红，
+  // 结果一次正常升版被 9 处「文件里是旧号，package.json 也是旧号」误拦（本会话实测）。
+  // 真问题只有一种：锚点里出现既非旧号也非目标号的第三个版本值。
+  // 注意：本文件在全仓版本字面量扫描范围内，注释里不许写具体版本号。
+  const odd = [...new Set([found, ...stray])].filter((v) => v !== OLD && v !== NEW);
+  if (!ALIGN && odd.length) {
+    problems.push(`${name}：文件里是 v${odd.join(" / v")}，既不是 package.json 的 ${OLD} 也不是目标 ${NEW} —— 手工对齐后再跑`);
     continue;
   }
-  if (found === NEW && !stray.length) continue; // 已经是目标号：不进计划（对齐模式下多数锚点走这条）
   plans.push({ file, name, text, re, found, count });
 }
 
