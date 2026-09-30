@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.1";
+        var VERSION = "v0.51.2";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -290,6 +290,12 @@
           ".dsh-armor5-todo[data-status=in_progress] .dsh-armor5-todo-glyph{color:var(--dsw-alias-state-business-primary,#3b82f6)}",
           ".dsh-armor5-todo[data-status=pending]{color:var(--dsw-alias-label-caption,rgba(127,127,127,.85))}",
           ".dsh-armor5-mem{display:flex;flex-direction:column;gap:6px}",
+          // v0.51.2：用户模式下把设置台压紧（字号 / 行距 / 间距 / 圆角一起收），开发者模式保持原样。
+          ".armor5-console[data-panel='user']{font-size:12px;line-height:17px}",
+          ".armor5-console[data-panel='user'] .armor5-console-group{margin-top:6px}",
+          ".armor5-console[data-panel='user'] .armor5-console-group-title{margin-bottom:4px;font-size:11px}",
+          ".armor5-console[data-panel='user'] .armor5-console-choices{gap:4px}",
+          ".armor5-console[data-panel='user'] .armor5-console-choices>button{padding:4px 8px;border-radius:8px}",
           ".dsh-armor5-chiprow{display:flex;flex-wrap:wrap;gap:4px}",
           // v0.50.6：触屏热区 —— 1px 内边距在手机上点不准，给到 28px 最小高度。
           ".dsh-armor5-filter{cursor:pointer;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.3));",
@@ -1126,6 +1132,28 @@
           out = out.replace(/通过/g, "可以直接回答").replace(/拒答/g, "已按边界改写");
           return out;
         };
+        // v0.51.2：设置台（console）的词表 —— 组标题与选项名同样分两套模式，
+        // 内部语义（偏好 key 与取值）一律不动，只换显示文本。
+        var CONSOLE_LEX = {
+          "上屏多少信息（TRIGGER_MODE）": "面板显示多少",
+          "挂到哪个槽位（SLOT_MODE）": "面板放在哪",
+          "任务清单进度（宿主 todos 投影）": "任务清单",
+          "领域覆盖 · 词表 · 注入健康": "识别能力与运行状态",
+          "实时（信号来源 / 本轮 / 工具流水）": "实时状态",
+          "触发形态": "面板显示多少",
+          "glyph": "只留一个图标",
+          "text": "图标 + 两个字",
+          "composer": "挨着输入框（推荐）",
+          "header": "会话标题栏右侧",
+          "zone": "输入框上方",
+          "用户模式（说人话，默认）": "说人话（默认）",
+          "开发者模式（显示内部字段名）": "保留内部术语（开发者）",
+          "面板用哪套词（PANEL_MODE）": "面板说哪套话"
+        };
+        var C = function (text) {
+          if (PANEL_LEX_STATE.dev) return text;
+          return CONSOLE_LEX[text] || text;
+        };
         var PREF_DEFAULTS = Object.freeze({
           triggerMode: TRIGGER_MODE,
           slotMode: SLOT_MODE,
@@ -1768,7 +1796,7 @@
               }))
             : null;
           return react.createElement("div", { className: "armor5-console-group" },
-            react.createElement("div", { className: "armor5-console-group-title" }, "任务清单进度（宿主 todos 投影）"),
+            react.createElement("div", { className: "armor5-console-group-title" }, C("任务清单进度（宿主 todos 投影）")),
             bars,
             list,
             tuner.state.taskNote ? react.createElement("span", { className: "armor5-console-hint" }, tuner.state.taskNote) : null,
@@ -1814,7 +1842,7 @@
           var cov = db && db.coverage ? db.coverage : null;
           if (!cov) {
             return react.createElement("div", { className: "armor5-console-group" },
-              react.createElement("div", { className: "armor5-console-group-title" }, "领域覆盖 · 词表 · 注入健康"),
+              react.createElement("div", { className: "armor5-console-group-title" }, C("领域覆盖 · 词表 · 注入健康")),
               react.createElement("span", { className: "armor5-console-hint" },
                 state.database
                   ? "统计库里还没有覆盖分区（需要 v0.14.1 的服务端；重启一次 DSH 后由本体落盘）"
@@ -2049,7 +2077,7 @@
         function liveGroup(state) {
           var rows = liveRowPairs(state.liveDoc, state.link);
           return react.createElement("div", { className: "armor5-console-group" },
-            react.createElement("div", { className: "armor5-console-group-title" }, "实时（信号来源 / 本轮 / 工具流水）"),
+            react.createElement("div", { className: "armor5-console-group-title" }, C("实时（信号来源 / 本轮 / 工具流水）")),
             react.createElement("ul", { className: "armor5-live-rows" },
               rows.map(function (row) {
                 return react.createElement("li", { key: row[0] },
@@ -2117,7 +2145,7 @@
             return react.createElement(ArmorChoice, {
               key: row.value,
               value: row.value,
-              label: PANEL_MODES[row.value] || row.value,
+              label: C(PANEL_MODES[row.value] || row.value),
               hint: row.hint,
               active: prefs.panelMode === row.value,
               onPick: pick("panelMode", row.value)
@@ -2132,7 +2160,7 @@
             return react.createElement(ArmorChoice, {
               key: row.value,
               value: row.value,
-              label: row.value,
+              label: C(row.value),
               hint: row.hint,
               active: prefs.slotMode === row.value,
               onPick: pick("slotMode", row.value)
@@ -2142,7 +2170,10 @@
           // v0.49.0（C 方案）：设置页那一组「点开之后用哪种容器」已删除 —— 只有抽屉一种容器，
           // 触发方式是单击或长按触发条。偏好项里也不再保留 layoutMode。
 
-          return react.createElement("div", { className: "armor5-console" },
+          return react.createElement("div", {
+            className: "armor5-console",
+            "data-panel": prefs.panelMode || "user"
+          },
             react.createElement("div", { className: "armor5-console-head" },
               react.createElement("div", { className: "armor5-console-title" },
                 react.createElement("b", null, IDLE_LABEL),
@@ -2151,7 +2182,7 @@
               react.createElement("span", { className: "armor5-console-hint" }, "面板形态与挂载位置，改完立即生效并保存在本机")
             ),
             react.createElement("div", { className: "armor5-console-group" },
-              react.createElement("div", { className: "armor5-console-group-title" }, "上屏多少信息（TRIGGER_MODE）"),
+              react.createElement("div", { className: "armor5-console-group-title" }, C("上屏多少信息（TRIGGER_MODE）")),
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-2" }, modeChoices)
             ),
             react.createElement("div", { className: "armor5-console-group" },
@@ -2163,9 +2194,9 @@
               )
             ),
             react.createElement("div", { className: "armor5-console-group" },
-              react.createElement("div", { className: "armor5-console-group-title" }, "挂到哪个槽位（SLOT_MODE）"),
+              react.createElement("div", { className: "armor5-console-group-title" }, C("挂到哪个槽位（SLOT_MODE）")),
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-3" }, slotChoices),
-              react.createElement("div", { className: "armor5-console-group-title" }, "面板用哪套词（PANEL_MODE）"),
+              react.createElement("div", { className: "armor5-console-group-title" }, C("面板用哪套词（PANEL_MODE）")),
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-2" }, panelChoices)
             ),
             react.createElement("div", { className: "armor5-console-group" },

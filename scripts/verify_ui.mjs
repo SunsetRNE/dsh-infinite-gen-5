@@ -1702,7 +1702,30 @@ if (process.argv.includes("--emit-html")) {
     CLIENT_SRC.includes('"识别领域": "我判断你在做"') && CLIENT_SRC.includes('"扫描范围": "我读了多少"'));
 }
 
-// ── 结果 ────────────────────────────────────────────────────────────────────
+// ── v0.51.2：设置台（console）也走双模式 + 用户模式压缩 UI ────────────────
+{
+  ok("设置台有独立词表与 C()（组标题 / 选项名，不与面板词表混用）",
+    CLIENT_SRC.includes("var CONSOLE_LEX = {") && /var C = function \(text\)/.test(CLIENT_SRC));
+  ok("五个组标题都走 C()（不再是内部术语直出）",
+    ["上屏多少信息（TRIGGER_MODE）", "挂到哪个槽位（SLOT_MODE）", "任务清单进度（宿主 todos 投影）",
+     "领域覆盖 · 词表 · 注入健康", "实时（信号来源 / 本轮 / 工具流水）"]
+      .every((t) => CLIENT_SRC.includes('C("' + t + '")')));
+  ok("选项名走 C()（glyph / composer / header / zone 都会翻译）",
+    (CLIENT_SRC.match(/label: C\(/g) || []).length >= 3 &&
+    ["glyph", "composer", "zone"].every((k) => CLIENT_SRC.includes('"' + k + '": ')));
+  ok("用户模式压缩 UI 与字体（data-panel 选择器 + 字号/间距一起收）",
+    CLIENT_SRC.includes('"data-panel":') &&
+    CLIENT_SRC.includes(".armor5-console[data-panel='user']{font-size:12px") &&
+    CLIENT_SRC.includes(".armor5-console[data-panel='user'] .armor5-console-group{margin-top:6px}"));
+  ok("内部语义不变：三个偏好键与取值通道照旧",
+    CLIENT_SRC.includes('pick("triggerMode", row.value)') &&
+    CLIENT_SRC.includes('pick("slotMode", row.value)') &&
+    CLIENT_SRC.includes('pick("panelMode", row.value)'));
+  ok("dev 模式两种词表都原样返回（不改开发者口径）",
+    /if \(PANEL_LEX_STATE\.dev\) return text;/.test(CLIENT_SRC));
+}
+
+// ── 结果 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ok("槽位模式表列了三种可用位置", CLIENT_SRC.includes("conversation.session.header.utilities") && CLIENT_SRC.includes("conversation.input.dock"));
 
 if (failures.length === 0) {
