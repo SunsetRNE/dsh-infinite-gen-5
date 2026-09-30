@@ -2327,7 +2327,9 @@ export function apply(ctx, config) {
       // v0.47.0 系统提示段预算：这一段不改任何段正文，只在装配的最后一刻量一遍全部段，
       // 把「自己那几段占了多少、超没超份额、超了该丢谁」算清楚。默认 warn 只观测 ——
       // 静默改装配文本是最难查的一类故障（面板数字与线上载荷对不上），所以先看得见再动刀。
-      const sectionBudgetHandler = async (input, next) => {
+      // 事件瀑布的签名是 (assembly, context, next)：三条同款 handler 都按这个收参 ——
+      // 少写一个形参会把 context 当成 next 调（实测报 "next is not a function"）。
+      const sectionBudgetHandler = async (_input, _context, next) => {
         const out = await next();
         if (!out || !Array.isArray(out.sections)) return out;
         const ceiling = CFG.SECTION_BUDGET_BYTES;

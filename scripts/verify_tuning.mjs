@@ -160,7 +160,16 @@ const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
   const got = await callRoute(r.route.handler, { token });
   check(got.status === 200 && got.body?.ok === true, "GET 回 200 + ok:true", `${got.status} ${JSON.stringify(got.body).slice(0, 120)}`);
   const keys = Object.keys(got.body?.effective ?? {});
-  check(keys.length === 12, "effective 十二个开关都在（含 BOOST_MODE / BOOST_BYTES / LAZY_MODE / LAZY_BYTES）", JSON.stringify(keys));
+  // 条数从 index.js 的 TUNABLE_KEYS 数组现场数，不写死：加一枚开关不该让门禁变红，
+  // 真正要守的是「面板下发的每一项都在 TUNABLE_KEYS 里、且每项都下发了」。
+  const indexSrc = readFileSync(join(ROOT, "index.js"), "utf8");
+  const tunableBlock = (indexSrc.match(/const TUNABLE_KEYS = \[([\s\S]*?)\];/) || [])[1] || "";
+  const wantKeys = (tunableBlock.match(/"[A-Z0-9_]+"/g) || []).map((s) => s.slice(1, -1));
+  check(
+    keys.length === wantKeys.length && wantKeys.every((k) => keys.includes(k)),
+    `effective 开关齐全（共 ${wantKeys.length} 项，含 SECTION_BUDGET_MODE/BYTES/SHARE）`,
+    JSON.stringify(keys),
+  );
   const sources = got.body?.sources ?? {};
   check(
     Object.values(sources).every((v) => v === "default"),
@@ -168,7 +177,11 @@ const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
     JSON.stringify(sources),
   );
   check(got.body?.effective?.RUNTIME_ANCHOR_EVERY === DEFAULTS.RUNTIME_ANCHOR_EVERY, "GET 的生效值等于文件默认", String(got.body?.effective?.RUNTIME_ANCHOR_EVERY));
-  check(Array.isArray(got.body?.catalog) && got.body.catalog.length === 12, "控件目录随响应下发（十二项）", String(got.body?.catalog?.length));
+  check(
+    Array.isArray(got.body?.catalog) && got.body.catalog.length === wantKeys.length,
+    `控件目录随响应下发（${wantKeys.length} 项）`,
+    String(got.body?.catalog?.length),
+  );
 
   // ---- 3. 自守 ----
   const badToken = await callRoute(r.route.handler, { token: "0".repeat(32) });
@@ -257,7 +270,14 @@ const clearEnv = () => { for (const k of TMP_ENV_KEYS) delete process.env[k]; };
   // 真缺陷回归：LAZY_BYTES 旋钮的 max 曾写 40000，而 NUMERIC_RANGES 只放到 16000 ——
   // 用户在设置页点到 40000 只会被拒收（rejected 留痕），是个够不着的假旋钮。
   const numericKnobs = (got.body?.catalog || []).filter((item) => item.kind === "number");
-  check(numericKnobs.length === 4, "catalog 里带出全部四个数字旋钮（供区间断言）", JSON.stringify(numericKnobs.map((k) => k.key)));
+  // 数字旋钮条数也现场数（NUMERIC_RANGES 里有区间就得有旋钮）：加一枚不该红，缺一枚必须红。
+  const rangeBlock = (indexSrc.match(/const NUMERIC_RANGES = Object\.freeze\(\{([\s\S]*?)\n\}\);/) || [])[1] || "";
+  const wantRanges = (rangeBlock.match(/([A-Z0-9_]+)\s*:\s*\[/g) || []).map((s) => s.replace(/[\s:[]/g, ""));
+  check(
+    numericKnobs.length === wantRanges.length && wantRanges.every((k) => numericKnobs.some((item) => item.key === k)),
+    `catalog 里带出全部数字旋钮（共 ${wantRanges.length} 枚，供区间断言）`,
+    JSON.stringify(numericKnobs.map((k) => k.key)),
+  );
   for (const knob of numericKnobs) {
     const probe = await callRoute(r.route.handler, {
       token,

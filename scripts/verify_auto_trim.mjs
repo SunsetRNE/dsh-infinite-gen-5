@@ -212,7 +212,10 @@ function fixtureSections() {
 			const mine = (captured.assemble ?? []).filter((h) => h && h.ig5SectionBudget === true);
 			if (mine.length) {
 				try {
-					out = await mine[mine.length - 1]({}, async () => ({ sections: fixtureSections() }));
+					// 事件瀑布的真实签名是 (assembly, context, next)：必须按三条同款 handler 的
+					// 习惯传三个参。曾经这里只传两个，把 context 当 next 调，门禁全绿而真宿主
+					// verify:injection 直接 TypeError —— 夹具的调用形态必须与真宿主一致。
+					out = await mine[mine.length - 1]({}, { agent: {}, scope: {} }, async () => ({ sections: fixtureSections() }));
 				} catch (error) {
 					applyError = applyError ?? String(error?.message ?? error);
 				}
@@ -251,6 +254,13 @@ function fixtureSections() {
 			const offRun = await runOnce("off");
 			return offRun.mine.length === 0;
 		})()) === true);
+		// 形参个数是硬要求：瀑布按 (assembly, context, next) 调，少一个形参就等于把 context
+		// 当 next 调。这条断言把「夹具能过、真宿主机崩」那类隐患钉在门禁里。
+		t("③ 瀑布 handler 形参为三个（assembly/context/next）", warnRun.mine[0]?.length === 3, `arity=${warnRun.mine[0]?.length}`);
+		t("③ 接线源码里 handler 也按三个形参收（防手改回两个）",
+			/const sectionBudgetHandler = async \([^)]*,[^)]*,[^)]*\)\s*=>/.test(
+				fs.readFileSync(path.join(ROOT, "index.js"), "utf8"),
+			), "index.js 里不是三形参");
 		delete process.env.IG5_SECTION_BUDGET_MODE;
 	}
 }
