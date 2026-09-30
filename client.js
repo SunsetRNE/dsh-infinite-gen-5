@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.50.4";
+        var VERSION = "v0.50.5";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -291,6 +291,9 @@
           ".dsh-armor5-todo[data-status=pending]{color:var(--dsw-alias-label-caption,rgba(127,127,127,.85))}",
           ".dsh-armor5-mem{display:flex;flex-direction:column;gap:6px}",
           ".dsh-armor5-chiprow{display:flex;flex-wrap:wrap;gap:4px}",
+          ".dsh-armor5-filter{cursor:pointer;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.3));",
+          "background:transparent;color:inherit;font:inherit;padding:1px 6px;border-radius:999px}",
+          ".dsh-armor5-filter[data-on='1']{background:var(--dsw-alias-bg-layer-3,rgba(127,127,127,.22));border-color:transparent}",
           ".dsh-armor5-tab-count{flex:0 0 auto;margin-left:4px;font-size:10px;font-variant-numeric:tabular-nums;opacity:.75}",
           ".dsh-armor5-root .dsh-armor5-dot{transition:transform .12s ease-out}",
           ".dsh-armor5-drawer-grip{flex:0 0 auto;display:flex;padding:6px 12px 2px}",
@@ -332,6 +335,10 @@
           // TodoDock 用的是同一个投影键 todos，形状 {content, status}[]，
           // status ∈ completed / in_progress / pending）。与其他两个一样无条件调用。
           var todos = canProject ? useProjection("todos") : undefined;
+          // v0.50.5：命中页筛选（全部 / 通过 / 拒答）。三段共用同一枚筛选，避免各自翻。
+          var hitFilterPair = react.useState("all");
+          var hitFilter = hitFilterPair[0];
+          var setHitFilter = hitFilterPair[1];
           var todoList = Array.isArray(todos) ? todos : [];
           var todoDone = 0;
           var todoActive = 0;
@@ -803,8 +810,24 @@
 
           var hitGroups = liveState.liveDoc && liveState.liveDoc.hits
             && liveState.liveDoc.hits.groups ? liveState.liveDoc.hits.groups : null;
-          var hitRowsOf = function (rows) {
+          var filterHits = function (rows) {
             var list = Array.isArray(rows) ? rows : [];
+            if (hitFilter === "all") return list;
+            return list.filter(function (hit) { return (hit && hit.verdict) === hitFilter; });
+          };
+          var hitFilterBar = react.createElement("div", { className: "dsh-armor5-chiprow" },
+            [["all", "全部"], ["pass", "通过"], ["block", "拒答"]].map(function (row) {
+              return react.createElement("button", {
+                key: "hf" + row[0],
+                type: "button",
+                className: "dsh-armor5-chip dsh-armor5-filter",
+                "data-filter": row[0],
+                "data-on": hitFilter === row[0] ? "1" : "0",
+                onClick: function () { setHitFilter(row[0]); }
+              }, row[1]);
+            }));
+          var hitRowsOf = function (rows) {
+            var list = filterHits(rows);
             return list.length
               ? react.createElement("ul", { className: "dsh-armor5-hits" },
                 list.map(function (hit, index) {
@@ -825,13 +848,14 @@
           // 老服务端不发布 groups 时，整段退回原来的单块「最近命中」，不空屏。
           var hitPaneGrouped = hitGroups
             ? react.createElement("div", { className: "dsh-armor5-mem" },
-              section("本对话命中（" + (hitGroups.session || []).length + " 条 · 会话 "
+              hitFilterBar,
+              section("本对话命中（" + filterHits(hitGroups.session).length + " 条 · 会话 "
                 + (hitGroups.global && hitGroups.global.sessionId !== null
                   && hitGroups.global.sessionId !== undefined
                   ? String(hitGroups.global.sessionId).slice(0, 8) : "未知") + "）",
                 hitRowsOf(hitGroups.session), "hg-session"),
               section("最近对话命中（本进程更早 "
-                + (hitGroups.earlier || []).length + " 条）",
+                + filterHits(hitGroups.earlier).length + " 条）",
                 hitRowsOf(hitGroups.earlier), "hg-earlier"),
               section("全局命中（本进程累计 "
                 + ((hitGroups.global && hitGroups.global.total) || 0) + " 次判决）",
@@ -876,11 +900,13 @@
                   section("风险载荷", memChips(mem.risks, "mem-risk") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-r")),
                 "mem");
 
+          var hitListFiltered = filterHits(hitList);
           var drawerPane = drawerTab === "hits"
-            ? (hitPaneGrouped || section(hitList.length ? "最近命中（本进程最近 " + hitList.length + " 次判决）" : "最近命中",
-              hitList.length
+            ? (hitPaneGrouped || section(hitListFiltered.length
+              ? "最近命中（本进程最近 " + hitListFiltered.length + " 次判决）" : "最近命中",
+              hitListFiltered.length
               ? react.createElement("ul", { className: "dsh-armor5-hits" },
-                hitList.map(function (hit) {
+                hitListFiltered.map(function (hit) {
                   return react.createElement("li", {
                     key: hit.key,
                     title: hit.title,

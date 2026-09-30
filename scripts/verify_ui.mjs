@@ -1633,7 +1633,25 @@ if (process.argv.includes("--emit-html")) {
     serverSrc.includes("const lifetimeHits = ()") && serverSrc.includes("[doc, doc?.counters, doc?.stats, doc?.store]"));
 }
 
-// ── 结果 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ── v0.50.5：命中页筛选（全部 / 通过 / 拒答）──────────────────────────────
+{
+  ok("命中页有筛选胶囊（全部 / 通过 / 拒答）",
+    CLIENT_SRC.includes('["all", "全部"], ["pass", "通过"], ["block", "拒答"]') &&
+    CLIENT_SRC.includes('"data-filter"'));
+  ok("三段共用同一枚筛选（filterHits 一处实现）",
+    /var filterHits = function \(rows\)/.test(CLIENT_SRC) &&
+    CLIENT_SRC.split("filterHits(").length - 1 >= 4);
+  ok("筛选后标题计数跟着变（不是只过滤列表不改数字）",
+    CLIENT_SRC.includes('filterHits(hitGroups.session).length') &&
+    CLIENT_SRC.includes('filterHits(hitGroups.earlier).length'));
+  ok("老服务端单段回退路径也过筛选",
+    CLIENT_SRC.includes("var hitListFiltered = filterHits(hitList)") &&
+    CLIENT_SRC.includes("hitListFiltered.map("));
+  ok("高亮态用 data-on（样式靠它显形）",
+    CLIENT_SRC.includes('"data-on": hitFilter === row[0] ? "1" : "0"'));
+}
+
+// ── 结果 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ok("槽位模式表列了三种可用位置", CLIENT_SRC.includes("conversation.session.header.utilities") && CLIENT_SRC.includes("conversation.input.dock"));
 
 if (failures.length === 0) {
