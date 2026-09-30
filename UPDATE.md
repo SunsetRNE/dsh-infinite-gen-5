@@ -11,6 +11,22 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.46.1
+
+**主题：生图通道（OpenAI 兼容 `POST /images/generations`）落进公共层，并以「在册工具」的身份接进工具注册表（用户 m00948：「我在想怎么扩展生图工具」）。**
+
+① **起因与探查**：仓库原本**没有**生图工具 —— `adapters/lib/provider-api.mjs` 只有 chat 传输层（`provider-api.mjs:131` 打 `/chat/completions`）。生图痕迹只有两处别的东西：`skills/ig5-layer-02-codex/refs/wb-proxy/codex-skills/.system/imagegen/references/image-api.md:45`（第三方 codex skill 的参考，非本仓能力）与 `data/scenarios.mjs:1650-1658` 的 diffusion 域包（知识层，含「sd 生图 / 文生图管线 / 批量出图脚本」别名）。要扩的是**传输层那一格**。
+
+② **公共层新增三件**（主仓 `adapters/`，同步一份到独立的 `/root/ig5-adapters/`）：**`adapters/lib/image-api.mjs`** —— `IMAGE_SCHEMA = "ig5-image/1"`、`resolveImageRelay()`（缺 `IG5_IMAGE_BASE_URL` 回落 `IG5_RELAY_BASE_URL`，密钥同理；空 env 只报 **2** 条问题：格式检查写成 `else if`，否则 baseUrl 为空时会叠一条假问题 —— 首跑 6/7 就是被它抓出来的）、`generateImage({relay, prompt, n, size, responseFormat, …})`（POST `${base}/images/generations`，body `{model, prompt, n, size}`；429/5xx 与网络层重试、4xx 不重试；`dryRun` 只回草稿体不建连接；缺 prompt / 未就绪 / 无 fetch 一律 `ok:false` 不抛异常）、`saveImages()`（b64 写字节、url 只登记不改写）、`looksLikePng()`（`89 50 4E 47`）。**`adapters/image-runner.mjs`** —— CLI，退出码 **0 成功 / 2 端点未配置（只产出请求模板，不宣称取得回执）/ 1 失败**，stdout 一律 JSON 且密钥不出现。**`adapters/test-image-embed.mjs`** —— 本地桩 E1–E7（回落与缺项 · 请求形状 · 只在头里带密钥且包体不含 · 回执解析 · 落盘为真 PNG 字节 · 4xx 不重试且脱敏 · 5xx 重试到上限），零密钥、loopback 不出网；实测 **7/7 EXIT=0**。
+
+③ **在册入口 `scripts/image-gen.mjs`（薄封装）**：转发 `adapters/image-runner.mjs` 的参数与退出码，`--selftest` 转跑公共层 E1–E7。在 `scripts/tool-registry.mjs` 的 OVERLAY 登记 `{ cat: "工具", note: … }` —— 判据按注册表规则自动推导为 `node scripts/image-gen.mjs --selftest`（无 npm 别名 + 文件含 `--selftest` → 取自检）。**薄封装的意义**：生图实现的唯一真源仍在 `adapters/`，脚本面只给它一个在册身份与可跑判据。实测：`npm run tools:doc` → 在册 **100 → 101** 个工具；`npm run verify:tools` **4/4**；`verify_version` **27 通过 / 0 失败**（扫描 1325 个文件，新增件未引入版本号字面量）；`--dry-run` EXIT=0 只打印模板，未配置端点 EXIT=2 降级。
+
+④ **门禁与运行态**：`verify_adapters` **40/40**（新增件不破坏任何原有判据，语义指纹仍未变）· `verify_sync` **38 通过 / 0 失败 / 1 警告**（那 1 条仍是设计内的「宿主记录早于树改动」，修法与成因见 v0.46.0 ⑧）· `sync:local:apply` 新增 4 · 更新 4 · 指纹 `748a1ffe03bc`（备份 `~/.dsh/plugin-activations.json.bak-20260930045644`）· `verify:runtime` **8/8** · `IG5_SKIP_LIVE_GOLDEN=1 npm run verify:all` **EXIT=0**（日志 2197 行）。文档面同步：[README.md](README.md) 兼容层节加了生图命令与入口说明，`/root/ig5-adapters/README.md` 加了 E1–E7 判据行。
+
+⑤ **版本号**：0.46.0 → **0.46.1**（10 处锚点，`npm run verify:version` 27/0）。之所以另起一版而不是并进 v0.46.0：线上 `v0.46.0` 的 annotated tag 已指向旧提交 `1182400`（不含 v0.46.0 ⑧ 的指纹复刻修复，也不含本版生图通道），补丁版让这两批改动有可指认的版本线。
+
+⑥ **边界**：本轮**没打过真靶** —— 本机没有可用生图端点，所有生图结论都来自本地桩（`MOCK_MODEL`），桩回执是确定性生成的；真实端点的 `size` 取值集、是否接受 `response_format`、`n>1` 的限流与计费都**未验**。`--dry-run` 打印的 `TARGET_IMAGE_MODEL` 是占位符，换真实端点时须换成该端点公布的模型名。
+
 ## v0.46.0
 
 **主题：把「公共层 + 兼容层」（原独立目录 `/root/ig5-adapters`）测试性合入主仓 `adapters/`，并把内核根从写死路径改成自推导（用户 m00142/m00195：「尝试性合并……然后变更版本号推送远端发布」「继续，尝试性适配现有版本，应该是我忘记适配了」）。**
