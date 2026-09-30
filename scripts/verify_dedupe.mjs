@@ -334,7 +334,9 @@ const chars = (rows) => rows.map((r) => r.text.length);
   }
   check(!/无限五代 v0\.5\.0/.test(client), "客户端不再残留 v0.5.0 字样");
   const hooks = (client.match(/useProjection\(/g) || []).length;
-  check(hooks === 2, "useProjection 调用数保持不变（hook 顺序恒定）", `实得 ${hooks}`);
+  // v0.50.2：抽屉第四页要读宿主任务清单，投影调用从 2 增至 3（infinite-gen-5:armor / armor / todos）。
+  // 这里钉的是「数量不变」这个不变量本身：增删投影都必须同步改这条，避免 hook 顺序被无意打乱。
+  check(hooks === 3, "useProjection 调用数保持不变（hook 顺序恒定）", `实得 ${hooks}`);
   check(/if \(!foldable\) return undefined;/.test(client), "拿不到投影数据时不折叠别人的徽标");
 }
 
