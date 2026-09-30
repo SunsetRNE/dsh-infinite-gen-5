@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.50.5";
+        var VERSION = "v0.50.6";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -291,8 +291,11 @@
           ".dsh-armor5-todo[data-status=pending]{color:var(--dsw-alias-label-caption,rgba(127,127,127,.85))}",
           ".dsh-armor5-mem{display:flex;flex-direction:column;gap:6px}",
           ".dsh-armor5-chiprow{display:flex;flex-wrap:wrap;gap:4px}",
+          // v0.50.6：触屏热区 —— 1px 内边距在手机上点不准，给到 28px 最小高度。
           ".dsh-armor5-filter{cursor:pointer;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.3));",
-          "background:transparent;color:inherit;font:inherit;padding:1px 6px;border-radius:999px}",
+          "background:transparent;color:inherit;font:inherit;font-size:12px;min-height:28px;",
+          "padding:4px 12px;border-radius:999px;display:inline-flex;align-items:center}",
+          ".dsh-armor5-hits-empty{display:block;padding:4px 0;font-size:11px;line-height:15px;opacity:.6}",
           ".dsh-armor5-filter[data-on='1']{background:var(--dsw-alias-bg-layer-3,rgba(127,127,127,.22));border-color:transparent}",
           ".dsh-armor5-tab-count{flex:0 0 auto;margin-left:4px;font-size:10px;font-variant-numeric:tabular-nums;opacity:.75}",
           ".dsh-armor5-root .dsh-armor5-dot{transition:transform .12s ease-out}",
@@ -815,6 +818,32 @@
             if (hitFilter === "all") return list;
             return list.filter(function (hit) { return (hit && hit.verdict) === hitFilter; });
           };
+          var dayKey = function (value) {
+            var t = typeof value === "string" ? Date.parse(value) : value;
+            if (!isFinite(t)) return "更早";
+            var d = new Date(t);
+            return d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
+          };
+          var bucketOf = function (value) {
+            var now = new Date();
+            if (dayKey(value) === dayKey(now.getTime())) return "今天";
+            if (dayKey(value) === dayKey(now.getTime() - 86400000)) return "昨天";
+            return "更早";
+          };
+          // v0.50.6：命中台账按天分组 —— 条数一多，光看「本对话/更早」分不清是什么时候的事。
+          var hitTimeGroups = function (rows) {
+            var buckets = { "今天": [], "昨天": [], "更早": [] };
+            var list = Array.isArray(rows) ? rows : [];
+            for (var index = 0; index < list.length; index += 1) {
+              buckets[bucketOf(list[index] && list[index].at)].push(list[index]);
+            }
+            return ["今天", "昨天", "更早"].filter(function (label) {
+              return buckets[label].length > 0;
+            }).map(function (label) {
+              return section(label + "（" + buckets[label].length + "）",
+                hitRowsOf(buckets[label]), "hg-day-" + label);
+            });
+          };
           var hitFilterBar = react.createElement("div", { className: "dsh-armor5-chiprow" },
             [["all", "全部"], ["pass", "通过"], ["block", "拒答"]].map(function (row) {
               return react.createElement("button", {
@@ -826,8 +855,10 @@
                 onClick: function () { setHitFilter(row[0]); }
               }, row[1]);
             }));
+          // v0.50.6：分组条目必须过既有归一化器 hitRows（raw 环条目只有 domain/markers，
+          // 没有 main/sub，直接渲染会是一片空行）。喂成 {recent: [...]} 即复用同一条去重+倒序链。
           var hitRowsOf = function (rows) {
-            var list = filterHits(rows);
+            var list = hitRows({ recent: filterHits(rows) });
             return list.length
               ? react.createElement("ul", { className: "dsh-armor5-hits" },
                 list.map(function (hit, index) {
@@ -842,7 +873,8 @@
                     react.createElement("span", { className: "dsh-armor5-hit-sub" },
                       (hit && hit.sub) || ""));
                 }))
-              : react.createElement("span", { className: "dsh-armor5-sec-title" }, "这一类还没有判决");
+              : react.createElement("span", { className: "dsh-armor5-hits-empty" },
+                hitFilter === "all" ? "这一类还没有判决" : "这一类里没有「" + hitFilter + "」的判决");
           };
           // v0.50.3：命中分三类（本对话 / 最近的更早对话 / 本进程全局累计）。
           // 老服务端不发布 groups 时，整段退回原来的单块「最近命中」，不空屏。
@@ -853,10 +885,10 @@
                 + (hitGroups.global && hitGroups.global.sessionId !== null
                   && hitGroups.global.sessionId !== undefined
                   ? String(hitGroups.global.sessionId).slice(0, 8) : "未知") + "）",
-                hitRowsOf(hitGroups.session), "hg-session"),
+                react.createElement("div", { className: "dsh-armor5-mem" }, hitTimeGroups(hitGroups.session)), "hg-session"),
               section("最近对话命中（本进程更早 "
                 + filterHits(hitGroups.earlier).length + " 条）",
-                hitRowsOf(hitGroups.earlier), "hg-earlier"),
+                react.createElement("div", { className: "dsh-armor5-mem" }, hitTimeGroups(hitGroups.earlier)), "hg-earlier"),
               section("全局命中（本进程累计 "
                 + ((hitGroups.global && hitGroups.global.total) || 0) + " 次判决）",
                 react.createElement("div", { className: "dsh-armor5-hits" },
