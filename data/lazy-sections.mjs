@@ -7,8 +7,41 @@
 // 两者都不改内核正文一个字：lazy 的正文是 scripts/kernel-lazy-split.mjs 从内核**逐字搬出来**的，
 // 覆盖校验在那支脚本里（正文必须是原文的连续片段 + 常驻内核无残留）。
 import { readFileSync, statSync } from "node:fs";
+import { analyze, renderRouterClause } from "./cot-router.mjs";
 
 const LAZY_URL = new URL("../prompts/infinite-gen-5-lazy.md", import.meta.url);
+
+// ── 动态单元：CoT Router 注入条款（v0.47.0）──────────────────────────────────
+// 与 L_* 的区别：它的正文不是从内核搬出来的，而是 data/cot-router.mjs 现场渲染的，
+// 所以不进 prompts/infinite-gen-5-lazy.md、也不进 verify_lazy 的拆分不变量（那 14 条要求
+// 正文必须是原文连续片段）。命中判据 = 同一支路由器的 route()：T2/T3 才注入，T1 直给档
+// 不注入（避免给一条命令就能办的事强塞「列可能性 + 报价」的流程）。
+export const LAZY_ROUTER_ENV = "IG5_COT_ROUTER";
+export const ROUTER_UNIT_ID = "L_cotrouter";
+export const routerEnabled = () => process.env[LAZY_ROUTER_ENV] !== "0";
+
+export function routerUnits(userText = "") {
+  if (!routerEnabled()) return [];
+  let r;
+  try {
+    r = analyze(String(userText || ""));
+  } catch {
+    return []; // 判档器自己不抛；万一抛了也不许拖垮整轮注入
+  }
+  if (r.tier === "T1" && r.needsPreview !== true) return [];
+  const body = renderRouterClause();
+  return [{
+    id: ROUTER_UNIT_ID,
+    order: 164.5, // 排在惰性章节本体之后、尾段之前
+    anchor: "CoT Router clause",
+    body,
+    bytes: Buffer.byteLength(body, "utf8"),
+    chars: body.length,
+    re: null, // 命中不靠词表，靠 route() 判档
+    dynamic: true,
+    tier: r.tier,
+  }];
+}
 
 export const LAZY_MODES = Object.freeze({ off: 0, light: 3500, standard: 6000, full: 16000 });
 export const LAZY_DEFAULT_MODE = "standard";
@@ -73,6 +106,9 @@ export function compileLazy({ text = "", mode = LAZY_DEFAULT_MODE, bytes = LAZY_
 
   const kept = [];
   const dropped = [];
+  // 动态单元（CoT Router 条款）跟在惰性章节本体之后，按同一套预算规则进出。
+  const dyn = routerUnits(text);
+  const dynHits = all ? dyn : dyn;
   // v0.41 修正：预算必须把抬头行与 join("\n") 的分隔符算进去 —— 否则 emitted.bytes 可以
   // 超出档位预算最多 headerBytes + kept.length 字节（设置页把 light 档调到 3500 时可见）。
   const headerBytes = Buffer.byteLength(`${LAZY_HEADER}\n`, "utf8");
@@ -82,11 +118,25 @@ export function compileLazy({ text = "", mode = LAZY_DEFAULT_MODE, bytes = LAZY_
     if (used + overhead + u.bytes <= budget) { kept.push(u); used += overhead + u.bytes; }
     else dropped.push(u);
   }
-  const header = kept.length ? `${LAZY_HEADER}\n` : "";
-  const body = kept.map((u) => u.body).join("\n");
-  const out = kept.length ? `${header}${body}` : "";
+  // 动态单元：off 档整条丢弃（与惰性章节一致）；all/full 档直接进；其余档位按剩余预算试装。
+  const dynKept = [];
+  if (effectiveMode !== "off") {
+    if (all) {
+      dynKept.push(...dynHits);
+    } else {
+      let rest = budget - used;
+      for (const u of dynHits) {
+        const overhead = kept.length + dynKept.length > 0 ? 1 : headerBytes;
+        if (rest - overhead - u.bytes >= 0) { dynKept.push(u); rest -= overhead + u.bytes; }
+        else dropped.push(u);
+      }
+    }
+  }
+  const header = kept.length + dynKept.length ? `${LAZY_HEADER}\n` : "";
+  const body = kept.map((u) => u.body).concat(dynKept.map((u) => u.body)).join("\n");
+  const out = kept.length + dynKept.length ? `${header}${body}` : "";
   return {
-    emit: kept.length > 0,
+    emit: kept.length + dynKept.length > 0,
     mode: effectiveMode,
     requestedMode: mode,
     directive,
@@ -95,18 +145,21 @@ export function compileLazy({ text = "", mode = LAZY_DEFAULT_MODE, bytes = LAZY_
     bytes: Buffer.byteLength(out, "utf8"),
     chars: out.length,
     text: out,
-    hits: kept.map((u) => ({ id: u.id, anchor: u.anchor, bytes: u.bytes, chars: u.chars })),
+    hits: kept.concat(dynKept).map((u) => ({ id: u.id, anchor: u.anchor, bytes: u.bytes, chars: u.chars, tier: u.tier })),
     dropped: dropped.map((u) => ({ id: u.id, bytes: u.bytes })),
   };
 }
 
 export function lazyStats() {
   const units = lazyUnits();
+  const dyn = routerUnits("设计一个界面，先给方案"); // 只要开关开着就恒有一枚动态位
   return {
     units: units.length,
+    dynamicUnits: dyn.length,
     bytes: units.reduce((n, u) => n + u.bytes, 0),
     chars: units.reduce((n, u) => n + u.chars, 0),
     ids: units.map((u) => u.id),
+    dynamicIds: dyn.map((u) => u.id),
     modes: { ...LAZY_MODES },
     defaultMode: LAZY_DEFAULT_MODE,
     defaultBytes: LAZY_DEFAULT_BYTES,

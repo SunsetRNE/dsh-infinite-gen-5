@@ -37,6 +37,7 @@ import { BOOST_UNITS, BOOST_HEADER, boostStats, compileBoost, inferMode, readDir
 // 所以「怎么跑这一批」必须由注入层说 —— 检测与合同编译都在 data/batch-arm.mjs，这里只做接线。
 import { detectBatch, renderBatchClause, renderBatchAnchor, BATCH_ARM_MIN_DEFAULT } from "./data/batch-arm.mjs";
 import { LAZY_DEFAULT_BYTES, LAZY_DEFAULT_MODE, LAZY_HEADER, LAZY_MODES, compileLazy, lazyStats, readLazyDirective } from "./data/lazy-sections.mjs";
+import { BUDGET_CEILING, planSectionBudget, applySectionPlan, DEFAULT_CEILING_BYTES as BUDGET_DEFAULT_CEILING } from "./data/context-budget.mjs";
 // 首句层 + 压缩后再锚定（v0.37.0）：宿主的系统段按 order 升序拼接，宿主身份段用 -1000；
 // 本层用更小的 order 抢到整份系统提示的第一句。压缩事件由宿主的 session/event 送达，
 // 收到就置一次标记 —— 下一次运行时锚点文本换新，宿主的运行时上下文快照比对发现变了必然
@@ -92,7 +93,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.46.2";
+const PLUGIN_VERSION = "0.47.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -415,6 +416,15 @@ const LAZY_MODE = LAZY_DEFAULT_MODE;
 const LAZY_BYTES = LAZY_DEFAULT_BYTES;
 const LAZY_SECTION = "infinite-gen-5:lazy-sections";
 const LAZY_ORDER = 160;
+// 系统提示段预算（v0.47.0）：上面几段各自有上限，但加起来没人管 —— 内核 16 KB + 增强集
+// + 惰性章节 + 批量臂一旦同轮命中，自己那几段就能把系统提示顶到几十 KB。这一段做的是
+// 「按窗口给系统提示留份额」：把宿主交给泵的所有段量一遍，超份额就按可丢等级
+// （批量臂 → 增强集 → 惰性章节）降级，惰性章节降级成一行指针而不是静默消失。
+// 档位：warn（默认，只观测并把数字写进 stats，一个字节不改）/ apply（真降级）/ off。
+const SECTION_BUDGET_MODE = "warn";
+const SECTION_BUDGET_BYTES = BUDGET_DEFAULT_CEILING; // 窗口大小；shareCap 取 25% 作为系统提示份额
+const SECTION_BUDGET_SHARE = 0.25;
+const SECTION_BUDGET_SECTION = "infinite-gen-5:section-budget";
 // 批量交付臂（v0.42.0）：比赛口径是「装插件 + 只给文件 + 一个对话里零额外提示词跑 100 题」。
 // 输入里一旦出现批量信号（[qNNN] 清单 / 编号题面 / 题库文件名 / 「100 道」这类题量短语）
 // 就自动武装：常驻合同段（order 170，兜底宿主不重发 context 的场合）+ 命中轮次的运行时锚点。
@@ -455,6 +465,9 @@ const TUNABLE_KEYS = [
   "BOOST_BYTES",
   "LAZY_MODE",
   "LAZY_BYTES",
+  "SECTION_BUDGET_MODE",
+  "SECTION_BUDGET_BYTES",
+  "SECTION_BUDGET_SHARE",
 ];
 const ENV_OF_KEY = {
   LAYER2_MODE: "IG5_LAYER2_MODE",
@@ -469,6 +482,9 @@ const ENV_OF_KEY = {
   BOOST_BYTES: "IG5_BOOST_BYTES",
   LAZY_MODE: "IG5_LAZY_MODE",
   LAZY_BYTES: "IG5_LAZY_BYTES",
+  SECTION_BUDGET_MODE: "IG5_SECTION_BUDGET_MODE",
+  SECTION_BUDGET_BYTES: "IG5_SECTION_BUDGET_BYTES",
+  SECTION_BUDGET_SHARE: "IG5_SECTION_BUDGET_SHARE",
 };
 // 只有真布尔键走 true/false 转换；档位键（LAYER2_MODE / TAIL_MODE / RUNTIME_ANCHOR_MODE /
 // ASK_GATE_MODE）的 "off"/"auto"/"on" 是字符串取值，不能被布尔化，否则 off 档会静默失效。
@@ -481,6 +497,9 @@ const NUMERIC_RANGES = Object.freeze({
   ASK_GATE_EVERY: [1, 64],
   BOOST_BYTES: [256, 12000],
   LAZY_BYTES: [0, 16000], // 0 = 跟随档位预算（不是关闭；关闭用 LAZY_MODE=off）
+  // 系统提示段预算：0 = 不设限（等价于 off 的轻度版：只量不改）
+  SECTION_BUDGET_BYTES: [0, 8 * 1024 * 1024],
+  SECTION_BUDGET_SHARE: [1, 100], // 单位 %：系统提示最多占窗口这么多
 });
 const coerce = (key, raw) => {
   const range = NUMERIC_RANGES[key];
@@ -514,6 +533,9 @@ const IG5_DEFAULTS = Object.freeze({
   BOOST_BYTES,
   LAZY_MODE,
   LAZY_BYTES,
+  SECTION_BUDGET_MODE,
+  SECTION_BUDGET_BYTES,
+  SECTION_BUDGET_SHARE,
 });
 
 // 三档来源：设置页 UI（持久化）> profile config > 环境变量 > 文件默认。
@@ -709,6 +731,32 @@ const TUNING_CATALOG = [
     hint: "硬上限：档位预算与本值取小，超预算整章丢弃；0 = 跟随档位预算（默认），要停就关掉档位",
   },
   {
+    key: "SECTION_BUDGET_MODE",
+    label: "系统提示段预算（v0.47.0）",
+    hint: "给自己的几段（内核 / 增强集 / 惰性章节 / 批量臂）按窗口留份额：超了就按可丢等级降级，惰性章节降级成一行指针而不是静默消失",
+    options: [
+      { value: "warn", label: "只观测（默认）", hint: "一个字节不改，只把「占了多少、超没超、该丢谁」写进 stats 与面板；先看清再动刀" },
+      { value: "apply", label: "真降级", hint: "超份额时按 批量臂 → 增强集 → 惰性章节 顺序降级，惰性章节换成指针行" },
+      { value: "off", label: "关闭", hint: "这一段完全不参与，装配路径与 v0.46.2 逐字节相同" },
+    ],
+  },
+  {
+    key: "SECTION_BUDGET_BYTES",
+    kind: "number",
+    min: 0,
+    max: 8388608,
+    label: "窗口字节数（份额基数）",
+    hint: "系统提示的份额按这个数算（默认 256 KiB = normal 档）；0 = 不设限，只量不改",
+  },
+  {
+    key: "SECTION_BUDGET_SHARE",
+    kind: "number",
+    min: 1,
+    max: 100,
+    label: "系统提示份额（%）",
+    hint: "系统提示最多占窗口这么多，默认 25%；调小更省上下文但会更快丢段，调大更保内容",
+  },
+  {
     key: "EXCLUSIVE_SECTION",
     kind: "bool",
     label: "独占系统段",
@@ -734,6 +782,9 @@ export const IG5_CONFIG = {
   BOOST_BYTES,
   LAZY_MODE,
   LAZY_BYTES,
+  SECTION_BUDGET_MODE,
+  SECTION_BUDGET_BYTES,
+  SECTION_BUDGET_SHARE,
   // 批量交付臂（v0.42.0）：只读环境变量档位，不进 TUNABLE_KEYS。
   BATCH_ARM_MODE,
   BATCH_ARM_MIN,
@@ -759,6 +810,9 @@ const runtime = {
   phaseGateOpens: 0,
   // 批量交付臂实况（v0.42.0）：哪一轮武装、命中了什么、锚点发了几次，都要能如实汇报。
   batch: { armed: false, kind: "none", count: 0, span: null, source: null, seenAt: null, anchors: 0, dirty: false },
+  // 系统提示段预算实况（v0.47.0）：这一段默认只观测，所以「量到了什么」必须留在案上 ——
+  // 面板与 stats 都从这里读，丢了它就只剩一句 console.warn。
+  sectionBudget: null,
 };
 
 // 统一解析入口（v0.13.8）：插件不控制任何外部文本 —— 调参文件、HTTP 请求体，
@@ -1114,6 +1168,8 @@ const profileTool = {
       injectionPlacements: runtime.placements,
       // v0.42.0 批量交付臂实况：武装没武装、命中什么、锚点发了几次 —— 比赛现场最需要的一格。
       batch: runtime.batch,
+      // v0.47.0 系统提示段预算实况：默认只观测，所以「量到了什么、该丢谁」必须能被面板读到。
+      sectionBudget: runtime.sectionBudget,
       injectionStrength: {
         exclusive: IG5_CONFIG.EXCLUSIVE_SECTION === true,
         tail:
@@ -2264,6 +2320,76 @@ export function apply(ctx, config) {
           `[infinite-gen-5] 无法挂载内核热加载瀑布（${String(error?.message ?? error)}）；` +
             `改 prompts/*.md 后需重启进程才生效。`,
         );
+      }
+    }
+
+    if (CFG.SECTION_BUDGET_MODE !== "off") {
+      // v0.47.0 系统提示段预算：这一段不改任何段正文，只在装配的最后一刻量一遍全部段，
+      // 把「自己那几段占了多少、超没超份额、超了该丢谁」算清楚。默认 warn 只观测 ——
+      // 静默改装配文本是最难查的一类故障（面板数字与线上载荷对不上），所以先看得见再动刀。
+      const sectionBudgetHandler = async (input, next) => {
+        const out = await next();
+        if (!out || !Array.isArray(out.sections)) return out;
+        const ceiling = CFG.SECTION_BUDGET_BYTES;
+        if (ceiling <= 0) return out; // 0 = 不设限，只量不改（量也不做：没基数）
+        const plan = planSectionBudget(
+          out.sections.map((s) => ({ name: s?.name ?? "", text: s?.text ?? "", order: s?.order })),
+          { ceiling, shareCap: CFG.SECTION_BUDGET_SHARE / 100, mode: CFG.SECTION_BUDGET_MODE },
+        );
+        runtime.sectionBudget = {
+          mode: CFG.SECTION_BUDGET_MODE,
+          tier: plan.tier,
+          verdict: plan.verdict,
+          ceiling,
+          shareCap: plan.shareCap,
+          target: plan.target,
+          before: plan.before,
+          after: plan.after,
+          freed: plan.freed,
+          share: plan.share,
+          protectedBytes: plan.protectedBytes,
+          drop: plan.drop.map((d) => ({ name: d.name, bytes: d.bytes, rank: d.rank })),
+          issues: plan.issues,
+          at: Date.now(),
+        };
+        if (CFG.SECTION_BUDGET_MODE !== "apply" || plan.freed <= 0) return out;
+        const applied = applySectionPlan(out.sections, plan, {
+          // 指针行必须点名是哪一段（段名留在原地，触发词命中时仍可逐字拼回），
+          // 并写清丢了多大一块 —— 否则「省下的字节」在正文里看不出代价。
+          pointerOf: (s) =>
+            `（惰性 〈${s?.name ?? "section"}〉｜摘要）本段 ${Math.round((plan.per.find((x) => x.name === s?.name)?.bytes ?? 0) / 1024)} KB` +
+            `因系统提示份额不足只留指针，命中触发词时按需拼回。`,
+        });
+        runtime.sectionBudget.dropped = applied.dropped;
+        runtime.sectionBudget.swapped = applied.swapped;
+        // 面板标签同步：段被换掉/丢掉后注册表里的 chars 已经不对，就地改正免得数字骗人。
+        for (const name of applied.dropped) {
+          const live = (runtime.sections || []).find((s) => s && s.section === name);
+          if (live) live.chars = 0;
+          const placed = (runtime.placements || []).find((p) => p && p.section === name);
+          if (placed) placed.chars = 0;
+        }
+        for (const sw of applied.swapped) {
+          for (const reg of [runtime.sections, runtime.placements]) {
+            const hit = (reg || []).find((x) => x && x.section === sw.name);
+            if (hit && hit.chars !== sw.after) hit.chars = sw.after;
+          }
+        }
+        publishStats();
+        if (applied.dropped.length || applied.swapped.length) {
+          console.warn(
+            `[infinite-gen-5] 系统提示段预算 ${plan.verdict}：${plan.before} → ${plan.after} B` +
+              `（丢 ${applied.dropped.length} 段、降级 ${applied.swapped.length} 段；本次 tier=${plan.tier}）`,
+          );
+        }
+        return { ...out, sections: applied.sections };
+      };
+      // 给门禁认脸用：verify_auto_trim 靠这个标记从四条瀑布里挑出「预算那一条」。
+      sectionBudgetHandler.ig5SectionBudget = true;
+      try {
+        injectionHandles.push(ctx.effect(() => ctx.on("system-prompt/assemble", sectionBudgetHandler)));
+      } catch (error) {
+        console.warn(`[infinite-gen-5] 无法挂载系统提示段预算瀑布（${String(error?.message ?? error)}）。`);
       }
     }
 

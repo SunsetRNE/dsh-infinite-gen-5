@@ -102,7 +102,13 @@ export const SCAN_SKIP_DIRS = [".git", "node_modules", "ui-preview", "runs", ".d
 // 归档件写的是**当时**版本，发版时不该改 —— 改了就不再是存档，而是被追认的叙述。
 // 因此它既不登记为锚点（会被 bump 改写），也不参与「未登记字面量」扫描。
 // 约束：这些文件一旦入库就只能增补说明、不得重写正文；要更新存档就另存一份新文件。
-export const FROZEN_ARCHIVE_FILES = ["docs/README-FULL.md"];
+export const FROZEN_ARCHIVE_FILES = [
+  "docs/README-FULL.md",
+  // HackerOne 公开报告摘录（漏洞技能包的引用件）：里面那条 application 版本号说的是某个
+  // 第三方应用当时那一版，与本插件当前版本同形纯属巧合。归档件逐字冻结，发版时既不改写
+  // 也不该因它失败 —— 所以进冻结表，不进锚点表。
+  "skills/ig5-layer-03-zhekk/refs/漏洞技能skill/references/h1-reports/by-weakness/privilege-escalation.md",
+];
 
 // 只扫这些后缀，避免把二进制、图片、用例产物当文本读。
 export const SCAN_EXTENSIONS = [
