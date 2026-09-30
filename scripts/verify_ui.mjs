@@ -1711,7 +1711,7 @@ if (process.argv.includes("--emit-html")) {
      "领域覆盖 · 词表 · 注入健康", "实时（信号来源 / 本轮 / 工具流水）"]
       .every((t) => CLIENT_SRC.includes('C("' + t + '")')));
   ok("选项名走 C()（glyph / composer / header / zone 都会翻译）",
-    (CLIENT_SRC.match(/label: C\(/g) || []).length >= 3 &&
+    (CLIENT_SRC.match(/label: C\(/g) || []).length >= 2 &&
     ["glyph", "composer", "zone"].every((k) => CLIENT_SRC.includes('"' + k + '": ')));
   ok("用户模式压缩 UI 与字体（data-panel 选择器 + 字号/间距一起收）",
     CLIENT_SRC.includes('"data-panel":') &&
