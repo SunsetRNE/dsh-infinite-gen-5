@@ -23,7 +23,7 @@
 
 ② **版本号**：0.46.1 → **0.46.2**（10 处锚点：`package.json` / `index.js` · PLUGIN_VERSION / `client.js` · VERSION / `cordis.patch.yml` / `README.md` 标题 / `README.md` 一键安装深链 ×4 / `HARNESS_PLUGIN.md` / `scripts/verify_prompt_gen5.mjs` / `scripts/verify_dedupe.mjs` / `data/boost-corpus.mjs` · BOOST_VERSION；`bump-version.mjs` 的 dry-run 与实际改写均逐项 OK）。`node scripts/verify_version.mjs` → **27 通过 / 0 失败**（当前版本 0.46.2 · 锚点 9 处 · 扫描 1326 个文件）。
 
-③ **门禁**：bump 后首跑 `IG5_SKIP_LIVE_GOLDEN=1 npm run verify:all`（日志 `/tmp/ig5-verify-all9.log`）**EXIT=1**，唯一红是 `verify_release_notes` 的 33 通过 · 2 失败 —— `✗ 仓库：CHANGELOG 有当前版本 v0.46.2 的段` 与 `✗ 仓库：当前版本能压出正文`，与 v0.46.1 第 6 遍同源：这是「bump → 提交 → changelog → 再提交」铁律顺序的**预期中间态**，不是缺陷；changelog 重生成后复跑。
+③ **门禁**：bump 后首跑 `IG5_SKIP_LIVE_GOLDEN=1 npm run verify:all`（日志 `/tmp/ig5-verify-all9.log`）**EXIT=1**，唯一红是 `verify_release_notes` 的 33 通过 · 2 失败 —— `✗ 仓库：CHANGELOG 有当前版本 v0.46.2 的段` 与 `✗ 仓库：当前版本能压出正文`，与 v0.46.1 第 6 遍同源：这是「bump → 提交 → changelog → 再提交」铁律顺序的**预期中间态**，不是缺陷；changelog 重生成后复跑（第 10 遍，日志 `/tmp/ig5-verify-all10.log`）**EXIT=1**，红点换成了 `✗ 工具注册表自洽 — 生成文档已过期：docs/TOOL-PROTOCOLS.md —— 跑 npm run tools:doc`：bump 改了 `package.json` 的 `version`，而 `docs/TOOL-PROTOCOLS.md` 是生成物、必须跟着重生成（v0.46.1 那次是在 bump 之后先跑过 `tools:doc`，所以没撞上）。处置：`npm run tools:doc`（**entries=101 · 写入=2**）→ `verify:tools` **4/0** → 提交 `c28b56d` → 第 11 遍（日志 `/tmp/ig5-verify-all11.log`，2197 行）**ALL_EXIT=0**。
 
 ④ **边界**：本版**只改描述与版本号**，一行生图实现都没动（`adapters/lib/image-api.mjs` / `image-runner.mjs` / `image-probe.mjs` 与 E1–E7、探针自证读数沿用 v0.46.1 与它 ⑦ 段的记录）。真靶仍未跑：本机没有可用生图端点，「参数不适配 / 不稳定」这句告示因此不是免责套话 —— 它是当前的**已知事实**（六条探针只在本地桩上验过，真实端点的尺寸集 / `response_format` / `n>1` 全部未验）。
 
