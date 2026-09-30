@@ -302,6 +302,24 @@ node test-endpoint-inventory.mjs     # → 10/10 条判据通过
 
 报告落 `runs/inventory-<stamp>.md` 与 `.json`，含每条端点的 `carrier` / `slot` / `budgetBytes` / `confidence` 与探针依据；有 `error` 行时退出码 1。工具里没有「批量注册账号」「枚举/爆破密钥链接」「使用非本人凭据的端点」这三件事的接口——要扩端点池，正确路径是自己申请、自己部署、然后进这份清单。
 
+## 生图通道（OpenAI 兼容 images/generations，可选）
+
+与上面五条「装载通道」并列的一条**能力通道**：让无限五代这边也能出图。三件：
+
+- `lib/image-api.mjs` —— 传输层（`IMAGE_SCHEMA = "ig5-image/1"`）：`resolveImageRelay(env)` 读 `IG5_IMAGE_BASE_URL` / `IG5_IMAGE_API_KEY` / `IG5_IMAGE_MODEL`，前两项缺省回落 `IG5_RELAY_*`；`generateImage()` POST `${base}/images/generations`，返回 `{ok, status, attempts, model, images:[{b64_json,url,revised_prompt}], usage, error}`；4xx 不重试、429/5xx 重试到 3 次、任何失败都不抛异常；`saveImages()` 把 b64 写字节（url 只登记不改写）、`looksLikePng()` 验 PNG 签名。
+- `image-runner.mjs` —— CLI（`--prompt` / `--prompt-file` / `--out` / `--size` / `-n` / `--model` / `--base-url` / `--dry-run`），退出码 **0 成功 / 2 端点未配置（只产出请求模板，不宣称取得回执）/ 1 失败**；stdout 一律 JSON，密钥不出现。
+- `image-probe.mjs` —— 端点**参数**探针：六条探针（P1 最小出图 1024x1024 · P2 显式 b64_json · P3 显式 url · P4 256x256 · P5 1792x1024 · P6 n=2）问出这个端点实际支持哪些尺寸 / 格式 / 张数，输出画像 JSON（`summary.supportedSizes` · `responseFormats` · `maxObservedN` · `failed`）。
+
+```bash
+cd /root/dsh-infinite-gen-5/adapters
+node test-image-embed.mjs                    # E1–E7 本地桩，零密钥不出网 → 7/7
+node image-probe.mjs --mock                  # 桩上自证：探针能不能分辨受限端点 → EXIT=0，selfCheck 全 true
+node image-probe.mjs --dry-run               # 只列 6 条计划，不发请求
+node image-probe.mjs --out /tmp/ig5-probe    # 真靶画像（需 IG5_IMAGE_* 或 IG5_RELAY_* 三件套）
+```
+
+在册入口是 `node scripts/image-gen.mjs …`（转调 runner；`--selftest` 转跑 E1–E7，不重复实现）。**未打真靶**：本机没有可用生图端点，六条探针只在本地桩上验过「分辨能力」；真实端点的尺寸集 / 格式支持 / 张数上限仍是未知，拿到端点后跑一次 `image-probe.mjs` 才有画像。
+
 ## 四态与边界
 
 已知：本目录全部文件为本次会话新写；五条通道在 Node.js v24.19.0 上真跑通，40/40 判据通过（A/B/C/D/E/F/G/H 各 5 条）；端点动态适配用三个本地桩端点 + 一个死端点真发包，14/14 通过（载体 system→inline 回退、8192 上限解析、触发词注入、预算闸门、可复现）；
@@ -315,6 +333,7 @@ node test-endpoint-inventory.mjs     # → 10/10 条判据通过
 `lib/file-carrier.mjs` 实测（对 0.45 线真源重算：13509 B 内核 + 14 条惰性）：`cap=8000` → 合成 15026 B / `withinCap=false` / 装 0 条 / dropped 14；`cap=20000` → 19777 B / `withinCap=true` / 装 5 条 / dropped 9；`cap=40000` → 26795 B / 14 条全装 / dropped 0；`lazyMode=off` → 15026 B 且指针清单留在正文里（note：固定部分 13509 B 已超过可用预算 8000 B）。
 
 端点池巡检在本地桩 + 死端点上 10/10 通过（清单闸门四类拒绝、坏条目不连坐、dry-run 零网络包、兼容桩 → LAST/40000B、拒收桩 → inline、死端点记 `transport: fetch failed`、跨来源 `stitchable=false`、密钥值零落盘、起步清单 15 条全条通过校验且全条 skip 时零网络包、`--emit-template` stdout 可解析），10 条判据在独立测试件 `test-endpoint-inventory.mjs` 里，不并入总门禁计数；
+生图传输层在本地桩上 7/7 通过（E1 回落与缺项 · E2 请求形状 · E3 鉴权且密钥不入包 · E4 回执解析 · E5 落盘为真图片字节 · E6 4xx 不重试且脱敏 · E7 5xx 重试到上限），端点参数探针自证 EXIT=0（对受限桩准确分辨出 `sizes=[1024x1024]` · `formats=[b64_json]` · `maxN=1` · 失败项恰为 `P3,P4,P5,P6`）；**真靶未跑**，另有一条超时缺陷在此自证中被抓出并已修（`lib/image-api.mjs` 里 `relay.timeoutMs` 缺省时定时器 0ms 立即 abort）；
 
 已知（续）：gpt-instruct 的候选提示词上限 8000 UTF-8 bytes 在本机对常驻内核**不够用** —— 当前内核 13509 B 单独就超限（历史上 16456 B 时同样超限），这不是推测而是本次合成器的实测输出。
 

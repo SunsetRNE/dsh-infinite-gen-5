@@ -27,6 +27,8 @@
 
 ⑥ **边界**：本轮**没打过真靶** —— 本机没有可用生图端点，所有生图结论都来自本地桩（`MOCK_MODEL`），桩回执是确定性生成的；真实端点的 `size` 取值集、是否接受 `response_format`、`n>1` 的限流与计费都**未验**。`--dry-run` 打印的 `TARGET_IMAGE_MODEL` 是占位符，换真实端点时须换成该端点公布的模型名。
 
+⑦ **发布后补（在 tag `v0.46.1` 之后，未随该 tag 发出）**：新增 `adapters/image-probe.mjs`（`PROBE_SCHEMA = "ig5-image-probe/1"`）—— 六条探针（P1 最小出图 1024x1024 · P2 显式 `b64_json` · P3 显式 `url` · P4 256x256 · P5 1792x1024 · P6 `n=2`）问出**这个端点实际支持什么**，输出画像 `summary.supportedSizes` / `responseFormats` / `maxObservedN` / `failed`；`--mock` 起一个「受限端点」桩、`--dry-run` 只列计划、退出码 0/1/2。它第一次自证就抓出一个真缺陷：`adapters/lib/image-api.mjs` 的超时定时器原本直接读 `relay.timeoutMs`，而外部构造的 relay 不带该字段时 `setTimeout(fn, undefined)` = **0ms 立即 abort**，六条探针全部报 `timeout`（status 0）；已改成 `Number(relay.timeoutMs ?? 120_000)`。判据：`node adapters/image-probe.mjs --mock` **EXIT=0** 且 `selfCheck` 四项全 true（对受限桩准确分辨出 `sizes=[1024x1024]` · `formats=[b64_json]` · `maxN=1` · 失败项恰为 `["P3","P4","P5","P6"]`）；回归 `test-image-embed.mjs` **7/7**、`verify_adapters.mjs` **40/40**。用户选择「先不联调，收尾」，因此真实端点的尺寸集 / 格式支持 / 张数上限仍是**未知**，拿到端点后跑一次 `node adapters/image-probe.mjs --out /tmp/ig5-probe` 才有画像。
+
 ## v0.46.0
 
 **主题：把「公共层 + 兼容层」（原独立目录 `/root/ig5-adapters`）测试性合入主仓 `adapters/`，并把内核根从写死路径改成自推导（用户 m00142/m00195：「尝试性合并……然后变更版本号推送远端发布」「继续，尝试性适配现有版本，应该是我忘记适配了」）。**

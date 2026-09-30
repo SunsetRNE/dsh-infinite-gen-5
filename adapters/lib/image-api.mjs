@@ -77,7 +77,7 @@ export async function generateImage({
 
   for (let attempt = 1; attempt <= RETRY.attempts; attempt += 1) {
     const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(new Error("timeout")), relay.timeoutMs);
+    const timer = setTimeout(() => ac.abort(new Error("timeout")), Number(relay.timeoutMs ?? 120_000));
     const abort = () => ac.abort(new Error("aborted"));
     if (signal) signal.addEventListener("abort", abort, { once: true });
     try {
