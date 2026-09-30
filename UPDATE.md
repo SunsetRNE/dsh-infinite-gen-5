@@ -1,3 +1,19 @@
+## v0.50.7
+
+**技能层补丁：`env-bootstrap` 强化，并装进仓库技能层。**
+
+- 新入口 `scripts/verify-skill.sh`：技能原来只有各自为政的 `verify-*.sh`，跑完靠人眼看输出，没有回执。
+  现在一条命令给三件事：静态自检（任何机器可跑，判据是退出码）、逐个子自检、四态回执
+  （已知 / 未知 / 不适用 / 失败）。**架构上不可用的通道归「不适用」而不是失败** —— 例如 Frida 的
+  `PTRACE_SEIZE` 在受限内核上 `errno=95`，那是环境事实，不是回归。
+- 环境矩阵补了本仓库实测的七条坑（中文路径守卫空转、`tools:doc` 一次只补一份、生成文档内嵌
+  UPDATE 首行导致顺序敏感、假渲染器 vs 真机、vendored 版本字面量、统计库 `counters` 顶层键、
+  `unzip` 的 locale 转义）。
+- 技能落到 `skills/ig5-layer-04-env-bootstrap/`：本地 `verify:surface` 由「0 个技能副本可查」
+  变为 17 通过 / 0 失败（这一条此前一直是本机环境缺口）。
+- 判据：`bash skills/ig5-layer-04-env-bootstrap/scripts/verify-skill.sh --selftest` →
+  `回执（静态档）：已知 12 · 失败 0`。
+
 ## v0.50.6
 
 **命中台账加时间轴；筛选胶囊给足触屏热区；空态说人话。**
