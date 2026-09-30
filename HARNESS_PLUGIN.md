@@ -1,4 +1,4 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.50.9)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.50.10)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
