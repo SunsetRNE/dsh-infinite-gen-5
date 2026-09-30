@@ -327,7 +327,7 @@
           var armor5 = canProject ? useProjection("infinite-gen-5:armor") : undefined;
           var armor4 = canProject ? useProjection("armor") : undefined;
           // v0.50.2：把宿主「任务清单」投影读进来（宿主 dsh-client-ui-conversation 的
-          // TodoDock 用的是同一个键 useProjection("todos")，形状 {content, status}[]，
+          // TodoDock 用的是同一个投影键 todos，形状 {content, status}[]，
           // status ∈ completed / in_progress / pending）。与其他两个一样无条件调用。
           var todos = canProject ? useProjection("todos") : undefined;
           var todoList = Array.isArray(todos) ? todos : [];
