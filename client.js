@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.3";
+        var VERSION = "v0.51.4";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -295,7 +295,7 @@
           ".armor5-console[data-panel='user'] .armor5-console-group{margin-top:6px}",
           ".armor5-console[data-panel='user'] .armor5-console-group-title{margin-bottom:4px;font-size:11px}",
           ".armor5-console[data-panel='user'] .armor5-console-choices{gap:4px}",
-          ".armor5-console[data-panel='user'] .armor5-console-choices>button{padding:4px 8px;border-radius:8px}",
+          ".armor5-console[data-panel='user'] .armor5-console-choices>button{padding:4px 8px;border-radius:8px;min-height:28px;font-size:12px}",
           ".dsh-armor5-chiprow{display:flex;flex-wrap:wrap;gap:4px}",
           // v0.50.6：触屏热区 —— 1px 内边距在手机上点不准，给到 28px 最小高度。
           ".dsh-armor5-filter{cursor:pointer;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.3));",
@@ -303,6 +303,7 @@
           "padding:4px 12px;border-radius:999px;display:inline-flex;align-items:center}",
           ".dsh-armor5-hits-empty{display:block;padding:4px 0;font-size:11px;line-height:15px;opacity:.6}",
           ".dsh-armor5-filter[data-on='1']{background:var(--dsw-alias-bg-layer-3,rgba(127,127,127,.22));border-color:transparent}",
+          ".dsh-armor5-panel-toggle{flex:0 0 auto;margin-right:6px;min-height:28px;min-width:48px;padding:4px 10px;border-radius:999px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.3));background:transparent;color:inherit;font:inherit;font-size:12px}",
           ".dsh-armor5-tab-count{flex:0 0 auto;margin-left:4px;font-size:10px;font-variant-numeric:tabular-nums;opacity:.75}",
           ".dsh-armor5-root .dsh-armor5-dot{transition:transform .12s ease-out}",
           ".dsh-armor5-drawer-grip{flex:0 0 auto;display:flex;padding:6px 12px 2px}",
@@ -1017,6 +1018,18 @@
                     react.createElement("span", { className: "dsh-armor5-badge", "data-tone": tone }, badgeText),
                     react.createElement("span", null, clock === "—" ? "本次会话" : clock),
                     react.createElement("span", null, VERSION),
+                    react.createElement("button", {
+                      type: "button",
+                      className: "dsh-armor5-panel-toggle",
+                      "data-panel-mode": dockPrefs.panelMode === "dev" ? "dev" : "user",
+                      title: dockPrefs.panelMode === "dev"
+                        ? "切回用户模式（标签说人话）"
+                        : "切到开发者模式（看内部字段名）",
+                      "aria-label": "切换面板模式",
+                      onClick: function () {
+                        writePrefs({ panelMode: dockPrefs.panelMode === "dev" ? "user" : "dev" });
+                      }
+                    }, dockPrefs.panelMode === "dev" ? "开发者" : "用户"),
                     react.createElement("button", {
                       type: "button",
                       className: "dsh-armor5-tab-close",

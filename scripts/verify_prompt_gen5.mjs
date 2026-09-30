@@ -1,4 +1,4 @@
-// 无限五代 v0.51.3 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.51.4 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";

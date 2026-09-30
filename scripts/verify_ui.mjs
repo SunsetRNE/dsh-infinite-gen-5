@@ -1725,7 +1725,20 @@ if (process.argv.includes("--emit-html")) {
     /if \(PANEL_LEX_STATE\.dev\) return text;/.test(CLIENT_SRC));
 }
 
-// ── 结果 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ── v0.51.4：抽屉内快捷切换 + 压缩后触屏保底 ────────────────────────────────
+{
+  ok("抽屉头部有「用户 / 开发者」快捷切换（写同一条偏好通道）",
+    CLIENT_SRC.includes('className: "dsh-armor5-panel-toggle"') &&
+    /writePrefs\(\{ panelMode: dockPrefs\.panelMode === "dev" \? "user" : "dev" \}\)/.test(CLIENT_SRC));
+  ok("切换按钮声明当前模式（data-panel-mode）与可读 title",
+    CLIENT_SRC.includes('"data-panel-mode": dockPrefs.panelMode === "dev" ? "dev" : "user"') &&
+    CLIENT_SRC.includes("切到开发者模式（看内部字段名）"));
+  ok("压缩后仍保触屏下限（28px 高 + 字号不低于 12px）",
+    CLIENT_SRC.includes("min-height:28px;font-size:12px}") &&
+    CLIENT_SRC.includes(".dsh-armor5-panel-toggle{flex:0 0 auto;margin-right:6px;min-height:28px"));
+}
+
+// ── 结果 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ok("槽位模式表列了三种可用位置", CLIENT_SRC.includes("conversation.session.header.utilities") && CLIENT_SRC.includes("conversation.input.dock"));
 
 if (failures.length === 0) {
