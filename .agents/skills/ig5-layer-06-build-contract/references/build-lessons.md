@@ -2,6 +2,11 @@
 
 > 来源：用户自有 Android 工程的历史构建笔记（已去掉项目名、包名、模块名、上游服务名）。
 > 每条都保留「症状 → 真因 → 判据」，便于机械检查。版本边界见每组末尾。
+>
+> **证据等级（重要）**：这份笔记里绝大部分结论 **官方公告没有明确说明**，是同一条路撞了十几回才写下来的。
+> 逐条标级见每条的 `证据：` 行 —— `E1` 官方明示 / `E2` 半官方（源码或 release notes 可见）/
+> `E3` **实测踩坑，无官方出处**。E3 条目**不能**靠查公告验证或作废，只能在当前版本组合上复跑；
+> 版本边界是结论的一部分，换 AGP / Kotlin / Gradle 任一版本都要重新判定，不得外推。
 
 ## 1. 产物重命名：旧 API 在 AGP 9 被移除
 
@@ -22,6 +27,7 @@ androidComponents {
 ```
 
 - 判据：`grep -rn 'VariantOutputImpl'` 在场；且不存在 `applicationVariants.all` 里改产物名的写法。
+- 证据：**E3**（官方文档未明示内部实现类用法，笔记自述「官方未在文档明示，故专门记录」）。
 - 版本边界：**AGP 9.x 实测**；`VariantOutputImpl` 是内部实现类（非公开 API），AGP 大版本升级需重新核对包路径。
 
 ## 2. 版本号是四层，真源必须唯一
@@ -40,6 +46,7 @@ androidComponents {
 
 - 症状：library 模块显式 apply kotlin 插件后直接失败，报错原文含
   `The 'org.jetbrains.kotlin.android' plugin is no longer required for Kotlin support since AGP 9.0.`
+- 证据：**E1**（那条报错原文本身是官方产出）。
 - 处置：library 模块只 apply `com.android.library`；**只有需要 Compose 的模块**才额外 apply Compose 插件。
 - 判据：`grep -rn 'kotlin.android'` 在 library 模块里应为 0 命中。
 
@@ -47,6 +54,7 @@ androidComponents {
 
 - 症状：KDoc 里写形如 `` `assets/xxx/*` `` 会**开始一个嵌套注释**，把后面整段代码吞掉；
   报错却指向完全无关的地方（如「未指定 compileSdk」），或在文件末尾报 `Expecting a top level declaration`。
+- 证据：**E3**（官方文档不写「注释可嵌套」这种反直觉行为，靠吞代码试出来）。
 - 规则：注释文本里不出现 `/*`；写目录就写 `xxx/`。
 - 判据：`grep -rn '/\*' --include='*.kt'` 人工过一遍（排除注释块开头的合法 `/*`）。
 
@@ -57,6 +65,7 @@ androidComponents {
   `InvalidPathException: Malformed input or input contains unmappable characters` → 编译器内部错误。
 - 真因：`sun.jnu.encoding` **由 JVM 启动时的 locale 决定，`-D` 覆盖不了**。
 - 处置：环境里导出 `LANG=LC_ALL=C.UTF-8`；**已存在的守护进程要 `gradlew --stop` 重启**才生效。
+- 证据：**E3**（`sun.jnu.encoding` 不可 `-D` 覆盖属实测结论；JVM 文档未把它写成用户可配项）。
 - 判据：`locale` 输出里 `LC_ALL`/`LANG` 为 `C.UTF-8`；容器内 `python3 -c "import sys;print(sys.getfilesystemencoding())"` 类探测同源。
 
 ## 6. JNI 契约：改名/改形参个数必须重建 `.so`
@@ -64,12 +73,14 @@ androidComponents {
 - 症状：调用返回失败但**不崩**（被 `runCatching` 吞掉），表现为「服务无响应」——极难定位。
 - 真因：JNI 导出符号按「函数名 + 形参个数」硬匹配；两端不同步 → `UnsatisfiedLinkError`。
 - 处置：加/改形参 → 重建原生库；只是加字段 → **改成传 JSON 参数**，原生侧按缺省解析，避免动签名。
+- 证据：**E2**（JNI 命名规则有官方说明；但「被 `runCatching` 吞成服务无响应」这个症状链是实测）。
 - 判据：源码里 native 方法列表与 `nm -D <lib.so> | grep Java_` 的符号集合一致；`.so` 比源码新。
 
 ## 7. 配置缓存开着时，配置阶段不能起外部进程
 
 - 症状：配置阶段调用 `git rev-parse` 会**打挂配置缓存**（IDE 直连构建时退化成 `unknown`）。
 - 处置：构建参数由脚本在**执行前**算好并注入环境变量；Gradle 侧只读注入值。
+- 证据：**E2**（配置缓存禁用项官方有说明；具体「打挂后 IDE 退化成 unknown」是实测）。
 - 判据：`grep -rn 'exec\|ProcessBuilder' build.gradle.kts` 在配置块里应为 0。
 
 ## 8. 环境脚本三分：判定 / 准备 / 持久化
