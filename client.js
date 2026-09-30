@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.50.3";
+        var VERSION = "v0.50.4";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -289,6 +289,8 @@
           ".dsh-armor5-todo[data-status=completed] .dsh-armor5-todo-glyph{color:var(--dsw-alias-state-success-primary,#3aa76d)}",
           ".dsh-armor5-todo[data-status=in_progress] .dsh-armor5-todo-glyph{color:var(--dsw-alias-state-business-primary,#3b82f6)}",
           ".dsh-armor5-todo[data-status=pending]{color:var(--dsw-alias-label-caption,rgba(127,127,127,.85))}",
+          ".dsh-armor5-mem{display:flex;flex-direction:column;gap:6px}",
+          ".dsh-armor5-chiprow{display:flex;flex-wrap:wrap;gap:4px}",
           ".dsh-armor5-tab-count{flex:0 0 auto;margin-left:4px;font-size:10px;font-variant-numeric:tabular-nums;opacity:.75}",
           ".dsh-armor5-root .dsh-armor5-dot{transition:transform .12s ease-out}",
           ".dsh-armor5-drawer-grip{flex:0 0 auto;display:flex;padding:6px 12px 2px}",
@@ -822,7 +824,7 @@
           // v0.50.3：命中分三类（本对话 / 最近的更早对话 / 本进程全局累计）。
           // 老服务端不发布 groups 时，整段退回原来的单块「最近命中」，不空屏。
           var hitPaneGrouped = hitGroups
-            ? react.Fragment(null,
+            ? react.createElement("div", { className: "dsh-armor5-mem" },
               section("本对话命中（" + (hitGroups.session || []).length + " 条 · 会话 "
                 + (hitGroups.global && hitGroups.global.sessionId !== null
                   && hitGroups.global.sessionId !== undefined
@@ -838,8 +840,41 @@
                     "通过 " + ((hitGroups.global && hitGroups.global.pass) || 0)
                     + " · 拒答 " + ((hitGroups.global && hitGroups.global.block) || 0)
                     + " · 命中域 " + (((hitGroups.global && hitGroups.global.byDomain) || [])
-                      .join("、") || "—"))), "hg-global"))
+                      .join("、") || "—")),
+                  react.createElement("span", { className: "dsh-armor5-hit-sub" },
+                    hitGroups.global && hitGroups.global.lifetime
+                      ? "跨重启累计 " + hitGroups.global.lifetime.total + " 次（通过 "
+                        + hitGroups.global.lifetime.pass + " / 拒答 " + hitGroups.global.lifetime.block + "）"
+                      : "跨重启累计：统计库还没积累（~/.dsh/infinite-gen-5-stats.json）")), "hg-global"))
             : null;
+
+          // v0.50.4：本对话标识记忆（去重 + 次数）——明细页尾部追加，换会话由服务端清空。
+          var mem = hitGroups && hitGroups.memory ? hitGroups.memory : null;
+          var memChips = function (rows, kind) {
+            var list = Array.isArray(rows) ? rows : [];
+            if (list.length === 0) return null;
+            return react.createElement("div", { className: "dsh-armor5-chiprow" },
+              list.map(function (row) {
+                return react.createElement("span", {
+                  key: kind + row.name,
+                  className: "dsh-armor5-chip",
+                  "data-kind": kind,
+                  title: row.name + " ×" + row.count
+                }, row.name + " ×" + row.count);
+              }));
+          };
+          var memoryPane = !mem || mem.turns === 0
+            ? react.createElement("span", { className: "dsh-armor5-sec-title" },
+              "本对话还没有判决（累计从第一条判决开始）")
+            : section("本对话累计（" + mem.turns + " 次判决 · 通过 "
+                + ((mem.verdicts && mem.verdicts.pass) || 0) + " / 拒答 "
+                + ((mem.verdicts && mem.verdicts.block) || 0) + "）",
+                react.createElement("div", { className: "dsh-armor5-mem" },
+                  section("识别领域", memChips(mem.domains, "mem-domain") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-d"),
+                  section("命中标记", memChips(mem.markers, "mem-marker") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-m"),
+                  section("安全标记", memChips(mem.safe, "mem-safe") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-s"),
+                  section("风险载荷", memChips(mem.risks, "mem-risk") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-r")),
+                "mem");
 
           var drawerPane = drawerTab === "hits"
             ? (hitPaneGrouped || section(hitList.length ? "最近命中（本进程最近 " + hitList.length + " 次判决）" : "最近命中",
@@ -858,7 +893,7 @@
               : react.createElement("span", { className: "dsh-armor5-sec-title" },
                 "还没有判决留档（重启 DSH 后开始攒）"), "hits"))
             : drawerTab === "fields"
-              ? fieldTiles
+              ? react.createElement("div", { className: "dsh-armor5-drawer-pane" }, fieldTiles, memoryPane)
               : drawerTab === "todo"
                 ? todoPane
                 : tileGrid(liveTiles, "live");

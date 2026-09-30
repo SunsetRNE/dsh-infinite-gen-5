@@ -93,7 +93,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.50.3";
+const PLUGIN_VERSION = "0.50.4";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -890,6 +890,18 @@ const hitGroups = () => {
       block: hitTally.block,
       byDomain,
       sessionId: activeSessionId,
+      // v0.50.4：跨重启累计（读 ~/.dsh 统计库；读不到就是 null，客户端只显示本进程口径）
+      lifetime: lifetimeHits(),
+    },
+    // v0.50.4：本对话标识记忆 —— 去重 + 次数，供明细页「本对话累计」用
+    memory: {
+      turns: sessionMemory.turns,
+      sessionId: sessionMemory.sessionId,
+      verdicts: { ...sessionMemory.verdicts },
+      domains: topCounts(sessionMemory.domains, 6),
+      markers: topCounts(sessionMemory.markers, 10),
+      safe: topCounts(sessionMemory.safe, 6),
+      risks: topCounts(sessionMemory.risks, 6),
     },
   };
 };
@@ -900,6 +912,56 @@ const hitRing = [];
 let activeSessionId = null;
 // 本进程累计（全局口径）：判决总数 / 通过 / 拒答 / 各域条数。
 const hitTally = { total: 0, pass: 0, block: 0, byDomain: {} };
+// v0.50.4：本对话「标识记忆」—— 同一标识只占一格、按次数累加，解决明细页里
+// 新消息一到就丢标识 / 同一标识重复铺开的问题。换会话即清空。
+const sessionMemory = {
+  sessionId: null, turns: 0,
+  domains: {}, markers: {}, safe: {}, risks: {},
+  verdicts: { pass: 0, block: 0 },
+};
+const bumpCount = (bag, key, by = 1) => {
+  const name = typeof key === "string" ? key.trim() : "";
+  if (!name) return;
+  bag[name] = (bag[name] || 0) + (Number.isFinite(by) && by > 0 ? by : 1);
+};
+const resetSessionMemory = (id) => {
+  sessionMemory.sessionId = id ?? null;
+  sessionMemory.turns = 0;
+  sessionMemory.domains = {};
+  sessionMemory.markers = {};
+  sessionMemory.safe = {};
+  sessionMemory.risks = {};
+  sessionMemory.verdicts = { pass: 0, block: 0 };
+};
+/** 计数按次数降序，转成 [{name, count}]，只留前 limit 格。 */
+const topCounts = (bag, limit) => Object.entries(bag)
+  .sort((left, right) => right[1] - left[1])
+  .slice(0, limit)
+  .map(([name, count]) => ({ name, count }));
+/** 跨重启累计：读统计库（~/.dsh）里由 bump 累积的 counters，形状按几种可能逐层探。 */
+const lifetimeHits = () => {
+  let doc = null;
+  try {
+    doc = statsSink && typeof statsSink.snapshot === "function" ? statsSink.snapshot() : null;
+  } catch (error) {
+    return null;
+  }
+  for (const root of [doc, doc?.counters, doc?.stats, doc?.store]) {
+    const node = root && typeof root === "object" ? root.hits : null;
+    if (node && typeof node.total === "number") {
+      return {
+        total: node.total,
+        pass: typeof node.pass === "number" ? node.pass : 0,
+        block: typeof node.block === "number" ? node.block : 0,
+        byDomain: Object.entries(node.byDomain ?? {})
+          .sort((left, right) => right[1] - left[1])
+          .slice(0, 6)
+          .map(([id, count]) => `${id}(${count})`),
+      };
+    }
+  }
+  return null;
+};
 const liveState = { lastEventAt: null, lastKind: null, turnStartedAt: null };
 const utf8Bytes = (text) => Buffer.byteLength(text, "utf8");
 const trimToChars = (text, chars) =>
@@ -1738,6 +1800,20 @@ function armorProjectionApply(state, event) {
     else hitTally.block += 1;
     const tallyDomain = scored && scored.domain ? String(scored.domain) : "unknown";
     hitTally.byDomain[tallyDomain] = (hitTally.byDomain[tallyDomain] || 0) + 1;
+    // v0.50.4：会话记忆（标识 + 次数）与跨重启累计（落 ~/.dsh 统计库）
+    sessionMemory.turns += 1;
+    sessionMemory.verdicts[scored && scored.verdict === "pass" ? "pass" : "block"] += 1;
+    for (const row of (scored?.domainRanked ?? []).slice(0, RANK_KEEP)) bumpCount(sessionMemory.domains, row?.id, row?.hits);
+    for (const marker of scored?.domainMarkers ?? []) bumpCount(sessionMemory.markers, marker);
+    for (const flag of scored?.safe ?? []) bumpCount(sessionMemory.safe, flag);
+    for (const risk of scored?.risk ?? []) {
+      bumpCount(sessionMemory.risks, typeof risk === "string" ? risk : (risk?.label ?? risk?.id));
+    }
+    if (statsSink !== null) {
+      statsSink.bump("hits.total");
+      statsSink.bump(["hits", scored && scored.verdict === "pass" ? "pass" : "block"]);
+      statsSink.bump(["hits", "byDomain", tallyDomain]);
+    }
     hitRing.push({
       session: activeSessionId,
       at: new Date(scored.at).toISOString(),
@@ -1987,6 +2063,7 @@ export function apply(ctx, config) {
       stats.bump("sessions.seen");
     }
     activeSessionId = id;   // v0.50.3：命中环用它区分「本对话 / 更早的对话」
+    if (sessionMemory.sessionId !== id) resetSessionMemory(id);   // v0.50.4：换会话即清空标识记忆
     // lastAt 是「这个会话最近一次被处理的时间」（不是「最近一次换会话」）：每个事件都刷新。
     // 同一格早已被 bump("sessions.events") 置脏，所以写它不会多出一次落盘。
     stats.patch("sessions", { lastId: id, lastAt: new Date().toISOString() });

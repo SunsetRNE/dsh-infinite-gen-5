@@ -1601,7 +1601,39 @@ if (process.argv.includes("--emit-html")) {
     /liveState\.liveDoc\.hits\.groups/.test(CLIENT_SRC));
 }
 
-// ── 结果 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ── v0.50.4：本对话标识记忆 + 跨重启累计 ────────────────────────────────────
+{
+  ok("明细页挂了「本对话累计」段（标识记忆 + 次数）",
+    CLIENT_SRC.includes("本对话累计（") && CLIENT_SRC.includes("dsh-armor5-mem"));
+  ok("四类标识各自成行：识别领域 / 命中标记 / 安全标记 / 风险载荷",
+    ["识别领域", "命中标记", "安全标记", "风险载荷"].every((label) => CLIENT_SRC.includes('section("' + label + '"')));
+  ok("标识带 ×次数（同一标识只占一格，不去重就会重复铺开）",
+    /row\.name \+ " ×" \+ row\.count/.test(CLIENT_SRC) &&
+    CLIENT_SRC.includes('"data-kind": kind'));
+  ok("累计来自服务端 hits.groups.memory（不另起数据源）",
+    /hitGroups && hitGroups\.memory/.test(CLIENT_SRC));
+  ok("全局段给出跨重启累计行",
+    CLIENT_SRC.includes("跨重启累计 ") && CLIENT_SRC.includes("infinite-gen-5-stats.json"));
+  ok("累计读不到时给说明而不是 0 假象",
+    CLIENT_SRC.includes("跨重启累计：统计库还没积累"));
+  // 这条是 v0.50.3 的潜在真机崩点：React.Fragment 是 symbol，当函数调用会抛。
+  ok("不把 react.Fragment 当函数调用（真机上会抛 TypeError）",
+    !CLIENT_SRC.includes("react.Fragment("));
+  const serverSrc = readFileSync(new URL("../index.js", import.meta.url), "utf8");
+  ok("服务端发布 hits.groups.memory（turns / verdicts / 四类计数）",
+    serverSrc.includes("memory: {") && serverSrc.includes("turns: sessionMemory.turns") &&
+    serverSrc.includes("topCounts(sessionMemory.markers"));
+  ok("换会话即清空标识记忆",
+    serverSrc.includes("resetSessionMemory(id)"));
+  ok("跨重启累计写进 ~/.dsh 统计库（bump 三处）",
+    serverSrc.includes('statsSink.bump("hits.total")') &&
+    serverSrc.includes('statsSink.bump(["hits", scored && scored.verdict === "pass" ? "pass" : "block"])') &&
+    serverSrc.includes('statsSink.bump(["hits", "byDomain", tallyDomain])'));
+  ok("跨重启累计读回时逐层探形状（读不到返回 null）",
+    serverSrc.includes("const lifetimeHits = ()") && serverSrc.includes("[doc, doc?.counters, doc?.stats, doc?.store]"));
+}
+
+// ── 结果 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ok("槽位模式表列了三种可用位置", CLIENT_SRC.includes("conversation.session.header.utilities") && CLIENT_SRC.includes("conversation.input.dock"));
 
 if (failures.length === 0) {
