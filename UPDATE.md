@@ -1,3 +1,15 @@
+## v0.50.8
+
+**技能层再补两块：装载链清单 `ig5-chain.md`，以及发版前自检技能 `ig5-layer-05-release`。**
+
+- `skills/ig5-chain.md` 是「哪层先装、装什么、冲突怎么办」的真源：三层结构（常驻内核 / 技能层 / 域包）、
+  按编号升序的装载顺序表、四类冲突处理（同事实两说法 / 技能 vs 内核 / 技能 vs 域包 / 体量预算）。
+  它同时让 `verify:skill` 里那条「产物缺 ig5-chain.md」的 SKIP 变成真检查。
+  文件里显式记下 `ig5-layer-04` 有两个目录这一现象：当前按目录名字典序装载，**语义优先不保证**。
+- `skills/ig5-layer-05-release/` 把四类反复踩的发版坑收成一条可跑判据
+  （`scripts/verify-release-ready.sh`，五项 + 四态回执），并附 `references/release-matrix.md` 七行根因表。
+- 判据：`bash skills/ig5-layer-05-release/scripts/verify-release-ready.sh` → 全量档 **已知 11 · 警告 2 · 失败 0**。
+
 ## v0.50.7
 
 **技能层补丁：`env-bootstrap` 强化，并装进仓库技能层。**
