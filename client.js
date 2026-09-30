@@ -45,15 +45,15 @@
         //   drawer  —— 底部抽屉：视口锚定（不量锚点），内容分页（实时/命中/覆盖/档位）。
         //              手机上不会飘走，长内容靠页签分栏而不是把卡片撑高。
         // 两种容器共用同一批数据与同一个 section()，所以切布局不动数据面。
-        var LAYOUT_MODES = { popover: "浮层（默认）", drawer: "底部抽屉 · 分页" };
-        var LAYOUT_MODE = "popover";
+        // v0.49.0（C 方案）：LAYOUT_MODES / LAYOUT_MODE 已删 —— 容器不再有第二档，
+        // 触发条单击或长按都直接唤起底部抽屉。DRAWER_TABS 仍用于抽屉分页。
         var DRAWER_TABS = [
           { id: "live", label: "实时" },
           { id: "hits", label: "命中" },
           { id: "fields", label: "明细" }
         ];
 
-        var VERSION = "v0.48.0";
+        var VERSION = "v0.50.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -109,13 +109,7 @@
           "background:var(--dsw-alias-state-business-primary,#4d6bfe);",
           "animation:dshArmor5Pending 1s ease-in-out infinite alternate}",
           ".dsh-armor5-text{max-width:22ch;overflow:hidden;text-overflow:ellipsis}",
-          // 详情浮层：逐项对齐宿主 ContextMeter 的 .panel。
-          ".dsh-armor5-panel{position:fixed;z-index:1100;box-sizing:border-box;",
-          "width:min(260px,100vw - 18px);padding:7px 8px 8px;border:0;cursor:default;",
-          "border-radius:var(--dsw-radius-lg,9px);background:var(--dsw-specific-menu,#1f1f1f);",
-          "backdrop-filter:var(--dsw-menu-backdrop-filter,none);",
-          "box-shadow:var(--dsw-elevation-prominent,0 8px 32px rgba(0,0,0,.45));",
-          "color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:11px;line-height:15px}",
+          // v0.49.0（C 方案）：原位浮层 .dsh-armor5-panel 的规则已删除；下方 head/sec/hits 等为抽屉共用，保留。
           // 头部：判决徽标 + 标题 + 版本/时刻（右对齐）。徽标按 tone 上色，一眼分辨通过/拒绝/执行中。
           ".dsh-armor5-head{display:flex;align-items:center;gap:4px}",
           ".dsh-armor5-head b{color:var(--dsw-alias-label-primary,#e6e6e6);font-weight:500}",
@@ -280,9 +274,14 @@
           // 高度走 dvh，底部让出 safe-area；内容分页，所以卡片不会被长列表撑高。
           ".dsh-armor5-scrim{position:fixed;inset:0;z-index:1099;background:var(--dsw-alias-bg-mask,rgba(0,0,0,.32))}",
           ".dsh-armor5-drawer{position:fixed;left:0;right:0;bottom:0;z-index:1100;box-sizing:border-box;",
-          "display:flex;flex-direction:column;max-height:62dvh;padding-bottom:env(safe-area-inset-bottom,0);",
+          "display:flex;flex-direction:column;max-height:62vh;padding-bottom:env(safe-area-inset-bottom,0);",
           "border-radius:14px 14px 0 0;border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
           "background:var(--dsw-alias-bg-layer-2,#1c1c1f);box-shadow:0 -10px 30px rgba(0,0,0,.35)}",
+          // 高度三段兜底（v0.49.0）：dvh 优先（移动端地址栏收缩时更准），其次 JS 量的 --ig5-vh，最后回到 62vh。
+          ".dsh-armor5-drawer{max-height:calc(var(--ig5-vh,62vh) * 0.62)}",
+          "@supports (height:1dvh){.dsh-armor5-drawer{max-height:62dvh}}",
+          ".dsh-armor5-root[data-pressing='1'] .dsh-armor5-dot{transform:scale(1.5)}",
+          ".dsh-armor5-root .dsh-armor5-dot{transition:transform .12s ease-out}",
           ".dsh-armor5-drawer-grip{flex:0 0 auto;display:flex;padding:6px 12px 2px}",
           ".dsh-armor5-drawer-grip i{display:block;width:32px;height:4px;margin:0 auto;border-radius:999px;",
           "background:var(--dsw-alias-border-l2,rgba(127,127,127,.4))}",
@@ -329,9 +328,98 @@
           var setAnchor = anchorPair[1];
           // 抽屉页签（v0.48.0）：只在 drawer 布局下渲染，钩子在这里无条件声明，
           // 这样两种布局之间切换不会改变钩子顺序（React 的硬约束）。
+          var drawerRef = react.useRef(null);
+          // 抽屉几何修正：宿主注入点上方若有 transform / contain / filter 祖先，
+          // position:fixed 会以那个祖先为包含块而不是视口 —— 表现就是「抽屉偏、右边盖不到」。
+          // 这里量一次实测矩形，把位移补回来并把宽度铺满视口。
+          var drawerBoxPair = react.useState(null);
+          var drawerBox = drawerBoxPair[0];
+          var setDrawerBox = drawerBoxPair[1];
           var drawerTabPair = react.useState("live");
           var drawerTab = drawerTabPair[0];
           var setDrawerTab = drawerTabPair[1];
+          // 触发条的长按（v0.49.0 · C 方案）：单击与长按都唤起抽屉。
+          // 长按给「一次直达」的手感，并在按住期间给视觉反馈；移动超过阈值判定为滚动，取消。
+          var pressPair = react.useState(false);
+          var pressing = pressPair[0];
+          var setPressing = pressPair[1];
+          var pressTimer = react.useRef(null);
+          var longFired = react.useRef(false);
+          var pressOrigin = react.useRef({ x: 0, y: 0 });
+          var LONG_PRESS_MS = 420;
+          var LONG_PRESS_SLOP = 10;
+          var pressPoint = function (event) {
+            var touch = event && event.touches && event.touches[0];
+            return touch || event || null;
+          };
+          var pressStart = function (event) {
+            var point = pressPoint(event);
+            pressOrigin.current = { x: (point && point.clientX) || 0, y: (point && point.clientY) || 0 };
+            setPressing(true);
+            if (pressTimer.current) clearTimeout(pressTimer.current);
+            pressTimer.current = setTimeout(function () {
+              pressTimer.current = null;
+              setPressing(false);
+              longFired.current = true;
+              setOpen(true);
+            }, LONG_PRESS_MS);
+          };
+          var pressCancel = function () {
+            setPressing(false);
+            if (pressTimer.current) { clearTimeout(pressTimer.current); pressTimer.current = null; }
+          };
+          var pressMove = function (event) {
+            var point = pressPoint(event);
+            if (!point) return;
+            if (Math.abs(((point.clientX) || 0) - pressOrigin.current.x) > LONG_PRESS_SLOP ||
+              Math.abs(((point.clientY) || 0) - pressOrigin.current.y) > LONG_PRESS_SLOP) pressCancel();
+          };
+          // 抽屉高度兜底（v0.49.0）：删掉浮层后抽屉是唯一容器，而 dvh 需要较新的内核；
+          // 这里量一次视口写进 --ig5-vh，配合 CSS 三段落底，老内核上也不会无上限长高。
+          react.useEffect(function () {
+            if (typeof window === "undefined" || !window.document) return undefined;
+            var doc = window.document;
+            var sync = function () {
+              try {
+                doc.documentElement.style.setProperty("--ig5-vh", (window.innerHeight || 0) + "px");
+              } catch (err) { /* 老内核 / 只读 documentElement：CSS 的 vh 兜底仍然生效 */ }
+            };
+            sync();
+            if (typeof window.addEventListener !== "function") return undefined;
+            window.addEventListener("resize", sync);
+            window.addEventListener("orientationchange", sync);
+            return function () {
+              window.removeEventListener("resize", sync);
+              window.removeEventListener("orientationchange", sync);
+            };
+          }, [open]);
+
+          // 抽屉几何修正（同上）：只有开着时才量，量完把 dx/dy 与视口宽度写进 state。
+          react.useEffect(function () {
+            if (!open) return undefined;
+            var node = drawerRef.current;
+            if (!node || typeof node.getBoundingClientRect !== "function") return undefined;
+            var win = (node.ownerDocument && node.ownerDocument.defaultView) || window;
+            var measure = function () {
+              var rect = node.getBoundingClientRect();
+              var vw = win.innerWidth || 0;
+              var vh = win.innerHeight || 0;
+              if (!vw || !vh || !rect.width) return;
+              var next = { width: vw, dx: -rect.left, dy: vh - rect.bottom };
+              if (!drawerBox || drawerBox.width !== next.width ||
+                Math.abs(drawerBox.dx - next.dx) > 0.5 || Math.abs(drawerBox.dy - next.dy) > 0.5) {
+                setDrawerBox(next);
+              }
+            };
+            measure();
+            if (typeof win.addEventListener !== "function") return undefined;
+            win.addEventListener("resize", measure);
+            win.addEventListener("orientationchange", measure);
+            return function () {
+              win.removeEventListener("resize", measure);
+              win.removeEventListener("orientationchange", measure);
+            };
+          }, [open, drawerTab]);
           // 浮层卡片里的「实时」四行（v0.16.1）：与设置页那组同源同文案，但只在卡片开着时
           // retain 统计库 —— 关着就不为它多开一条 SSE、多回读一次。
           var liveState = useStatsView(open);
@@ -415,8 +503,12 @@
             var onDown = function (event) {
               var target = event.target;
               if (sameNode(target, node) || (node.contains && node.contains(target))) return;
-              var panel = doc.querySelector(".dsh-armor5-panel");
-              if (panel && panel.contains && panel.contains(target)) return;
+              // C 方案（v0.49.0）：抽屉是唯一容器 —— ref 优先（真机 DOM 一定命中），
+              // 类名查询兜底（v0.48.0 这里只查已删除的 .dsh-armor5-panel，导致抽屉内点击被误判为外部）。
+              var hostNode = drawerRef.current;
+              if (hostNode && hostNode.contains && hostNode.contains(target)) return;
+              var hostQuery = doc.querySelector(".dsh-armor5-panel, .dsh-armor5-drawer");
+              if (hostQuery && hostQuery.contains && hostQuery.contains(target)) return;
               setOpen(false);
             };
             var onKey = function (event) {
@@ -645,57 +737,17 @@
             tile("空答类型", textValue(emptyKind || "—"), "empty", 1)
               ], "fields");
 
-          // 浮层只在 popover 布局下参与渲染；drawer 布局下同一份内容走下面的抽屉容器。
-          var panel = open && dockPrefs.layoutMode === "popover"
-            ? react.createElement(
-              "div",
-              {
-                className: "dsh-armor5-panel",
-                "data-tone": tone,
-                style: anchor
-                  ? { width: anchor.width, left: anchor.left, bottom: anchor.bottom }
-                  : undefined
-              },
-              react.createElement(
-                "div",
-                { className: "dsh-armor5-head" },
-                react.createElement("span", { className: "dsh-armor5-badge", "data-tone": tone }, badgeText),
-                react.createElement("b", null, "无限五代内核"),
-                react.createElement("span", { className: "dsh-armor5-head-right" },
-                  react.createElement("span", null, clock === "—" ? "本次会话" : clock),
-                  react.createElement("span", null, VERSION))
-              ),
-              react.createElement("div", { className: "dsh-armor5-caprow" },
-                react.createElement("span", { className: "dsh-armor5-cap" }, "位置 " + slotText),
-                gateButton()),
-              fieldTiles,
-
-              section("实时", tileGrid(liveTiles, "live"), "live"),
-              // IG5-PANEL-STREAM-MERGE M3：这里原来挂着一个「实时流」列表，与下面的「最近命中」同一批行，
-              // 已删 —— 判决只在一个列表里长出来。
-              section(hitList.length ? "最近命中（本进程最近 " + hitList.length + " 次判决）" : "最近命中",
-                hitList.length
-                  ? react.createElement("ul", { className: "dsh-armor5-hits" },
-                    hitList.map(function (hit) {
-                      return react.createElement("li", {
-                        key: hit.key,
-                        title: hit.title,
-                        "data-fresh": hit.fresh ? "1" : undefined
-                      },
-                        react.createElement("span",
-                          { className: "dsh-armor5-hit-main", "data-verdict": hit.verdict }, hit.main),
-                        react.createElement("span", { className: "dsh-armor5-hit-sub" }, hit.sub));
-                    }))
-                  : react.createElement("span", { className: "dsh-armor5-sec-title" },
-                    "还没有判决留档（重启 DSH 后开始攒）"), "hits"),
-            )
-            : null;
+          // v0.49.0（C 方案）：原位浮层容器已删除 —— 单击或长按触发条一律走下面的抽屉。
+          // 回滚参照：本块原为「var panel = open && dockPrefs.layoutMode === "popover" ? … : null;」，
+          // 完整原文见 panel-drawer-v0.48.0/DIFF.patch 与 git 历史（v0.48.0 = ee88dfe）。
+          var panel = null;   // 占位：保留 overlay 的三元结构，避免下游引用炸掉；C 方案下 overlay 只取 drawer。
 
           // ── 抽屉容器（v0.48.0 · LAYOUT_MODE=drawer）────────────────────────
           // 与浮层同源：liveTiles / hitList / fieldTiles 三份数据原样搬进来，只换壳。
           // 页签只切「显示哪一页」，不改变任何订阅或回读时机。
           var drawerPane = drawerTab === "hits"
-            ? (hitList.length
+            ? section(hitList.length ? "最近命中（本进程最近 " + hitList.length + " 次判决）" : "最近命中",
+              hitList.length
               ? react.createElement("ul", { className: "dsh-armor5-hits" },
                 hitList.map(function (hit) {
                   return react.createElement("li", {
@@ -708,12 +760,12 @@
                     react.createElement("span", { className: "dsh-armor5-hit-sub" }, hit.sub));
                 }))
               : react.createElement("span", { className: "dsh-armor5-sec-title" },
-                "还没有判决留档（重启 DSH 后开始攒）"))
+                "还没有判决留档（重启 DSH 后开始攒）"), "hits")
             : drawerTab === "fields"
               ? fieldTiles
               : tileGrid(liveTiles, "live");
 
-          var drawer = open && dockPrefs.layoutMode === "drawer"
+          var drawer = open
             ? react.createElement(
               react.Fragment,
               null,
@@ -725,10 +777,20 @@
                 "div",
                 {
                   className: "dsh-armor5-drawer",
+                  ref: drawerRef,
                   role: "dialog",
                   "aria-modal": "true",
                   "data-tone": tone,
-                  "data-tab": drawerTab
+                  "data-tab": drawerTab,
+                  style: drawerBox
+                    ? {
+                      left: 0,
+                      right: "auto",
+                      bottom: 0,
+                      width: drawerBox.width + "px",
+                      transform: "translate(" + drawerBox.dx + "px," + drawerBox.dy + "px)"
+                    }
+                    : { left: 0, right: 0, bottom: 0 }
                 },
                 react.createElement("div", { className: "dsh-armor5-drawer-grip" },
                   react.createElement("i", null)),
@@ -761,7 +823,8 @@
             : null;
 
           // 两种容器二选一：open 为假时两者都不渲染（浮层默认关闭的行为不变）。
-          var overlay = panel || drawer;
+          // C 方案（v0.49.0）：浮层已删，唯一容器就是抽屉。
+          var overlay = drawer;
 
           return react.createElement(
             "div",
@@ -774,10 +837,20 @@
                 ref: rootRef,
                 "data-armor": "gen5",
                 "data-tone": tone,
-                title: title,
-                "aria-label": title,
+                "data-pressing": pressing ? "1" : undefined,
+                title: title + "（点击或长按打开抽屉）",
+                "aria-label": title + "（点击或长按打开抽屉）",
                 "aria-expanded": open ? "true" : "false",
-                onClick: function () { setOpen(!open); }
+                onPointerDown: pressStart,
+                onPointerUp: pressCancel,
+                onPointerCancel: pressCancel,
+                onPointerLeave: pressCancel,
+                onPointerMove: pressMove,
+                onClick: function () {
+                  // 长按已经开过一次：吞掉紧随其后的 click，避免「刚开就关」。
+                  if (longFired.current) { longFired.current = false; return; }
+                  setOpen(true);   // C 方案（v0.49.0）：单击也开抽屉，不再切浮层。
+                }
               },
               react.createElement("span", {
                 className: "dsh-armor5-text",
@@ -809,13 +882,11 @@
         var PREF_KEY = "dsh-infinite-gen-5:prefs";
         var PREF_DEFAULTS = Object.freeze({
           triggerMode: TRIGGER_MODE,
-          slotMode: SLOT_MODE,
-          layoutMode: LAYOUT_MODE
+          slotMode: SLOT_MODE
         });
         var PREF_CHECKS = {
           triggerMode: function (v) { return TRIGGER_MODES.indexOf(v) >= 0; },
-          slotMode: function (v) { return Object.prototype.hasOwnProperty.call(SLOT_MODES, v); },
-          layoutMode: function (v) { return Object.prototype.hasOwnProperty.call(LAYOUT_MODES, v); }
+          slotMode: function (v) { return Object.prototype.hasOwnProperty.call(SLOT_MODES, v); }
         };
         var CONSOLE_KEY = "armor5";
         // 设置页 nav 里排在官方「插件」那一项（order 15）后面：不常用，顺使用习惯，
@@ -1800,20 +1871,8 @@
             });
           });
 
-          // v0.48.0：弹出容器（浮层 / 底部抽屉）。与形态、槽位同一套偏好写入路径。
-          var layoutChoices = [
-            { value: "popover", hint: "锚在触发条上的原位卡片（桌面首选）" },
-            { value: "drawer", hint: "从底部弹出、内容分页（手机首选）" }
-          ].map(function (row) {
-            return react.createElement(ArmorChoice, {
-              key: row.value,
-              value: row.value,
-              label: LAYOUT_MODES[row.value] || row.value,
-              hint: row.hint,
-              active: prefs.layoutMode === row.value,
-              onPick: pick("layoutMode", row.value)
-            });
-          });
+          // v0.49.0（C 方案）：设置页那一组「点开之后用哪种容器」已删除 —— 只有抽屉一种容器，
+          // 触发方式是单击或长按触发条。偏好项里也不再保留 layoutMode。
 
           return react.createElement("div", { className: "armor5-console" },
             react.createElement("div", { className: "armor5-console-head" },
@@ -1838,10 +1897,6 @@
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "挂到哪个槽位（SLOT_MODE）"),
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-3" }, slotChoices)
-            ),
-            react.createElement("div", { className: "armor5-console-group" },
-              react.createElement("div", { className: "armor5-console-group-title" }, "点开之后用哪种容器（LAYOUT_MODE）"),
-              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-2" }, layoutChoices)
             ),
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "注入档位（改完点保存，服务端当场重装，不必重启）"),

@@ -26,6 +26,14 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+// ── v0.49.0 退役声明 ──────────────────────────────────────────────────────
+// 本脚本的原判据是「原位浮层固定 264×448（v0.34.5 定稿）」。C 方案删除了浮层容器，
+// 抽屉高度改由视口决定（62vh → --ig5-vh → 62dvh 三段兜底），固定宽高的锚点不再成立。
+// 等价判据改由两处承担：① verify_ui.mjs 的结构断言（页签/遮罩/dialog 语义/切页生效）；
+// ② 真机目视（抽屉不遮输入框、首屏不内滚）。保留脚本以免流水线引用悬空。
+console.log("verify_card_size：已随 v0.49.0 浮层删除而退役（原判据 浮层 264×448）；新判据见 docs/CI.md。");
+process.exit(0);
+
 const H_MIN = 428;
 const H_MAX = 468;
 const W_MIN = 250;

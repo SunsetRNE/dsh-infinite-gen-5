@@ -1,3 +1,34 @@
+## v0.50.0
+
+**面板只剩一种容器：底部抽屉。原位浮层已删除，单击或长按触发条唤起。**
+
+### 破坏性变更
+
+- 删除浮层 DOM 与 `.dsh-armor5-panel` 样式规则；`LAYOUT_MODE` 偏好与设置页那一组随之移除
+  （localStorage 里旧的 `layoutMode` 值会被忽略）。
+- 触发条语义：单击 = 打开抽屉（不再切换容器），长按 420ms 亦打开；关闭走 `✕`、遮罩、Esc 或点抽屉外。
+
+### 修掉的两个真实缺陷
+
+1. **页签切不动（v0.48.0 引入）**：外部点击判定只查 `.dsh-armor5-panel`，抽屉态下该节点不存在，
+   于是抽屉内任意 pointerdown 都被判成「点了外部」——捕获阶段先置 `open=false`，抽屉被卸载，
+   页签的 `click` 永远到不了。现在改为 **ref 优先 + `.dsh-armor5-panel, .dsh-armor5-drawer` 兜底**。
+2. **抽屉偏右、右边盖不到**：`position:fixed` 的包含块若被宿主某个 `transform/contain/filter` 祖先接管，
+   `left:0;right:0` 就会贴着那个祖先而不是视口。现在打开后量一次实测矩形，把 `dx/dy` 与视口宽度
+   写进内联 `transform/width` 补回来（`resize`/`orientationchange` 重算）。
+
+### 高度与自检
+
+- 抽屉高度三段兜底：`62vh` → JS 写入的 `--ig5-vh`（`calc(var(--ig5-vh,62vh) * 0.62)`）→ `@supports (height:1dvh)` 下的 `62dvh`。
+- `node scripts/verify_ui.mjs` **222 通过 / 0 失败**；`verify_card_size.mjs` 随浮层删除**显式退役**
+  （原判据「浮层 264×448」不再成立，等价判据由 `verify_ui` 结构断言 + 真机目视承担）。
+
+### 边界
+
+- 抽屉仍未在真机上完成验收：`62vh` 上限与输入框/状态条的抢位、长按阈值手感都**未实测**。
+- 几何修正依赖一次 `getBoundingClientRect()`；若宿主把注入点放进 `overflow:hidden` 的容器里，
+  平移仍可能被裁剪 —— 这一点未验证。
+
 # 更新文档（版本变更）
 
 本文件是「这个项目每一版改了什么、为什么」的**唯一真源**，放在仓库内部随包分发。四件事分工：
