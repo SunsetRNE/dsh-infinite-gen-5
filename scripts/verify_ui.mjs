@@ -1581,7 +1581,27 @@ if (process.argv.includes("--emit-html")) {
     /canProject \? useProjection\("todos"\) : undefined/.test(CLIENT_SRC));
 }
 
-// ── 结果 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ── v0.50.3：最近工具容错 + 命中三分类 ──────────────────────────────────────
+{
+  ok("最近工具兼容三种形状（recent / ring / lastCall）",
+    CLIENT_SRC.includes("Array.isArray(tools.recent)") &&
+    CLIENT_SRC.includes("Array.isArray(tools.ring)") &&
+    CLIENT_SRC.includes("tools.lastCall && tools.lastCall.tool"));
+  ok("流式补丁只带 lastCall 时不再空白（拿最后一次调用顶上）",
+    /else if \(tools && tools\.lastCall && tools\.lastCall\.tool\) recent = \[tools\.lastCall\]/.test(CLIENT_SRC));
+  ok("命中页按三类分组（本对话 / 最近对话 / 全局）",
+    CLIENT_SRC.includes("本对话命中（") && CLIENT_SRC.includes("最近对话命中（") &&
+    CLIENT_SRC.includes("全局命中（本进程累计"));
+  ok("全局段给出通过 / 拒答 / 命中域（不是空标题）",
+    CLIENT_SRC.includes('" · 拒答 "') && CLIENT_SRC.includes("命中域 "));
+  ok("老服务端（无 hits.groups）退回单段「最近命中」不空屏",
+    CLIENT_SRC.includes("hitPaneGrouped || section(") &&
+    CLIENT_SRC.includes("dsh-armor5-sec-title") );
+  ok("客户端读的是服务端同一份 hits.groups（不另起数据源）",
+    /liveState\.liveDoc\.hits\.groups/.test(CLIENT_SRC));
+}
+
+// ── 结果 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ok("槽位模式表列了三种可用位置", CLIENT_SRC.includes("conversation.session.header.utilities") && CLIENT_SRC.includes("conversation.input.dock"));
 
 if (failures.length === 0) {

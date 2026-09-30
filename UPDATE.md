@@ -1,3 +1,20 @@
+## v0.50.3
+
+**修「最近工具」空白，命中按三类分开看。**
+
+- 「最近工具」以前只认 `tools.recent`；可统计库的**流式补丁只写 `tools.lastCall`**，于是那一格常年显示
+  「本进程还没调过工具」。现在按 `recent → ring → lastCall` 依次落：环形缓冲有就列流水，只有最后一次
+  调用就显示那一个工具，不再空白。
+- 命中页拆成三段：
+  | 段 | 含义 | 数据 |
+  |---|---|---|
+  | 本对话命中 | 会话号 == 当前会话 | `hits.groups.session` |
+  | 最近对话命中 | 本进程里更早的对话 | `hits.groups.earlier` |
+  | 全局命中 | 本进程累计判决 / 通过 / 拒答 / Top 域 | `hits.groups.global` |
+  会话号由服务端 `rememberSession` 刷新（`activeSessionId`），条目录入时打标；拿不到会话号的条目归「更早」，
+  不谎报成当前对话。老服务端没有 `hits.groups` 时整段退回原来的单块「最近命中」。
+- 判据：`node scripts/verify_ui.mjs` **238 通过 / 0 失败**；`npm run verify:dedupe` 92 通过 / 0 失败。
+
 ## v0.50.2
 
 **抽屉第四页：任务清单进度（对接宿主 todos 投影）。**

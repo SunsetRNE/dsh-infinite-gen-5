@@ -93,7 +93,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.50.2";
+const PLUGIN_VERSION = "0.50.3";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -869,7 +869,37 @@ const streamHits = [];
 let streamPublish = () => {};
 const toolRing = [];
 const eventRing = [];
+/** v0.50.3：把命中环按「当前会话 / 更早的对话」分开，并带上全局累计。 */
+const hitGroups = () => {
+  const session = [];
+  const earlier = [];
+  for (const hit of hitRing) {
+    if (activeSessionId !== null && hit.session === activeSessionId) session.push(hit);
+    else earlier.push(hit);
+  }
+  const byDomain = Object.entries(hitTally.byDomain)
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, 6)
+    .map(([id, count]) => `${id}(${count})`);
+  return {
+    session,
+    earlier,
+    global: {
+      total: hitTally.total,
+      pass: hitTally.pass,
+      block: hitTally.block,
+      byDomain,
+      sessionId: activeSessionId,
+    },
+  };
+};
+
 const hitRing = [];
+// v0.50.3：命中分类需要「这条判决属于哪个会话」。rememberSession 每次见到会话就刷新它；
+// 老路径拿不到会话时保持 null，客户端按「更早」归堆，不谎报成当前对话。
+let activeSessionId = null;
+// 本进程累计（全局口径）：判决总数 / 通过 / 拒答 / 各域条数。
+const hitTally = { total: 0, pass: 0, block: 0, byDomain: {} };
 const liveState = { lastEventAt: null, lastKind: null, turnStartedAt: null };
 const utf8Bytes = (text) => Buffer.byteLength(text, "utf8");
 const trimToChars = (text, chars) =>
@@ -1703,7 +1733,13 @@ function armorProjectionApply(state, event) {
     const scored = armorScore(text, state?.promptText || "");
     // 命中环（v0.16.2）：判决一出来就留一条，给浮层卡片的「最近命中」用。
     // 只放面板真会显示的字段、每个字段都截到固定长度 —— 这一圈会进统计库，体积必须有界。
+    hitTally.total += 1;
+    if (scored && scored.verdict === "pass") hitTally.pass += 1;
+    else hitTally.block += 1;
+    const tallyDomain = scored && scored.domain ? String(scored.domain) : "unknown";
+    hitTally.byDomain[tallyDomain] = (hitTally.byDomain[tallyDomain] || 0) + 1;
     hitRing.push({
+      session: activeSessionId,
       at: new Date(scored.at).toISOString(),
       verdict: scored.verdict,
       domain: scored.domain,
@@ -1950,6 +1986,7 @@ export function apply(ctx, config) {
       taskMirror.sessionId = id;
       stats.bump("sessions.seen");
     }
+    activeSessionId = id;   // v0.50.3：命中环用它区分「本对话 / 更早的对话」
     // lastAt 是「这个会话最近一次被处理的时间」（不是「最近一次换会话」）：每个事件都刷新。
     // 同一格早已被 bump("sessions.events") 置脏，所以写它不会多出一次落盘。
     stats.patch("sessions", { lastId: id, lastAt: new Date().toISOString() });
@@ -2555,7 +2592,12 @@ export function apply(ctx, config) {
       },
       tools: { recent: toolRing.slice(-TOOL_RING_SIZE), lastAt: liveState.lastToolAt ?? null },
       // 最近几次命中/风险载荷（浮层卡片的「最近命中」）：新判决一进环就换指纹，卡片立刻刷新。
-      hits: { recent: hitRing.slice(-HIT_RING_SIZE), stream: streamHits.slice(-STREAM_HIT_KEEP) },
+      hits: {
+        recent: hitRing.slice(-HIT_RING_SIZE),
+        stream: streamHits.slice(-STREAM_HIT_KEEP),
+        // v0.50.3 三分类：会话内（当前对话）/ 更早（本进程里别的对话）/ 全局（本进程累计）。
+        groups: hitGroups(),
+      },
       // IG5-PANEL-STREAM S5：实时流随库一起发（面板读的仍旧只有 /stats 这一条路）。
       ticks: {
         recent: tickRing.slice(-TICK_RING_SIZE),

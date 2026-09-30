@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.50.2";
+        var VERSION = "v0.50.3";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -799,8 +799,50 @@
                   })),
                 "todo");
 
+          var hitGroups = liveState.liveDoc && liveState.liveDoc.hits
+            && liveState.liveDoc.hits.groups ? liveState.liveDoc.hits.groups : null;
+          var hitRowsOf = function (rows) {
+            var list = Array.isArray(rows) ? rows : [];
+            return list.length
+              ? react.createElement("ul", { className: "dsh-armor5-hits" },
+                list.map(function (hit, index) {
+                  return react.createElement("li", {
+                    key: "hg" + index,
+                    title: hit && hit.title,
+                    "data-fresh": hit && hit.fresh ? "1" : undefined
+                  },
+                    react.createElement("span",
+                      { className: "dsh-armor5-hit-main", "data-verdict": hit && hit.verdict },
+                      (hit && hit.main) || ""),
+                    react.createElement("span", { className: "dsh-armor5-hit-sub" },
+                      (hit && hit.sub) || ""));
+                }))
+              : react.createElement("span", { className: "dsh-armor5-sec-title" }, "这一类还没有判决");
+          };
+          // v0.50.3：命中分三类（本对话 / 最近的更早对话 / 本进程全局累计）。
+          // 老服务端不发布 groups 时，整段退回原来的单块「最近命中」，不空屏。
+          var hitPaneGrouped = hitGroups
+            ? react.Fragment(null,
+              section("本对话命中（" + (hitGroups.session || []).length + " 条 · 会话 "
+                + (hitGroups.global && hitGroups.global.sessionId !== null
+                  && hitGroups.global.sessionId !== undefined
+                  ? String(hitGroups.global.sessionId).slice(0, 8) : "未知") + "）",
+                hitRowsOf(hitGroups.session), "hg-session"),
+              section("最近对话命中（本进程更早 "
+                + (hitGroups.earlier || []).length + " 条）",
+                hitRowsOf(hitGroups.earlier), "hg-earlier"),
+              section("全局命中（本进程累计 "
+                + ((hitGroups.global && hitGroups.global.total) || 0) + " 次判决）",
+                react.createElement("div", { className: "dsh-armor5-hits" },
+                  react.createElement("span", { className: "dsh-armor5-hit-sub" },
+                    "通过 " + ((hitGroups.global && hitGroups.global.pass) || 0)
+                    + " · 拒答 " + ((hitGroups.global && hitGroups.global.block) || 0)
+                    + " · 命中域 " + (((hitGroups.global && hitGroups.global.byDomain) || [])
+                      .join("、") || "—"))), "hg-global"))
+            : null;
+
           var drawerPane = drawerTab === "hits"
-            ? section(hitList.length ? "最近命中（本进程最近 " + hitList.length + " 次判决）" : "最近命中",
+            ? (hitPaneGrouped || section(hitList.length ? "最近命中（本进程最近 " + hitList.length + " 次判决）" : "最近命中",
               hitList.length
               ? react.createElement("ul", { className: "dsh-armor5-hits" },
                 hitList.map(function (hit) {
@@ -814,7 +856,7 @@
                     react.createElement("span", { className: "dsh-armor5-hit-sub" }, hit.sub));
                 }))
               : react.createElement("span", { className: "dsh-armor5-sec-title" },
-                "还没有判决留档（重启 DSH 后开始攒）"), "hits")
+                "还没有判决留档（重启 DSH 后开始攒）"), "hits"))
             : drawerTab === "fields"
               ? fieldTiles
               : drawerTab === "todo"
@@ -1786,7 +1828,13 @@
                 ? String(turn.lastKind).replace(/^.*\//, "")
                 : String(turn.lastKind) + " · " + fmtAgo(turn.lastEventAt))
               : "等第一条事件"]);
-            var recent = (tools && tools.recent) || [];
+            // v0.50.3：服务端各处给的形状不完全一致 —— 快照里是 tools.recent（环形缓冲），
+            // 流式补丁只带 tools.lastCall。以前只认 recent，于是「最近工具」常年空白。
+            // 这里按 recent → ring → lastCall 依次落，拿到什么显示什么。
+            var recent = [];
+            if (tools && Array.isArray(tools.recent)) recent = tools.recent;
+            else if (tools && Array.isArray(tools.ring)) recent = tools.ring;
+            else if (tools && tools.lastCall && tools.lastCall.tool) recent = [tools.lastCall];
             rows.push(["最近工具", recent.length
               ? (compact
                 ? recent[recent.length - 1].tool
