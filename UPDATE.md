@@ -11,6 +11,22 @@
 
 版本号规则见 `scripts/version-targets.mjs`（当前版本锚点的唯一真源）与 `scripts/verify_version.mjs`；本文件登记在 `PROSE_ALLOWED_FILES` 里（它天生满篇版本号，且必须能写当前版本）。
 
+## v0.46.2
+
+**主题：给实验性的生图通道补一段使用告示，并把版本号推到 0.46.2（用户 m01299：「提升版本，然后加入描述"实验性加入生图工具，可能会存在参数不适配，不稳定的情况，谨慎使用，有需要请带生成失败截图和参数反馈开发者"然后推送远端」）。**
+
+① **告示落四处，原文一字不动**（「实验性加入生图工具，可能会存在参数不适配，不稳定的情况，谨慎使用，有需要请带生成失败截图和参数反馈开发者。」）：
+- `package.json` 的 `description`（宿主插件列表里显示的那段）—— 在「附带：」之前插入「生图（实验性）：…」一句，并补实现入口与端点变量（`OpenAI 兼容 POST /images/generations` · `node scripts/image-gen.mjs` · `IG5_IMAGE_BASE_URL` / `IG5_IMAGE_API_KEY`，缺省回落 `IG5_RELAY_*`）；
+- `README.md` 生图通道段末 —— 引用块加粗，放在「端点用 …」之后，紧贴实现说明；
+- `adapters/README.md` 生图节首 —— 标题与「三件」之间；
+- 独立副本 `/root/ig5-adapters/README.md` 的判据段首 —— 同步一行（该目录不是 git 仓库，改动只落盘）。
+
+② **版本号**：0.46.1 → **0.46.2**（10 处锚点：`package.json` / `index.js` · PLUGIN_VERSION / `client.js` · VERSION / `cordis.patch.yml` / `README.md` 标题 / `README.md` 一键安装深链 ×4 / `HARNESS_PLUGIN.md` / `scripts/verify_prompt_gen5.mjs` / `scripts/verify_dedupe.mjs` / `data/boost-corpus.mjs` · BOOST_VERSION；`bump-version.mjs` 的 dry-run 与实际改写均逐项 OK）。`node scripts/verify_version.mjs` → **27 通过 / 0 失败**（当前版本 0.46.2 · 锚点 9 处 · 扫描 1326 个文件）。
+
+③ **门禁**：bump 后首跑 `IG5_SKIP_LIVE_GOLDEN=1 npm run verify:all`（日志 `/tmp/ig5-verify-all9.log`）**EXIT=1**，唯一红是 `verify_release_notes` 的 33 通过 · 2 失败 —— `✗ 仓库：CHANGELOG 有当前版本 v0.46.2 的段` 与 `✗ 仓库：当前版本能压出正文`，与 v0.46.1 第 6 遍同源：这是「bump → 提交 → changelog → 再提交」铁律顺序的**预期中间态**，不是缺陷；changelog 重生成后复跑。
+
+④ **边界**：本版**只改描述与版本号**，一行生图实现都没动（`adapters/lib/image-api.mjs` / `image-runner.mjs` / `image-probe.mjs` 与 E1–E7、探针自证读数沿用 v0.46.1 与它 ⑦ 段的记录）。真靶仍未跑：本机没有可用生图端点，「参数不适配 / 不稳定」这句告示因此不是免责套话 —— 它是当前的**已知事实**（六条探针只在本地桩上验过，真实端点的尺寸集 / `response_format` / `n>1` 全部未验）。
+
 ## v0.46.1
 
 **主题：生图通道（OpenAI 兼容 `POST /images/generations`）落进公共层，并以「在册工具」的身份接进工具注册表（用户 m00948：「我在想怎么扩展生图工具」）。**

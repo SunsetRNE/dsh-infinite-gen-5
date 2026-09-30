@@ -304,7 +304,11 @@ node test-endpoint-inventory.mjs     # → 10/10 条判据通过
 
 ## 生图通道（OpenAI 兼容 images/generations，可选）
 
-与上面五条「装载通道」并列的一条**能力通道**：让无限五代这边也能出图。三件：
+与上面五条「装载通道」并列的一条**能力通道**：让无限五代这边也能出图。
+
+> ⚠️ **实验性加入生图工具，可能会存在参数不适配，不稳定的情况，谨慎使用，有需要请带生成失败截图和参数反馈开发者。**
+
+三件：
 
 - `lib/image-api.mjs` —— 传输层（`IMAGE_SCHEMA = "ig5-image/1"`）：`resolveImageRelay(env)` 读 `IG5_IMAGE_BASE_URL` / `IG5_IMAGE_API_KEY` / `IG5_IMAGE_MODEL`，前两项缺省回落 `IG5_RELAY_*`；`generateImage()` POST `${base}/images/generations`，返回 `{ok, status, attempts, model, images:[{b64_json,url,revised_prompt}], usage, error}`；4xx 不重试、429/5xx 重试到 3 次、任何失败都不抛异常；`saveImages()` 把 b64 写字节（url 只登记不改写）、`looksLikePng()` 验 PNG 签名。
 - `image-runner.mjs` —— CLI（`--prompt` / `--prompt-file` / `--out` / `--size` / `-n` / `--model` / `--base-url` / `--dry-run`），退出码 **0 成功 / 2 端点未配置（只产出请求模板，不宣称取得回执）/ 1 失败**；stdout 一律 JSON，密钥不出现。
