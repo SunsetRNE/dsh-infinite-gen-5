@@ -154,10 +154,13 @@ node verify_adapters.mjs                    # 40 条判据（A–H 组）：语�
 node build-adapters.mjs --check --json      # 只校验不落盘；表里的字节数以 perTarget.residentBytes 为准
 node build-adapters.mjs                     # 落盘 dist/<通道>/<通道>.payload.md + manifest.json
 node test-openai-embed.mjs                  # OpenAI 兼容 /chat/completions 六条判据，默认本地桩、零密钥、不出网
+node test-image-embed.mjs                   # 生图通道 /images/generations 七条判据（E1–E7），同样本地桩、零密钥、不出网
 node probe-runner.mjs --dry-run --limit 1   # 端到端：本地桩 → 请求体 → 回执
 ```
 
 内核根按「本目录 → 上一级 → 历史绝对路径」推导，也可用 `IG5_KERNEL_DIR` / `IG5_PROMPT_DIR` / `IG5_DATA_DIR` 显式覆盖；本层只读宿主真源，一个字节都不改。设计约束、边界与全部实测读数见 [adapters/README.md](adapters/README.md)。
+
+生图通道（可选，与上面五条装载通道并列）：`adapters/lib/image-api.mjs` + `adapters/image-runner.mjs` 直连 OpenAI 兼容的 `POST /images/generations`（429/5xx 重试、4xx 不重试、密钥不入包）。在册入口是 `node scripts/image-gen.mjs`：`--dry-run` 只打印请求模板、`--selftest` 跑 E1–E7 判据；端点用 `IG5_IMAGE_BASE_URL` / `IG5_IMAGE_API_KEY`（缺省回落 `IG5_RELAY_*`）。
 
 ---
 

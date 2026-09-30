@@ -1,7 +1,7 @@
 # 工具与工具协议（自动生成）
 
 > 本文件由 `npm run tools:doc` 生成，**不要手改**：改代码或 `scripts/tool-registry.mjs` 后重跑。
-> 协议标识 `ig5-tool-registry-v1` · 在册工具 **100** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
+> 协议标识 `ig5-tool-registry-v1` · 在册工具 **101** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
 
 ## 一、工具协议总则（Tool ABI）
 
@@ -25,7 +25,7 @@
 「每个脚本都在册 / 在册路径都存在 / 声明的能力在文件里真的出现 / npm 别名真的存在 /
 本文件与生成器输出逐字节一致」。
 
-实测分布（现扫文件文本得出）：带 `--json` 的 **49** 个、带 `--selftest` 的 **23** 个、带 `--apply` 的 **8** 个、有 npm 别名的 **80** 个。
+实测分布（现扫文件文本得出）：带 `--json` 的 **49** 个、带 `--selftest` 的 **24** 个、带 `--apply` 的 **8** 个、有 npm 别名的 **80** 个。
 
 ## 二、命名协议注册表
 
@@ -210,7 +210,7 @@
 | `stats-store.mjs` | 统计数据库：插件本体（核心）单写、前端面板单读的那一份 JSON。 | `node stats-store.mjs` | `node stats-store.mjs` | — |
 | `tasks.mjs` | DSH 自身任务清单（todo）的读侧与写侧规则。 | `node tasks.mjs` | `node tasks.mjs` | — |
 
-### 工具（18）
+### 工具（19）
 
 *其余 CLI 工具*
 
@@ -221,6 +221,7 @@
 | `scripts/eval-corpus.mjs` <br>npm: `eval:corpus` `gate:eval` `baseline:eval` | 离线评测闭环（P0）· scripts/eval-corpus.mjs | `node scripts/eval-corpus.mjs` | `npm run eval:corpus` | `--json` `--write` `--dir` |
 | `scripts/extract-boost-corpus.mjs` | 无限五代 v0.35.0 · 增强语料提取器（离线、只读附件、不连网） | `node scripts/extract-boost-corpus.mjs` | `node scripts/extract-boost-corpus.mjs` | `--json` `--out` |
 | `scripts/gen_tool_docs.mjs` <br>npm: `tools:doc` | 无限五代 · 工具与文档索引生成器（docs/TOOL-PROTOCOLS.md + docs/INDEX.md） | `node scripts/gen_tool_docs.mjs` | `npm run tools:doc` | `--selftest` `--json` `--apply` `--check` `--write` |
+| `scripts/image-gen.mjs` | 无限五代 · 生图入口（在册工具）：把提示词按 OpenAI 兼容的 images/generations 发出去，取回图像落盘。 | `node scripts/image-gen.mjs` | `node scripts/image-gen.mjs --selftest` | `--selftest` `--dry-run` `--out` |
 | `scripts/kernel-lazy-split.mjs` | 内核惰性拆分器：把「只在触发场景才需要」的章节从常驻索引里搬到 prompts/infinite-gen-5-lazy.md， | `node scripts/kernel-lazy-split.mjs` | `node scripts/kernel-lazy-split.mjs` | — |
 | `scripts/merge_collection.mjs` <br>npm: `merge:collection` `verify:merge` | 无限五代 v0.44.0 · 合集融合编译器（外部技能批 → 仓内技能层） | `node scripts/merge_collection.mjs` | `npm run verify:merge` | `--selftest` `--json` `--apply` `--check` `--out` `--src` |
 | `scripts/plugin_integrity.mjs` <br>npm: `verify:hardening` | 插件目录完整性清单（r5-01 处置件） | `node scripts/plugin_integrity.mjs` | `npm run verify:hardening` | `--selftest` `--json` `--write` `--dir` |
