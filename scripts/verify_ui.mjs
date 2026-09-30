@@ -378,9 +378,9 @@ function mount(projection, docForeign, Component) {
   ok("空闲：title 交代版本、状态与「可点开」", /无限五代 v/.test(button.props.title) && /空闲/.test(button.props.title) && /点击查看面板/.test(button.props.title), button.props.title);
   ok("空闲：无障碍标签与 title 一致", button.props["aria-label"] === button.props.title);
   ok("空闲：无外来徽标时不挂 MutationObserver", doc.__observers.length === 0);
-  ok("两个投影键都被读取（hook 顺序恒定）",
-    m.readKeys.length >= 2 &&
-    m.readKeys.every((k, i) => k === (i % 2 === 0 ? "infinite-gen-5:armor" : "armor")),
+  ok("三个投影键都被读取且顺序恒定（armor5 → armor → todos）",
+    m.readKeys.length >= 3 &&
+    m.readKeys.every((k, i) => k === ["infinite-gen-5:armor", "armor", "todos"][i % 3]),
     JSON.stringify(m.readKeys));
 }
 
@@ -483,7 +483,7 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
   ok("抽屉是对话框语义（role=dialog + aria-modal）",
     drawerEl !== null && drawerEl.props.role === "dialog" && drawerEl.props["aria-modal"] === "true");
   const drawerTabs = collectByClass(tree, "dsh-armor5-tab");
-  ok("抽屉带三个页签（实时 / 命中 / 明细）", drawerTabs.length === 3, "实际 " + drawerTabs.length);
+  ok("抽屉带四个页签（实时 / 命中 / 明细 / 任务）", drawerTabs.length === 4, "实际 " + drawerTabs.length);
   ok("默认停在「实时」页", drawerEl.props["data-tab"] === "live", String(drawerEl.props["data-tab"]));
   // v0.49.0 回归（v0.48.0 的页签失效根因）：外部点击判定必须把抽屉本身算作「内部」，
   // 否则捕获阶段的 pointerdown 会先把 open 置假、抽屉被卸载，页签的 click 永远到不了。
@@ -1479,7 +1479,7 @@ if (process.argv.includes("--emit-html")) {
     drawer.props.role === "dialog" && drawer.props["aria-modal"] === "true");
 
   const tabs = collectByClass(tree, "dsh-armor5-tab");
-  ok("抽屉带三个页签（实时 / 命中 / 明细）", tabs.length === 3, "实际 " + tabs.length);
+  ok("抽屉带四个页签（实时 / 命中 / 明细 / 任务）", tabs.length === 4, "实际 " + tabs.length);
   // v0.49.0 回归（v0.48.0 的页签失效根因）：外部点击判定必须把抽屉本身算作「内部」，
   // 否则捕获阶段的 pointerdown 会先把 open 置假、抽屉被卸载，页签的 click 永远到不了。
   {
@@ -1519,7 +1519,69 @@ if (process.argv.includes("--emit-html")) {
   // C 方案：没有「切回 popover」这条路 —— 回退靠 git 回滚（参见 ROLLBACK.sh）。
 }
 
-// ── 结果 ────────────────────────────────────────────────────────────────────
+// ── 任务清单进度（v0.50.2 · 宿主 useProjection("todos") 投影）────────────────
+{
+  const inst = loadInstance({ storage: fakeStorage({}) });
+  const TODO_PROJ = {
+    "infinite-gen-5:armor": PASS,
+    todos: [
+      { content: "改窄触发条", status: "completed" },
+      { content: "抽屉接第四页", status: "in_progress" },
+      { content: "补自检断言", status: "pending" }
+    ]
+  };
+  const view = mountComponent(inst.badge, TODO_PROJ);
+  const readKeys = [];
+  const root = findByClass(view.rerender(), "dsh-armor5-root");
+  ok("徽标在（任务页测试的宿主）", root !== null);
+  // 触发条现在是单击开抽屉
+  findByClass(view.rerender(), "dsh-armor5-root").props.onClick();
+  let tree = view.rerender();
+  const tabEls = collectByClass(tree, "dsh-armor5-tab");
+  ok("任务页签存在（第四个）",
+    tabEls.some((t) => t.props["data-tab"] === "todo") && textOf(tabEls.find((t) => t.props["data-tab"] === "todo")) === "任务1/3",
+    JSON.stringify(tabEls.map((t) => textOf(t))));
+  const countEl = collectByClass(tree, "dsh-armor5-tab-count")[0];
+  ok("页签角标显示 完成/总数（1/3）",
+    countEl !== undefined && countEl.props["data-count"] === "1/3" && textOf(countEl) === "1/3",
+    JSON.stringify(countEl && countEl.props));
+  // 切到任务页
+  tabEls.find((t) => t.props["data-tab"] === "todo").props.onClick();
+  tree = view.rerender();
+  const pane = findByClass(tree, "dsh-armor5-drawer");
+  ok("任务页列出三条宿主 todos",
+    pane !== null && collectByClass(tree, "dsh-armor5-todo").length === 3,
+    String(collectByClass(tree, "dsh-armor5-todo").length));
+  const rows = collectByClass(tree, "dsh-armor5-todo");
+  ok("每条带 data-status（completed / in_progress / pending）",
+    rows.map((r) => r.props["data-status"]).join(",") === "completed,in_progress,pending",
+    JSON.stringify(rows.map((r) => r.props["data-status"])));
+  ok("任务正文上屏（不是只有状态点）",
+    textOf(pane).includes("抽屉接第四页") && textOf(pane).includes("补自检断言"),
+    textOf(pane).slice(0, 160));
+  ok("进度摘要按状态计数（完成 1 · 进行 1 · 待办 1）",
+    textOf(pane).includes("完成 1 · 进行 1 · 待办 1"), textOf(pane).slice(0, 160));
+  ok("任务页读的是宿主 todos 键（不是另起一套数据源）",
+    CLIENT_SRC.includes('useProjection("todos")'));
+
+  // 空投影：不要谎报，给说明
+  const emptyView = mountComponent(inst.badge, { "infinite-gen-5:armor": PASS, todos: [] });
+  findByClass(emptyView.rerender(), "dsh-armor5-root").props.onClick();
+  let eTree = emptyView.rerender();
+  collectByClass(eTree, "dsh-armor5-tab").find((t) => t.props["data-tab"] === "todo").props.onClick();
+  eTree = emptyView.rerender();
+  ok("宿主 todos 为空时给出说明而不是空白",
+    textOf(findByClass(eTree, "dsh-armor5-drawer")).includes("本会话还没有任务清单"),
+    textOf(findByClass(eTree, "dsh-armor5-drawer")).slice(0, 120));
+
+  // 宿主没有投影接口（老宿主）：假渲染器必然提供 useProjection，模拟不出缺失 →
+  // 钉源码级保证（canProject 为假时走专门文案，且不触碰 todos）。
+  ok("宿主缺 useProjection 时有专门文案（不崩、不谎报）",
+    CLIENT_SRC.includes("宿主未提供任务投影接口") &&
+    /canProject \? useProjection\("todos"\) : undefined/.test(CLIENT_SRC));
+}
+
+// ── 结果 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ok("槽位模式表列了三种可用位置", CLIENT_SRC.includes("conversation.session.header.utilities") && CLIENT_SRC.includes("conversation.input.dock"));
 
 if (failures.length === 0) {

@@ -1,3 +1,17 @@
+## v0.50.2
+
+**抽屉第四页：任务清单进度（对接宿主 todos 投影）。**
+
+- 数据源就是宿主那一份 —— `useProjection("todos")`，与宿主自己的 `TodoDock` 同一个键、同一个形状
+  （`{ content, status }[]`，`status ∈ completed / in_progress / pending`）。插件不另建一套状态，
+  所以宿主 `todo_write` 一更新，抽屉里就跟着变。
+- 页签显示 `完成/总数` 角标；页内给「完成 x · 进行 y · 待办 z」摘要 + 逐条列出（`✓ / ● / ○`，
+  每行带 `data-status`，长文本 `overflow-wrap:anywhere` 不撑破）。
+- 空投影给「本会话还没有任务清单（宿主 todos 投影为空）」；宿主没有投影接口时给专门文案，
+  不崩、不谎报。
+- 判据：`node scripts/verify_ui.mjs` **232 通过 / 0 失败**（新增 10 条：页签存在、角标 1/3、
+  三条逐项 data-status、正文上屏、摘要计数、空投影说明、缺接口文案、读的是宿主 todos 键）。
+
 ## v0.50.1
 
 **修 v0.50.0 的「右边仍有一条空带」。**

@@ -50,10 +50,11 @@
         var DRAWER_TABS = [
           { id: "live", label: "实时" },
           { id: "hits", label: "命中" },
-          { id: "fields", label: "明细" }
+          { id: "fields", label: "明细" },
+          { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.50.1";
+        var VERSION = "v0.50.2";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -281,6 +282,14 @@
           ".dsh-armor5-drawer{max-height:calc(var(--ig5-vh,62vh) * 0.62)}",
           "@supports (height:1dvh){.dsh-armor5-drawer{max-height:62dvh}}",
           ".dsh-armor5-root[data-pressing='1'] .dsh-armor5-dot{transform:scale(1.5)}",
+          ".dsh-armor5-todos{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}",
+          ".dsh-armor5-todo{display:flex;gap:6px;align-items:flex-start;font-size:11px;line-height:15px}",
+          ".dsh-armor5-todo-glyph{flex:0 0 auto;width:12px;color:var(--dsw-alias-label-caption,rgba(127,127,127,.9))}",
+          ".dsh-armor5-todo-text{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}",
+          ".dsh-armor5-todo[data-status=completed] .dsh-armor5-todo-glyph{color:var(--dsw-alias-state-success-primary,#3aa76d)}",
+          ".dsh-armor5-todo[data-status=in_progress] .dsh-armor5-todo-glyph{color:var(--dsw-alias-state-business-primary,#3b82f6)}",
+          ".dsh-armor5-todo[data-status=pending]{color:var(--dsw-alias-label-caption,rgba(127,127,127,.85))}",
+          ".dsh-armor5-tab-count{flex:0 0 auto;margin-left:4px;font-size:10px;font-variant-numeric:tabular-nums;opacity:.75}",
           ".dsh-armor5-root .dsh-armor5-dot{transition:transform .12s ease-out}",
           ".dsh-armor5-drawer-grip{flex:0 0 auto;display:flex;padding:6px 12px 2px}",
           ".dsh-armor5-drawer-grip i{display:block;width:32px;height:4px;margin:0 auto;border-radius:999px;",
@@ -317,6 +326,24 @@
           var canProject = typeof useProjection === "function";
           var armor5 = canProject ? useProjection("infinite-gen-5:armor") : undefined;
           var armor4 = canProject ? useProjection("armor") : undefined;
+          // v0.50.2：把宿主「任务清单」投影读进来（宿主 dsh-client-ui-conversation 的
+          // TodoDock 用的是同一个键 useProjection("todos")，形状 {content, status}[]，
+          // status ∈ completed / in_progress / pending）。与其他两个一样无条件调用。
+          var todos = canProject ? useProjection("todos") : undefined;
+          var todoList = Array.isArray(todos) ? todos : [];
+          var todoDone = 0;
+          var todoActive = 0;
+          for (var ti = 0; ti < todoList.length; ti++) {
+            var todoRow = todoList[ti] || {};
+            if (todoRow.status === "completed") todoDone += 1;
+            else if (todoRow.status === "in_progress") todoActive += 1;
+          }
+          var todoPending = todoList.length - todoDone - todoActive;
+          var todoSummary = [
+            todoDone > 0 ? "完成 " + todoDone : "",
+            todoActive > 0 ? "进行 " + todoActive : "",
+            todoPending > 0 ? "待办 " + todoPending : ""
+          ].filter(function (row) { return row !== ""; }).join(" · ");
           var armor = armor5 !== undefined ? armor5 : armor4;
 
           var rootRef = react.useRef(null);
@@ -745,6 +772,33 @@
           // ── 抽屉容器（v0.48.0 · LAYOUT_MODE=drawer）────────────────────────
           // 与浮层同源：liveTiles / hitList / fieldTiles 三份数据原样搬进来，只换壳。
           // 页签只切「显示哪一页」，不改变任何订阅或回读时机。
+          var todoPane = !canProject
+            ? react.createElement("span", { className: "dsh-armor5-sec-title" },
+              "宿主未提供任务投影接口（useProjection 缺失）")
+            : todoList.length === 0
+              ? react.createElement("span", { className: "dsh-armor5-sec-title" },
+                "本会话还没有任务清单（宿主 todos 投影为空）")
+              : section(todoSummary || "任务清单",
+                react.createElement("ul", { className: "dsh-armor5-todos" },
+                  todoList.map(function (item, index) {
+                    var row = item || {};
+                    var glyph = row.status === "completed" ? "✓"
+                      : row.status === "in_progress" ? "●" : "○";
+                    return react.createElement("li", {
+                      key: "todo" + index,
+                      className: "dsh-armor5-todo",
+                      "data-status": row.status || "pending",
+                      title: row.content
+                    },
+                      react.createElement("span", {
+                        className: "dsh-armor5-todo-glyph",
+                        "aria-hidden": "true"
+                      }, glyph),
+                      react.createElement("span", { className: "dsh-armor5-todo-text" },
+                        row.content || ""));
+                  })),
+                "todo");
+
           var drawerPane = drawerTab === "hits"
             ? section(hitList.length ? "最近命中（本进程最近 " + hitList.length + " 次判决）" : "最近命中",
               hitList.length
@@ -763,7 +817,9 @@
                 "还没有判决留档（重启 DSH 后开始攒）"), "hits")
             : drawerTab === "fields"
               ? fieldTiles
-              : tileGrid(liveTiles, "live");
+              : drawerTab === "todo"
+                ? todoPane
+                : tileGrid(liveTiles, "live");
 
           var drawer = open
             ? react.createElement(
@@ -806,7 +862,13 @@
                       "data-tab": row.id,
                       "data-on": drawerTab === row.id ? "1" : "0",
                       onClick: function () { setDrawerTab(row.id); }
-                    }, row.label);
+                    }, row.label,
+                      row.id === "todo" && todoList.length > 0
+                        ? react.createElement("span", {
+                          className: "dsh-armor5-tab-count",
+                          "data-count": todoDone + "/" + todoList.length
+                        }, todoDone + "/" + todoList.length)
+                        : null);
                   }),
                   react.createElement("span", { className: "dsh-armor5-head-right" },
                     react.createElement("span", { className: "dsh-armor5-badge", "data-tone": tone }, badgeText),
