@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.4";
+        var VERSION = "v0.51.5";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -1161,7 +1161,18 @@
           "zone": "输入框上方",
           "用户模式（说人话，默认）": "说人话（默认）",
           "开发者模式（显示内部字段名）": "保留内部术语（开发者）",
-          "面板用哪套词（PANEL_MODE）": "面板说哪套话"
+          "面板用哪套词（PANEL_MODE）": "面板说哪套话",
+          "触发形态": "面板长什么样",
+          "形态与去重": "面板长什么样 · 重复注入怎么处理",
+          "领域与工具": "识别哪些领域、能调哪些工具",
+          "载荷与预算": "注入多少、花多少上下文",
+          "节拍与门": "多久问一次、什么时候不问",
+          "判定源": "判决是从哪来的",
+          "注入面": "注进哪一段",
+          "运行时锚点节拍": "末位锚点多久重发一次",
+          "用户向选择（询问闸门）": "什么时候先问你",
+          "预览": "面板预览",
+          "摘要": "一句话小结"
         };
         var C = function (text) {
           if (PANEL_LEX_STATE.dev) return text;
@@ -2199,7 +2210,7 @@
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-2" }, modeChoices)
             ),
             react.createElement("div", { className: "armor5-console-group" },
-              react.createElement("div", { className: "armor5-console-group-title" }, "预览"),
+              react.createElement("div", { className: "armor5-console-group-title" }, C("预览")),
               react.createElement("div", { className: "armor5-console-previews" },
                 react.createElement(ArmorPreviewRow, { mode: mode, kind: "idle", tag: "空闲" }),
                 react.createElement(ArmorPreviewRow, { mode: mode, kind: "busy", tag: "执行中" }),
