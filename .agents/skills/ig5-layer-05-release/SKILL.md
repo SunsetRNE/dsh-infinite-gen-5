@@ -23,6 +23,8 @@ license: 随本仓库
    要么把 `argv[1]` 设成编码后的绝对路径（见 `scripts/verify-release-ready.sh` 的提示）。
 4. **计数型断言会把注释一起数**：`verify_dedupe.mjs` 数 `useProjection(`，注释里写一次就多一个；
    要么改注释措辞，要么同步期望值 —— 但不要「为了过而删断言」。
+6. **管道会吞退出码**：`cmd | tail -3` 的退出码是 `tail` 的 —— 本仓库真的因此「本地红着照发了一版」。
+   自检命令要么先跑并显式检查 `$?`，要么在脚本头 `set -o pipefail`。
 5. **vendored 文件里的版本字面量会撞版本门禁**：`verify:version` 扫全树找未登记版本号，
    第三方报告正文里的 `0.49.0` 也会被算上。换一个版本号最省事，别去改 vendored 原文。
 

@@ -11,6 +11,7 @@
 | 5 | `verify:version` 报「未登记的版本号字面量」，位置在 `skills/**/references/**` | 第三方报告（HackerOne 案例）正文里恰好有该版本串 | `node scripts/verify_version.mjs` 的报错原文 | 换一个版本号，别改 vendored 原文 |
 | 6 | `tools:doc` 一次只补一份 | 生成器每跑一次只报一个 `过期=` | 连跑两次，第二次才是 `过期=无` | 跑到注册表自检绿为止 |
 | 7 | 本地绿、CI 红（找不到差异） | 某些门禁在中文路径下静默空转（与 #3 同源），本地等于没跑 | 在 ASCII 工作树复跑同一条链 | 用 `git worktree add /tmp/<ascii> HEAD` 复跑 |
+| 8 | 本地「看着红」却照发了一版，CI 才拦下 | 发布脚本里写成 `node scripts/verify_ui.mjs｜tail -3` —— 管道退出码是 `tail` 的 0，原命令的失败被吞掉 | 复现：`node scripts/verify_ui.mjs | tail -3; echo $?` → 0（红着也 0） | 先跑、显式取 `exit=$?` 再决定是否继续；或 `set -o pipefail` |
 
 ## 常用起手
 
