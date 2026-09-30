@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.0";
+        var VERSION = "v0.51.1";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -873,7 +873,7 @@
                       { className: "dsh-armor5-hit-main", "data-verdict": hit && hit.verdict },
                       (hit && hit.main) || ""),
                     react.createElement("span", { className: "dsh-armor5-hit-sub" },
-                      (hit && hit.sub) || ""));
+                      V((hit && hit.sub) || "")));
                 }))
               : react.createElement("span", { className: "dsh-armor5-hits-empty" },
                 hitFilter === "all" ? "这一类还没有判决" : "这一类里没有「" + hitFilter + "」的判决");
@@ -895,14 +895,14 @@
                 + ((hitGroups.global && hitGroups.global.total) || 0) + " 次判决）",
                 react.createElement("div", { className: "dsh-armor5-hits" },
                   react.createElement("span", { className: "dsh-armor5-hit-sub" },
-                    "通过 " + ((hitGroups.global && hitGroups.global.pass) || 0)
-                    + " · 拒答 " + ((hitGroups.global && hitGroups.global.block) || 0)
+                    L("通过") + " " + ((hitGroups.global && hitGroups.global.pass) || 0)
+                    + " · " + L("拒答") + " " + ((hitGroups.global && hitGroups.global.block) || 0)
                     + " · 命中域 " + (((hitGroups.global && hitGroups.global.byDomain) || [])
                       .join("、") || "—")),
                   react.createElement("span", { className: "dsh-armor5-hit-sub" },
                     hitGroups.global && hitGroups.global.lifetime
-                      ? "跨重启累计 " + hitGroups.global.lifetime.total + " 次（通过 "
-                        + hitGroups.global.lifetime.pass + " / 拒答 " + hitGroups.global.lifetime.block + "）"
+                      ? "跨重启累计 " + hitGroups.global.lifetime.total + " 次（" + L("通过") + " "
+                        + hitGroups.global.lifetime.pass + " / " + L("拒答") + " " + hitGroups.global.lifetime.block + "）"
                       : "跨重启累计：统计库还没积累（~/.dsh/infinite-gen-5-stats.json）")), "hg-global"))
             : null;
 
@@ -1102,7 +1102,10 @@
           "位置": "面板位置",
           "本对话命中": "这次对话里",
           "最近对话命中": "之前几次",
-          "全局命中": "累计统计"
+          "全局命中": "累计统计",
+          "通过": "可以直接回答",
+          "拒答": "已按边界改写",
+          "未识别领域": "没看出类别"
         };
         // L 必须是模块级的：liveRowPairs 等模块级函数里也要翻译标签，
         // 组件内每帧把当前模式同步到这个开关上（与仓库里其它模块级状态同一风格）。
@@ -1110,6 +1113,18 @@
         var L = function (label) {
           if (PANEL_LEX_STATE.dev) return label;
           return USER_LEX[label] || label;
+        };
+        // v0.51.1：值级润色 —— 判决词与带数字的短语换成用户能懂的措辞。
+        // 只改措辞与连接词，数字一个不动（数字是事实，措辞才是难点）。
+        var V = function (text) {
+          if (PANEL_LEX_STATE.dev) return text;
+          var out = String(text == null ? "" : text);
+          out = out.replace(/判拒\s*(\d+)\s*字/g, "重点看 $1 字");
+          out = out.replace(/全文\s*(\d+)\s*字/g, "共读 $1 字");
+          out = out.replace(/载荷\s*(\d+)/g, "需要小心 $1 处");
+          out = out.replace(/([A-Za-z0-9_一-龥]+)\s*(\d)\*/g, "$1（$2 个线索，主判）");
+          out = out.replace(/通过/g, "可以直接回答").replace(/拒答/g, "已按边界改写");
+          return out;
         };
         var PREF_DEFAULTS = Object.freeze({
           triggerMode: TRIGGER_MODE,

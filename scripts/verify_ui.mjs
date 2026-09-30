@@ -1608,7 +1608,7 @@ if (process.argv.includes("--emit-html")) {
     CLIENT_SRC.includes("本对话命中（") && CLIENT_SRC.includes("最近对话命中（") &&
     CLIENT_SRC.includes("全局命中（本进程累计"));
   ok("全局段给出通过 / 拒答 / 命中域（不是空标题）",
-    CLIENT_SRC.includes('" · 拒答 "') && CLIENT_SRC.includes("命中域 "));
+    CLIENT_SRC.includes('L("拒答")') && CLIENT_SRC.includes("命中域 "));
   ok("老服务端（无 hits.groups）退回单段「最近命中」不空屏",
     CLIENT_SRC.includes("hitPaneGrouped || section(") &&
     CLIENT_SRC.includes("dsh-armor5-sec-title") );
