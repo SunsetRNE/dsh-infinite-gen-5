@@ -39,7 +39,21 @@
         var SLOT_ID = "armor5";
         var SLOT_ORDER = 30;
 
-        var VERSION = "v0.47.0";
+        // 弹出方式（v0.48.0 起可切换）：同一个触发条，两种承载容器。
+        //   popover —— 默认。锚在触发条上的原位浮层：一次量锚点，卡片贴着 chip 长。
+        //              桌面/宽屏最好用；手机上键盘弹出或 dock 行位移后锚点会偏。
+        //   drawer  —— 底部抽屉：视口锚定（不量锚点），内容分页（实时/命中/覆盖/档位）。
+        //              手机上不会飘走，长内容靠页签分栏而不是把卡片撑高。
+        // 两种容器共用同一批数据与同一个 section()，所以切布局不动数据面。
+        var LAYOUT_MODES = { popover: "浮层（默认）", drawer: "底部抽屉 · 分页" };
+        var LAYOUT_MODE = "popover";
+        var DRAWER_TABS = [
+          { id: "live", label: "实时" },
+          { id: "hits", label: "命中" },
+          { id: "fields", label: "明细" }
+        ];
+
+        var VERSION = "v0.48.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -260,7 +274,33 @@
           ".armor5-console-tag[data-source=ui]{border-color:var(--dsw-alias-state-business-primary,#4d6bfe);",
           "color:var(--dsw-alias-state-business-primary,#4d6bfe)}",
           ".armor5-console-choices-4{grid-template-columns:repeat(4,minmax(0,1fr))}",
-          ".armor5-console-yaml{margin:0;padding:5px 7px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));border-radius:6px;background:var(--dsw-alias-bg-layer-1,rgba(127,127,127,.06));color:var(--dsw-alias-label-secondary,#b4b4b4);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;line-height:15px;white-space:pre-wrap;overflow-wrap:anywhere}"
+          ".armor5-console-yaml{margin:0;padding:5px 7px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));border-radius:6px;background:var(--dsw-alias-bg-layer-1,rgba(127,127,127,.06));color:var(--dsw-alias-label-secondary,#b4b4b4);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;line-height:15px;white-space:pre-wrap;overflow-wrap:anywhere}",
+          // ── 底部抽屉（v0.48.0 · LAYOUT_MODE=drawer） ──
+          // 视口锚定（不量触发条位置）：手机键盘弹出/滚动都不会让容器飘走。
+          // 高度走 dvh，底部让出 safe-area；内容分页，所以卡片不会被长列表撑高。
+          ".dsh-armor5-scrim{position:fixed;inset:0;z-index:1099;background:var(--dsw-alias-bg-mask,rgba(0,0,0,.32))}",
+          ".dsh-armor5-drawer{position:fixed;left:0;right:0;bottom:0;z-index:1100;box-sizing:border-box;",
+          "display:flex;flex-direction:column;max-height:62dvh;padding-bottom:env(safe-area-inset-bottom,0);",
+          "border-radius:14px 14px 0 0;border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
+          "background:var(--dsw-alias-bg-layer-2,#1c1c1f);box-shadow:0 -10px 30px rgba(0,0,0,.35)}",
+          ".dsh-armor5-drawer-grip{flex:0 0 auto;display:flex;padding:6px 12px 2px}",
+          ".dsh-armor5-drawer-grip i{display:block;width:32px;height:4px;margin:0 auto;border-radius:999px;",
+          "background:var(--dsw-alias-border-l2,rgba(127,127,127,.4))}",
+          ".dsh-armor5-tabs{flex:0 0 auto;display:flex;align-items:center;gap:2px;padding:2px 10px 0;",
+          "border-bottom:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.2))}",
+          ".dsh-armor5-tabs button{flex:0 0 auto;height:28px;padding:0 10px;border:0;background:0 0;",
+          "color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:11px;border-radius:6px 6px 0 0}",
+          ".dsh-armor5-tabs button[data-on='1']{color:var(--dsw-alias-label-primary,#e6e6e6);",
+          "box-shadow:inset 0 -2px 0 var(--dsw-alias-state-business-primary,#4d6bfe)}",
+          ".dsh-armor5-drawer-body{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 12px 12px}",
+          ".dsh-armor5-drawer-body .dsh-armor5-sec{margin-top:0}",
+          ".dsh-armor5-drawer-pane{display:flex;flex-direction:column;gap:6px}",
+          ".dsh-armor5-tab-close{flex:0 0 auto;margin-left:auto;width:22px;height:22px;border:0;background:0 0;",
+          "color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:12px;border-radius:6px}",
+          ".dsh-armor5-tab-close:hover{background:var(--dsw-alias-bg-layer-1,rgba(127,127,127,.12))}",
+          ".dsh-armor5-drawer-foot{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;",
+          "gap:8px;padding:6px 12px;border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.2));",
+          "color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;font-variant-numeric:tabular-nums}",
         ].join("");
 
         function sameNode(a, b) {
@@ -270,7 +310,9 @@
         function ArmorDock(props) {
           var useProjection = props.useProjection;
           // 形态来自设置台（默认值 = 源码常量），所以「设置里改了」与「状态条上显示」永远同源。
-          var triggerMode = usePrefs().triggerMode;
+          // v0.48.0：一次读全（含 layoutMode），避免同一组件里再挂一条订阅。
+          var dockPrefs = usePrefs();
+          var triggerMode = dockPrefs.triggerMode;
           // 两个 useProjection 都是无条件调用，保持 hook 顺序恒定。
           // 五代用自己的投影键；"armor" 留给同机安装的四代（key: "armor"）。
           var canProject = typeof useProjection === "function";
@@ -285,6 +327,11 @@
           var anchorPair = react.useState(null);
           var anchor = anchorPair[0];
           var setAnchor = anchorPair[1];
+          // 抽屉页签（v0.48.0）：只在 drawer 布局下渲染，钩子在这里无条件声明，
+          // 这样两种布局之间切换不会改变钩子顺序（React 的硬约束）。
+          var drawerTabPair = react.useState("live");
+          var drawerTab = drawerTabPair[0];
+          var setDrawerTab = drawerTabPair[1];
           // 浮层卡片里的「实时」四行（v0.16.1）：与设置页那组同源同文案，但只在卡片开着时
           // retain 统计库 —— 关着就不为它多开一条 SSE、多回读一次。
           var liveState = useStatsView(open);
@@ -580,7 +627,26 @@
               : liveState.phase === "loading" ? "读取档位…" : "档位未就绪（刷新页面）");
           };
 
-          var panel = open
+          // 判决明细磁贴：浮层与抽屉共用同一份（v0.48.0 起抽出为变量，避免两处各写一遍）。
+          var fieldTiles = tileGrid([
+            tile("命中标记" + (domainMarkers.length ? " · " + domainMarkers.length : ""),
+              chipList(domainMarkers, "hit", "无"), "hit", 2),
+            tile("风险载荷" + (risk.length ? " · " + risk.length : ""),
+              chipList(risk, "risk", "无"), "risk", 2),
+            tile("安全标记" + (safe.length ? " · " + safe.length : ""),
+              chipList(safe, "safe", "无"), "safe", 1),
+            tile("识别领域", textValue(domain ? (domainLabel || domain) : "—"), "domain", 1),
+            tile("领域候选", textValue(candidatesText), "cand", 1),
+            tile("拒答/兜底词", textValue(words.length ? words.join("、") : "—"), "words", 1),
+            tile("扫描范围", textValue(textChars
+              ? "全文 " + textChars + " 字 · 判拒 " + openingChars + " 字"
+              : "—"), "range", 2),
+            tile("候选明细", textValue(rankedDetailText), "cand", 2),
+            tile("空答类型", textValue(emptyKind || "—"), "empty", 1)
+              ], "fields");
+
+          // 浮层只在 popover 布局下参与渲染；drawer 布局下同一份内容走下面的抽屉容器。
+          var panel = open && dockPrefs.layoutMode === "popover"
             ? react.createElement(
               "div",
               {
@@ -602,22 +668,8 @@
               react.createElement("div", { className: "dsh-armor5-caprow" },
                 react.createElement("span", { className: "dsh-armor5-cap" }, "位置 " + slotText),
                 gateButton()),
-              tileGrid([
-                tile("命中标记" + (domainMarkers.length ? " · " + domainMarkers.length : ""),
-                  chipList(domainMarkers, "hit", "无"), "hit", 2),
-                tile("风险载荷" + (risk.length ? " · " + risk.length : ""),
-                  chipList(risk, "risk", "无"), "risk", 2),
-                tile("安全标记" + (safe.length ? " · " + safe.length : ""),
-                  chipList(safe, "safe", "无"), "safe", 1),
-                tile("识别领域", textValue(domain ? (domainLabel || domain) : "—"), "domain", 1),
-                tile("领域候选", textValue(candidatesText), "cand", 1),
-                tile("拒答/兜底词", textValue(words.length ? words.join("、") : "—"), "words", 1),
-                tile("扫描范围", textValue(textChars
-                  ? "全文 " + textChars + " 字 · 判拒 " + openingChars + " 字"
-                  : "—"), "range", 2),
-                tile("候选明细", textValue(rankedDetailText), "cand", 2),
-                tile("空答类型", textValue(emptyKind || "—"), "empty", 1)
-              ], "fields"),
+              fieldTiles,
+
               section("实时", tileGrid(liveTiles, "live"), "live"),
               // IG5-PANEL-STREAM-MERGE M3：这里原来挂着一个「实时流」列表，与下面的「最近命中」同一批行，
               // 已删 —— 判决只在一个列表里长出来。
@@ -638,6 +690,78 @@
                     "还没有判决留档（重启 DSH 后开始攒）"), "hits"),
             )
             : null;
+
+          // ── 抽屉容器（v0.48.0 · LAYOUT_MODE=drawer）────────────────────────
+          // 与浮层同源：liveTiles / hitList / fieldTiles 三份数据原样搬进来，只换壳。
+          // 页签只切「显示哪一页」，不改变任何订阅或回读时机。
+          var drawerPane = drawerTab === "hits"
+            ? (hitList.length
+              ? react.createElement("ul", { className: "dsh-armor5-hits" },
+                hitList.map(function (hit) {
+                  return react.createElement("li", {
+                    key: hit.key,
+                    title: hit.title,
+                    "data-fresh": hit.fresh ? "1" : undefined
+                  },
+                    react.createElement("span",
+                      { className: "dsh-armor5-hit-main", "data-verdict": hit.verdict }, hit.main),
+                    react.createElement("span", { className: "dsh-armor5-hit-sub" }, hit.sub));
+                }))
+              : react.createElement("span", { className: "dsh-armor5-sec-title" },
+                "还没有判决留档（重启 DSH 后开始攒）"))
+            : drawerTab === "fields"
+              ? fieldTiles
+              : tileGrid(liveTiles, "live");
+
+          var drawer = open && dockPrefs.layoutMode === "drawer"
+            ? react.createElement(
+              react.Fragment,
+              null,
+              react.createElement("div", {
+                className: "dsh-armor5-scrim",
+                onClick: function () { setOpen(false); }
+              }),
+              react.createElement(
+                "div",
+                {
+                  className: "dsh-armor5-drawer",
+                  role: "dialog",
+                  "aria-modal": "true",
+                  "data-tone": tone,
+                  "data-tab": drawerTab
+                },
+                react.createElement("div", { className: "dsh-armor5-drawer-grip" },
+                  react.createElement("i", null)),
+                react.createElement("div", { className: "dsh-armor5-tabs" },
+                  DRAWER_TABS.map(function (row) {
+                    return react.createElement("button", {
+                      key: row.id,
+                      type: "button",
+                      className: "dsh-armor5-tab",
+                      "data-tab": row.id,
+                      "data-on": drawerTab === row.id ? "1" : "0",
+                      onClick: function () { setDrawerTab(row.id); }
+                    }, row.label);
+                  }),
+                  react.createElement("span", { className: "dsh-armor5-head-right" },
+                    react.createElement("span", { className: "dsh-armor5-badge", "data-tone": tone }, badgeText),
+                    react.createElement("span", null, clock === "—" ? "本次会话" : clock),
+                    react.createElement("span", null, VERSION),
+                    react.createElement("button", {
+                      type: "button",
+                      className: "dsh-armor5-tab-close",
+                      title: "收起抽屉",
+                      onClick: function () { setOpen(false); }
+                    }, "✕"))),
+                react.createElement("div", { className: "dsh-armor5-drawer-body" },
+                  react.createElement("div", { className: "dsh-armor5-drawer-pane" }, drawerPane)),
+                react.createElement("div", { className: "dsh-armor5-drawer-foot" },
+                  react.createElement("span", null, "位置 " + slotText),
+                  gateButton())))
+            : null;
+
+          // 两种容器二选一：open 为假时两者都不渲染（浮层默认关闭的行为不变）。
+          var overlay = panel || drawer;
 
           return react.createElement(
             "div",
@@ -664,7 +788,7 @@
                 "data-busy": busy ? "true" : undefined
               }) : null
             ),
-            panel
+            overlay
           );
         }
 
@@ -685,11 +809,13 @@
         var PREF_KEY = "dsh-infinite-gen-5:prefs";
         var PREF_DEFAULTS = Object.freeze({
           triggerMode: TRIGGER_MODE,
-          slotMode: SLOT_MODE
+          slotMode: SLOT_MODE,
+          layoutMode: LAYOUT_MODE
         });
         var PREF_CHECKS = {
           triggerMode: function (v) { return TRIGGER_MODES.indexOf(v) >= 0; },
-          slotMode: function (v) { return Object.prototype.hasOwnProperty.call(SLOT_MODES, v); }
+          slotMode: function (v) { return Object.prototype.hasOwnProperty.call(SLOT_MODES, v); },
+          layoutMode: function (v) { return Object.prototype.hasOwnProperty.call(LAYOUT_MODES, v); }
         };
         var CONSOLE_KEY = "armor5";
         // 设置页 nav 里排在官方「插件」那一项（order 15）后面：不常用，顺使用习惯，
@@ -1674,6 +1800,21 @@
             });
           });
 
+          // v0.48.0：弹出容器（浮层 / 底部抽屉）。与形态、槽位同一套偏好写入路径。
+          var layoutChoices = [
+            { value: "popover", hint: "锚在触发条上的原位卡片（桌面首选）" },
+            { value: "drawer", hint: "从底部弹出、内容分页（手机首选）" }
+          ].map(function (row) {
+            return react.createElement(ArmorChoice, {
+              key: row.value,
+              value: row.value,
+              label: LAYOUT_MODES[row.value] || row.value,
+              hint: row.hint,
+              active: prefs.layoutMode === row.value,
+              onPick: pick("layoutMode", row.value)
+            });
+          });
+
           return react.createElement("div", { className: "armor5-console" },
             react.createElement("div", { className: "armor5-console-head" },
               react.createElement("div", { className: "armor5-console-title" },
@@ -1697,6 +1838,10 @@
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "挂到哪个槽位（SLOT_MODE）"),
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-3" }, slotChoices)
+            ),
+            react.createElement("div", { className: "armor5-console-group" },
+              react.createElement("div", { className: "armor5-console-group-title" }, "点开之后用哪种容器（LAYOUT_MODE）"),
+              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-2" }, layoutChoices)
             ),
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "注入档位（改完点保存，服务端当场重装，不必重启）"),

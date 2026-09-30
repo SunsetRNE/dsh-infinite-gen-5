@@ -255,7 +255,7 @@ ok("侧栏入口整块移除：不再注册 main / sidebar.panellist",
 ok("__meta 交代设置台契约（且不再暴露侧栏槽位）",
   mod.__meta.prefKey === "dsh-infinite-gen-5:prefs" &&
   Array.isArray(mod.__meta.prefFields) &&
-  mod.__meta.prefFields.slice().sort().join(",") === "slotMode,triggerMode" &&
+  mod.__meta.prefFields.slice().sort().join(",") === "layoutMode,slotMode,triggerMode" &&
   mod.__meta.sectionSlot === "settings.section" &&
   mod.__meta.sidebarSlot === undefined &&
   mod.__meta.mainSlot === undefined, JSON.stringify(mod.__meta.prefFields));
@@ -736,7 +736,8 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
   const inst = loadInstance({ storage });
   ok("出厂默认 = 源码常量（glyph / composer，且偏好里不再有侧栏入口）",
     inst.meta.prefDefaults.triggerMode === "glyph" && inst.meta.prefDefaults.slotMode === "composer" &&
-    inst.meta.prefFields.slice().sort().join(",") === "slotMode,triggerMode", JSON.stringify(inst.meta.prefDefaults));
+    inst.meta.prefDefaults.layoutMode === "popover" &&
+    inst.meta.prefFields.slice().sort().join(",") === "layoutMode,slotMode,triggerMode", JSON.stringify(inst.meta.prefDefaults));
   ok("只读偏好不写盘（没改就不落 localStorage）", Object.keys(storage.dump()).length === 0, JSON.stringify(storage.dump()));
   ok("设置页组件拿到了（就是 settings.section 那一条）", typeof inst.page === "function");
 
@@ -1416,6 +1417,70 @@ if (process.argv.includes("--emit-html")) {
   ok("服务端 ok:false 时不谎报成功，错误原文上屏",
     textOf(failView.rerender()).includes("写入 ~/.dsh 失败"),
     JSON.stringify(textOf(failView.rerender()).slice(0, 200)));
+}
+
+// ── 底部抽屉（v0.48.0 · LAYOUT_MODE=drawer）─────────────────────────────────
+{
+  const storage = fakeStorage({});
+  const inst = loadInstance({ storage });
+  const store = { hooks: [] };
+  const badge = mountComponent(inst.badge, { "infinite-gen-5:armor": PASS }, store);
+
+  // 设置页里长出了第三组选择（形态 / 槽位之外的「弹出方式」）
+  const consoleView = mountComponent(inst.page, undefined);
+  const layoutBtns = collectByClass(consoleView.tree, "armor5-console-choice")
+    .filter((b) => ["popover", "drawer"].includes(b.props["data-choice"]));
+  ok("设置台渲染出两档弹出方式（浮层 / 抽屉）", layoutBtns.length === 2, "实际 " + layoutBtns.length);
+  ok("弹出方式默认高亮「浮层」（出厂默认不动）",
+    layoutBtns.find((b) => b.props["data-choice"] === "popover").props.className.includes("is-active"));
+
+  // 切到抽屉：写盘 + 状态条换成抽屉容器
+  inst.exports.setPrefs({ layoutMode: "drawer" });
+  ok("切抽屉写进 localStorage（持久化）",
+    JSON.parse(storage.dump()[PREF_KEY]).layoutMode === "drawer", JSON.stringify(storage.dump()));
+  findByClass(badge.rerender(), "dsh-armor5-root").props.onClick();
+  let tree = badge.rerender();
+  const drawer = findByClass(tree, "dsh-armor5-drawer");
+  ok("抽屉布局：点开后渲染 .dsh-armor5-drawer", drawer !== null);
+  ok("抽屉布局：同一时刻不再渲染浮层 .dsh-armor5-panel（两种容器互斥）",
+    findByClass(tree, "dsh-armor5-panel") === null);
+  ok("抽屉是视口锚定的容器（不写内联 left/bottom，贴底交给 CSS）", drawer !== null && drawer.props.style === undefined);
+  ok("抽屉带遮罩（点遮罩可收起）", findByClass(tree, "dsh-armor5-scrim") !== null);
+  ok("抽屉是对话框语义（role=dialog + aria-modal）",
+    drawer.props.role === "dialog" && drawer.props["aria-modal"] === "true");
+
+  const tabs = collectByClass(tree, "dsh-armor5-tab");
+  ok("抽屉带三个页签（实时 / 命中 / 明细）", tabs.length === 3, "实际 " + tabs.length);
+  ok("默认停在「实时」页", drawer.props["data-tab"] === "live", String(drawer.props["data-tab"]));
+  ok("当前页签高亮 data-on=1（唯一）",
+    tabs.filter((t) => t.props["data-on"] === "1").length === 1 &&
+    tabs.find((t) => t.props["data-tab"] === "live").props["data-on"] === "1");
+  ok("实时页上屏实时磁贴（与浮层同一份数据）", textOf(drawer).includes("信号来源") || textOf(drawer).includes("本轮"),
+    textOf(drawer).slice(0, 160));
+
+  // 切页签：容器与订阅都不重来，只有 pane 换内容
+  tabs.find((t) => t.props["data-tab"] === "hits").props.onClick();
+  tree = badge.rerender();
+  const drawer2 = findByClass(tree, "dsh-armor5-drawer");
+  ok("点「命中」页签后 data-tab 跟着变", drawer2.props["data-tab"] === "hits", String(drawer2.props["data-tab"]));
+  ok("命中页显示判决留档列表",
+    textOf(drawer2).includes("最近命中") || textOf(drawer2).includes("还没有判决留档"), textOf(drawer2).slice(0, 160));
+  collectByClass(tree, "dsh-armor5-tab").find((t) => t.props["data-tab"] === "fields").props.onClick();
+  tree = badge.rerender();
+  const fieldsDrawer = findByClass(tree, "dsh-armor5-drawer");
+  ok("明细页把九个字段磁贴搬了进来（识别领域 / 领域候选 都在）",
+    textOf(fieldsDrawer).includes("识别领域") && textOf(fieldsDrawer).includes("领域候选"),
+    textOf(fieldsDrawer).slice(0, 160));
+  ok("明细页与浮层同源：真实值也在（通过 / web）",
+    textOf(fieldsDrawer).includes("通过") && textOf(fieldsDrawer).includes("web"));
+
+  // 收起 + 退回浮层：两条路都要能走回去
+  findByClass(tree, "dsh-armor5-tab-close").props.onClick();
+  ok("点右上角 ✕ 收起抽屉", findByClass(badge.rerender(), "dsh-armor5-drawer") === null);
+  inst.exports.setPrefs({ layoutMode: "popover" });
+  findByClass(badge.rerender(), "dsh-armor5-root").props.onClick();
+  ok("切回 popover 后仍是老浮层（可回退，不是单向迁移）",
+    findByClass(badge.rerender(), "dsh-armor5-panel") !== null);
 }
 
 // ── 结果 ────────────────────────────────────────────────────────────────────
