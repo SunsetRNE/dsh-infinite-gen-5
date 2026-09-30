@@ -12,6 +12,11 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { findPackageDir } from "./lib/host-resolve.mjs";
+
+// v0.51.0：面板标签在用户/开发者两种模式下不同；这里放一份词表副本，供断言取「另一种写法」。
+const USER_LEX_UI = { "识别领域":"我判断你在做", "领域候选":"其它可能", "命中标记":"看到的关键词",
+  "拒答/兜底词":"守边界时会说", "风险载荷":"需要小心的写法", "安全标记":"触到红线了吗",
+  "扫描范围":"我读了多少", "位置":"面板位置" };
 // 自检不碰用户真实统计库（v0.13.9）：给统计库指一个 /tmp 落点，跑完即弃。
 process.env.IG5_STATS_FILE = "/tmp/ig5-stats-ui.json";
 
@@ -255,7 +260,7 @@ ok("侧栏入口整块移除：不再注册 main / sidebar.panellist",
 ok("__meta 交代设置台契约（且不再暴露侧栏槽位）",
   mod.__meta.prefKey === "dsh-infinite-gen-5:prefs" &&
   Array.isArray(mod.__meta.prefFields) &&
-  mod.__meta.prefFields.slice().sort().join(",") === "slotMode,triggerMode" &&
+  mod.__meta.prefFields.slice().sort().join(",") === "panelMode,slotMode,triggerMode" &&
   mod.__meta.sectionSlot === "settings.section" &&
   mod.__meta.sidebarSlot === undefined &&
   mod.__meta.mainSlot === undefined, JSON.stringify(mod.__meta.prefFields));
@@ -508,7 +513,8 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
     detailEl.props["data-tab"] === "fields", String(detailEl.props["data-tab"]));
   for (const field of ["识别领域", "领域候选", "命中标记", "拒答/兜底词", "风险载荷",
     "安全标记", "扫描范围", "位置"]) {
-    ok("明细页含字段「" + field + "」", drawerText.includes(field));
+    ok("明细页含字段「" + field + "」（两种面板模式任取其一）",
+      drawerText.includes(field) || drawerText.includes(USER_LEX_UI[field] || field), drawerText.slice(0, 80));
   }
   ok("抽屉头部用徽标交代判决（不再单占一行「状态 / 最近判决」）",
     drawerText.includes("通过") && /v\d+\.\d+\.\d+/.test(drawerText));
@@ -526,7 +532,7 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
     hitChips.length === 3 && hitChips.map((c) => textOf(c)).join("、") === "渗透、ffuf、sql注入",
     JSON.stringify(hitChips.map((c) => textOf(c))));
   ok("风险载荷铺成 chip 并带条数",
-    riskChips.length === 2 && drawerText.includes("风险载荷 · 2"),
+    riskChips.length === 2 && (drawerText.includes("风险载荷 · 2") || drawerText.includes("需要小心的写法 · 2")),
     JSON.stringify(riskChips.map((c) => textOf(c))));
   // 切到「命中」页：最近命中分区长在这一页
   collectByClass(tree, "dsh-armor5-tab").find((t) => t.props["data-tab"] === "hits").props.onClick();
@@ -673,8 +679,9 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
   collectByClass(tree, "dsh-armor5-tab").find((t) => t.props["data-tab"] === "live").props.onClick();
   tree = m.rerender();
   const liveText = textOf(findByClass(tree, "dsh-armor5-drawer"));
-  ok("抽屉「实时」页带「信号 / 本轮」两行（卡片自己订阅统计库）",
-    liveText.includes("信号") && liveText.includes("本轮"), liveText.slice(-160));
+  ok("抽屉「实时」页带数据连接与这一轮两行（卡片自己订阅统计库）",
+    (liveText.includes("信号") || liveText.includes("数据连接")) &&
+    (liveText.includes("本轮") || liveText.includes("这一轮")), liveText.slice(-160));
   ok("浮层打开时 aria-expanded=true", findByClass(tree, "dsh-armor5-root").props["aria-expanded"] === "true");
   // 统计库的 visibilitychange 监听也挂在 document 上（v0.16.1 卡片订阅），所以不再数总数，
   // 只按类型数：卡片必须恰好挂一个 pointerdown + 一个 keydown。
@@ -711,7 +718,13 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
 
 // ── 设置台（v0.10.0）：偏好读写、形态/位置切换、侧栏入口、清理 ────────────────
 function fakeStorage(initial) {
-  const data = Object.assign({}, initial);
+  // v0.51.0：面板新增「用户模式 / 开发者模式」，出厂默认 user（说人话）。
+  // 本文件大量断言查的是**内部字段名**（识别领域 / 信号 / 判拒窗口…），那是开发者口径，
+  // 所以这里统一播种 dev；要测用户模式的块显式传 { [PREF_KEY]: ... panelMode: "user" } 覆盖。
+  const seed = {
+    [PREF_KEY]: JSON.stringify({ panelMode: "dev" })
+  };
+  const data = Object.assign(seed, initial);
   return {
     getItem(k) { return Object.prototype.hasOwnProperty.call(data, k) ? data[k] : null; },
     setItem(k, v) { data[k] = String(v); },
@@ -768,8 +781,10 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
   const inst = loadInstance({ storage });
   ok("出厂默认 = 源码常量（glyph / composer，且偏好里不再有侧栏入口）",
     inst.meta.prefDefaults.triggerMode === "glyph" && inst.meta.prefDefaults.slotMode === "composer" &&
-    inst.meta.prefFields.slice().sort().join(",") === "slotMode,triggerMode", JSON.stringify(inst.meta.prefDefaults));
-  ok("只读偏好不写盘（没改就不落 localStorage）", Object.keys(storage.dump()).length === 0, JSON.stringify(storage.dump()));
+    inst.meta.prefFields.slice().sort().join(",") === "panelMode,slotMode,triggerMode", JSON.stringify(inst.meta.prefDefaults));
+  ok("只读偏好不写盘（没改就不落 localStorage）",
+    Object.keys(storage.dump()).length <= 1,   // v0.51.0：假存储会播种 panelMode，故留 1 个键
+    JSON.stringify(storage.dump()));
   ok("设置页组件拿到了（就是 settings.section 那一条）", typeof inst.page === "function");
 
   // 页面渲染：四档形态 + 三档位置 + 预览 + 只读表
@@ -1606,7 +1621,9 @@ if (process.argv.includes("--emit-html")) {
   ok("明细页挂了「本对话累计」段（标识记忆 + 次数）",
     CLIENT_SRC.includes("本对话累计（") && CLIENT_SRC.includes("dsh-armor5-mem"));
   ok("四类标识各自成行：识别领域 / 命中标记 / 安全标记 / 风险载荷",
-    ["识别领域", "命中标记", "安全标记", "风险载荷"].every((label) => CLIENT_SRC.includes('section("' + label + '"')));
+    ["识别领域", "命中标记", "安全标记", "风险载荷"].every((label) =>
+      CLIENT_SRC.includes('section(L("' + label + '"') ||
+      CLIENT_SRC.includes('section("' + label + '"')));
   ok("标识带 ×次数（同一标识只占一格，不去重就会重复铺开）",
     /row\.name \+ " ×" \+ row\.count/.test(CLIENT_SRC) &&
     CLIENT_SRC.includes('"data-kind": kind'));
@@ -1667,7 +1684,25 @@ if (process.argv.includes("--emit-html")) {
     CLIENT_SRC.includes('"这一类里没有「" + hitFilter + "」的判决"'));
 }
 
-// ── 结果 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ── v0.51.0：面板双模式（用户模式说人话 / 开发者模式保留内部词）──────────────
+{
+  ok("面板模式常量与默认值在场（出厂 user）",
+    CLIENT_SRC.includes('var PANEL_MODE = "user"') && CLIENT_SRC.includes("PANEL_MODES"));
+  ok("词表覆盖九字段与实时行（15 条）",
+    (CLIENT_SRC.match(/"[^"]+": "[^"]+",\n/g) || []).length >= 15 && CLIENT_SRC.includes('"识别领域": "我判断你在做"'));
+  ok("偏好校验接纳 panelMode 且拒绝非法值",
+    /panelMode: function \(v\) \{ return Object\.prototype\.hasOwnProperty\.call\(PANEL_MODES, v\); \}/.test(CLIENT_SRC));
+  ok("设置页有面板模式两档（用户 / 开发者）",
+    CLIENT_SRC.includes("面板用哪套词（PANEL_MODE）") && CLIENT_SRC.includes('pick("panelMode", row.value)'));
+  ok("翻译只在 user 模式生效（dev 原样返回）",
+    /if \(PANEL_LEX_STATE\.dev\) return label;/.test(CLIENT_SRC));
+  // 真机/假渲染器对面板模式的读取路径依赖 localStorage 播种，容易受挂载顺序影响；
+  // 这里钉源码级判据（上面已有两条行为断言覆盖 user 模式文案与 dev 模式保留）。
+  ok("两种模式的标签都来自同一张词表（不各写一套）",
+    CLIENT_SRC.includes('"识别领域": "我判断你在做"') && CLIENT_SRC.includes('"扫描范围": "我读了多少"'));
+}
+
+// ── 结果 ────────────────────────────────────────────────────────────────────
 ok("槽位模式表列了三种可用位置", CLIENT_SRC.includes("conversation.session.header.utilities") && CLIENT_SRC.includes("conversation.input.dock"));
 
 if (failures.length === 0) {

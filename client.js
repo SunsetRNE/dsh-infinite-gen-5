@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.50.11";
+        var VERSION = "v0.51.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -759,17 +759,19 @@
           };
 
           // 判决明细磁贴：浮层与抽屉共用同一份（v0.48.0 起抽出为变量，避免两处各写一遍）。
+          // v0.51.0：标签翻译的当前模式同步给模块级 L（dev 模式原样，用户模式查词表）。
+          PANEL_LEX_STATE.dev = dockPrefs.panelMode === "dev";
           var fieldTiles = tileGrid([
-            tile("命中标记" + (domainMarkers.length ? " · " + domainMarkers.length : ""),
+            tile(L("命中标记") + (domainMarkers.length ? " · " + domainMarkers.length : ""),
               chipList(domainMarkers, "hit", "无"), "hit", 2),
-            tile("风险载荷" + (risk.length ? " · " + risk.length : ""),
+            tile(L("风险载荷") + (risk.length ? " · " + risk.length : ""),
               chipList(risk, "risk", "无"), "risk", 2),
-            tile("安全标记" + (safe.length ? " · " + safe.length : ""),
+            tile(L("安全标记") + (safe.length ? " · " + safe.length : ""),
               chipList(safe, "safe", "无"), "safe", 1),
-            tile("识别领域", textValue(domain ? (domainLabel || domain) : "—"), "domain", 1),
-            tile("领域候选", textValue(candidatesText), "cand", 1),
-            tile("拒答/兜底词", textValue(words.length ? words.join("、") : "—"), "words", 1),
-            tile("扫描范围", textValue(textChars
+            tile(L("识别领域"), textValue(domain ? (domainLabel || domain) : "—"), "domain", 1),
+            tile(L("领域候选"), textValue(candidatesText), "cand", 1),
+            tile(L("拒答/兜底词"), textValue(words.length ? words.join("、") : "—"), "words", 1),
+            tile(L("扫描范围"), textValue(textChars
               ? "全文 " + textChars + " 字 · 判拒 " + openingChars + " 字"
               : "—"), "range", 2),
             tile("候选明细", textValue(rankedDetailText), "cand", 2),
@@ -926,7 +928,7 @@
                 + ((mem.verdicts && mem.verdicts.pass) || 0) + " / 拒答 "
                 + ((mem.verdicts && mem.verdicts.block) || 0) + "）",
                 react.createElement("div", { className: "dsh-armor5-mem" },
-                  section("识别领域", memChips(mem.domains, "mem-domain") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-d"),
+                  section(L("识别领域"), memChips(mem.domains, "mem-domain") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-d"),
                   section("命中标记", memChips(mem.markers, "mem-marker") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-m"),
                   section("安全标记", memChips(mem.safe, "mem-safe") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-s"),
                   section("风险载荷", memChips(mem.risks, "mem-risk") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-r")),
@@ -1018,7 +1020,7 @@
                 react.createElement("div", { className: "dsh-armor5-drawer-body" },
                   react.createElement("div", { className: "dsh-armor5-drawer-pane" }, drawerPane)),
                 react.createElement("div", { className: "dsh-armor5-drawer-foot" },
-                  react.createElement("span", null, "位置 " + slotText),
+                  react.createElement("span", null, L("位置") + " " + slotText),
                   gateButton())))
             : null;
 
@@ -1080,13 +1082,44 @@
         // 模式 / 自检沙箱）时退化成「只在本会话生效」，不抛错。
         // ────────────────────────────────────────────────────────────────────
         var PREF_KEY = "dsh-infinite-gen-5:prefs";
+        // v0.51.0：面板模式。用户模式把内部字段名换成说人话的标签；开发者模式保留内部词。
+        var PANEL_MODES = { user: "用户模式（说人话，默认）", dev: "开发者模式（显示内部字段名）" };
+        var PANEL_MODE = "user";
+        // 内部字段名 → 用户能看懂的标签。只换标签，不动数据与判据。
+        var USER_LEX = {
+          "信号": "数据连接",
+          "本轮": "这一轮",
+          "事件速率": "动作频率",
+          "最近事件": "最后动作",
+          "最近工具": "用过的工具",
+          "识别领域": "我判断你在做",
+          "领域候选": "其它可能",
+          "命中标记": "看到的关键词",
+          "拒答/兜底词": "守边界时会说",
+          "风险载荷": "需要小心的写法",
+          "安全标记": "触到红线了吗",
+          "扫描范围": "我读了多少",
+          "位置": "面板位置",
+          "本对话命中": "这次对话里",
+          "最近对话命中": "之前几次",
+          "全局命中": "累计统计"
+        };
+        // L 必须是模块级的：liveRowPairs 等模块级函数里也要翻译标签，
+        // 组件内每帧把当前模式同步到这个开关上（与仓库里其它模块级状态同一风格）。
+        var PANEL_LEX_STATE = { dev: false };
+        var L = function (label) {
+          if (PANEL_LEX_STATE.dev) return label;
+          return USER_LEX[label] || label;
+        };
         var PREF_DEFAULTS = Object.freeze({
           triggerMode: TRIGGER_MODE,
-          slotMode: SLOT_MODE
+          slotMode: SLOT_MODE,
+          panelMode: PANEL_MODE
         });
         var PREF_CHECKS = {
           triggerMode: function (v) { return TRIGGER_MODES.indexOf(v) >= 0; },
-          slotMode: function (v) { return Object.prototype.hasOwnProperty.call(SLOT_MODES, v); }
+          slotMode: function (v) { return Object.prototype.hasOwnProperty.call(SLOT_MODES, v); },
+          panelMode: function (v) { return Object.prototype.hasOwnProperty.call(PANEL_MODES, v); }
         };
         var CONSOLE_KEY = "armor5";
         // 设置页 nav 里排在官方「插件」那一项（order 15）后面：不常用，顺使用习惯，
@@ -1889,19 +1922,19 @@
           var freshText = live && live.at ? fmtAgo(live.at) : "";
           // compact = 浮层卡片那套田字格：半格宽只放得下一句话，链接自述（「统计库一落盘就刷新」）
           // 就留给设置页那一整行；卡片上只留「怎么连的 · 库几秒前」。
-          rows.push(["信号", compact
+          rows.push([L("信号"), compact
             ? modeText + (freshText ? " · " + freshText : "")
             : modeText + " · " + (link ? link.text : "还没有信号") + (freshText ? "　·　库 " + freshText : "")]);
           var turn = live && live.turn ? live.turn : null;
           var events = live && live.events ? live.events : null;
           var tools = live && live.tools ? live.tools : null;
           if (!live) {
-            rows.push(["本轮", compact
+            rows.push([L("本轮"), compact
               ? "还没有实时分区"
               : "还没有实时分区（重启 DSH 后由本体落盘）"]);
           } else {
             var started = turn && turn.startedAt ? Date.parse(turn.startedAt) : NaN;
-            rows.push(["本轮", compact
+            rows.push([L("本轮"), compact
               ? (turn && turn.active
                 ? "进行中 · 已 " + fmtSpan(Date.now() - started)
                 : "空闲 · " + fmtAgo(turn ? turn.lastEventAt : null))
@@ -1911,12 +1944,12 @@
             // 分母用 spanMs（真正参与计算的那个跨度）：高事件率下环被截断，分子不再是 30 秒里的事，
             // 拿 windowMs 当分母就会出现「60 次 / 30 秒（3.x 次/秒）」这种自己打自己的写法。
             var spanMs = Number(events && (events.spanMs || events.windowMs)) || 0;
-            rows.push(["事件速率", events
+            rows.push([L("事件速率"), events
               ? events.count + " 次 / " + Math.round(spanMs / 1000) + " 秒 · " + (events.perSecond || 0) + "/s"
               : "—"]);
             // IG5-PANEL-STREAM-MERGE M7：事件心跳 —— live.turn.lastKind 由每个会话事件重写
             // （老服务端也有这个字段），于是这一格会随事件一句句换字，不用另开列表。
-            rows.push(["最近事件", turn && turn.lastKind
+            rows.push([L("最近事件"), turn && turn.lastKind
               ? (compact
                 ? String(turn.lastKind).replace(/^.*\//, "")
                 : String(turn.lastKind) + " · " + fmtAgo(turn.lastEventAt))
@@ -1928,7 +1961,7 @@
             if (tools && Array.isArray(tools.recent)) recent = tools.recent;
             else if (tools && Array.isArray(tools.ring)) recent = tools.ring;
             else if (tools && tools.lastCall && tools.lastCall.tool) recent = [tools.lastCall];
-            rows.push(["最近工具", recent.length
+            rows.push([L("最近工具"), recent.length
               ? (compact
                 ? recent[recent.length - 1].tool
                 : recent.slice(-4).map(function (item) { return item.tool + "(" + fmtBytes(item.bytes) + ")"; }).join(" → "))
@@ -2062,6 +2095,20 @@
             });
           });
 
+          var panelChoices = [
+            { value: "user", hint: "说人话的标签（出厂默认，推荐日常使用）" },
+            { value: "dev", hint: "保留内部字段名（判拒窗口 / 领域候选 / composer.dock），便于自查" }
+          ].map(function (row) {
+            return react.createElement(ArmorChoice, {
+              key: row.value,
+              value: row.value,
+              label: PANEL_MODES[row.value] || row.value,
+              hint: row.hint,
+              active: prefs.panelMode === row.value,
+              onPick: pick("panelMode", row.value)
+            });
+          });
+
           var slotChoices = [
             { value: "composer", hint: "与原生计量器同排（推荐）" },
             { value: "header", hint: "会话标题栏右侧角落" },
@@ -2102,7 +2149,9 @@
             ),
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "挂到哪个槽位（SLOT_MODE）"),
-              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-3" }, slotChoices)
+              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-3" }, slotChoices),
+              react.createElement("div", { className: "armor5-console-group-title" }, "面板用哪套词（PANEL_MODE）"),
+              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-2" }, panelChoices)
             ),
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, "注入档位（改完点保存，服务端当场重装，不必重启）"),
