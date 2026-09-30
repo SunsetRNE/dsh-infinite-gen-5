@@ -53,7 +53,7 @@
           { id: "fields", label: "明细" }
         ];
 
-        var VERSION = "v0.50.0";
+        var VERSION = "v0.50.1";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -273,7 +273,7 @@
           // 视口锚定（不量触发条位置）：手机键盘弹出/滚动都不会让容器飘走。
           // 高度走 dvh，底部让出 safe-area；内容分页，所以卡片不会被长列表撑高。
           ".dsh-armor5-scrim{position:fixed;inset:0;z-index:1099;background:var(--dsw-alias-bg-mask,rgba(0,0,0,.32))}",
-          ".dsh-armor5-drawer{position:fixed;left:0;right:0;bottom:0;z-index:1100;box-sizing:border-box;",
+          ".dsh-armor5-drawer{position:fixed;left:0;right:0;bottom:0;width:100vw;max-width:100vw;z-index:1100;box-sizing:border-box;",
           "display:flex;flex-direction:column;max-height:62vh;padding-bottom:env(safe-area-inset-bottom,0);",
           "border-radius:14px 14px 0 0;border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.28));",
           "background:var(--dsw-alias-bg-layer-2,#1c1c1f);box-shadow:0 -10px 30px rgba(0,0,0,.35)}",
@@ -787,7 +787,10 @@
                       left: 0,
                       right: "auto",
                       bottom: 0,
-                      width: drawerBox.width + "px",
+                      // 宽度用 CSS 视口单位，不依赖 JS 量到的 innerWidth（真机上实测会出现
+                      // 「量出来比屏幕窄」，于是右边留一条盖不到的空带）。
+                      width: "100vw",
+                      maxWidth: "100vw",
                       transform: "translate(" + drawerBox.dx + "px," + drawerBox.dy + "px)"
                     }
                     : { left: 0, right: 0, bottom: 0 }

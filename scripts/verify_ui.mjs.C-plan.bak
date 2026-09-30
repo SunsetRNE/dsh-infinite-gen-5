@@ -255,7 +255,7 @@ ok("侧栏入口整块移除：不再注册 main / sidebar.panellist",
 ok("__meta 交代设置台契约（且不再暴露侧栏槽位）",
   mod.__meta.prefKey === "dsh-infinite-gen-5:prefs" &&
   Array.isArray(mod.__meta.prefFields) &&
-  mod.__meta.prefFields.slice().sort().join(",") === "slotMode,triggerMode" &&
+  mod.__meta.prefFields.slice().sort().join(",") === "layoutMode,slotMode,triggerMode" &&
   mod.__meta.sectionSlot === "settings.section" &&
   mod.__meta.sidebarSlot === undefined &&
   mod.__meta.mainSlot === undefined, JSON.stringify(mod.__meta.prefFields));
@@ -274,8 +274,8 @@ for (const token of [
   "--dsw-alias-state-business-primary",
   "--dsw-radius-sm",
   "--dsw-radius-lg",
-  "--dsw-alias-bg-layer-2",
-  "--dsw-alias-bg-mask",
+  "--dsw-specific-menu",
+  "--dsw-elevation-prominent",
   "--dsh-content-font-size-secondary"
 ]) {
   ok("样式使用宿主令牌 " + token, CLIENT_SRC.includes(token));
@@ -373,7 +373,7 @@ function mount(projection, docForeign, Component) {
   ok("空闲：触发条压成单个圆点（glyph 无判决时不写文字）", textOf(button) === "", JSON.stringify(textOf(button)));
   ok("空闲：圆点仍然是空闲/执行中的形态（有判决才被记号替代）", dot !== null);
   ok("空闲：文字节点被 display:none 收起但不卸载", findByClass(m.tree, "dsh-armor5-text") !== null);
-  ok("空闲：抽屉默认关闭", findByClass(m.tree, "dsh-armor5-drawer") === null);
+  ok("空闲：浮层默认关闭", findByClass(m.tree, "dsh-armor5-panel") === null);
   ok("空闲：样式表只注入一次", Object.keys(doc.__styles).length === 1 && doc.__styles["dsh-armor5-css"] !== undefined);
   ok("空闲：title 交代版本、状态与「可点开」", /无限五代 v/.test(button.props.title) && /空闲/.test(button.props.title) && /点击查看面板/.test(button.props.title), button.props.title);
   ok("空闲：无障碍标签与 title 一致", button.props["aria-label"] === button.props.title);
@@ -470,55 +470,33 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
   let button = findByClass(m.rerender(), "dsh-armor5-root");
   button.props.onClick();
   let tree = m.rerender();
-  const drawerEl = findByClass(tree, "dsh-armor5-drawer");
-  ok("点击后抽屉出现（C 方案 v0.49.0：浮层已删除）", drawerEl !== null);
-  // 修正是在 effect 里 setState 出来的，假渲染需要再走一拍才看得到（与真实浏览器一致）
-  const drawerSettled = findByClass(m.rerender(), "dsh-armor5-drawer");
-  ok("抽屉按实测几何修正（补回被 transform 祖先带偏的位移、宽度铺满视口）",
-    drawerSettled !== null && drawerSettled.props.style !== undefined &&
-    /translate\(-?\d/.test(String(drawerSettled.props.style.transform)) &&
-    String(drawerSettled.props.style.width) === "100vw",
-    JSON.stringify(drawerSettled && drawerSettled.props.style));
-  ok("抽屉带遮罩（点遮罩可收起）", findByClass(tree, "dsh-armor5-scrim") !== null);
-  ok("抽屉是对话框语义（role=dialog + aria-modal）",
-    drawerEl !== null && drawerEl.props.role === "dialog" && drawerEl.props["aria-modal"] === "true");
-  const drawerTabs = collectByClass(tree, "dsh-armor5-tab");
-  ok("抽屉带三个页签（实时 / 命中 / 明细）", drawerTabs.length === 3, "实际 " + drawerTabs.length);
-  ok("默认停在「实时」页", drawerEl.props["data-tab"] === "live", String(drawerEl.props["data-tab"]));
-  // v0.49.0 回归（v0.48.0 的页签失效根因）：外部点击判定必须把抽屉本身算作「内部」，
-  // 否则捕获阶段的 pointerdown 会先把 open 置假、抽屉被卸载，页签的 click 永远到不了。
-  // v0.49.0 回归（v0.48.0 的页签失效根因）：外部点击判定必须把抽屉算作「内部」，否则捕获阶段的
-  // pointerdown 会先把 open 置假、抽屉被卸载，页签的 click 永远到不了。
-  // 假 DOM 的 querySelector / contains 恒为空，模拟不出 containment，所以这里钉源码级保证；
-  // 「页签真的能切」由下面切页后的 data-tab 断言承担。
-  {
-    const downPair = (doc.__listeners || []).find((pair) => pair[0] === "pointerdown");
-    ok("注册了 document 级 pointerdown（外部点击判定在场）", Boolean(downPair));
-    ok("外部点击判定把抽屉算作内部（不再只认已删除的 .dsh-armor5-panel）",
-      CLIENT_SRC.includes('doc.querySelector(".dsh-armor5-panel, .dsh-armor5-drawer")') ||
-      CLIENT_SRC.includes('doc.querySelector(".dsh-armor5-drawer")'));
-  }
-  // 切到「明细」页：九个字段磁贴、真实值、chip 都长在这一页
-  collectByClass(tree, "dsh-armor5-tab").find((t) => t.props["data-tab"] === "fields").props.onClick();
-  tree = m.rerender();
-  const detailEl = findByClass(tree, "dsh-armor5-drawer");
-  const drawerText = textOf(detailEl);
-  const panelText = drawerText;   // v0.49.0：浮层已并入抽屉，旧断言变量名保留以缩小改动面
-  ok("点「明细」页签后 data-tab 变为 fields（页签真的能切）",
-    detailEl.props["data-tab"] === "fields", String(detailEl.props["data-tab"]));
+  const panel = findByClass(tree, "dsh-armor5-panel");
+  ok("点击后浮层出现", panel !== null);
+  ok("浮层是对话框式的原位浮层（不占用输入框那一行）", panel !== null && panel.props.style !== undefined);
+  ok("浮层宽度按宿主 ContextMeter 的面板口径夹取（<=286，v0.16.2 起给 chip 块留了位置）",
+    panel.props.style.width <= 286, JSON.stringify(panel.props.style));
+  ok("浮层底部锚定在触发器上方（bottom > 0）", panel.props.style.bottom > 0, JSON.stringify(panel.props.style));
+  ok("浮层横向被夹在视口内",
+    panel.props.style.left >= 8 && panel.props.style.left + panel.props.style.width <= 1280 - 8,
+    JSON.stringify(panel.props.style));
+  const panelText = textOf(panel);
+  // v0.16.5：字段搬进「田字格」的 tile 后「版本」不再单独占一行，所以字段列表里也去掉它，
+  // 单独断言版本只出现一次（头部右侧），见下面那条。
   for (const field of ["识别领域", "领域候选", "命中标记", "拒答/兜底词", "风险载荷",
     "安全标记", "扫描范围", "位置"]) {
-    ok("明细页含字段「" + field + "」", drawerText.includes(field));
+    ok("浮层含字段「" + field + "」", panelText.includes(field));
   }
-  ok("抽屉头部用徽标交代判决（不再单占一行「状态 / 最近判决」）",
-    drawerText.includes("通过") && /v\d+\.\d+\.\d+/.test(drawerText));
-  ok("抽屉里能看到真实值", drawerText.includes("通过") && drawerText.includes("web"));
+  ok("浮层头部用徽标交代判决（不再单占一行「状态 / 最近判决」）",
+    panelText.includes("无限五代内核") && panelText.includes("通过"));
+  ok("浮层里能看到真实值", panelText.includes("通过") && panelText.includes("web"));
+  // v0.16.4：领域键与命中数从「识别领域」挪走（那行只留中文标签），命中数在「领域候选」的 3* 里。
   ok("识别领域显示中文标签，命中数在领域候选里带 *",
-    drawerText.includes("Web 应用与 API") && drawerText.includes("3*"));
-  ok("领域候选按命中数排序且主判带 *", drawerText.includes("web 3*") && drawerText.includes("network 1"), drawerText);
-  ok("命中标记列出真正命中的词（不是黑箱）", drawerText.includes("渗透") && drawerText.includes("sql注入"));
-  ok("扫描范围写明全文与判拒窗口", drawerText.includes("全文 1288 字") && drawerText.includes("160"));
-  ok("抽屉头部带落笔时刻", /\d\d:\d\d:\d\d/.test(drawerText), drawerText.slice(0, 120));
+    panelText.includes("Web 应用与 API") && panelText.includes("3*"));
+  ok("领域候选按命中数排序且主判带 *", panelText.includes("web 3*") && panelText.includes("network 1"), panelText);
+  ok("命中标记列出真正命中的词（不是黑箱）", panelText.includes("渗透") && panelText.includes("sql注入"));
+  ok("扫描范围写明全文与判拒窗口", panelText.includes("全文 1288 字") && panelText.includes("160"));
+  ok("浮层头部带落笔时刻", /\d\d:\d\d:\d\d/.test(panelText), panelText.slice(0, 120));
+  // v0.16.2：命中标记 / 风险载荷改成 chip 块，并新增「最近命中」流水分区。
   const chips = collectByClass(tree, "dsh-armor5-chip");
   const hitChips = chips.filter((c) => c.props["data-kind"] === "hit");
   const riskChips = chips.filter((c) => c.props["data-kind"] === "risk");
@@ -526,29 +504,23 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
     hitChips.length === 3 && hitChips.map((c) => textOf(c)).join("、") === "渗透、ffuf、sql注入",
     JSON.stringify(hitChips.map((c) => textOf(c))));
   ok("风险载荷铺成 chip 并带条数",
-    riskChips.length === 2 && drawerText.includes("风险载荷 · 2"),
+    riskChips.length === 2 && panelText.includes("风险载荷 · 2"),
     JSON.stringify(riskChips.map((c) => textOf(c))));
-  // 切到「命中」页：最近命中分区长在这一页
-  collectByClass(tree, "dsh-armor5-tab").find((t) => t.props["data-tab"] === "hits").props.onClick();
-  tree = m.rerender();
-  const hitsText = textOf(findByClass(tree, "dsh-armor5-drawer"));
-  ok("抽屉有「最近命中」分区（服务端还没 data 时给出说明而不是空白）",
-    hitsText.includes("最近命中") && hitsText.includes("还没有判决留档"),
-    hitsText.slice(-200));
-  ok("抽屉样式与流水结构都写进源码（chip / 命中流水）",
+  ok("卡片有「最近命中」分区（服务端还没 data 时给出说明而不是空白）",
+    panelText.includes("最近命中") && panelText.includes("还没有判决留档"),
+    panelText.slice(-200));
+  ok("卡片样式与流水结构都写进源码（chip / 命中流水）",
     CLIENT_SRC.includes(".dsh-armor5-chip") && CLIENT_SRC.includes(".dsh-armor5-hits") &&
     CLIENT_SRC.includes("function hitRows"));
-  collectByClass(tree, "dsh-armor5-tab").find((t) => t.props["data-tab"] === "fields").props.onClick();
-  tree = m.rerender();
+  // v0.16.5：字段铺成「田字格」（两列 tile），词表与长值跨列；版本标识只剩头部一处。
   const tiles = collectByClass(tree, "dsh-armor5-tile");
   const span2 = tiles.filter((t) => t.props["data-span"] === "2");
   ok("字段铺成「田字格」（两列 tile，词表 / 长值跨列）",
     tiles.length >= 8 && span2.length >= 3, "tiles=" + tiles.length + " span2=" + span2.length);
-  const tilesText = textOf(findByClass(tree, "dsh-armor5-drawer"));
-  ok("抽屉里不再有「版本」行，版本只在头部出现一次",
-    tilesText.includes("版本") === false &&
-    (tilesText.match(/v\d+\.\d+\.\d+/g) || []).length === 1,
-    JSON.stringify((tilesText.match(/v\d+\.\d+\.\d+/g) || [])));
+  ok("卡片里不再有「版本」行，版本只在头部出现一次",
+    panelText.includes("版本") === false &&
+    (panelText.match(/v\d+\.\d+\.\d+/g) || []).length === 1,
+    JSON.stringify((panelText.match(/v\d+\.\d+\.\d+/g) || [])));
   ok("田字格样式写进源码（grid / tile / 跨列选择器）",
     CLIENT_SRC.includes(".dsh-armor5-grid") && CLIENT_SRC.includes(".dsh-armor5-tile") &&
     CLIENT_SRC.includes("[data-span='2']"));
@@ -602,10 +574,10 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
   // v0.19.1：这张表就是「面板大小」的唯一真源 —— 表长也被断言，删掉一条锚点直接红；
   // 单条规则「顺手改回去一点」同样红。光有选择器不算数，值也必须对。
   const compactAnchors = [
-    ["抽屉 dvh 优先的 @supports 兜底", /@supports \(height:1dvh\)\{\.dsh-armor5-drawer\{max-height:62dvh\}\}/.test(cssText)],
-    ["抽屉高度三段兜底（vh → --ig5-vh → dvh）", /\.dsh-armor5-drawer\{[^}]*max-height:62vh/.test(cssText)],
-    ["抽屉圆角 14px 14px 0 0", /\.dsh-armor5-drawer\{[^}]*border-radius:14px 14px 0 0/.test(cssText)],
-    ["抽屉让出安全区", /padding-bottom:env\(safe-area-inset-bottom,0\)/.test(cssText)],
+    ["面板宽度 min(260px,100vw - 18px)", cssText.includes("width:min(260px,100vw - 18px)")],
+    ["面板内边距 7px 8px 8px", /\.dsh-armor5-panel\{[^}]*padding:7px 8px 8px/.test(cssText)],
+    ["面板圆角 9px", /\.dsh-armor5-panel\{[^}]*border-radius:var\(--dsw-radius-lg,9px\)/.test(cssText)],
+    ["面板正文 11px/15px", /\.dsh-armor5-panel\{[^}]*font-size:11px;line-height:15px/.test(cssText)],
     ["头部间距 gap 4px", cssText.includes(".dsh-armor5-head{display:flex;align-items:center;gap:4px}")],
     ["头部时刻 10px", cssText.includes("font-size:10px;font-variant-numeric:tabular-nums}")],
     ["徽标高 15px / 内边距 0 6px", /\.dsh-armor5-badge\{[^}]*height:15px;padding:0 6px/.test(cssText)],
@@ -668,13 +640,10 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
   ok("四档顺序真源在源码里（proactive 打头、off 收尾）且按钮接进了「位置」行",
     /var GATE_MODES = \[[\s\S]{0,40}\{ value: "proactive"/.test(CLIENT_SRC) &&
     CLIENT_SRC.indexOf('{ value: "off"') >= 0 &&
-    CLIENT_SRC.indexOf("gateButton()") >= 0);
+    CLIENT_SRC.indexOf("gateButton()),") >= 0);
   // v0.16.1：浮层卡片自己也订一份统计库（与设置页那组同源），卡片没拿到桥时至少要有「信号 / 本轮」两行。
-  collectByClass(tree, "dsh-armor5-tab").find((t) => t.props["data-tab"] === "live").props.onClick();
-  tree = m.rerender();
-  const liveText = textOf(findByClass(tree, "dsh-armor5-drawer"));
-  ok("抽屉「实时」页带「信号 / 本轮」两行（卡片自己订阅统计库）",
-    liveText.includes("信号") && liveText.includes("本轮"), liveText.slice(-160));
+  ok("浮层卡片带「实时」行（卡片自己订阅统计库）",
+    panelText.includes("信号") && panelText.includes("本轮"), panelText.slice(-160));
   ok("浮层打开时 aria-expanded=true", findByClass(tree, "dsh-armor5-root").props["aria-expanded"] === "true");
   // 统计库的 visibilitychange 监听也挂在 document 上（v0.16.1 卡片订阅），所以不再数总数，
   // 只按类型数：卡片必须恰好挂一个 pointerdown + 一个 keydown。
@@ -685,8 +654,7 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
   button = findByClass(tree, "dsh-armor5-root");
   button.props.onClick();
   tree = m.rerender();
-  findByClass(tree, "dsh-armor5-tab-close").props.onClick();
-  ok("点 ✕ 收起抽屉", findByClass(m.rerender(), "dsh-armor5-drawer") === null);
+  ok("再点一次收起浮层", findByClass(tree, "dsh-armor5-panel") === null);
 }
 
 // 7) 折叠上一代徽标
@@ -768,7 +736,8 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
   const inst = loadInstance({ storage });
   ok("出厂默认 = 源码常量（glyph / composer，且偏好里不再有侧栏入口）",
     inst.meta.prefDefaults.triggerMode === "glyph" && inst.meta.prefDefaults.slotMode === "composer" &&
-    inst.meta.prefFields.slice().sort().join(",") === "slotMode,triggerMode", JSON.stringify(inst.meta.prefDefaults));
+    inst.meta.prefDefaults.layoutMode === "popover" &&
+    inst.meta.prefFields.slice().sort().join(",") === "layoutMode,slotMode,triggerMode", JSON.stringify(inst.meta.prefDefaults));
   ok("只读偏好不写盘（没改就不落 localStorage）", Object.keys(storage.dump()).length === 0, JSON.stringify(storage.dump()));
   ok("设置页组件拿到了（就是 settings.section 那一条）", typeof inst.page === "function");
 
@@ -1182,7 +1151,7 @@ function previewPage({ theme, pluginCss, stateRows, panelHtml, consoleHtml, navH
     background:var(--dsw-alias-bg-module-platform);border:1px solid var(--dsw-alias-border-l1)}
   .stage-tag{font-size:11px;color:var(--dsw-alias-label-caption);min-width:84px}
   .note{font-size:11.5px;line-height:1.75;color:var(--dsw-alias-label-tertiary);max-width:780px;margin:6px auto 0}
-  .panel-host .dsh-armor5-drawer{position:static !important;bottom:auto !important;left:auto !important;width:264px !important;display:block !important}
+  .panel-host .dsh-armor5-panel{position:static !important;bottom:auto !important;left:auto !important;width:264px !important;display:block !important}
   .row{display:flex;gap:14px;align-items:flex-start}
   code{font-size:11.5px;background:var(--dsw-alias-markdown-inline-code);padding:1px 4px;border-radius:4px}
 </style>
@@ -1300,7 +1269,7 @@ if (process.argv.includes("--emit-html")) {
   const trigger = findByClass(mo.rerender(), "dsh-armor5-root");
   trigger.props.onClick();
   const openTree = mo.rerender();
-  const panelHtml = toHtml(findByClass(openTree, "dsh-armor5-drawer"));
+  const panelHtml = toHtml(findByClass(openTree, "dsh-armor5-panel"));
   const base = outPath || "/tmp/preview";
   mkdirSync(dirname(base.replace(/\.html$/, "") + "-x.html"), { recursive: true });
   for (const dark of [true, false]) {
@@ -1461,35 +1430,27 @@ if (process.argv.includes("--emit-html")) {
   const consoleView = mountComponent(inst.page, undefined);
   const layoutBtns = collectByClass(consoleView.tree, "armor5-console-choice")
     .filter((b) => ["popover", "drawer"].includes(b.props["data-choice"]));
+  ok("设置台渲染出两档弹出方式（浮层 / 抽屉）", layoutBtns.length === 2, "实际 " + layoutBtns.length);
+  ok("弹出方式默认高亮「浮层」（出厂默认不动）",
+    layoutBtns.find((b) => b.props["data-choice"] === "popover").props.className.includes("is-active"));
+
   // 切到抽屉：写盘 + 状态条换成抽屉容器
-  // C 方案（v0.49.0）：layoutMode 偏好已删除，抽屉是唯一容器，无需切档写盘。
+  inst.exports.setPrefs({ layoutMode: "drawer" });
+  ok("切抽屉写进 localStorage（持久化）",
+    JSON.parse(storage.dump()[PREF_KEY]).layoutMode === "drawer", JSON.stringify(storage.dump()));
   findByClass(badge.rerender(), "dsh-armor5-root").props.onClick();
   let tree = badge.rerender();
   const drawer = findByClass(tree, "dsh-armor5-drawer");
   ok("抽屉布局：点开后渲染 .dsh-armor5-drawer", drawer !== null);
-  ok("浮层已从源码与 DOM 中彻底删除（只有抽屉一种容器）",
-    !CLIENT_SRC.includes('className: "dsh-armor5-panel"') && findByClass(tree, "dsh-armor5-panel") === null);
-  const drawerSettled2 = findByClass(badge.rerender(), "dsh-armor5-drawer");
-  ok("抽屉按实测几何修正（位移补回 + 宽度铺满视口）",
-    drawerSettled2 !== null && drawerSettled2.props.style !== undefined &&
-    /translate\(-?\d/.test(String(drawerSettled2.props.style.transform)),
-    JSON.stringify(drawerSettled2 && drawerSettled2.props.style));
+  ok("抽屉布局：同一时刻不再渲染浮层 .dsh-armor5-panel（两种容器互斥）",
+    findByClass(tree, "dsh-armor5-panel") === null);
+  ok("抽屉是视口锚定的容器（不写内联 left/bottom，贴底交给 CSS）", drawer !== null && drawer.props.style === undefined);
   ok("抽屉带遮罩（点遮罩可收起）", findByClass(tree, "dsh-armor5-scrim") !== null);
   ok("抽屉是对话框语义（role=dialog + aria-modal）",
     drawer.props.role === "dialog" && drawer.props["aria-modal"] === "true");
 
   const tabs = collectByClass(tree, "dsh-armor5-tab");
   ok("抽屉带三个页签（实时 / 命中 / 明细）", tabs.length === 3, "实际 " + tabs.length);
-  // v0.49.0 回归（v0.48.0 的页签失效根因）：外部点击判定必须把抽屉本身算作「内部」，
-  // 否则捕获阶段的 pointerdown 会先把 open 置假、抽屉被卸载，页签的 click 永远到不了。
-  {
-    // 假 DOM 的 querySelector / contains 恒为空，模拟不出 containment → 钉源码级保证；
-    // 「页签真的能切」由下面的 data-tab 断言承担。
-    const downPair = (doc.__listeners || []).find((pair) => pair[0] === "pointerdown");
-    ok("注册了 document 级 pointerdown（外部点击判定在场）", Boolean(downPair));
-    ok("外部点击判定把抽屉算作内部（不再只认已删除的 .dsh-armor5-panel）",
-      CLIENT_SRC.includes('drawerRef.current') && CLIENT_SRC.includes('.dsh-armor5-panel, .dsh-armor5-drawer'));
-  }
   ok("默认停在「实时」页", drawer.props["data-tab"] === "live", String(drawer.props["data-tab"]));
   ok("当前页签高亮 data-on=1（唯一）",
     tabs.filter((t) => t.props["data-on"] === "1").length === 1 &&
@@ -1516,7 +1477,10 @@ if (process.argv.includes("--emit-html")) {
   // 收起 + 退回浮层：两条路都要能走回去
   findByClass(tree, "dsh-armor5-tab-close").props.onClick();
   ok("点右上角 ✕ 收起抽屉", findByClass(badge.rerender(), "dsh-armor5-drawer") === null);
-  // C 方案：没有「切回 popover」这条路 —— 回退靠 git 回滚（参见 ROLLBACK.sh）。
+  inst.exports.setPrefs({ layoutMode: "popover" });
+  findByClass(badge.rerender(), "dsh-armor5-root").props.onClick();
+  ok("切回 popover 后仍是老浮层（可回退，不是单向迁移）",
+    findByClass(badge.rerender(), "dsh-armor5-panel") !== null);
 }
 
 // ── 结果 ────────────────────────────────────────────────────────────────────
