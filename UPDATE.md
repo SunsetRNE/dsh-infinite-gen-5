@@ -1,3 +1,17 @@
+## v0.51.19
+
+**只读 CI 工具：一个工具顶掉「curl + 解析 + 45 KB 日志塞上下文」。**
+
+- `scripts/ig5-ci.mjs`：`status` / `logs` / `watch`；参数 `--repo OWNER/NAME`、`--run latest-failed|ID`、
+  `--inject summary|tail`、`--tail N`、`--json`。回执固定形状（repo / run / failedSteps / fullLog + sha256）。
+- 三条协议条款已内置（GITHUB-CI）：**默认摘要且 ≤8 KB**；**全文必落盘并回 sha256**；
+  **失败优先**；401/403 只报「凭据失效或权限不足」不重试；**无凭据时明确降级**（GitHub 的 job 日志接口要 token，
+  没有就只回步骤级摘要 —— 不假装拿到全文）。
+- 门禁 `scripts/verify_ci_tool.mjs`（npm 键 `verify:ci-tool`，9 条判据，无网络 SKIP）。
+- 实测：`status` 对 `SunsetRNE/dsh-infinite-gen-5` 返回 run 36833869948 / v0.51.18 / success / 13 步。
+- **未做（下一轮）**：密钥落盘（`~/.dsh/infinite-gen-5-github.json` 0600，SECRETS 协议）与设置台「远端凭据」入口；
+  本轮工具只认环境变量 `GITHUB_TOKEN` / `IG5_GH_TOKEN`。
+
 ## v0.51.18
 
 **补上 DSH 宿主自带的「读后写」文件纪律（技能 + 内核两处）。**
