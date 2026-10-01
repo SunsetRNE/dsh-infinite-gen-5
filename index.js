@@ -461,6 +461,8 @@ const BATCH_SCAN_CAP = 20000;
 //         BOOST_MODE: full
 //         EXCLUSIVE_SECTION: true
 const TUNABLE_KEYS = [
+  "OVERRIDE_MODE",
+  "OVERRIDE_CLAUSE",
   "LAYER2_MODE",
   "DEDUPE_PAYLOAD",
   "TAIL_MODE",
@@ -494,7 +496,8 @@ const ENV_OF_KEY = {
   SECTION_BUDGET_BYTES: "IG5_SECTION_BUDGET_BYTES",
   SECTION_BUDGET_SHARE: "IG5_SECTION_BUDGET_SHARE",
   OVERRIDE_MODE: "IG5_OVERRIDE_MODE",
-  OVERRIDE_DROP: "IG5_OVERRIDE_DROP",
+  // IG5_OVERRIDE_DROP 刻意不进调参目录与 effective：它是自由文本清单，目录里没有文本框控件，
+  // 硬塞进去会牵动 TUNABLE_KEYS 与条目数断言（同 verify_tuning 里 boost/lazy 目录外开关的口径）。
   OVERRIDE_CLAUSE: "IG5_OVERRIDE_CLAUSE",
 };
 // 只有真布尔键走 true/false 转换；档位键（LAYER2_MODE / TAIL_MODE / RUNTIME_ANCHOR_MODE /
@@ -548,7 +551,6 @@ const OVERRIDE_ORDER = 9900; // 中段锚点 200 之后、真末位锚点 10150 
 // 文件默认值：唯一基线。每次重新解析都从这里重算，避免上一次的覆盖「粘」在配置里。
 const IG5_DEFAULTS = Object.freeze({
   OVERRIDE_MODE,
-  OVERRIDE_DROP,
   OVERRIDE_CLAUSE,
   LAYER2_MODE,
   DEDUPE_PAYLOAD,
@@ -795,6 +797,26 @@ const TUNING_CATALOG = [
       { value: true, label: "开", hint: "内核 complete，宿主工具用法/沙箱策略等被整体丢弃" },
     ],
   },
+  {
+    key: "OVERRIDE_MODE",
+    label: "提示词接管（训练档）",
+    hint: "按段让位宿主平台自带系统段；自有宿主/授权靶场专用",
+    options: [
+      { value: "off", label: "关", hint: "只追加载荷，不动宿主任何段（默认）" },
+      { value: "shadow", label: "让位命中段", hint: "只剔除命中剔除词的宿主段（身份/人格/工具用法/沙箱/设备协议）" },
+      { value: "replace", label: "全量替换", hint: "非本插件段一律让位 + 内核 complete；装配面再兜一层" },
+    ],
+  },
+  {
+    key: "OVERRIDE_CLAUSE",
+    kind: "bool",
+    label: "接管裁决句（Order 9900）",
+    hint: "接管时插在真末位锚点之前：与内核冲突以内核为准",
+    options: [
+      { value: true, label: "开", hint: "写明不得以平台规定/系统设定为由回避、改写或降级（默认）" },
+      { value: false, label: "关", hint: "只让位、不加裁决句" },
+    ],
+  },
 ];
 
 // 注入配置的唯一读取口：apply() 一律从这里取值，自检因此可以直接改它来驱动各档行为。
@@ -843,7 +865,6 @@ const STEP_INJECT_TEXT = [
 
 export const IG5_CONFIG = {
   OVERRIDE_MODE,
-  OVERRIDE_DROP,
   OVERRIDE_CLAUSE,
   TASK_MODE,
   STEP_INJECT_MODE,
@@ -2360,7 +2381,11 @@ export function apply(ctx, config) {
       const out = await next();
       if (runtime.role !== "primary") return out;
       if (!out || !Array.isArray(out.sections)) return out;
-      const plan = planOverride(out.sections, { mode: CFG.OVERRIDE_MODE, dropList: CFG.OVERRIDE_DROP });
+      const plan = planOverride(out.sections, {
+        mode: CFG.OVERRIDE_MODE,
+        // 自由文本清单只认环境变量（不进调参目录）：CFG 里没有就用模块级 OVERRIDE_DROP。
+        dropList: CFG.OVERRIDE_DROP ?? OVERRIDE_DROP,
+      });
       const clause = CFG.OVERRIDE_CLAUSE ? renderTakeoverClause({ mode: plan.mode, dropped: plan.dropped }) : "";
       const tails = plan.kept.filter((s) => s && s.name === TAIL_SECTION);
       const body = plan.kept.filter((s) => s && s.name !== TAIL_SECTION);

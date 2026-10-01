@@ -75,9 +75,11 @@ check("残留扫描：命中宿主身份句", hits.some((h) => h.id === "host-id
 check("残留扫描：干净文本零命中", scanResidual("只有内核与锚点，没有宿主立场句。").length === 0);
 
 // index.js 接线
-check("接线：配置键进 IG5_CONFIG", /OVERRIDE_MODE,\n  OVERRIDE_DROP,\n  OVERRIDE_CLAUSE,/.test(src));
-check("接线：进环境变量映射", /OVERRIDE_MODE: "IG5_OVERRIDE_MODE"/.test(src) && /OVERRIDE_DROP: "IG5_OVERRIDE_DROP"/.test(src));
-check("接线：档位键有取值守卫", /const MODE_KEYS = Object.freeze\(\{ OVERRIDE_MODE: OVERRIDE_MODES \}\)/.test(src));
+check("接线：配置键进 IG5_CONFIG", /OVERRIDE_MODE,\n  OVERRIDE_CLAUSE,\n  TASK_MODE,/.test(src));
+check("接线：进环境变量映射", /OVERRIDE_MODE: "IG5_OVERRIDE_MODE"/.test(src) && /OVERRIDE_CLAUSE: "IG5_OVERRIDE_CLAUSE"/.test(src));
+check("接线：自由文本清单不进调参目录（只认 env）", !/\n  OVERRIDE_DROP: "IG5_OVERRIDE_DROP",/.test(src));
+check("接线：档位键进调参目录与守卫", /"OVERRIDE_MODE",\n  "OVERRIDE_CLAUSE",/.test(src) && /const MODE_KEYS = Object.freeze\(\{ OVERRIDE_MODE: OVERRIDE_MODES \}\)/.test(src));
+check("接线：目录里两枚新控件（select + bool）", /key: "OVERRIDE_MODE",\n    label: "提示词接管（训练档）"/.test(src) && /key: "OVERRIDE_CLAUSE",\n    kind: "bool"/.test(src));
 check("接线：replace 档触发独占内核", /CFG\.EXCLUSIVE_SECTION === true \|\| CFG\.OVERRIDE_MODE === "replace"/.test(src));
 check("接线：装配瀑布已挂", /registerOverrideWaterfall\(\);/.test(src) && /const registerOverrideWaterfall = \(\) => \{/.test(src));
 check("接线：回执落 runtime.override", /runtime\.override = \{/.test(src));
