@@ -140,7 +140,7 @@ export const DIRECTIVES = [
 
 // 增强集自报版本：本文件唯一的版本号字面量（version-targets.mjs 的锚点，
 // 发版时由 bump-version.mjs 改写；BOOST_HEADER 与 boostStats 都从这里派生）。
-export const BOOST_VERSION = "0.51.20";
+export const BOOST_VERSION = "0.51.21";
 
 // 段首标头：让模型知道这一段是「编译出来的增强集」，而不是内核重述。
 // 版本号在**编译时**现读 package.json：长驻进程里 ES 模块常量随进程寿命固定，

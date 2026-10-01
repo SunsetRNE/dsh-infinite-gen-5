@@ -14,7 +14,8 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync, readFileSync, statSync } from "node:fs";
 
-const API = "https://api.github.com";
+// v0.51.21：允许指向自建 mock（门禁与离线复验用），默认仍是真 GitHub。
+const API = process.env.IG5_CI_API || "https://api.github.com";
 const SUMMARY_LIMIT = 8192;      // 协议硬门限：回执超过它就只回摘要
 const FALLBACK_DIR = "/tmp/ig5-ci";
 
