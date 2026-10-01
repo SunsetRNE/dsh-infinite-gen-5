@@ -25,7 +25,15 @@ function arg(name, def = null) {
 const asJson = process.argv.includes("--json");
 const action = (process.argv[2] || "status").replace(/^--/, "");
 const repo = arg("repo");
-const token = process.env.GITHUB_TOKEN || process.env.IG5_GH_TOKEN || "";
+// SECRETS 协议：凭据只落 ~/.dsh 直下（插件目录之外 → 更新不丢）；此处只读、绝不回显。
+function tokenFromSecretFile() {
+  const home = process.env.IG5_HOME || process.env.DSH_HOME || `${process.env.HOME || "/root"}/.dsh`;
+  try {
+    const parsed = JSON.parse(readFileSync(`${home}/infinite-gen-5-github.json`, "utf8"));
+    return typeof parsed?.token === "string" ? parsed.token : "";
+  } catch { return ""; }        // 没配过 / 坏了都当「无凭据」，走降级路径
+}
+const token = process.env.GITHUB_TOKEN || process.env.IG5_GH_TOKEN || tokenFromSecretFile();
 
 const headers = { accept: "application/vnd.github+json", "user-agent": "ig5-ci/1" };
 if (token) headers.authorization = "Bearer " + token;
@@ -92,6 +100,7 @@ async function main() {
         headers: { ...headers, accept: "application/vnd.github+json" }, redirect: "follow",
       });
       if (res.status === 401 || res.status === 403) return fail(`取日志被拒（${res.status}：权限不足或 token 失效）`);
+      if (res.status >= 300 && res.status < 400) { out.note = `日志接口给了重定向（${res.status}），本工具不跟随第三方大体积下载`; }
       if (res.status === 200) {
         const buf = Buffer.from(await res.arrayBuffer());
         mkdirSync(FALLBACK_DIR, { recursive: true });
@@ -121,4 +130,8 @@ async function main() {
   console.log(text);
 }
 
+process.on("unhandledRejection", (err) => {
+  console.log(JSON.stringify(fail("未预期异常：" + String((err && err.message) || err))));
+  process.exitCode = 1;
+});
 main().catch((err) => { console.log(JSON.stringify(fail(String(err && err.message || err)))); process.exitCode = 1; });
