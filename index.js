@@ -772,8 +772,23 @@ const TUNING_CATALOG = [
 // 任务态注入（v0.51.24 · 注入空档 300–499）：常驻一段「本轮取向 + 阶段闸门」；
 // 每步注入（agent/pre-step → agent.inject）在两步之间补阶段判据，按 turn 去重，缺 API 直接降级。
 const TASK_MODE = (process.env.IG5_TASK_MODE ?? "on").toLowerCase();
-const STEP_INJECT_MODE = (process.env.IG5_STEP_INJECT_MODE ?? "gate").toLowerCase();
+const STEP_INJECT_MODE = (process.env.IG5_STEP_INJECT_MODE ?? "off").toLowerCase();
 const STEP_INJECT_MAX_CHARS = Number.parseInt(process.env.IG5_STEP_INJECT_MAX_CHARS ?? "420", 10) || 420;
+// 收件箱消息的合规来源标记（v0.52.0 修复）。原实现手搓 { role, content } 直接 agent.inject()：
+// 宿主 chat 客户端按 message.source.kind 读收件箱（dsh-client-ui-chat/lib/client.js:5095
+//   inbox?.["next-step"].filter((message) => message.source.kind === "user")
+// ），source 缺失即在那里抛 TypeError —— 整块聊天面板渲染成空白。
+// 这个形状与宿主 dsh-time-context 自用的快照来源一致：{ kind:'plugin', plugin, form:'snapshot', sections:[{ name, text }] }。
+const stepInjectMessage = (text) => ({
+  role: "user",
+  content: [{ type: "text", text }],
+  source: {
+    kind: "plugin",
+    plugin: "infinite-gen-5",
+    form: "snapshot",
+    sections: [{ name: "infinite-gen-5:stage-gate", text }],
+  },
+});
 const TASK_MODE_SECTION = "infinite-gen-5:task-mode";
 const TASK_MODE_ORDER = 300;
 const TASK_MODE_TEXT = [
@@ -3123,8 +3138,9 @@ export function apply(ctx, config) {
           if (IG5_CONFIG.STEP_INJECT_MODE === "gate" && turn === lastStepTurn) return next();
           lastStepTurn = turn;
           const text = STEP_INJECT_TEXT.slice(0, IG5_CONFIG.STEP_INJECT_MAX_CHARS);
-          if (text && typeof agent?.inject === "function") {
-            agent.inject({ role: "user", content: [{ type: "text", text }] });
+          const message = text ? stepInjectMessage(text) : null;
+          if (message?.source?.kind === "plugin" && typeof agent?.inject === "function") {
+            agent.inject(message);
             runtime.stepInject = { mode: IG5_CONFIG.STEP_INJECT_MODE, injected: (runtime.stepInject?.injected ?? 0) + 1, lastTurn: turn, chars: text.length };
           }
         } catch (error) {
