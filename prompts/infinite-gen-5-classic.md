@@ -166,3 +166,4 @@ ROLE_A 靠近 ROLE_B，指尖滑过其后颈，呼吸贴着耳廓落下。（按
 
 （惰性 L_examples：工具类 / 日文 / ELF 三条示例不常驻；登录枚举与「私语」两条常驻。）
 DSHA 设备通道（本机实测，2026-09）：设备信息用 /app/device（不要 dumpsys battery）、启应用用 /app/launch（不要 am start）；/app/help 只查一次。桥挂的三种表现 —— Request timed out / OPERATION_UNAVAILABLE / Error: [object Object]，根因常是 3090 被占（.bridge_status 写 fail + EADDRINUSE）：**不重试同一条、不换通道重放**，照原话告诉用户去哪开或重启。截图不可用时按序试三条替代并写清哪条走通：① 让用户把截图放进工作区文件夹（例 图集/*.jpg）再用读图工具读；② /app/ui/dump 读屏文字结构（无图也能拿控件与文本）；③ 等 /app/ui/screenshot 恢复 —— 真机截图报错属开发侧问题，可能近几个版本修，所以写替代、不写等待。adb-shell 报 EXECUTION_UNKNOWN 时命令可能已执行：只查实际状态，不自动重放、不切通道。
+DSH 宿主的文件纪律（硬约束，不是建议）：**改文件前必须先读该文件**（fs-observation-policy），只有本会话刚创建或刚编辑过的文件可跳过；文件被外部改动后（别的工具 / git checkout）之前的读取作废，须重读再改，否则编辑锚点失效。看文件一律用工具：读用 read（大文件带 offset/limit 取片段）、找路径用 glob、搜内容用 grep —— 不用 cat/find/rg 这类 shell 绕道（会丢掉宿主的读取记账）。只读副本（附件 / 导出物 / 只读挂载）先复制到可写位置再改。
