@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.5";
+        var VERSION = "v0.51.6";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -768,21 +768,53 @@
           // 判决明细磁贴：浮层与抽屉共用同一份（v0.48.0 起抽出为变量，避免两处各写一遍）。
           // v0.51.0：标签翻译的当前模式同步给模块级 L（dev 模式原样，用户模式查词表）。
           PANEL_LEX_STATE.dev = dockPrefs.panelMode === "dev";
+          // v0.51.6：用户反馈「检测标签不是单个累计状态」—— 用户模式下这三个磁贴改成
+          // 本对话累计（同一标识只占一格 + ×次数），dev 模式保留本条判决的原始词。
+          var memEarly = liveState.liveDoc && liveState.liveDoc.hits
+            && liveState.liveDoc.hits.groups && liveState.liveDoc.hits.groups.memory
+            ? liveState.liveDoc.hits.groups.memory : null;
+          var chipRowEarly = function (rows, kind) {
+            var list = Array.isArray(rows) ? rows : [];
+            if (!list.length) {
+              return react.createElement("span", { className: "dsh-armor5-hits-empty" }, "本对话还没有累计");
+            }
+            return react.createElement("div", { className: "dsh-armor5-chiprow" },
+              list.map(function (row) {
+                return react.createElement("span", {
+                  key: kind + row.name,
+                  className: "dsh-armor5-chip",
+                  "data-kind": kind,
+                  title: row.name + " ×" + row.count
+                }, row.name + " ×" + row.count);
+              }));
+          };
+          var accOrRaw = function (rawList, memKey, kind) {
+            if (PANEL_LEX_STATE.dev) return chipList(rawList, kind, "无");
+            var acc = memEarly ? memEarly[memKey] : null;
+            // 还没累计（本会话第一条判决 / 老服务端没有 memory）→ 回落显示本条判决的原始词，
+            // 不能因为「没有累计」就把这一格变成空的。
+            if (!Array.isArray(acc) || acc.length === 0) return chipList(rawList, kind, "无");
+            return chipRowEarly(acc, "mem-" + kind);
+          };
+          var tileLabel = function (key, rawList) {
+            return PANEL_LEX_STATE.dev && rawList && rawList.length
+              ? L(key) + " · " + rawList.length : L(key);
+          };
           var fieldTiles = tileGrid([
-            tile(L("命中标记") + (domainMarkers.length ? " · " + domainMarkers.length : ""),
-              chipList(domainMarkers, "hit", "无"), "hit", 2),
-            tile(L("风险载荷") + (risk.length ? " · " + risk.length : ""),
-              chipList(risk, "risk", "无"), "risk", 2),
-            tile(L("安全标记") + (safe.length ? " · " + safe.length : ""),
-              chipList(safe, "safe", "无"), "safe", 1),
+            tile(tileLabel("命中标记", domainMarkers),
+              accOrRaw(domainMarkers, "markers", "hit"), "hit", 2),
+            tile(tileLabel("风险载荷", risk),
+              accOrRaw(risk, "risks", "risk"), "risk", 2),
+            tile(tileLabel("安全标记", safe),
+              accOrRaw(safe, "safe", "safe"), "safe", 1),
             tile(L("识别领域"), textValue(domain ? (domainLabel || domain) : "—"), "domain", 1),
             tile(L("领域候选"), textValue(candidatesText), "cand", 1),
             tile(L("拒答/兜底词"), textValue(words.length ? words.join("、") : "—"), "words", 1),
             tile(L("扫描范围"), textValue(textChars
               ? "全文 " + textChars + " 字 · 判拒 " + openingChars + " 字"
               : "—"), "range", 2),
-            tile("候选明细", textValue(rankedDetailText), "cand", 2),
-            tile("空答类型", textValue(emptyKind || "—"), "empty", 1)
+            tile(L("候选明细"), textValue(rankedDetailText), "cand", 2),
+            tile(L("空答类型"), textValue(emptyKind || "—"), "empty", 1)
               ], "fields");
 
           // v0.49.0（C 方案）：原位浮层容器已删除 —— 单击或长按触发条一律走下面的抽屉。
@@ -1121,6 +1153,8 @@
           "位置": "面板位置",
           "本对话命中": "这次对话里",
           "最近对话命中": "之前几次",
+          "候选明细": "同类线索详情",
+          "空答类型": "没答上来算哪种",
           "全局命中": "累计统计",
           "通过": "可以直接回答",
           "拒答": "已按边界改写",

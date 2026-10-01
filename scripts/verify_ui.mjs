@@ -526,13 +526,15 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
   ok("扫描范围写明全文与判拒窗口", drawerText.includes("全文 1288 字") && drawerText.includes("160"));
   ok("抽屉头部带落笔时刻", /\d\d:\d\d:\d\d/.test(drawerText), drawerText.slice(0, 120));
   const chips = collectByClass(tree, "dsh-armor5-chip");
-  const hitChips = chips.filter((c) => c.props["data-kind"] === "hit");
-  const riskChips = chips.filter((c) => c.props["data-kind"] === "risk");
+  // v0.51.6：用户模式下这三个磁贴走「本对话累计」（data-kind=mem-hit/…），dev 模式才是 raw；
+  // 两种都算「铺成 chip」，只断言形状与条数，不把某一种模式写死。
+  const hitChips = chips.filter((c) => String(c.props["data-kind"] || "").indexOf("hit") >= 0);
+  const riskChips = chips.filter((c) => String(c.props["data-kind"] || "").indexOf("risk") >= 0);
   ok("命中标记铺成 chip（不是一坨逗号）",
     hitChips.length === 3 && hitChips.map((c) => textOf(c)).join("、") === "渗透、ffuf、sql注入",
     JSON.stringify(hitChips.map((c) => textOf(c))));
   ok("风险载荷铺成 chip 并带条数",
-    riskChips.length === 2 && (drawerText.includes("风险载荷 · 2") || drawerText.includes("需要小心的写法 · 2")),
+    riskChips.length === 2 && (drawerText.includes("风险载荷") || drawerText.includes("需要小心的写法")),
     JSON.stringify(riskChips.map((c) => textOf(c))));
   // 切到「命中」页：最近命中分区长在这一页
   collectByClass(tree, "dsh-armor5-tab").find((t) => t.props["data-tab"] === "hits").props.onClick();
@@ -1750,7 +1752,25 @@ if (process.argv.includes("--emit-html")) {
   ok("设置台组标题已走 C() 的有 7 处（实测值，其余文案不在 group-title 渲染点）", wrapped >= 7, "实得 " + wrapped);
 }
 
-// ── 结果 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ── v0.51.6：明细页三个检测磁贴改「本对话累计」+ 两个字段名翻译 ─────────────
+{
+  ok("用户模式下命中标记/风险载荷/安全标记走累计口径（去重 + ×次数）",
+    CLIENT_SRC.includes("accOrRaw(domainMarkers, \"markers\", \"hit\")") &&
+    CLIENT_SRC.includes("accOrRaw(risk, \"risks\", \"risk\")") &&
+    CLIENT_SRC.includes("accOrRaw(safe, \"safe\", \"safe\")"));
+  ok("累计 chip 带 ×次数（同一标识只占一格）",
+    /row\.name \+ " ×" \+ row\.count/.test(CLIENT_SRC) && CLIENT_SRC.includes('"mem-" + kind'));
+  ok("还没累计时回落本条（不把格子变空）",
+    CLIENT_SRC.includes("if (!Array.isArray(acc) || acc.length === 0) return chipList(rawList, kind, \"无\")"));
+  ok("两个未翻译字段名已入词表并包 L()",
+    CLIENT_SRC.includes('"候选明细": "同类线索详情"') && CLIENT_SRC.includes('"空答类型": "没答上来算哪种"') &&
+    CLIENT_SRC.includes('tile(L("候选明细")') && CLIENT_SRC.includes('tile(L("空答类型")'));
+  ok("dev 模式仍是本条原始词（开发者口径没被改掉）",
+    CLIENT_SRC.includes("if (PANEL_LEX_STATE.dev) return chipList(rawList, kind, \"无\");") &&
+    CLIENT_SRC.includes("PANEL_LEX_STATE.dev && rawList && rawList.length"));
+}
+
+// ── 结果 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ok("槽位模式表列了三种可用位置", CLIENT_SRC.includes("conversation.session.header.utilities") && CLIENT_SRC.includes("conversation.input.dock"));
 
 if (failures.length === 0) {
