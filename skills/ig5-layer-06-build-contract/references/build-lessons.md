@@ -103,3 +103,11 @@ androidComponents {
 笔记里引用的某份优化提案**从未入库**（`git log --all -- <path>` 0 条），却一直被人当作依据。
 规则：**引用了不存在的文档**要当成缺陷处理 —— 要么补文档，要么把引用改掉。
 判据：`grep -rhoE 'docs/[A-Za-z0-9._/-]+\.md' | sort -u` 后逐个 `test -f`。
+
+## 10. 新增「读 JSON 文件」的代码必须走 safeParseJson（E3 实测，v0.51.20）
+
+- 现象：新增的密钥模块里写了 `JSON.parse(readFileSync(...))`，本地 `verify:tool-budget` 在 CI 上红三条
+  （「index.js 里只剩一个 JSON.parse 点 — 2 处：826,934」「唯一解析点在 safeParseJson 内部」「旧的裸解析写法已清除」）。
+- 结论：本仓库把「只有一个 JSON.parse 点」当架构约束，新增任何读 JSON 的代码都必须调用 `safeParseJson(raw, fallback)`，
+  并按 `parsed.ok ? parsed.value : fallback` 取值。
+- 复现判据：`npm run verify:tool-budget`（58 条，含上述三条）。本地跑过再推，别等 CI。

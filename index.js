@@ -931,7 +931,10 @@ const GITHUB_SECRET_FILE = () => `${statsHome()}/infinite-gen-5-github.json`;
 const readGithubSecret = () => {
   try {
     const raw = readFileSync(GITHUB_SECRET_FILE(), "utf8");
-    const doc = JSON.parse(raw);
+    // v0.51.20 修：本仓库只允许有一个 JSON.parse 点（safeParseJson 内部），
+    // 这里改用同一个 helper，否则 verify:tool-budget 的三条判据会红。
+    const parsed = safeParseJson(raw, {});
+    const doc = parsed.ok ? parsed.value : {};
     const token = typeof doc?.token === "string" ? doc.token : "";
     if (!token) return null;
     return { token, last4: token.slice(-4), createdAt: doc.createdAt ?? null, lastOkAt: doc.lastOkAt ?? null, scopes: doc.scopes ?? [] };
