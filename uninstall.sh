@@ -61,3 +61,6 @@ for old in "${LEGACY_PLUGINS[@]}"; do
 done
 
 echo "==> 卸载完成，请重启 DeepSeek Harness。"
+
+# v0.51.20 · SECRETS 协议：卸载插件即删除远端凭据（凭据在 ~/.dsh 直下，不在插件目录里）
+rm -f "${DSH_HOME:-$HOME/.dsh}/infinite-gen-5-github.json"

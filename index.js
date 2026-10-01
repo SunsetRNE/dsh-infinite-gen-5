@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, renameSync, mkdirSync, statSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname as dirNameOf, join as joinPath } from "node:path";
 import { randomBytes } from "node:crypto";
@@ -59,7 +59,7 @@ import {
   withContract,
 } from "./anchor-armor.mjs";
 // 统计数据库：插件本体单写、前端面板单读。面板不参与任何计算，也不认识插件内部形态。
-import { createStatsStore, emptyStats, recordBoot, statsFile, STATS_SCHEMA } from "./stats-store.mjs";
+import { createStatsStore, emptyStats, recordBoot, statsFile, statsHome, STATS_SCHEMA } from "./stats-store.mjs";
 import * as ig5RelayFs from "node:fs";
 import * as ig5RelayCrypto from "node:crypto";
 import * as ig5RelayOs from "node:os";
@@ -93,7 +93,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.51.19";
+const PLUGIN_VERSION = "0.51.20";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -924,6 +924,43 @@ const bumpCount = (bag, key, by = 1) => {
   if (!name) return;
   bag[name] = (bag[name] || 0) + (Number.isFinite(by) && by > 0 ? by : 1);
 };
+// ── SECRETS 协议（v0.51.20）：远端凭据只落 ~/.dsh 直下、0600、只写不回显 ─────────────
+// 为什么不放插件目录：更新=替换 plugin-src/<name>，放里面必丢。
+// 为什么不放统计库：/stats 会整份被面板读走，等于把 token 发给前端。
+const GITHUB_SECRET_FILE = () => `${statsHome()}/infinite-gen-5-github.json`;
+const readGithubSecret = () => {
+  try {
+    const raw = readFileSync(GITHUB_SECRET_FILE(), "utf8");
+    const doc = JSON.parse(raw);
+    const token = typeof doc?.token === "string" ? doc.token : "";
+    if (!token) return null;
+    return { token, last4: token.slice(-4), createdAt: doc.createdAt ?? null, lastOkAt: doc.lastOkAt ?? null, scopes: doc.scopes ?? [] };
+  } catch { return null; }
+};
+const githubSecretStatus = () => {
+  const sec = readGithubSecret();
+  let mode = null;
+  try { mode = "0" + (statSync(GITHUB_SECRET_FILE()).mode & 0o777).toString(8); } catch { mode = null; }
+  return sec
+    ? { configured: true, last4: sec.last4, createdAt: sec.createdAt, lastOkAt: sec.lastOkAt, path: GITHUB_SECRET_FILE(), mode }
+    : { configured: false, path: GITHUB_SECRET_FILE(), mode };
+};
+const writeGithubSecret = (token) => {
+  const value = String(token ?? "").trim();
+  if (value.length < 20) return { ok: false, error: "token 太短，疑似粘贴不全" };
+  const file = GITHUB_SECRET_FILE();
+  const tmp = `${file}.tmp`;
+  const doc = { token: value, kind: "github", createdAt: new Date().toISOString(), lastOkAt: null, scopes: [] };
+  writeFileSync(tmp, JSON.stringify(doc, null, 2), { mode: 0o600 });
+  chmodSync(tmp, 0o600);
+  renameSync(tmp, file);                       // 原子替换，避免半截文件
+  return { ok: true, ...githubSecretStatus() };
+};
+const clearGithubSecret = () => {
+  try { rmSync(GITHUB_SECRET_FILE(), { force: true }); } catch { /* 不存在即视为已清除 */ }
+  return { ok: true, ...githubSecretStatus() };
+};
+
 const resetSessionMemory = (id) => {
   sessionMemory.sessionId = id ?? null;
   sessionMemory.turns = 0;
@@ -2905,7 +2942,7 @@ export function apply(ctx, config) {
       const method = (req.method || "GET").toUpperCase();
       if (method === "GET") {
         const { doc, source } = panelDoc();
-        return sendJson(res, 200, { ok: true, source, tasks: doc.tasks ?? null });
+        return sendJson(res, 200, { ok: true, source, tasks: doc.tasks ?? null, github: githubSecretStatus() });
       }
       if (method !== "POST") return sendJson(res, 405, { ok: false, error: "只支持 GET / POST" });
       const raw = await readBody(req);
@@ -2913,6 +2950,13 @@ export function apply(ctx, config) {
       if (!parsed.ok) return sendJson(res, 400, { ok: false, error: `请求体不是合法 JSON（${parsed.reason}）` });
       const payload = parsed.value && typeof parsed.value === "object" ? parsed.value : {};
       // v0.51.9：累计重置走**同一条**任务路由（加一个 action），不新增路由 —— 路由计数门禁不动。
+      if (payload.action === "setGithubToken") {
+        const r = writeGithubSecret(payload.token);
+        return sendJson(res, r.ok ? 200 : 400, r);          // 只回状态与末四位，永不回 token
+      }
+      if (payload.action === "clearGithubToken") {
+        return sendJson(res, 200, clearGithubSecret());
+      }
       if (payload.action === "resetMemory") {
         resetSessionMemory(activeSessionId);
         return sendJson(res, 200, { ok: true, action: "resetMemory", sessionId: activeSessionId ?? null });

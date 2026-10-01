@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.19";
+        var VERSION = "v0.51.20";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -325,6 +325,8 @@
           "border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18))}",
           ".armor5-console[data-panel='user'] .armor5-console-group:first-of-type{border-top:0;padding-top:2px}",
           ".armor5-console[data-panel='user'] .armor5-console-group-title{font-weight:600;opacity:.9}",
+          ".armor5-console-secret-input{flex:1 1 auto;min-width:0;min-height:28px;padding:4px 8px;border-radius:8px;",
+          "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.3));background:transparent;color:inherit;font:inherit;font-size:12px}",
           ".dsh-armor5-chiprow{display:flex;flex-wrap:wrap;gap:4px}",
           // v0.50.6：触屏热区 —— 1px 内边距在手机上点不准，给到 28px 最小高度。
           ".dsh-armor5-filter{cursor:pointer;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.3));",
@@ -1225,6 +1227,7 @@
           "位置": "面板位置",
           "本对话命中": "这次对话里",
           "最近对话命中": "之前几次",
+          "远端凭据（GitHub · 只写不回显）": "远端凭据（GitHub）",
           "候选明细": "同类线索详情",
           "空答类型": "没答上来算哪种",
           "全局命中": "累计统计",
@@ -2274,6 +2277,26 @@
             });
           });
 
+          // v0.51.20 · SECRETS 协议：远端凭据入口 —— 只写不回显，界面只显示状态与末四位。
+          var secretPair = react.useState(null);
+          var secret = secretPair[0];
+          var setSecret = secretPair[1];
+          var secretInputPair = react.useState("");
+          var secretInput = secretInputPair[0];
+          var setSecretInput = secretInputPair[1];
+          var postSecret = function (body) {
+            var br = state && state.link;
+            if (!br || !br.tasksPath) { setSecret({ ok: false, error: "面板没拿到写通道（刷新页面重试）" }); return; }
+            panelFetch(br, br.tasksPath, "POST", body).then(function (r) {
+              setSecret(r && r.doc ? r.doc : { ok: false, error: "空回执" });
+              if (body.action === "setGithubToken") setSecretInput("");
+            });
+          };
+          var secretStatusText = !secret ? "未读取（保存或清除后显示）"
+            : secret.ok === false ? ("失败：" + (secret.error || "未知"))
+              : secret.configured ? ("已配置 · 末四位 ****" + secret.last4 + " · " + (secret.path || "") + (secret.mode ? " (" + secret.mode + ")" : ""))
+                : "未配置";
+
           var panelChoices = [
             { value: "user", hint: "说人话的标签（出厂默认，推荐日常使用）" },
             { value: "dev", hint: "保留内部字段名（判拒窗口 / 领域候选 / composer.dock），便于自查" }
@@ -2333,7 +2356,28 @@
               react.createElement("div", { className: "armor5-console-group-title" }, C("挂到哪个槽位（SLOT_MODE）")),
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-3" }, slotChoices),
               react.createElement("div", { className: "armor5-console-group-title" }, C("面板用哪套词（PANEL_MODE）")),
-              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-2" }, panelChoices)
+              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-2" }, panelChoices),
+            react.createElement("div", { className: "armor5-console-group", "data-dev-only": "1" },
+              react.createElement("div", { className: "armor5-console-group-title" }, C("远端凭据（GitHub · 只写不回显）")),
+              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-1" },
+                react.createElement("input", {
+                  type: "password",
+                  className: "armor5-console-secret-input",
+                  value: secretInput,
+                  placeholder: "粘贴 GitHub token（只写盘、不回显）",
+                  onChange: function (e) { setSecretInput(e.target.value); }
+                }),
+                react.createElement("button", {
+                  type: "button", className: "armor5-secret-save",
+                  onClick: function () { postSecret({ action: "setGithubToken", token: secretInput }); }
+                }, "保存凭据"),
+                react.createElement("button", {
+                  type: "button", className: "armor5-secret-clear",
+                  onClick: function () { postSecret({ action: "clearGithubToken" }); }
+                }, "清除凭据"),
+                react.createElement("span", { className: "dsh-armor5-hit-sub" }, secretStatusText)
+              )
+            )
             ),
             react.createElement("div", { className: "armor5-console-group", "data-dev-only": "1" },
               react.createElement("div", { className: "armor5-console-group-title" }, "注入档位（改完点保存，服务端当场重装，不必重启）"),
