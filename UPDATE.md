@@ -1,3 +1,16 @@
+## v0.51.23
+
+**更正误判：`logs` 全文路径本来是好的 —— 坏的是我的测试夹具。**
+
+- v0.51.21 我把 `logs` 标为「不可用」。真因：`scripts/fixtures/ci-mock.mjs` 的分支顺序 ——
+  `/actions/runs/<id>/jobs` 这个 URL **也包含 `/actions/runs`**，于是被 runs 分支先吃掉，
+  工具拿到的 jobs 载荷是空的 → 回执只剩「该 run 没有 job 记录」→ 看着像工具坏了。
+- 修法：runs 分支加 `&& !url.includes('/jobs')`（具体匹配优先于通用匹配 —— 这已是本会话同一类错的第三次）。
+- 新增 8 条**离线**判据进 `verify:ci-tool`（自起 mock，不依赖网络也不依赖凭据）：
+  logs 走通 / 定位到失败步骤 / 全文落盘 / 落盘哈希与回执一致 / 字节数一致 / `--inject tail` 带回尾部行 / 回执仍 ≤8 KB。
+- 实测（本机）：`{"ok":true,"failedSteps":[["package","全量自检（不带病发布）"]],"fullLog":"/tmp/ig5-ci/424242.log","fullLogBytes":3132,"fullLogSha256":"92029a69b05bfda9…","injected":"tail"}`，回执 604 B ≤ 8192。
+- 判据：`npm run verify:ci-tool` → **19 通过 / 0 失败 / 0 跳过**。
+
 ## v0.51.22
 
 **修「保存凭据没有反馈」，并把凭据组的渲染对齐设置台。**

@@ -10,7 +10,7 @@ const body = Array.from({ length: LINES }, (_, i) =>
 
 const server = createServer((req, res) => {
   const url = req.url || "";
-  if (url.includes("/actions/runs")) {
+  if (url.includes('/actions/runs') && !url.includes('/jobs')) {   // jobs 列表也含 /actions/runs，必须排除
     res.setHeader("content-type", "application/json");
     return res.end(JSON.stringify({ workflow_runs: [{
       id: 424242, head_branch: "main", head_sha: "abcdef1234567890", status: "completed",

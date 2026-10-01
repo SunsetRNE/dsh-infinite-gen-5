@@ -2,8 +2,9 @@
 // verify_ci_tool.mjs — GITHUB-CI 协议门禁（v0.51.19）
 // 判据：工具在场且语法通过；只读跑一次 status，回执符合协议（ok / 必填字段 / ≤8 KB / 无 token 痕迹）。
 // 无网络时 SKIP（与仓库其它联网门禁同惯例），不算回归。
-import { readFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
+import { readFileSync, existsSync, statSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { execFileSync, spawn } from "node:child_process";
 
 const REPO = "SunsetRNE/dsh-infinite-gen-5";
 const FILES = ["scripts/ig5-ci.mjs"];
@@ -57,6 +58,32 @@ else {
     try { doc = JSON.parse(out); } catch { doc = null; }
     doc && doc.ok === false ? ok("无效凭据 → 有回执且 ok=false（错误可见）") : bad("无效凭据的回执形状不对");
     /github_pat_INVALID_FOR_TEST/.test(out) ? bad("回执里回显了凭据！") : ok("回执不回显凭据");
+  }
+}
+
+// ── v0.51.23：离线全文路径（用自建 mock，不依赖网络与凭据）──────────────
+{
+  const PORT = 8813;
+  const mock = spawn("node", ["scripts/fixtures/ci-mock.mjs", String(PORT)], { stdio: "ignore" });
+  try {
+    execFileSync("node", ["-e", `setTimeout(()=>{},700)`], { stdio: "ignore" });
+    const out2 = execFileSync("node", ["scripts/ig5-ci.mjs", "logs", "--repo", "MOCK/REPO", "--run", "latest", "--inject", "tail", "--tail", "4"],
+      { stdio: "pipe", timeout: 30000, env: { ...process.env, IG5_CI_API: `http://127.0.0.1:${PORT}`, IG5_GH_TOKEN: "x", IG5_HOME: "/tmp/ig5-no-such-home" } }).toString();
+    const d = JSON.parse(out2);
+    d.ok === true ? ok("mock：logs 走通（ok=true）") : bad("mock：logs 未走通");
+    (d.failedSteps || []).length > 0 ? ok("mock：定位到失败步骤") : bad("mock：没定位到失败步骤");
+    d.fullLog && existsSync(d.fullLog) ? ok("mock：全文已落盘 " + d.fullLog) : bad("mock：全文没落盘");
+    if (d.fullLog && existsSync(d.fullLog)) {
+      createHash("sha256").update(readFileSync(d.fullLog)).digest("hex") === d.fullLogSha256
+        ? ok("mock：落盘哈希与回执一致") : bad("mock：落盘哈希不一致");
+      statSync(d.fullLog).size === d.fullLogBytes ? ok("mock：字节数一致") : bad("mock：字节数不一致");
+    }
+    (d.tail || []).length > 0 ? ok("mock：--inject tail 带回尾部行") : bad("mock：tail 为空");
+    Buffer.byteLength(out2) <= 8192 ? ok("mock：回执仍在 8 KB 内") : bad("mock：回执超门限");
+  } catch (e) {
+    bad("mock 离线判据异常：" + String((e && e.message) || e).slice(0, 60));
+  } finally {
+    try { mock.kill(); } catch { /* 已退出 */ }
   }
 }
 
