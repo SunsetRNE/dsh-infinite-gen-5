@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.11";
+        var VERSION = "v0.51.12";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -804,13 +804,21 @@
                 }, row.name + " ×" + row.count);
               }));
           };
+          // v0.51.12：修「明细页闪烁（有数字没颜色 / 有颜色没数字）」。
+          // 根因：这一格以前有**两条互斥的渲染路径** —— 服务端累计到位就渲染 `名字 ×N`（mem-* 着色），
+          // 累计还没到位就回落渲染原始词（hit/risk/safe 着色）；而累计是随着 SSE 回读一帧一阵到的，
+          // 于是同一格在两套形状之间来回跳，看着就是闪。
+          // 现在只留一条路径：**永远渲染 `名字 ×N`**（没有累计时按 ×1 兜底），着色固定走 mem-*，
+          // dev 模式另当别论（开发者要原始词，不参与这条）。
           var accOrRaw = function (rawList, memKey, kind) {
             if (PANEL_LEX_STATE.dev) return chipList(rawList, kind, "无");
-            var acc = memEarly ? memEarly[memKey] : null;
-            // 还没累计（本会话第一条判决 / 老服务端没有 memory）→ 回落显示本条判决的原始词，
-            // 不能因为「没有累计」就把这一格变成空的。
-            if (!Array.isArray(acc) || acc.length === 0) return chipList(rawList, kind, "无");
-            return chipRowEarly(acc, "mem-" + kind);
+            var acc = memEarly && Array.isArray(memEarly[memKey]) ? memEarly[memKey] : null;
+            var rows = (acc && acc.length)
+              ? acc
+              : (Array.isArray(rawList) ? rawList : []).map(function (name) {
+                return { name: name, count: 1 };
+              });
+            return chipRowEarly(rows, "mem-" + kind);
           };
           var tileLabel = function (key, rawList) {
             return PANEL_LEX_STATE.dev && rawList && rawList.length

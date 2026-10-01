@@ -531,7 +531,8 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
   const hitChips = chips.filter((c) => String(c.props["data-kind"] || "").indexOf("hit") >= 0);
   const riskChips = chips.filter((c) => String(c.props["data-kind"] || "").indexOf("risk") >= 0);
   ok("命中标记铺成 chip（不是一坨逗号）",
-    hitChips.length === 3 && hitChips.map((c) => textOf(c)).join("、") === "渗透、ffuf、sql注入",
+    hitChips.length === 3 &&
+    hitChips.map((c) => textOf(c).replace(/ ×\d+$/, "")).join("、") === "渗透、ffuf、sql注入",   // v0.51.12：chip 文本变成「名字 ×N」，比较时剥掉 ×N
     JSON.stringify(hitChips.map((c) => textOf(c))));
   ok("风险载荷铺成 chip 并带条数",
     riskChips.length === 2 && (drawerText.includes("风险载荷") || drawerText.includes("需要小心的写法")),
@@ -1760,8 +1761,8 @@ if (process.argv.includes("--emit-html")) {
     CLIENT_SRC.includes("accOrRaw(safe, \"safe\", \"safe\")"));
   ok("累计 chip 带 ×次数（同一标识只占一格）",
     /row\.name \+ " ×" \+ row\.count/.test(CLIENT_SRC) && CLIENT_SRC.includes('"mem-" + kind'));
-  ok("还没累计时回落本条（不把格子变空）",
-    CLIENT_SRC.includes("if (!Array.isArray(acc) || acc.length === 0) return chipList(rawList, kind, \"无\")"));
+  ok("还没累计时按 ×1 兜底（格子不空、形状也不变）",
+    CLIENT_SRC.includes("return { name: name, count: 1 };"));
   ok("两个未翻译字段名已入词表并包 L()",
     CLIENT_SRC.includes('"候选明细": "同类线索详情"') && CLIENT_SRC.includes('"空答类型": "没答上来算哪种"') &&
     CLIENT_SRC.includes('tile(L("候选明细")') && CLIENT_SRC.includes('tile(L("空答类型")'));
@@ -1799,7 +1800,19 @@ if (process.argv.includes("--emit-html")) {
     CLIENT_SRC.includes(".dsh-armor5-root[data-panel='user']{gap:4px}"));
 }
 
-// ── 结果 ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ── v0.51.12：明细页闪烁修复（同一格只留一条渲染路径）─────────────────────
+{
+  ok("累计与原始不再走两条互斥路径（永远 ×N，避免来回跳）",
+    CLIENT_SRC.includes("var rows = (acc && acc.length)") &&
+    CLIENT_SRC.includes("return { name: name, count: 1 };") &&
+    !CLIENT_SRC.includes("if (!Array.isArray(acc) || acc.length === 0) return chipList(rawList, kind"));
+  ok("着色固定走 mem-*（不再随数据到位与否在 hit/risk/safe 之间跳）",
+    CLIENT_SRC.includes('return chipRowEarly(rows, "mem-" + kind);'));
+  ok("dev 模式仍走原始词（开发者不参与这条路径）",
+    CLIENT_SRC.includes('if (PANEL_LEX_STATE.dev) return chipList(rawList, kind, "无");'));
+}
+
+// ── 结果 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ok("槽位模式表列了三种可用位置", CLIENT_SRC.includes("conversation.session.header.utilities") && CLIENT_SRC.includes("conversation.input.dock"));
 
 if (failures.length === 0) {
