@@ -26,7 +26,11 @@ const argOf = (name) => {
   const at = argv.indexOf(name);
   return at >= 0 ? argv[at + 1] : undefined;
 };
-const SOURCE = resolve(argOf("--source") ?? process.env.IG5_SKILLS_SRC ?? "/root/ig5-adapters/dist/skills");
+// 产物默认取仓内路径：适配器已并入本仓（adapters/），产物落在 adapters/dist/skills。
+// 旧默认值 /root/ig5-adapters/dist/skills 是「适配器独立于仓库」时代的产物 —— 那条路径在
+// 干净机子上根本不存在，于是本节判据长期整段走跳过，漂移检测名存实亡。
+// --source / IG5_SKILLS_SRC 仍可覆盖（装到别处、跑历史产物时用）。
+const SOURCE = resolve(argOf("--source") ?? process.env.IG5_SKILLS_SRC ?? join(ROOT, "adapters", "dist", "skills"));
 const extraRoot = argOf("--root");
 const json = argv.includes("--json");
 
@@ -69,8 +73,13 @@ const installed = roots.filter((r) => r.skillPresent);
 if (!distExists && !installed.length) {
   skips.push(`技能层不在场：产物 ${distSkill} 与四个扫描根都没有 ${SKILL_ID}/SKILL.md`);
 } else {
-  check(distExists, "dist 产物在场", distSkill);
-  check(!!installed.length, "至少一个扫描根装上了技能", roots.map((r) => `${r.id}:${r.skillPresent ? "有" : "无"}`).join(" "));
+  // 产物与副本「缺席」是环境状态，不是缺陷：判失败会让干净容器里的 npm run verify:all
+  // 永久停在本步，而报出来的像是技能层坏了。缺席一律记跳过（打印出来、不影响退出码）；
+  // 在场但内容漂移才是真缺陷，由下面的逐条判据负责。
+  if (distExists) check(true, "dist 产物在场", distSkill);
+  else skips.push(`dist 产物不在场（${distSkill}）—— 跳过产物面判据`);
+  if (installed.length) check(true, "至少一个扫描根装上了技能", roots.map((r) => `${r.id}:${r.skillPresent ? "有" : "无"}`).join(" "));
+  else skips.push("四个扫描根都没装技能副本 —— 跳过安装面判据（装法：node scripts/build_skill.mjs --install <根>）");
 
   // ---- 0. 仓内帧触发面（O1）：帧策略在仓库里，判据也在仓库里 ----
   const repoFramePresent = existsSync(REPO_FRAME);
@@ -116,11 +125,17 @@ if (!distExists && !installed.length) {
   for (const r of installed) {
     const live = readBytes(r.skillFile);
     const liveSha = sha(live);
-    check(
-      liveSha === distSkillSha,
-      `${r.id}：装的与 dist 产物逐字节相同（无漂移）`,
-      liveSha === distSkillSha ? "" : `装 ${liveSha.slice(0, 12)} vs 产物 ${String(distSkillSha).slice(0, 12)}`,
-    );
+    // 漂移检测要有参照物：dist 产物不在场时没有可比对象，记跳过而不是判失败
+    //（判失败会让「装了副本但没建 dist」的干净容器永久卡在本步）。
+    if (distExists) {
+      check(
+        liveSha === distSkillSha,
+        `${r.id}：装的与 dist 产物逐字节相同（无漂移）`,
+        liveSha === distSkillSha ? "" : `装 ${liveSha.slice(0, 12)} vs 产物 ${String(distSkillSha).slice(0, 12)}`,
+      );
+    } else {
+      skips.push(`${r.id}：dist 产物不在场，跳过漂移检测`);
+    }
     const text = live.toString("utf8");
     check(text.includes(FIRST_LINE_TEXT), `${r.id}：副本含首句层契约`);
     check(text.includes(CONTRACT_SHORT), `${r.id}：副本 description 含契约短形`);

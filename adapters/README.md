@@ -45,10 +45,21 @@ dist/      产物             按通道落盘，可独立复算指纹
   末位锚点（396 B）追加到**最后一条 user 消息末尾** —— 它没有组装瀑布，位次由自己的 `messagesFor()` 保证，所以 B4 把
   `endpointRelay` 也算作「持有末位机制」的能力位。该通道**无去重可言**（`dedupe: keep`），一次运行只装一份内核由调用方保证。
 
+## 谁产出正文、谁校验帧（分工，别混用）
+
+技能帧在仓里有两条入口，职责不同：
+
+| 入口 | 职责 | 产物 |
+| --- | --- | --- |
+| `adapters/build-skills.mjs` | **产出正文**：把常驻内核分层，渲染技能档全文件（frontmatter + 正文） | `adapters/dist/skills/` · `skills/`（`--out skills`）· 扫描根（`--install`） |
+| `scripts/build_skill.mjs` | **校验与前置元数据策略**：`checkFrame()` 判据、`descriptionLine` / `whenToUseLine`、单帧就地重写 | 只重写 frontmatter，不做分层 |
+
+**踩过的坑**：两条链各自渲染 frontmatter，逐字节不会相同 —— 用 `scripts/build_skill.mjs --install` 装出的副本 sha 与适配器产物不一致（实测 `08746a0a39f0` vs `39a1a5c7e3b3`），会让 `verify:skill` 的漂移检测报红。**装扫描根一律用 `adapters/build-skills.mjs --install <dir>`**（它先清旧副本再写，保证逐字节一致）。
+
 ## 用法
 
 ```bash
-cd /root/ig5-adapters
+cd <仓库根>/adapters                          # 适配器已并入本仓（v0.46.0 起）；旧的独立目录 /root/ig5-adapters 不再是权威
 node build-adapters.mjs                      # 全量构建 → dist/
 node build-adapters.mjs --target generic     # 只构建一条通道
 node build-adapters.mjs --check --json       # 只校验不落盘 + 机器可读摘要
@@ -186,7 +197,7 @@ node verify_adapters.mjs        # 决策表判据 F 组 + 自动注入 G 组（�
 `registerRelayTools(ctx)` 在注册 relay 工具之后，会自己再挂一条会话注入链 —— **不需要再动 `index.js`**（复用 `index.js:39` 的 import 与 `index.js:2650` 的 `ctx.effect`，卸载照旧只需 `--revert`）：
 
 ```bash
-cd /root/ig5-adapters
+cd <仓库根>/adapters
 node plugin-patch.mjs --json --apply          # 同步模块 + 打补丁（幂等）
 IG5_RELAY_BASE_URL=http://127.0.0.1:PORT/v1 IG5_RELAY_MODEL=M \
   node -e 'import("./ig5-relay-plugin.mjs").then(async m=>{const t=m.relayTool();console.log((await t.execute({action:"adapt",live:true})).plan)})'
@@ -235,11 +246,11 @@ node test-plugin-load.mjs         # 3 条：打过补丁的 index.js 能加载�
   { "action": "adapt", "prompt": "帮我派个子代理", "live": true }
   ```
   回执三段：`signals`（systemRole / contextWindow / usageReported / headerHints …，读不出写 `unknown`）、`plan`（carrier / slot / lazyMode / budgetBytes / cacheCheckpoint / confidence / degraded / reasons）、`inject.selected`（这条输入命中了哪几条惰性章节，附 `bytes` 与 `matched` 触发词）。用来看「换了个端点，它到底吃不吃 system、窗口多大、该装哪一档」。
-- `adapt` 的两条额外环境变量：`IG5_ADAPTERS_DIR`（默认 `/root/ig5-adapters`，动态 import 探针与适配计划）、`IG5_PROMPT_DIR`（默认 `/root/dsh-infinite-gen-5/prompts`，读常驻内核与惰性章节真源）。两者都是**运行期动态加载**：目录不在就回 `reason:"adapters-missing"` / `"kernel-missing"` 降级，不因缺件把插件加载搞炸。
+- `adapt` 的两条额外环境变量：`IG5_ADAPTERS_DIR`（默认**自推导**：本层根 → 本层上一级，合进主仓后即 `<仓库根>/adapters`；历史独立布局 `/root/ig5-adapters` 仅作兜底）、`IG5_PROMPT_DIR`（默认自推导到 `<仓库根>/prompts`，读常驻内核与惰性章节真源）。两者都是**运行期动态加载**：目录不在就回 `reason:"adapters-missing"` / `"kernel-missing"` 降级，不因缺件把插件加载搞炸。
 - `inventory` = 在宿主会话里跑一份自有端点清单（名单与三条纪律都在 `endpoint-inventory.mjs` 里，插件只是入口）：
   ```jsonc
-  { "action": "inventory", "inventory": "/root/ig5-adapters/my-endpoints.json" }            // 只校验清单，零网络包
-  { "action": "inventory", "inventory": "/root/ig5-adapters/my-endpoints.json", "live": true } // 真发包，逐条出行
+  { "action": "inventory", "inventory": "<仓库根>/adapters/my-endpoints.json" }            // 只校验清单，零网络包
+  { "action": "inventory", "inventory": "<仓库根>/adapters/my-endpoints.json", "live": true } // 真发包，逐条出行
   ```
   回执：`counts`（entries / planned / skipped / rejected）、`rejected`（每条的原因，被拒的**一个包都不发**）、`planned`（dry-run 时列出将跑哪几条与 `hasKey`）、`rows`（live 时每条一行：`host` / `provenance` / `carrier` / `slot` / `budgetBytes` / `confidence` / `probesUsed` / `ms` / `error`）、`report`（markdown 报告，超 4000 字符截断并提示用 CLI 落盘）、`stitchable` + `stitchReason`。T12 用桩计数反证 dry-run 零网络包，T13 断言真发包后 `carrier=system / slot=LAST / budgetBytes=40000 / confidence=high` 且被拒条目不出现在 `rows` 里。
 - `inventory` 的两条降级：`inventory-unset`（没给路径，提示先用 `--emit-template` 生成骨架）、`inventory-missing`（适配层目录里没有 `endpoint-inventory.mjs`）；清单读不到回 `inventory-unreadable`，清单本身不合法回 `inventory-invalid` + 具体原因，都不抛。

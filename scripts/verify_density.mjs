@@ -55,6 +55,16 @@ const stats = lazyStats();
 // 用对拉代替硬编码数字：下次再搬章节时这条不会假失败，真丢了指针才会红。
 const pointerCount = (core.match(/惰性 L_[a-z0-9_]+/g) || []).length;
 check(stats.units === pointerCount, `惰性单元 ${stats.units} 个与常驻指针行一一对应`, `单元 ${stats.units} / 指针 ${pointerCount}`);
+// index.js 的惰性描述不得写死章数：批次从 9 章长到 14 章后，硬编码那个数字就成了伪信息
+//（v0.51.23 实测 index.js 里有「9 段」两处）。要报数一律取 lazyStats().units —— 这条对拉
+// 就是防它再漂：数字活在代码里，注释与面板标签跟着代码走。
+const indexSrc = readFileSync(join(ROOT, "index.js"), "utf8");
+const hardcodedLazyUnits = indexSrc.match(/\d+\s*段原文|搬走的\s*\d+\s*段/g) ?? [];
+check(
+  hardcodedLazyUnits.length === 0,
+  "index.js 不硬编码惰性章数（取 lazyStats().units）",
+  hardcodedLazyUnits.join(" / ") || "无硬编码",
+);
 const lazyQuiet = compileLazy({ text: "把这个配置文件改掉并验证", mode: "standard", bytes: 0 });
 const lazyHit = compileLazy({ text: "继续下一轮，保持深度", mode: "standard", bytes: 0 });
 const lazyAll = compileLazy({ text: "@lazy:all", mode: "standard", bytes: 0 });

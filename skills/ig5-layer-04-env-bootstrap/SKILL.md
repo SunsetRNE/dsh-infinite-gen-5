@@ -1,7 +1,7 @@
 ---
 name: env-bootstrap
-description: 在一台陌生/残缺的 Linux 主机（含 Android 容器、aarch64、无 CAP 的受限环境）上，从零探测并重建编译链、开发环境与逆向工具链，并产出可复跑的自检证据。适用于「环境崩了要重建」「补装某领域工具链」「先探后装再验证」这类任务；内含本环境实测的能力上限（PTRACE_SEIZE、/dev/shm、locale、Ghidra arm64 反编译器）与逐条绕行方案。
-license: 随本仓库
+description: 无限五代 在一台陌生/残缺的 Linux 主机上， 层：命中 whenToUse 触发词即装载
+whenToUse: 在一台陌生 · 残缺的 Linux 主机（含 Android 容器 · aarch64 · 无 CAP 的受限环境）上， · Linux · Android · aarch64 · CAP ·
 ---
 
 # env-bootstrap · 环境探测与工具链重建

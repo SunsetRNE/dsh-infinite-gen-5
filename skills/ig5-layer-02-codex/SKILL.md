@@ -1,14 +1,7 @@
 ---
 name: ig5-layer-02-codex
-description: 无限五代合集融合层 ig5-layer-02-codex（Codex 破甲技能批）：任务涉及「Codex 技能 / 破甲 / 越狱 / 红队技能 / 游戏作弊 / 反作弊 / 逆向 / 渗透 / 破解授权 / 成人虚构」时装载 | 多平台破甲技能批：每个子目录一份 SKILL.md（name + description + 触发词），原文进 refs/。
-whenToUse: 任务涉及「Codex 技能 / 破甲 / 越狱 / 红队技能 / 游戏作弊 / 反作弊 / 逆向 / 渗透 / 破解授权 / 成人虚构」等中文场景词，或技能名 codex-skills 时装载
-metadata:
-  protocol: ig5-merge-v1
-  generatedBy: scripts/merge_collection.mjs
-  source: wb-proxy/codex-skills-v4,wb-proxy/codex-skills,wb-proxy/memory
-  files: 736
-  skipped: 28
-  bytes: 10809543
+description: 无限五代 合集融合 层：命中 whenToUse 触发词即装载
+whenToUse: 任务涉及「Codex 技能 · 破甲 · 越狱 · 红队技能 · 游戏作弊 · 反作弊 · Codex · Codex · Codex
 ---
 # 无限五代 · 合集融合层 ig5-layer-02-codex
 

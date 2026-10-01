@@ -192,6 +192,30 @@ check("A5", "A", "降级动作表与八能力位一一对应，且缺 assemble �
   return { ok: bad.length === 0, detail: bad.join("；") };
 });
 
+check("A6", "A", "落点触达面：开惰性装载的通道必须持有 systemPromptAssemble；能力位表里不得出现技能位", () => {
+  // 这条判据守的是「内容该落在哪个落点」这件事本身。判据是「凭什么」而不是「只有谁」：
+  // 惰性段（Order 160）能省字节，前提是宿主有组装瀑布把命中章节拼回去；没有这条能力位的
+  // 通道把内容搬进惰性段，不是省字节而是净丢失（build 时 lazyEnabled=false，一个字都不装）。
+  // 技能层（宿主 <root>/<name>/SKILL.md）由宿主侧装载器读取，不进 system prompt、不占
+  // residentBytes —— 所以 CAPS 里不该有技能位；一旦出现，说明契约层把「加技能」误接成了
+  // 「减常驻」，那是两个落点被混成一个。
+  const bad = [];
+  const lazyOn = [];
+  for (const name of names) {
+    const a = TARGETS[name].adapter;
+    if (!compileFlags(a).lazyEnabled) continue;
+    lazyOn.push(name);
+    if (!a.caps.includes("systemPromptAssemble"))
+      bad.push(`${name}: 开了惰性装载却没有 systemPromptAssemble —— 惰性章节装不上，是静默失效`);
+  }
+  const skillCap = CAPS.filter((c) => /skill/i.test(c));
+  if (skillCap.length) bad.push(`能力位表出现技能位 ${skillCap.join(",")} —— 技能层不经注入通道`);
+  return {
+    ok: bad.length === 0,
+    detail: bad.length ? bad.join("；") : `惰性装载 ${lazyOn.join(",") || "无"}（均持有 systemPromptAssemble）；能力位 ${CAPS.length} 项无技能位`,
+  };
+});
+
 // ── B 级：行为门禁 ───────────────────────────────────────────────────────────
 check("B1", "B", "四条通道语义指纹同源（同一份内核）", () => {
   const fps = new Set(names.map((n) => loads[n].signature.semanticSha256));

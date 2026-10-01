@@ -1,0 +1,22 @@
+{
+  "installedAt": "2026-10-01T12:11:17.692Z",
+  "target": "/root/仓库合集/dsh-infinite-gen-5/.agents/skills",
+  "skills": [
+    {
+      "id": "ig5-layer-01",
+      "kind": "skill",
+      "sha256": "39a1a5c7e3b35ed366b6b7bcca5af023066bcbd8576768250b728ceaca979fce",
+      "chars": 2253
+    },
+    {
+      "id": "ig5-chain",
+      "kind": "resident-chain",
+      "sha256": "03a84fb466be779e90911649ca49573ab57e932c1210db5f1331d6058c31d9f3",
+      "chars": 9908
+    }
+  ],
+  "rollback": [
+    "rm -rf \"/root/仓库合集/dsh-infinite-gen-5/.agents/skills/ig5-layer-01\"",
+    "rm -f \"/root/仓库合集/dsh-infinite-gen-5/.agents/skills/ig5-chain.md\""
+  ]
+}

@@ -194,7 +194,10 @@ export function renderIndex(layer, manifest) {
   const fm = [
     "---",
     `name: ${layer.id}`,
-    `description: 无限五代合集融合层 ${layer.id}（${layer.title}）：任务涉及「${layer.whenToUse.replace(/^任务涉及「/, "").replace(/」等中文场景词.*$/, "")}」时装载 | ${layer.note}`,
+    // O2（本轮）：description 去掉 `| ${layer.note}` —— note 是给人看的解释（「24 模块 + routing…」），
+    // 对「要不要装载」零贡献，却随技能目录每轮发给模型。note 在正文里另有一份（见上方
+    // 「本层由 scripts/merge_collection.mjs … 从外部素材编译：${layer.note}」），删描述不丢信息。
+    `description: 无限五代合集融合层 ${layer.id}（${layer.title}）：任务涉及「${layer.whenToUse.replace(/^任务涉及「/, "").replace(/」等中文场景词.*$/, "")}」时装载`,
     `whenToUse: ${layer.whenToUse}`,
     "metadata:",
     `  protocol: ${MERGE_PROTOCOL}`,

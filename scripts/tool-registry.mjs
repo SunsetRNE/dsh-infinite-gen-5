@@ -113,6 +113,7 @@ export const OVERLAY = {
   "verify_dispatch.mjs": { cat: "门禁" },
   "verify_env.mjs": { cat: "门禁" },
   "verify_eval.mjs": { cat: "门禁" },
+  "verify_frame_budget.mjs": { cat: "门禁" },
   "verify_h_audit.mjs": { cat: "门禁" },
   "verify_injection.mjs": { cat: "门禁" },
   "verify_install.mjs": { cat: "门禁" },

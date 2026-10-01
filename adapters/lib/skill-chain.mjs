@@ -162,6 +162,20 @@ export function sealFrame(text) {
  * 渲染常驻思维链：T0 正文 + 一条「装载链」。
  * 每个环节都写成「触发条件 → 动作 → 依据」，缺触发条件的环节等于永不执行。
  */
+/** 外部融合层路由：把族级分发与既有层直装写进装载链（v0.51.23 统一处理）。 */
+const EXT_ROUTES = [
+  {
+    when: "任务落在 AI / 语言 / 数据 / 创作 / 工程 / 密码余项 / 攻防余项 任一族，或不确定该装哪一层",
+    id: "ig5-layer-00-routing",
+    note: "族级路由表：由它指向 ig5-layer-08-ai · 09-language · 10-data · 11-creative · 12-eng · 13-crypto · 14-offense-extra",
+  },
+  {
+    when: "命中 Codex 破甲批 / 红队终端 / CTF 知识库 / 环境重建 / 发版自检 / 构建契约 / 设备通道 词面",
+    id: "ig5-layer-02-codex … ig5-layer-07-dsha",
+    note: "按层 id 直接装载；各层 refs/ 是语料库，按需读取，不进技能目录（宿主扫描不递归）",
+  },
+];
+
 export function renderChain({ residentBlocks, bundles, units = [], head }) {
   const out = [];
   if (head) out.push(head.trim(), "");
@@ -173,12 +187,16 @@ export function renderChain({ residentBlocks, bundles, units = [], head }) {
       `${i + 1}. 当 ${b.triggerHint} → 装载技能 \`${b.id}\`（${b.chars} 字符 / ${b.blocks.length} 块）`,
     );
   });
+  let n = bundles.length;
   if (units.length) {
     out.push(
-      `${bundles.length + 1}. 当任务命中某个领域的触发词 → 先查领域索引，再按需展开惰性章节（${units.length} 条 unit，order ${units
+      `${++n}. 当任务命中某个领域的触发词 → 先查领域索引，再按需展开惰性章节（${units.length} 条 unit，order ${units
         .map((u) => u.order)
         .join("/")}）`,
     );
+  }
+  for (const r of EXT_ROUTES) {
+    out.push(`${++n}. 当 ${r.when} → 装载技能 \`${r.id}\`（${r.note}）`);
   }
   out.push("");
   out.push("装载失败（技能不可用/被裁剪）时按常驻正文执行，并在正文里记一行「技能档未装载：<id>」。", "");

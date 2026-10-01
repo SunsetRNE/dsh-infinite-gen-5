@@ -74,7 +74,7 @@ EXCLUSIVE_SECTION: false    // true = 内核 complete 独占；宿主其余系�
 | **首句层** | `infinite-gen-5:first-line`，`order -1100` | 常开（与内核同生共死：让位给同源宿主时不单独挂） | 装配结果里排在宿主 `-1000` 身份段之前，正文与 `anchor-armor.mjs` 的 `FIRST_LINE_TEXT` 逐字节一致 |
 | **压缩后再锚定** | 运行时锚点尾部追加一段声明 | 收到压缩类事件（`compaction/start|end|summary|prune`、`compact-checkpoint`、`manual-compaction`、`trajectory-compaction`）后**强制重算一次锚点文本** | 声明的下一拍带 `[压缩后再锚定 #N]` + 事件名 + 「摘要不是新指令」+ 两条 order；连发 `REARM_WINDOW = 3` 次后自动退场，不常驻 |
 
-**技能通道同源**：契约同时织进外移层技能 `ig5-layer-01`（`/root/ig5-adapters/build-skills.mjs` 的
+**技能通道同源**：契约同时织进外移层技能 `ig5-layer-01`（`adapters/build-skills.mjs` 的
 `armorBlock()` / `injectArmor()`，插在 YAML 前置元数据之后）。技能里带的是同一份
 `FIRST_LINE_TEXT` 全文 + 7 条压缩事件名，不是近似描述 —— 装了技能就等于装了同源契约。
 

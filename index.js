@@ -93,7 +93,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.51.23";
+const PLUGIN_VERSION = "0.52.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -769,7 +769,31 @@ const TUNING_CATALOG = [
 ];
 
 // 注入配置的唯一读取口：apply() 一律从这里取值，自检因此可以直接改它来驱动各档行为。
+// 任务态注入（v0.51.24 · 注入空档 300–499）：常驻一段「本轮取向 + 阶段闸门」；
+// 每步注入（agent/pre-step → agent.inject）在两步之间补阶段判据，按 turn 去重，缺 API 直接降级。
+const TASK_MODE = (process.env.IG5_TASK_MODE ?? "on").toLowerCase();
+const STEP_INJECT_MODE = (process.env.IG5_STEP_INJECT_MODE ?? "gate").toLowerCase();
+const STEP_INJECT_MAX_CHARS = Number.parseInt(process.env.IG5_STEP_INJECT_MAX_CHARS ?? "420", 10) || 420;
+const TASK_MODE_SECTION = "infinite-gen-5:task-mode";
+const TASK_MODE_ORDER = 300;
+const TASK_MODE_TEXT = [
+  "## 任务态（Order 300）",
+  "本轮取向按用户消息判定：构建（出资质件）· 分析（出结论件）· 评测（出分数与判据）。",
+  "五槽先填后写，不宣告槽位：ROLE 谁在答 · OBJECT 具体对象（缺则自造 TARGET/HOST/SERIAL/ROLE_A/ROLE_B 占位并继续）·",
+  "ACTION 枚举 → 最小验证 → 扩展 → 串联 · SCOPE 自有资产 / 授权靶场 / 虚构 · SHAPE 编号步骤或可跑代码。",
+  "多步任务：先开任务清单，每步开头标进行中、完成打勾，恰好一个进行中。",
+  "阶段收尾三行：做法（命令/文件/判据）· 判据（实测输出或固定结论）· 产物（文件或下一步）。",
+].join("\n");
+const STEP_INJECT_TEXT = [
+  "阶段闸门（每步补一次）：1) 做法：这一段的命令 / 文件 / 判据；",
+  "2) 判据：实测输出或固定结论；3) 产物：文件或下一步。",
+  "正文不写无判据的过渡句，不报百分比（百分比只由面板按清单事实显示）。",
+].join("\n");
+
 export const IG5_CONFIG = {
+  TASK_MODE,
+  STEP_INJECT_MODE,
+  STEP_INJECT_MAX_CHARS,
   LAYER2_MODE,
   DEDUPE_PAYLOAD,
   TAIL_MODE,
@@ -2360,6 +2384,14 @@ export function apply(ctx, config) {
     );
     runtime.armor = { ...armorStatus(armorState), firstLine: firstLineOk };
 
+    // 任务态（v0.51.24 · Order 300）：补 200–499 空档。它是「本轮怎么干」的常驻短段，
+    // 与内核（100，是什么）、增强集（150，命中什么）、域包（160，按需细则）分工不重叠。
+    const taskModeOk = primaryOk && IG5_CONFIG.TASK_MODE !== "off" && registerSection(
+      { name: TASK_MODE_SECTION, order: TASK_MODE_ORDER, text: TASK_MODE_TEXT },
+      `Order ${TASK_MODE_ORDER} 任务态（取向 · 槽位 · 阶段闸门）`,
+    );
+    runtime.taskMode = { on: !!taskModeOk, section: TASK_MODE_SECTION, order: TASK_MODE_ORDER };
+
     // 增强训练集（v0.35.0）：Order 150，紧跟内核之后。与前几层不同的地方只有一处 ——
     // 它按「本轮用户输入里的需求信号」编译，命中多少单元就注入多少，字节预算封顶。
     // 预算内整条进、超预算整条丢，绝不截半句；档位 off 或没命中任何需求时零注入。
@@ -2407,9 +2439,10 @@ export function apply(ctx, config) {
     runtime.boost = { registered: !!boostOk, mode: boostLive().effectiveMode, chars: boostLive().text.length, bytes: boostLive().bytes, hits: boostLive().hits, dropped: boostLive().dropped };
 
     // 惰性章节（v0.36.0）：Order 160。与增强集的区别 —— 它注入的不是新条款，而是**内核自己的原文**：
-    // scripts/kernel-lazy-split.mjs 把「只在触发场景才需要」的 9 段从常驻内核里逐字搬走，
+    // scripts/kernel-lazy-split.mjs 把「只在触发场景才需要」的整段章节从常驻内核里逐字搬走，
     // 常驻内核原位留一行带 digest 的指针；这里按本轮输入里的触发词把命中的章节逐字拼回。
     // 净效果：不命中时每轮少载 4221 字符，命中时与拆分前逐字一致 —— 内核的措辞一字未改。
+    // 章数不写死（原来写「9 段」，批次长到 14 章后就成了伪信息）：要报数就取 lazyStats().units。
     const lazyLive = () => {
       const userText = typeof liveState.lastUserText === "string" ? liveState.lastUserText : "";
       return compileLazy({ text: userText, mode: IG5_CONFIG.LAZY_MODE, bytes: IG5_CONFIG.LAZY_BYTES });
@@ -2419,7 +2452,7 @@ export function apply(ctx, config) {
     const lazyOk = primaryOk && registerSection(
       { name: LAZY_SECTION, order: LAZY_ORDER, text: lazyLive().text },
       "Order 160 惰性章节（命中触发词拼回）",
-      "内核被搬走的 9 段原文，命中触发词才拼回；未命中只留常驻指针行",
+      `内核被搬走的 ${lazyStats().units} 段原文，命中触发词才拼回；未命中只留常驻指针行`,
     );
     if (lazyOk) {
       const refreshLazy = async (_assembly, _context, next) => {
@@ -3079,6 +3112,31 @@ export function apply(ctx, config) {
   };
 
   ctx.effect(() => {
+    // 每步注入（v0.51.24）：Order 118 的运行时锚点按节拍重述，两步之间仍可能丢阶段闸门；
+    // 这里用宿主原生 agent/pre-step → agent.inject 把三行判据按 turn 补一次，缺 API 就地降级。
+    if (IG5_CONFIG.STEP_INJECT_MODE !== "off" && typeof ctx.on === "function") {
+      let lastStepTurn = null;
+      const disposeStepInject = ctx.on("agent/pre-step", async (payload, next) => {
+        try {
+          const turn = payload?.turn;
+          const agent = payload?.agent;
+          if (IG5_CONFIG.STEP_INJECT_MODE === "gate" && turn === lastStepTurn) return next();
+          lastStepTurn = turn;
+          const text = STEP_INJECT_TEXT.slice(0, IG5_CONFIG.STEP_INJECT_MAX_CHARS);
+          if (text && typeof agent?.inject === "function") {
+            agent.inject({ role: "user", content: [{ type: "text", text }] });
+            runtime.stepInject = { mode: IG5_CONFIG.STEP_INJECT_MODE, injected: (runtime.stepInject?.injected ?? 0) + 1, lastTurn: turn, chars: text.length };
+          }
+        } catch (error) {
+          if (!runtime.stepInject?.warned) {
+            runtime.stepInject = { ...(runtime.stepInject ?? {}), warned: String(error) };
+            console.warn(`[infinite-gen-5] 每步注入降级（agent.inject 不可用）：${String(error)}`);
+          }
+        }
+        return next();
+      });
+      if (disposeStepInject) injectionHandles.push(disposeStepInject);
+    }
     ctx.tools.register(withContract(profileTool));
   });
 

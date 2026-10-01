@@ -7,6 +7,10 @@ ui-preview/
 
 # 发布产物打包输出（npm run release:pack）
 dist/
+# 例外：适配器侧的技能产物入仓。它是 verify:skill / verify:surface 的 dist 面参照物，
+# 也是分发包该带的件 —— 不进 git 就等于「发布件缺产物」，而那两条门禁会因找不到产物而整段跳过。
+!adapters/dist/
+!adapters/dist/**
 
 # 拆分器的一次性备份（还原用 infinite-gen-5.full.md 快照即可）
 prompts/*.bak-*

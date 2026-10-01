@@ -1,7 +1,7 @@
 ---
 name: ig5-layer-06-build-contract
-description: Android/Gradle 工程「构建与版本契约」技能：任务涉及「AGP 升级报错 / APK 重命名 / 版本号与产物命名 / 配置缓存报错 / JNI 与 .so 不同步 / 中文标识符编译失败 / 构建环境脚本拆分 / 镜像与预存资产」时装载。含九条实测踩坑与「版本号串必须先问用户，不许 AI 自己定规则」的强制条款。
-license: 随本仓库
+description: 无限五代 Android/Gradle 工程「构建 层：命中 whenToUse 触发词即装载
+whenToUse: 任务涉及「AGP 升级报错 · APK 重命名 · 版本号与产物命名 · 配置缓存报错 · JNI 与 .so 不同步  · AGP · APK · JNI · AGP · APK · JNI
 ---
 
 # ig5-layer-06-build-contract · 构建与版本契约

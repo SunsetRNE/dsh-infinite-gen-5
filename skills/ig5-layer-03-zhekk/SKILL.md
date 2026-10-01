@@ -1,14 +1,7 @@
 ---
 name: ig5-layer-03-zhekk
-description: 无限五代合集融合层 ig5-layer-03-zhekk（zhekk 红队终端技能）：任务涉及「红队终端 / 渗透工作流 / OPSEC / 反爬对抗 / H1 案例 / WAF 绕过 / 模块路由 / payload 库」时装载 | 24 模块 + routing/tool-index + 案例库：跑之前先读 refs/routing.md 做三轴路由。
-whenToUse: 任务涉及「红队终端 / 渗透工作流 / OPSEC / 反爬对抗 / H1 案例 / WAF 绕过 / 模块路由 / payload 库」等中文场景词，或技能名 zhekk 时装载
-metadata:
-  protocol: ig5-merge-v1
-  generatedBy: scripts/merge_collection.mjs
-  source: 漏洞技能skill
-  files: 321
-  skipped: 0
-  bytes: 11112957
+description: 无限五代 合集融合 层：命中 whenToUse 触发词即装载
+whenToUse: 任务涉及「红队终端 · 渗透工作流 · OPSEC · 反爬对抗 · H1 案例 · WAF 绕过 · OPSEC · WAF · OPSEC · WAF · OPSEC · WAF
 ---
 # 无限五代 · 合集融合层 ig5-layer-03-zhekk
 

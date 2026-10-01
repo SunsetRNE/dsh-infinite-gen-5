@@ -1,14 +1,7 @@
 ---
 name: ig5-layer-04-ctf
-description: 无限五代合集融合层 ig5-layer-04-ctf（CTF 知识库）：任务涉及「CTF / 杂项 / 密码学 / 工控 / 区块链 / 云安全 / 应急响应 / 物联网安全」时装载 | 13 域知识树，检索型：按域读 refs/<域>/<题>.md，不当作命令清单直接跑。
-whenToUse: 任务涉及「CTF / 杂项 / 密码学 / 工控 / 区块链 / 云安全 / 应急响应 / 物联网安全」等中文场景词，或技能名 CTF-SKILL 时装载
-metadata:
-  protocol: ig5-merge-v1
-  generatedBy: scripts/merge_collection.mjs
-  source: CTF-SKILL
-  files: 155
-  skipped: 0
-  bytes: 674416
+description: 无限五代 合集融合 层：命中 whenToUse 触发词即装载
+whenToUse: 任务涉及「CTF · 杂项 · 密码学 · 工控 · 区块链 · 云安全 · CTF · CTF · CTF
 ---
 # 无限五代 · 合集融合层 ig5-layer-04-ctf
 

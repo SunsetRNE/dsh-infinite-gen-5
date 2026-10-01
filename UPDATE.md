@@ -1,3 +1,27 @@
+## v0.52.0
+
+**技能面三处收口：v3 双批归档 · 装载链按族分发 · 注入空档 300 + 每步注入（十六层装载全绿）。**
+
+- ① **v3 双批归档**：取证发现 v3 与 v4 同名同路径 340 文件逐字节相同（0 处不同），v3 只多 `.system/`（48 文件：
+  imagegen / openai-docs / plugin-creator / review-agent / skill-creator / skill-installer）→ v3 整体移到
+  `refs/wb-proxy/_legacy/codex-skills-v3/`（不删数据，git 可恢复；388 条哈希存 `ui-preview/ig5-install/v3-backup-sha256.txt`），
+  `.system/` 抢救为 `refs/wb-proxy/codex-system/`；装载器 `EXCLUDE` 改指 `_legacy` 防止归档被再装载。
+- ② **装载链按族分发**：`adapters/lib/skill-chain.mjs` 的 `renderChain()` 新增 `EXT_ROUTES` 两条 ——
+  第 3 条族级路由转 `ig5-layer-00-routing`（→ 08-ai / 09-language / 10-data / 11-creative / 12-eng / 13-crypto / 14-offense-extra），
+  第 4 条既有层直装 `ig5-layer-02-codex … ig5-layer-07-dsha`；思维链 9550 → 9908 字符，产物重建后同步扫描根。
+- ③ **注入空档 300–499**：`index.js` 注册 `infinite-gen-5:task-mode`（order 300，297 字符：本轮取向 / 五槽 / 阶段闸门三行，
+  开关 `IG5_TASK_MODE`，默认 on）；每步注入走宿主原生 `ctx.on("agent/pre-step") → agent.inject({role:"user",content:[{type:"text"}]})`，
+  按 turn 去重（`IG5_STEP_INJECT_MODE=gate|off`），缺 `ctx.on` / `agent.inject` 时 try/catch 降级并只 warn 一次。
+- **装载器** `scripts/ig5-install-layers.mjs`：dry-run / `--apply` / `--scaffold` / `--slim-frames` / `--rollback` 五档；
+  04b 重命名（`ig5-layer-04-env-bootstrap` → 装载名 `04b`）与 v3 去重规则写死在脚本常量里，可审计可回滚。
+- **技能目录帧预算**：16 层装载把目录帧顶到 10244 B（上限 4600 B）→ `--slim-frames` 只重写 `description` / `whenToUse` 两行、
+  保留 front-matter 其余字段（`metadata.protocol` / `bodySha256` 丢了会被 `verify:skill` 抓到）；契约短形只留 `ig5-layer-01`，
+  该层 `whenToUse` 原样保留；目录帧回到 **4045 B**，上限未放宽（单帧 ≤900 B、常驻+帧 19071 B ≤20000 B）。
+- **新增 8 个族层**：`ig5-layer-00-routing` + `08-ai`(13 域) · `09-language`(10) · `10-data`(8) · `11-creative`(11) ·
+  `12-eng`(18) · `13-crypto`(7) · `14-offense-extra`(5)，合计 72 域，均带触发词、域清单与取材命令。
+- 判据：`verify:skill` **22 通过 / 0 失败** · `verify:injection` **65 / 0**（九处注入位置含 300）·
+  `verify:frame-budget` **5 / 5** · `verify:surface` **17 / 0** · `verify:gen5` **283 / 0** · `verify:lazy` **121 / 0**。
+
 ## v0.51.23
 
 **更正误判：`logs` 全文路径本来是好的 —— 坏的是我的测试夹具。**

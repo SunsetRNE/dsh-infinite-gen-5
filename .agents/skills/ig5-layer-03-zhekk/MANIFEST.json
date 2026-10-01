@@ -1,0 +1,2348 @@
+{
+  "layer": "ig5-layer-03-zhekk",
+  "protocol": "ig5-merge-v1",
+  "title": "zhekk 红队终端技能",
+  "sources": [
+    "漏洞技能skill"
+  ],
+  "srcRoot": "/root/dsh-infinite-gen-4/合集",
+  "stamp": "",
+  "maxBytes": 2097152,
+  "files": [
+    {
+      "src": "漏洞技能skill/SKILL.md",
+      "dst": "refs/漏洞技能skill/SKILL.md",
+      "bytes": 26703,
+      "sha256": "bcf9a91595bb7670bf3f7d2a37fdfcfc1fc47cce7feba8015316db1570b66eb2"
+    },
+    {
+      "src": "漏洞技能skill/field-journal/_template.md",
+      "dst": "refs/漏洞技能skill/field-journal/_template.md",
+      "bytes": 782,
+      "sha256": "eba12821f89918ad420c8b38087e7850fb4a493fedfd07c2d70fde07e0defbdc"
+    },
+    {
+      "src": "漏洞技能skill/field-journal/precedent-auth.md",
+      "dst": "refs/漏洞技能skill/field-journal/precedent-auth.md",
+      "bytes": 3096,
+      "sha256": "fa59936ceaef91bb4d76b02bcb902eb908aca71b89f6e4b39486e0461156eb10"
+    },
+    {
+      "src": "漏洞技能skill/field-journal/precedent-pentest.md",
+      "dst": "refs/漏洞技能skill/field-journal/precedent-pentest.md",
+      "bytes": 1337,
+      "sha256": "12d42a300e69633aa1774c804338f44d25d4ac77b6e11593b9c06547e5f0b3b5"
+    },
+    {
+      "src": "漏洞技能skill/field-journal/precedent-reverse.md",
+      "dst": "refs/漏洞技能skill/field-journal/precedent-reverse.md",
+      "bytes": 1249,
+      "sha256": "a63021b7cb49527e39b66ebaa9e4f2a63b707bf50efd58ae73d2ff9268b4723a"
+    },
+    {
+      "src": "漏洞技能skill/modules/attack_chain/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/attack_chain/SKILL.md",
+      "bytes": 8407,
+      "sha256": "f56a48fb09121fb85e107c1c3a5a648fc51d8ef2da684c7dd0e2f2276b6a3a1b"
+    },
+    {
+      "src": "漏洞技能skill/modules/cloud/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/cloud/SKILL.md",
+      "bytes": 5849,
+      "sha256": "17f12244e30d165973b4f933753c2c4835f26809333c679e906f28dbf66bf2dc"
+    },
+    {
+      "src": "漏洞技能skill/modules/code_audit/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/code_audit/SKILL.md",
+      "bytes": 10841,
+      "sha256": "a078e8f1726b6e7d34f8abb7fcb1fb43885bd47c7f899f54bbb35183ffe1b917"
+    },
+    {
+      "src": "漏洞技能skill/modules/ddos/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/ddos/SKILL.md",
+      "bytes": 3816,
+      "sha256": "548cf2f7cf90610798e1bd0b69adcba4f7436e4a56bea85b7cc139c9fff65e40"
+    },
+    {
+      "src": "漏洞技能skill/modules/dns/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/dns/SKILL.md",
+      "bytes": 7348,
+      "sha256": "0b5367c53981a6b2a14241199dcb706d8397203377e90e58f0ccd086ba43c96e"
+    },
+    {
+      "src": "漏洞技能skill/modules/docs/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/docs/SKILL.md",
+      "bytes": 5728,
+      "sha256": "ffdeafc9d5ce2bdd545f581b2318080a246f3683e9cb2c516517b4733af74a46"
+    },
+    {
+      "src": "漏洞技能skill/modules/exploit/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/exploit/SKILL.md",
+      "bytes": 8896,
+      "sha256": "6cf78a651c3e31286d691205bbd78922bc1a3f6800bbec5fb74dc8c43900f029"
+    },
+    {
+      "src": "漏洞技能skill/modules/forensics/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/forensics/SKILL.md",
+      "bytes": 6356,
+      "sha256": "93256ccc22a49fbff8bd8f65a1231b3b5d83513c2b17356d72587e85b593a725"
+    },
+    {
+      "src": "漏洞技能skill/modules/fuzzer/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/fuzzer/SKILL.md",
+      "bytes": 11747,
+      "sha256": "d98bdf04f37de8ecfe71d17175342fdb705cbd576f5b2ffe80da53237305ba37"
+    },
+    {
+      "src": "漏洞技能skill/modules/incident/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/incident/SKILL.md",
+      "bytes": 13693,
+      "sha256": "7a5a1ba56cc20e5c2d4320eca4f816530caeb84143757f0a1e6e84543b751cfe"
+    },
+    {
+      "src": "漏洞技能skill/modules/iot/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/iot/SKILL.md",
+      "bytes": 3838,
+      "sha256": "433357a053f837fb0caa6f3ff508d97217853ff879b50a07e8d43eaa68c5ed89"
+    },
+    {
+      "src": "漏洞技能skill/modules/llm/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/llm/SKILL.md",
+      "bytes": 12500,
+      "sha256": "c82038c19aa8b214aed10363c7af142d8173f3977105e0666f5f01aed3eaab53"
+    },
+    {
+      "src": "漏洞技能skill/modules/malware/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/malware/SKILL.md",
+      "bytes": 7249,
+      "sha256": "526a76ea213c5b8ccddf869770e9deed4be9640987b1461c3d942302a2598182"
+    },
+    {
+      "src": "漏洞技能skill/modules/mobile/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/mobile/SKILL.md",
+      "bytes": 6295,
+      "sha256": "213b11d03bdcc95d104701d92bf0fae12ede3ff9d1a2e72e34fa6827522b839f"
+    },
+    {
+      "src": "漏洞技能skill/modules/network/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/network/SKILL.md",
+      "bytes": 10435,
+      "sha256": "51223968f4bc8f95b14b00dc9e12c84edc45cbaca909672d55d9b7aecdf4a995"
+    },
+    {
+      "src": "漏洞技能skill/modules/opsec/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/opsec/SKILL.md",
+      "bytes": 7522,
+      "sha256": "49f468b308f69137d26990d0b185e1837df7ca9ebb8f2998180421112e5b7914"
+    },
+    {
+      "src": "漏洞技能skill/modules/post_exploit/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/post_exploit/SKILL.md",
+      "bytes": 8358,
+      "sha256": "d46ffe0069b1d2751a033e7da854a98410a7f4ef0bd63785c6417f59435ee2c9"
+    },
+    {
+      "src": "漏洞技能skill/modules/recon/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/recon/SKILL.md",
+      "bytes": 7622,
+      "sha256": "87a93e0a350c297e2fe3e148ddfaf9907fdc69fea4d855d0068e4c93dd9d3555"
+    },
+    {
+      "src": "漏洞技能skill/modules/reverse/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/reverse/SKILL.md",
+      "bytes": 14606,
+      "sha256": "66f3fdc1495ddc2b658975365d07ba28ad94de6edf16ee973b23ca17d06fcaf0"
+    },
+    {
+      "src": "漏洞技能skill/modules/social/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/social/SKILL.md",
+      "bytes": 15164,
+      "sha256": "0baecbc974c6c2844f32a83a1e8daad89dbbe4836eca1ddc7e5e6f4e3758b10c"
+    },
+    {
+      "src": "漏洞技能skill/modules/stego/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/stego/SKILL.md",
+      "bytes": 12493,
+      "sha256": "2af61496b5712bf4fab4f23322770539cab1e7a1e5121939ebd65b7b47205949"
+    },
+    {
+      "src": "漏洞技能skill/modules/tls/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/tls/SKILL.md",
+      "bytes": 4215,
+      "sha256": "94bfd11b3a411259d19ce6ef8a4a3d6f2a9cbc2e8db5de86116ae17434c82d73"
+    },
+    {
+      "src": "漏洞技能skill/modules/web/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/web/SKILL.md",
+      "bytes": 25224,
+      "sha256": "7693aaf5ae48ce3c2fa2231a51d80c3c28b56469cc4137e17430824b05705833"
+    },
+    {
+      "src": "漏洞技能skill/modules/wireless/SKILL.md",
+      "dst": "refs/漏洞技能skill/modules/wireless/SKILL.md",
+      "bytes": 5395,
+      "sha256": "2ea729a63abf570c7c2d1a204b32cb7888f01527c29c52cd4a9eeda6c5021c40"
+    },
+    {
+      "src": "漏洞技能skill/payloads/bypass/waf-bypass.md",
+      "dst": "refs/漏洞技能skill/payloads/bypass/waf-bypass.md",
+      "bytes": 1625,
+      "sha256": "da07cab3f52193b4672418f5fdcab5feca266ea69434c5fc097a0ed1f538fb6f"
+    },
+    {
+      "src": "漏洞技能skill/payloads/mobile/frida-scripts.md",
+      "dst": "refs/漏洞技能skill/payloads/mobile/frida-scripts.md",
+      "bytes": 2774,
+      "sha256": "cd2817548edde2d2bdfa3c589f5bb8b2fecd027c1f2b560706919f45a72469ae"
+    },
+    {
+      "src": "漏洞技能skill/payloads/network/internal-payloads.md",
+      "dst": "refs/漏洞技能skill/payloads/network/internal-payloads.md",
+      "bytes": 1186,
+      "sha256": "13ed9f059c9191459ef7b8a717a6f4e0b8c2a10205157a70e17530a4053eb5d1"
+    },
+    {
+      "src": "漏洞技能skill/payloads/network/privesc-payloads.md",
+      "dst": "refs/漏洞技能skill/payloads/network/privesc-payloads.md",
+      "bytes": 1868,
+      "sha256": "2059e94e55396b78db20dce63c2729e14021c1747e7c0158c0e5fc9df537e953"
+    },
+    {
+      "src": "漏洞技能skill/payloads/network/reverse-shells.md",
+      "dst": "refs/漏洞技能skill/payloads/network/reverse-shells.md",
+      "bytes": 2400,
+      "sha256": "9f8ef8b1b0726ef1b07fda73df92e4959b365b96f76c007092280c11d00fdb1b"
+    },
+    {
+      "src": "漏洞技能skill/payloads/web/cloud-payloads.md",
+      "dst": "refs/漏洞技能skill/payloads/web/cloud-payloads.md",
+      "bytes": 1063,
+      "sha256": "c9f01858e714d552eec5c1112b88139733703540ca9ddeb81df4bdae58e711b3"
+    },
+    {
+      "src": "漏洞技能skill/payloads/web/sqli-payloads.md",
+      "dst": "refs/漏洞技能skill/payloads/web/sqli-payloads.md",
+      "bytes": 5195,
+      "sha256": "dd28e74735f9d36732e21ae14e5726705971507bbe7e25844c3ce2524ef698ac"
+    },
+    {
+      "src": "漏洞技能skill/payloads/web/xss-payloads.md",
+      "dst": "refs/漏洞技能skill/payloads/web/xss-payloads.md",
+      "bytes": 2759,
+      "sha256": "9efd566911fed33efe3eac74139efe36bcc384ee82a18919ef93b1a04f244bf0"
+    },
+    {
+      "src": "漏洞技能skill/references/cheatsheets/command-cheatsheet.md",
+      "dst": "refs/漏洞技能skill/references/cheatsheets/command-cheatsheet.md",
+      "bytes": 2684,
+      "sha256": "90609046cdcf1500768c3f7549dfaf718d50d6c29f82e8322535625b88c53532"
+    },
+    {
+      "src": "漏洞技能skill/references/compliance.md",
+      "dst": "refs/漏洞技能skill/references/compliance.md",
+      "bytes": 2178,
+      "sha256": "53fee39c20f08e4b8ff9d36247fec249fa90fb15fb47871babaa5adeb8ff04c2"
+    },
+    {
+      "src": "漏洞技能skill/references/dictionaries/00-index.md",
+      "dst": "refs/漏洞技能skill/references/dictionaries/00-index.md",
+      "bytes": 2297,
+      "sha256": "aa133c4576ca99eb39c81afb4969183f2029c6c176cd3a714489f33c758cc466"
+    },
+    {
+      "src": "漏洞技能skill/references/dictionaries/chinese-srcfingerprints.md",
+      "dst": "refs/漏洞技能skill/references/dictionaries/chinese-srcfingerprints.md",
+      "bytes": 14884,
+      "sha256": "b1eb5b1b7ba630c92217cc1c0d29dcc4dc76281cb2833d2b266353fb1d7e1893"
+    },
+    {
+      "src": "漏洞技能skill/references/dictionaries/default-credentials-cn.md",
+      "dst": "refs/漏洞技能skill/references/dictionaries/default-credentials-cn.md",
+      "bytes": 10146,
+      "sha256": "869baf639d42849fa81561a59914eb929a02f2f07a4eeb43081780b34891b32c"
+    },
+    {
+      "src": "漏洞技能skill/references/environment/device-profile.md",
+      "dst": "refs/漏洞技能skill/references/environment/device-profile.md",
+      "bytes": 5920,
+      "sha256": "1ad7e3596a193b5586788a8fe35b008353b9626333e62d2e86f4e2b8529cd6ae"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/allocation-of-resources-without-limits-or-throttling.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/allocation-of-resources-without-limits-or-throttling.md",
+      "bytes": 15112,
+      "sha256": "70495d5ad3d18b68aefc1c3bf3a8e256cdf9b97b48a12e13be23b28c1b8fb23c"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/array-index-underflow.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/array-index-underflow.md",
+      "bytes": 17625,
+      "sha256": "64e64358d9d3ba7667c238c66c9580cd4559cf9e1cebffd38b6e22518c7695ee"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/asi05-unexpected-code-execution-rce.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/asi05-unexpected-code-execution-rce.md",
+      "bytes": 4815,
+      "sha256": "6c23e6e1bf83b243c724c9203162f72f722abb41fb1ad6df9567425cc353e109"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/authentication-bypass-by-primary-weakness.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/authentication-bypass-by-primary-weakness.md",
+      "bytes": 17498,
+      "sha256": "aa0df84507153c6f6a6498fa58a09e0ee3188224c09a20aeca72be47ba51ffcb"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/authentication-bypass-using-an-alternate-path-or-channel.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/authentication-bypass-using-an-alternate-path-or-channel.md",
+      "bytes": 24145,
+      "sha256": "b49288b82e0a3768706dc4de7154bfda6b6220f15196858c13e638f92cfe7046"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/authentication-bypass.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/authentication-bypass.md",
+      "bytes": 7610,
+      "sha256": "1af876f2b2200c3a4ddaf9dba2cc6eae6048f2c62f655036ba7ef9bb9797f831"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/blind-sql-injection.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/blind-sql-injection.md",
+      "bytes": 2962,
+      "sha256": "7d466c731750668e7f00cf071a770d8d4df169bf5d66cfa89ea6852bb45c5725"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/buffer-over-read.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/buffer-over-read.md",
+      "bytes": 92166,
+      "sha256": "04028bf886f3d628adf3b7fa313b9c0d38aca822d7a815beb69361092ae9c423"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/buffer-underflow.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/buffer-underflow.md",
+      "bytes": 16249,
+      "sha256": "8b330780c8121ff0f0bc3679ff77dd2e76468a99c52bf4e9ba35cabb0de8e23d"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/business-logic-errors.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/business-logic-errors.md",
+      "bytes": 193345,
+      "sha256": "4c017bc7f8265bc0f4cf9658048567ac045b99bb341c28319b54e5b316340b37"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/classic-buffer-overflow.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/classic-buffer-overflow.md",
+      "bytes": 127887,
+      "sha256": "7b09c7b50489b86f1f3d7e1ab6b06cd0e29a3dfb3d3da6d4eaa5e20612a0d858"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/cleartext-storage-of-sensitive-information.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/cleartext-storage-of-sensitive-information.md",
+      "bytes": 49970,
+      "sha256": "8e6638714484cc770835232cda9d829d154310d159b6aba4663bfb77d52287f2"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/cleartext-transmission-of-sensitive-information.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/cleartext-transmission-of-sensitive-information.md",
+      "bytes": 9786,
+      "sha256": "8bb38448fe071ec73896dbbd2b498ddfcb0067076a893360ecfd7866eff5962c"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/client-side-enforcement-of-server-side-security.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/client-side-enforcement-of-server-side-security.md",
+      "bytes": 3391,
+      "sha256": "9c1ff24b6e69ee7768639b7feeda42a3496c9f7f774868e3ae5d6c2a7a6047af"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/code-injection.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/code-injection.md",
+      "bytes": 427318,
+      "sha256": "d2cd828d410f25e6d557ccd1bd0f1880423dd04dcb4ad8e01d376a9e8a84f52d",
+      "srcBytes": 428389,
+      "srcSha256": "178e9705851aa5fc7d4c3d59c43880bddbba613ceb74097fdd0409a86d7b2e3c",
+      "sanitized": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/command-injection-generic.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/command-injection-generic.md",
+      "bytes": 258352,
+      "sha256": "ff299d7ef94bd17edceed16b1d2741b6178dceed383ca26420bda9d7afc4d1a5",
+      "srcBytes": 259281,
+      "srcSha256": "489276b34f2d0ba27ad9c5d395c75f773ef6ada09c3813510a26dc7db7907b7b",
+      "sanitized": [
+        {
+          "rule": "aws-key-id",
+          "count": 1
+        },
+        {
+          "rule": "aws-secret-access-key",
+          "count": 1
+        },
+        {
+          "rule": "aws-session-token",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/concurrent-execution-using-shared-resource-with-improper-synchronization-race-condition.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/concurrent-execution-using-shared-resource-with-improper-synchronization-race-condition.md",
+      "bytes": 1220,
+      "sha256": "4f83beaec3c85c8dc159d0897e9f8bec277a0a8315a6d93ffc5f43e3407a81b4"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/crlf-injection.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/crlf-injection.md",
+      "bytes": 17468,
+      "sha256": "5fb3e01f94f5357d8e910a088eace1b20d335d9db5b31ba4cf1ee360000df053"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/cross-site-request-forgery-csrf.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/cross-site-request-forgery-csrf.md",
+      "bytes": 132888,
+      "sha256": "44935d7a3b72197a44993a0aee06d45375709d4eb2e7282c71a7a530559d4eb5"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/cross-site-scripting-xss-dom.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/cross-site-scripting-xss-dom.md",
+      "bytes": 63455,
+      "sha256": "8e8076897cddf1055a15701642d139f999ff3a4583f4db1ece9349603398e75e"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/cross-site-scripting-xss-generic.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/cross-site-scripting-xss-generic.md",
+      "bytes": 172757,
+      "sha256": "654834b0d4a432663c1fe6634db39d9912f76646a9e8468564b4aecb051b0e3f",
+      "srcBytes": 173914,
+      "srcSha256": "873e08745577d46e9bfd6fbd966f548988f255128dad4e0654cd70e95270164b",
+      "sanitized": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/cross-site-scripting-xss-reflected.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/cross-site-scripting-xss-reflected.md",
+      "bytes": 76416,
+      "sha256": "67f76be6173d77f2726e37ba0c5ab4c40eec2ee36b498d2524575c427368f4f0"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/cross-site-scripting-xss-stored.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/cross-site-scripting-xss-stored.md",
+      "bytes": 424605,
+      "sha256": "e203c43b5d23b60d9e25f700e1067c49d7032cd8f4e8697063e4f6dd2e72acaa",
+      "srcBytes": 424650,
+      "srcSha256": "47535449f56fdff28dca2aee72988ead96115f99fd35ec05b4b3ca6a04bd2463",
+      "sanitized": [
+        {
+          "rule": "github-token",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/cross-site-scripting-xss.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/cross-site-scripting-xss.md",
+      "bytes": 1826,
+      "sha256": "e0092b092d2896d9a5489b50d34bcbb3c9f5ce9dbade8e3734061bad981a9856"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/cryptographic-issues-generic.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/cryptographic-issues-generic.md",
+      "bytes": 53888,
+      "sha256": "80e4a263dc75c1aee5e7ee1140ef617b5c92d5f8ac09830d2daea794fd1be2c9"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/deserialization-of-untrusted-data.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/deserialization-of-untrusted-data.md",
+      "bytes": 109077,
+      "sha256": "f893de0f56df81195d79d21ccef7b0cb13151324f6c05dc2fcc12c86e4d05271"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/double-free.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/double-free.md",
+      "bytes": 16428,
+      "sha256": "fb003e2bdc20f18b632edc48445729f83d2d0e54ea0b11320cf0c61089282473"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/download-of-code-without-integrity-check.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/download-of-code-without-integrity-check.md",
+      "bytes": 2116,
+      "sha256": "bcdae46b45578cf009eda673a11e8541ca704201f6244b936a55a257a9c1f75f"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/embedded-malicious-code.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/embedded-malicious-code.md",
+      "bytes": 1416,
+      "sha256": "32cbd6772d05480a274ddd29a9a80035fe28d1cc59bb439acbeb6f12bc3561bb"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/encoding-error.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/encoding-error.md",
+      "bytes": 8901,
+      "sha256": "132154cb4882b4e572623a45d7bdd1c193beded77049819bbbb86532fdd93423"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/execution-with-unnecessary-privileges.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/execution-with-unnecessary-privileges.md",
+      "bytes": 1278,
+      "sha256": "d995d6e622e0b415b12c043eebec765b355790df56574984f3e863a1b5a51e25"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/exposed-dangerous-method-or-function.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/exposed-dangerous-method-or-function.md",
+      "bytes": 2545,
+      "sha256": "13fb6559a5024664f98bd38989749eba2fa059fbf1fc9dbbf10cee8d66fac587"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/exposure-of-data-element-to-wrong-session.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/exposure-of-data-element-to-wrong-session.md",
+      "bytes": 4761,
+      "sha256": "09f86c6c5c1457a41caa6c87d85280d8e84853afccee1566abf7ed2e5efe42f3"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/external-control-of-critical-state-data.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/external-control-of-critical-state-data.md",
+      "bytes": 8451,
+      "sha256": "74c8561cc0fb9091528dcbe45c5297dac015f48442ccdb796f6de151afecd26d"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/external-control-of-file-name-or-path.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/external-control-of-file-name-or-path.md",
+      "bytes": 5455,
+      "sha256": "1fa976c5d96e8b7b04ccb1a1167923ee18cfcb6d1677543fd9910a65d911cbc4"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/externally-controlled-reference-to-a-resource-in-another-sphere.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/externally-controlled-reference-to-a-resource-in-another-sphere.md",
+      "bytes": 1658,
+      "sha256": "9c27dd9f69e60acbda083155a591199f97ce59a35e65e1ae411c1413298e1970"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/file-and-directory-information-exposure.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/file-and-directory-information-exposure.md",
+      "bytes": 3263,
+      "sha256": "10ac1b914c61142685cd9a755d755deac7e9b1398d0d0b6b3b066e4c77223cd8"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/file-content-injection.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/file-content-injection.md",
+      "bytes": 1394,
+      "sha256": "a4805dc64ac8156274a09bed56678844b1e44693064796cdb32f927d53698863"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/file-manipulation.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/file-manipulation.md",
+      "bytes": 1631,
+      "sha256": "768475bb968085ec34098f1de60546f6800e685a177153c7eda7cac8662fda47"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/forced-browsing.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/forced-browsing.md",
+      "bytes": 1905,
+      "sha256": "b7f3dd9e913f9e88a0f8ffd96ebbb3ad07ee83e72f55a0e8935555538e4a0417"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/heap-overflow.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/heap-overflow.md",
+      "bytes": 212862,
+      "sha256": "aea017d8b0864280477d7ef12c05088c0ba3b541998eb410e70c19627696d402"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/http-request-smuggling.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/http-request-smuggling.md",
+      "bytes": 87933,
+      "sha256": "fed795f68e275a82679f78d1392e34992bf387017d4fb495c0b57e9cf3b6dc5f"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/http-response-splitting.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/http-response-splitting.md",
+      "bytes": 9653,
+      "sha256": "4c64b3f721468098e9379304d8f62b8516320663f1f74d41639eefd92c9e4cb8"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-access-control-generic.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-access-control-generic.md",
+      "bytes": 725207,
+      "sha256": "f331ba0362e371bd6b6916c56a6bfeac3b3865631b1d70286a07eb3cc8f891e9",
+      "srcBytes": 727181,
+      "srcSha256": "d52bc343d3d5b849d743ba31776ad53745ca2ebcac84e5dee7db4bd57241af90",
+      "sanitized": [
+        {
+          "rule": "google-api-key",
+          "count": 2
+        },
+        {
+          "rule": "jwt",
+          "count": 3
+        },
+        {
+          "rule": "salesforce-access-token",
+          "count": 4
+        },
+        {
+          "rule": "facebook-access-token",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-authentication-generic.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-authentication-generic.md",
+      "bytes": 347133,
+      "sha256": "939320f53ddacf1f51a304d50e646d3c77a4aefd68ca8c896620b493f1234b16",
+      "srcBytes": 349876,
+      "srcSha256": "c2dd1ffe0327d6212ca2cddb24bf35a019e57ac5c9e051bba7eeb84b720ade0e",
+      "sanitized": [
+        {
+          "rule": "jwt",
+          "count": 9
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-authorization.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-authorization.md",
+      "bytes": 35651,
+      "sha256": "1ba0ecde9a5aa57c464f7cb2cc3a3de0ea18849e5aa0b29514c92182d439c9ba",
+      "srcBytes": 36590,
+      "srcSha256": "5e5eea2daf87ade0fbb5d0339988dbc3094f20efdc23ee2b3225b0d27ec5e285",
+      "sanitized": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-certificate-validation.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-certificate-validation.md",
+      "bytes": 49692,
+      "sha256": "30817142dd684ca33888da8d6f00eef34e7fb4b85f8b99d006b9f3ef8c5ef4d3",
+      "srcBytes": 54682,
+      "srcSha256": "6af5aefbbda427daf15827065624a0ec1016d51ca50ce1089cd4d522b38e6fcf",
+      "sanitized": [
+        {
+          "rule": "private-key-block",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-check-or-handling-of-exceptional-conditions.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-check-or-handling-of-exceptional-conditions.md",
+      "bytes": 9472,
+      "sha256": "c804abde220395807a6a858a07d85e96cc98c4f59b96b35d3d586e384bf4f716"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-export-of-android-application-components.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-export-of-android-application-components.md",
+      "bytes": 685,
+      "sha256": "ef5dc5c8eda69da1542ac97810f72261d270c17e4a4326dfaa8070ee7d12d345"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-handling-of-url-encoding-hex-encoding.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-handling-of-url-encoding-hex-encoding.md",
+      "bytes": 8782,
+      "sha256": "934cc8b464a536ad1c11206bfd07eeca8a6e52a5e33e5086f37274817e1b89a5"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-initialization.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-initialization.md",
+      "bytes": 1101,
+      "sha256": "e926fd3ff23f48441c4f4e9058b2c5c06f0ec10b370949b4330e4d51f2f358ab"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-input-validation.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-input-validation.md",
+      "bytes": 64335,
+      "sha256": "c4fa4a633aadebb3aedd92647397a7419718eff69a53cb1ee25f3a131cd406bb"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-neutralization-of-http-headers-for-scripting-syntax.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-neutralization-of-http-headers-for-scripting-syntax.md",
+      "bytes": 625,
+      "sha256": "562fe696895cfd94d089a100594d5fc4859e6f8a86476121b449005482ac3483"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-null-termination.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-null-termination.md",
+      "bytes": 25692,
+      "sha256": "05e8edcdd73ebd96e84f3ac93bd0ad4aa440931a4e5dcda0f297e4f7580cb02f"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-privilege-management.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-privilege-management.md",
+      "bytes": 18594,
+      "sha256": "6bbec8e4b14a4c41b0a49ef670da0a324aa05ac60a79efe7c1e08ffef35ac643"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-restriction-of-authentication-attempts.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/improper-restriction-of-authentication-attempts.md",
+      "bytes": 50088,
+      "sha256": "98bfb7b88af33b86e5ba8a6f9a8c6121b723ab78a7e925a602f4a8cba90db0ec"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/inclusion-of-functionality-from-untrusted-control-sphere.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/inclusion-of-functionality-from-untrusted-control-sphere.md",
+      "bytes": 2120,
+      "sha256": "39e187bd79b0c7cd52aaec945625c25c825a65b5d6e0175e0f0892cb8c9e7c34"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/inclusion-of-sensitive-information-in-an-include-file.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/inclusion-of-sensitive-information-in-an-include-file.md",
+      "bytes": 803,
+      "sha256": "6b1f15b8cfeefb73647edb6edb26df6fdde0d19c73be818990a5a156501e7cc9"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/incorrect-authorization.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/incorrect-authorization.md",
+      "bytes": 7299,
+      "sha256": "e866b25e19864cbe49f3a792db701cc0c329c5f17bc6f36fd04b60b89355f455"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/incorrect-calculation-of-buffer-size.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/incorrect-calculation-of-buffer-size.md",
+      "bytes": 2878,
+      "sha256": "da367a53450db961f01f390af4b3b10a602d0e84f2e3bea292681e71755cdcc9"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/incorrect-privilege-assignment.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/incorrect-privilege-assignment.md",
+      "bytes": 1804,
+      "sha256": "24d014aecdf62e66a7f4af9dc267d919d86b6545249fe014a6af385c70136ab9"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/index.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/index.md",
+      "bytes": 12077,
+      "sha256": "98ca641a610066e1cf7ad472c41ed477dfac6de1b20ca0199e7dc2d39cc7839e"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/information-disclosure.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/information-disclosure.md",
+      "bytes": 659529,
+      "sha256": "2061189896cdfc0dd652ddc5c9b08627af6afa552ad501472625269337b13aee"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/information-exposure-through-an-error-message.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/information-exposure-through-an-error-message.md",
+      "bytes": 8453,
+      "sha256": "6cf0838e8ce86f3be294d8865f4a9bc24a6f0f1a0bc021d36ab30c18142bcad1"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/information-exposure-through-debug-information.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/information-exposure-through-debug-information.md",
+      "bytes": 7383,
+      "sha256": "2765597502958a6f88b567fa9eb17a602b5af6b19baf3aca5bd1d564d3fb63a4"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/information-exposure-through-directory-listing.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/information-exposure-through-directory-listing.md",
+      "bytes": 27648,
+      "sha256": "73359238d7c8aaade423d8b17cda6abcaf012e7c48858d2c96064ac6e3277921"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/information-exposure-through-sent-data.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/information-exposure-through-sent-data.md",
+      "bytes": 17394,
+      "sha256": "57a4bb6599adf0febd5e1f0531f844deb2dfc42e279eec7e6a36bfe2d4844962"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/insecure-direct-object-reference-idor.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/insecure-direct-object-reference-idor.md",
+      "bytes": 189640,
+      "sha256": "5c8a7476261b6cb0436bc883dc1894c74d475bfc33e478590523f5508f365f79"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/insecure-storage-of-sensitive-information.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/insecure-storage-of-sensitive-information.md",
+      "bytes": 65968,
+      "sha256": "d731cc0d9ab776bf256053863f1ad89494d3618bac35ebbd109cfa3a41d890a7",
+      "srcBytes": 65980,
+      "srcSha256": "43ff7d14775845234293ecbf630e314cba033795873bd9055e3fdf7f5ae6076a",
+      "sanitized": [
+        {
+          "rule": "google-api-key",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/insecure-temporary-file.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/insecure-temporary-file.md",
+      "bytes": 458,
+      "sha256": "d41f83d3bb91626b55c37cdd7090d8151287ee2fb7a775d2599edd49380ff42b"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/insufficient-session-expiration.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/insufficient-session-expiration.md",
+      "bytes": 11209,
+      "sha256": "c62cc5abf28ae1bf288bcfa0c996bcbe990f3156f96a50912a72ae59490e7070"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/insufficiently-protected-credentials.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/insufficiently-protected-credentials.md",
+      "bytes": 37891,
+      "sha256": "962d3b19beb2e023ec728d70f1e09e212f18295a4d14f4b855714c3ee093b9df"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/integer-overflow.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/integer-overflow.md",
+      "bytes": 32375,
+      "sha256": "681192c4dab198fc9120e25b3822fb82d00940222a5bc1239fba0e8386b6e1bd"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/key-exchange-without-entity-authentication.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/key-exchange-without-entity-authentication.md",
+      "bytes": 22320,
+      "sha256": "4f9837fc768de503a2d6dbd093d9081b18f6b01499cf8f9fe0fb9b6c8337f375"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/ldap-injection.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/ldap-injection.md",
+      "bytes": 23396,
+      "sha256": "977b868954aefdfb868b43e30d9ef00f5d82374b575d67bc3f5d8c51207a64fc"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/leftover-debug-code-backdoor.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/leftover-debug-code-backdoor.md",
+      "bytes": 4795,
+      "sha256": "f7016a683c1f8eb8d3c0028720c3e0de3c63bd0c5a79513678933d072e580bcc"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/llm01-prompt-injection.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/llm01-prompt-injection.md",
+      "bytes": 8005,
+      "sha256": "16965b4c31411ec6ffd01a94663e280aba3db389b5ef8811a192a62a27b1cf24"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/malware.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/malware.md",
+      "bytes": 8592,
+      "sha256": "684d5e2a9caa8ce519c8b0b6a5859af897ab3f7bef5107befb4f9e2ebab1082e"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/man-in-the-middle.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/man-in-the-middle.md",
+      "bytes": 16490,
+      "sha256": "73661406b05a3ae5b530357f5d4a17e05bf98ca43ae26fa1640cb6ba849c3cc3"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/memory-corruption-generic.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/memory-corruption-generic.md",
+      "bytes": 221505,
+      "sha256": "58ae0f5b89e35ebf009aec82a36b8e3da100343c9771ea2479ac9228817acb37"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/misconfiguration.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/misconfiguration.md",
+      "bytes": 33082,
+      "sha256": "1d5bfe89de33aa4053ac7fb5e9c3590ebe77708035c6e156f2f06e429915b18c"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/missing-authentication-for-critical-function.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/missing-authentication-for-critical-function.md",
+      "bytes": 2333,
+      "sha256": "c62e6fa7f881f5acc6ff01134280231ad66cdb8d8a347f37b225b93657bf3352"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/missing-authorization.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/missing-authorization.md",
+      "bytes": 7914,
+      "sha256": "7f16c404d23562ba8c0333e528006935fc694936def3ca68ac2cea3c0b676c30"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/missing-critical-step-in-authentication.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/missing-critical-step-in-authentication.md",
+      "bytes": 3147,
+      "sha256": "b7610d6f71a57375b7ce4b7c7a8c881748596020cd6c0cde2aa7338fbdd97bc8"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/missing-encryption-of-sensitive-data.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/missing-encryption-of-sensitive-data.md",
+      "bytes": 6668,
+      "sha256": "f2aeb3a7f3c4eb34a29da26ba60f8a2e6d481d9ebef8603db102116ab331faa6",
+      "srcBytes": 6677,
+      "srcSha256": "4959124e53d78560288c1cf7293461d23762c661652296edfba8cc83d354389e",
+      "sanitized": [
+        {
+          "rule": "npm-auth-token",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/missing-required-cryptographic-step.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/missing-required-cryptographic-step.md",
+      "bytes": 8024,
+      "sha256": "749e1ebc9c3c85c3b8cf9f243e3d4ab99de42d8bb980f072ec3e7d313e5ae50e"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/modification-of-assumed-immutable-data-maid.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/modification-of-assumed-immutable-data-maid.md",
+      "bytes": 18906,
+      "sha256": "4edac5a31a1264ddb72dbc04a6f4f3394247ca760b722a786c73029c2de2d0de"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/null-pointer-dereference.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/null-pointer-dereference.md",
+      "bytes": 21990,
+      "sha256": "ec04f2e6c4068efac6c2fc9bc8c168ce6945990fe4d66d4e83cd22986e14cca9"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/off-by-one-error.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/off-by-one-error.md",
+      "bytes": 4475,
+      "sha256": "57a481b6e66b764bcfec6cffff2d72989e72387cde7ded526ec74ee4de3ba7e0"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/open-redirect.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/open-redirect.md",
+      "bytes": 27936,
+      "sha256": "e19918c5468b508d167783f053c29aeae69a982f965e2b55b85058863f11cbe2"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/os-command-injection.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/os-command-injection.md",
+      "bytes": 134469,
+      "sha256": "8a0cc3baa84019f12e77ece72de8edacf88d6e7da0be143e08f37ae4495ec612",
+      "srcBytes": 134484,
+      "srcSha256": "9f23c470610c6df7c91f11b24d6b0c6d9cad4a04f14ea0558990b218b82b1312",
+      "sanitized": [
+        {
+          "rule": "github-token",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/out-of-bounds-read.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/out-of-bounds-read.md",
+      "bytes": 70074,
+      "sha256": "9f7e6da65d97f5539035b98f11ae45d398d09c89ae889185729daed41ae2cb6f"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/password-in-configuration-file.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/password-in-configuration-file.md",
+      "bytes": 7648,
+      "sha256": "d48f9fe098c9f9af777adc846039525dd4ff2716a1a7d4e662df25d6e53eb2f4",
+      "srcBytes": 7861,
+      "srcSha256": "e0174dcad587fbd6c9d89c9ca61ada67af1994b6c4f1ca50b32a84c97d45941a",
+      "sanitized": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/path-traversal.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/path-traversal.md",
+      "bytes": 18041,
+      "sha256": "eea65d60a87b185b9267689dc4b597339889439370d84a47da9e0d53f7944ffc"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/phishing.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/phishing.md",
+      "bytes": 6063,
+      "sha256": "4d9c42b97acd2f5a163feb80adfdeff30d186bb9c1e6f3f4417305a982344f6a"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/php-local-file-inclusion.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/php-local-file-inclusion.md",
+      "bytes": 1725,
+      "sha256": "5cbaa51796dc1eafb982e99001c9513c15113179856d58bd7188192dbeb5fade"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/plaintext-storage-of-a-password.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/plaintext-storage-of-a-password.md",
+      "bytes": 1698,
+      "sha256": "23495b573d9225b93a70be7d785f5a62764164c44d4bb432aee99c02938bbdc2"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/privacy-violation.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/privacy-violation.md",
+      "bytes": 46485,
+      "sha256": "9b99fe585673f638061c92f634cca4e6e70d73f288bd7474fb8b770756528375"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/privilege-escalation.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/privilege-escalation.md",
+      "bytes": 380631,
+      "sha256": "88d5b6f022803f83fa936fa207ad761a9d2f310d9dc5a499981815244ee4a67e"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/reflected-xss.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/reflected-xss.md",
+      "bytes": 1094,
+      "sha256": "1566c32d60f96483eded064da1f55f794c6b5706a9328e3793c9a7589b7d4148"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/relative-path-traversal.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/relative-path-traversal.md",
+      "bytes": 7396,
+      "sha256": "e0830cafae415b6aed5fce29ca77f8eb22cb9b61b9e1c06939e9708cc1c2a49d"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/reliance-on-cookies-without-validation-and-integrity-checking-in-a-security-decision.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/reliance-on-cookies-without-validation-and-integrity-checking-in-a-security-decision.md",
+      "bytes": 6656,
+      "sha256": "97ea62fe161c67e3cc424e92e3c36b2efabc63443ab2bb4505aa1ddbd950fa92"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/reliance-on-untrusted-inputs-in-a-security-decision.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/reliance-on-untrusted-inputs-in-a-security-decision.md",
+      "bytes": 3777,
+      "sha256": "abdc498e3a97589f091835fa8dac23ef285ac2aabf5f890f57e3d5785029193a"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/remote-file-inclusion.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/remote-file-inclusion.md",
+      "bytes": 39840,
+      "sha256": "cf219b0f735d5a865d3f10927e10ffbed7ee743f641cf16383bea3ad20ef5585"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/resource-injection.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/resource-injection.md",
+      "bytes": 24194,
+      "sha256": "96840df6f48f2758ac338cb08a1e37f04185504de580263f871de17f438ba231"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/reusing-a-nonce-key-pair-in-encryption.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/reusing-a-nonce-key-pair-in-encryption.md",
+      "bytes": 988,
+      "sha256": "eaa5139b8b36504273d6493ba94d57c0094c7c4bdfaa927dbc2ff7542ae0b590"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/security-through-obscurity.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/security-through-obscurity.md",
+      "bytes": 26462,
+      "sha256": "7a30b27f478aa23864de6c575680374ac3a80f93709d07d370af6c5d230f06a5"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/server-side-request-forgery-ssrf.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/server-side-request-forgery-ssrf.md",
+      "bytes": 383332,
+      "sha256": "98fd206b4c0479fa4aef5d8bd081095d22a3595fe73ec1494348af62aa48f182",
+      "srcBytes": 384349,
+      "srcSha256": "3db189c4ba16606ea1d9244f216b13fb9a1b6245f044e0054bc73dd7d71258d3",
+      "sanitized": [
+        {
+          "rule": "aws-key-id",
+          "count": 1
+        },
+        {
+          "rule": "aws-secret-access-key",
+          "count": 1
+        },
+        {
+          "rule": "aws-session-token",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/session-fixation.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/session-fixation.md",
+      "bytes": 5352,
+      "sha256": "a919302a3f10f1a1a47f72541ad25e8d385b233992a15a68c45aa6fecdac9785"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/sql-injection.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/sql-injection.md",
+      "bytes": 441889,
+      "sha256": "862eeacfddd56c818aa47f14dfae7b47180ead9f7781958afa03dfc3a6277e47",
+      "srcBytes": 442202,
+      "srcSha256": "61dabd7ac10d7c162fa466d7103fbe8129a9c7bf4f0fbd4030dcb644ef20d6e5",
+      "sanitized": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/stack-overflow.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/stack-overflow.md",
+      "bytes": 54432,
+      "sha256": "0100c4fa528f2ca11c106083a246ba4ebc20b66182778829967c9227e507f434"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/storing-passwords-in-a-recoverable-format.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/storing-passwords-in-a-recoverable-format.md",
+      "bytes": 4608,
+      "sha256": "63af83ca3032a8061409be842a540272e18a20ba84eff724d81234d34ab9dfac"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/time-of-check-time-of-use-toctou-race-condition.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/time-of-check-time-of-use-toctou-race-condition.md",
+      "bytes": 21511,
+      "sha256": "0f434e513cfb4ff3dafa86550230f7a95acabc68bea2c3e41bfde1cde7a99925"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/type-confusion.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/type-confusion.md",
+      "bytes": 7146,
+      "sha256": "4091e0bb59d655e5c3a5c4860bd42210579b287da11ddb9736b9c652b2dd1007"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/ui-redressing-clickjacking.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/ui-redressing-clickjacking.md",
+      "bytes": 29589,
+      "sha256": "43feba6d1e4683540547186b8080f376da30858e6271ac7eef54ee2c8f80c973"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/uncategorized.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/uncategorized.md",
+      "bytes": 911357,
+      "sha256": "bbe7fa8052b0dcf134cbdd9a0980bdd5d6f222dd782ca40de194068aea8d6ad7"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/uncontrolled-resource-consumption.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/uncontrolled-resource-consumption.md",
+      "bytes": 444956,
+      "sha256": "ab1804b7f8ff7a60ff184bd7b392ed8f04dcb0ddef7c474f1a6597b810d8e659",
+      "srcBytes": 445323,
+      "srcSha256": "11a965945cffd82aca9f2891130c5f8473c56e70333c17b06772a00c0509c471",
+      "sanitized": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/unrestricted-upload-of-file-with-dangerous-type.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/unrestricted-upload-of-file-with-dangerous-type.md",
+      "bytes": 6219,
+      "sha256": "b80c4e848aa1354da35f74570b464fed562eacff3df643363d740c42a90fca06"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/untrusted-search-path.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/untrusted-search-path.md",
+      "bytes": 3067,
+      "sha256": "a31a618da262487e6cf2bd974c64a4d3c67de9c19fd5d4394d2080f639ed08c4"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/unverified-password-change.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/unverified-password-change.md",
+      "bytes": 3417,
+      "sha256": "0634f581d9919f6397147c89d0218a3a97b49186df782fd3f097cea391926354"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-after-free.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/use-after-free.md",
+      "bytes": 91166,
+      "sha256": "88fc93f0153e90d40083f2487be6cc49bc96d5fa59eb4d09915e74672b39b591",
+      "srcBytes": 91362,
+      "srcSha256": "72ea98a6083b67095b2b6e41faeef75bb1a3d42439d3b60e29b325e75f0051a8",
+      "sanitized": [
+        {
+          "rule": "private-key-block",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-of-a-broken-or-risky-cryptographic-algorithm.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/use-of-a-broken-or-risky-cryptographic-algorithm.md",
+      "bytes": 1958,
+      "sha256": "206b9e03aa7cf4cd676afd3cce71e75275591cacd4188a1576121e23e1d17473"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-of-a-key-past-its-expiration-date.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/use-of-a-key-past-its-expiration-date.md",
+      "bytes": 827,
+      "sha256": "d7e7f34f88493dbf7e2947b9ed74512a285f369742d3bf2b8f2423c8bcd119a3"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-of-cache-containing-sensitive-information.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/use-of-cache-containing-sensitive-information.md",
+      "bytes": 2978,
+      "sha256": "2c7e2ff376a147916b319f0ffdb017577ba7dc011da6d7a5c636b2158218eb23"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-of-cryptographically-weak-pseudo-random-number-generator-prng.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/use-of-cryptographically-weak-pseudo-random-number-generator-prng.md",
+      "bytes": 2213,
+      "sha256": "cec0730950a100dac341ef378ee44c32ce80fbfd2ce99a52f499f0cf64673e2e"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-of-default-credentials.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/use-of-default-credentials.md",
+      "bytes": 1786,
+      "sha256": "f7d87b2a0d5c55dce503d66ca05c10064e15cfaa8d775b04e18c192adfe874fe"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-of-externally-controlled-format-string.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/use-of-externally-controlled-format-string.md",
+      "bytes": 8969,
+      "sha256": "51bd4c8d7c5cd065773bb103be5575f1cae9fe1b53ea8a8f0820e2809e69b9b5"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-of-hard-coded-credentials.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/use-of-hard-coded-credentials.md",
+      "bytes": 8045,
+      "sha256": "511f7f84f15ee0fd6563d55a7946624c3cd7b67b942722e3eeb975154a62d915"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-of-hard-coded-cryptographic-key.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/use-of-hard-coded-cryptographic-key.md",
+      "bytes": 7732,
+      "sha256": "97686d0668204a5bcc4a1751d0b24613d0d97310f74bdff94573f1b5da81c81d"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-of-hard-coded-password.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/use-of-hard-coded-password.md",
+      "bytes": 2646,
+      "sha256": "dbc723f102e2fb555a99ab2c46023a4c3a201641c81af9154513022025ec7cdd"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-of-inherently-dangerous-function.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/use-of-inherently-dangerous-function.md",
+      "bytes": 6831,
+      "sha256": "4f81af0f486341487e67a630414aa054a55c6b4727dabe7c56411aca98fa1b3a"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-of-insufficiently-random-values.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/use-of-insufficiently-random-values.md",
+      "bytes": 926,
+      "sha256": "e178e4ee9743387ad42ddfb20aefd732abbafb6a66bf3f0c8fc53efaeb6e527a"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/user-interface-ui-misrepresentation-of-critical-information.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/user-interface-ui-misrepresentation-of-critical-information.md",
+      "bytes": 3968,
+      "sha256": "6f97c47e0eb774f89e4e1981bdfd09d880805b94f96a463b0ae4fbbceaaa6f71"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/using-components-with-known-vulnerabilities.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/using-components-with-known-vulnerabilities.md",
+      "bytes": 1445,
+      "sha256": "c63b05c45b3f95049520b56b94241174455cb647733782e98a3b758c2fdc0b95"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/violation-of-secure-design-principles.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/violation-of-secure-design-principles.md",
+      "bytes": 132811,
+      "sha256": "8d4cdf134528f1e62110b3ef321a9dc5b95d0787c3ff0115cee09251d5645570",
+      "srcBytes": 132963,
+      "srcSha256": "b27432f8bc9438eb10ca855169f64359378892c724ba5c008549714862f55230",
+      "sanitized": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/weak-cryptography-for-passwords.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/weak-cryptography-for-passwords.md",
+      "bytes": 530,
+      "sha256": "c5e11ae0b585b2049966d22e98e6f3a8e2573dd3167327ed9189568f77ca986d"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/weak-password-recovery-mechanism-for-forgotten-password.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/weak-password-recovery-mechanism-for-forgotten-password.md",
+      "bytes": 10467,
+      "sha256": "e557dad4aabc6ac4be6494ae3211bcf47f2e2a8ba2bc2da144f9374ddf2b2858"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/write-what-where-condition.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/write-what-where-condition.md",
+      "bytes": 3351,
+      "sha256": "785138867e9509f39b0e1550993acd5eea8feef62fe7c51fc5f5b7092aaf61d6"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/xml-entity-expansion.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/xml-entity-expansion.md",
+      "bytes": 4236,
+      "sha256": "bf3b91609de08e37ba151d4229a95d87777075ec7daeadb4b33fc15014b3a96b"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/xml-external-entities-xxe.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/xml-external-entities-xxe.md",
+      "bytes": 89162,
+      "sha256": "a64743a1e6c69899bcd462cae93566b98ef3e9b63398ec3c5e3a9d551f9d4157"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/xml-injection.md",
+      "dst": "refs/漏洞技能skill/references/h1-reports/by-weakness/xml-injection.md",
+      "bytes": 3281,
+      "sha256": "bb27004685ec811c692c56115975c7b7b9258e2bcaef9863e824741f4820f970"
+    },
+    {
+      "src": "漏洞技能skill/references/methodology/01-attack-priority.md",
+      "dst": "refs/漏洞技能skill/references/methodology/01-attack-priority.md",
+      "bytes": 6595,
+      "sha256": "543d505c620714ee1fc9b653dbabad9e5ce184b9bd2bbf299ddda0b10633321f"
+    },
+    {
+      "src": "漏洞技能skill/references/methodology/02-bypass-toolkit.md",
+      "dst": "refs/漏洞技能skill/references/methodology/02-bypass-toolkit.md",
+      "bytes": 5731,
+      "sha256": "bc8f2092beab5ee9102f26ed598ab9ed01d42d127cd90226ec1b0a2e55742957"
+    },
+    {
+      "src": "漏洞技能skill/references/methodology/03-evidence-discipline.md",
+      "dst": "refs/漏洞技能skill/references/methodology/03-evidence-discipline.md",
+      "bytes": 6246,
+      "sha256": "bd9664de8381bc5ece9e156e4bc109e02742aaed35365fdd369d0bd532af5192"
+    },
+    {
+      "src": "漏洞技能skill/references/methodology/04-control-gap-hunting.md",
+      "dst": "refs/漏洞技能skill/references/methodology/04-control-gap-hunting.md",
+      "bytes": 6137,
+      "sha256": "b6a8f5667cb3d61979b2c3a0d487e5be756f86c72122f3a29ad25c63872e4280"
+    },
+    {
+      "src": "漏洞技能skill/references/methodology/05-srctimebox-priority.md",
+      "dst": "refs/漏洞技能skill/references/methodology/05-srctimebox-priority.md",
+      "bytes": 6408,
+      "sha256": "3900975a25c70a09d67b99da59233c8e6e6e98119f7e1cf5bbae5ac8e6e14931"
+    },
+    {
+      "src": "漏洞技能skill/references/methodology/06-anti-antibot.md",
+      "dst": "refs/漏洞技能skill/references/methodology/06-anti-antibot.md",
+      "bytes": 12855,
+      "sha256": "4bafc288f6e4bce9d628cc5618530c208b5c372a90c8df6a78d49e8c446c0bbc"
+    },
+    {
+      "src": "漏洞技能skill/references/methodology/core-methodology.md",
+      "dst": "refs/漏洞技能skill/references/methodology/core-methodology.md",
+      "bytes": 1273,
+      "sha256": "617282e8f777d7f53031f048e13f092920bbc4cd9d7cbfa54c8c2663a1897ad0"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/00-index.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/00-index.md",
+      "bytes": 2912,
+      "sha256": "1bb9253a20bad2ed251cf6bb6e0b142a930915b56a779c2ffa736d922d131a77"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/api-rest/00-index.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/api-rest/00-index.md",
+      "bytes": 7907,
+      "sha256": "b9d8676704862b78100ac905b2dc1d7629753b07dae754cbe75fcce226eef8f2"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/api-rest/10-rest-api.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/api-rest/10-rest-api.md",
+      "bytes": 13639,
+      "sha256": "044d842eb4278fae3077758a9fefc019616a4640454ce720755944fad32c69d4"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/api-rest/11-graphql.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/api-rest/11-graphql.md",
+      "bytes": 7735,
+      "sha256": "46721fb08ccaba443143393b632a97042cecf5d06de88154691ecbb8142595ce"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/api-rest/12-jwt-api.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/api-rest/12-jwt-api.md",
+      "bytes": 6857,
+      "sha256": "11183f4efd662465a69fdfdb05cd0fbd9cf1e8cc11c6aab724fb1e187d535102"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/api-rest/13-websocket.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/api-rest/13-websocket.md",
+      "bytes": 12299,
+      "sha256": "900400716d170414b75c3a81701c807994fcd26251f6b9018ffc7bc42f4dae8a"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/arbitrary-x-authz.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/arbitrary-x-authz.md",
+      "bytes": 20839,
+      "sha256": "144277cd58f123f361b0aed74bdfd012ac8319c8218b615a69a23ce00b12d027"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/dos.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/dos.md",
+      "bytes": 29273,
+      "sha256": "2781bd6bf3c1eff6681329ef89e012d977065570711904715902c69e6c522bc1"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/file-upload/00-index.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/file-upload/00-index.md",
+      "bytes": 13739,
+      "sha256": "51d626dba401d0af3bbaaf6ef3be5dfd9efe373d05f8fa390180c73f5234be76"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/file-upload/10-upload-bypass.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/file-upload/10-upload-bypass.md",
+      "bytes": 13700,
+      "sha256": "5d2809ce27381a6c289035625919cba5df48a10ca0e8d00c54f302e85067b131"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/file-upload/11-archive-traversal.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/file-upload/11-archive-traversal.md",
+      "bytes": 9642,
+      "sha256": "d0c7e4c087d6a7dc37b634d6f57566b74ab3e1091bf9580f666a90d398af4174"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/file-upload/12-race-download.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/file-upload/12-race-download.md",
+      "bytes": 10199,
+      "sha256": "3b9b92958c80cf372995bb0123027fce5da9d1c9dc7c11d194f16a94dbd9ffdc"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/graphql.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/graphql.md",
+      "bytes": 5579,
+      "sha256": "7a7dab374f1c308ae2246de7e7f126c7dfb03a4aea1ba5e3ab57b9712d367b0d"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/http-smuggling.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/http-smuggling.md",
+      "bytes": 21696,
+      "sha256": "bae967f59d22ccb06f2d0094961b48b0d7258e05010fc051c76ac0f301ec745e"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/info-disclosure.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/info-disclosure.md",
+      "bytes": 16318,
+      "sha256": "b06c336a1b0eb6d9aca3d975db23acfcfc2a4c18f06e8384e04fa38282e49c02"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/intranet-postexp/00-index.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/intranet-postexp/00-index.md",
+      "bytes": 3135,
+      "sha256": "ead678919b59c72323ad8b14a860652d46b89d70cb3c857c932b0ae817083bf4"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/intranet-postexp/10-credentials.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/intranet-postexp/10-credentials.md",
+      "bytes": 21525,
+      "sha256": "16bf5a471e2f382643c127a8e5bb8ce6a4c486776426cf71f260402079088571"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/intranet-postexp/11-lateral.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/intranet-postexp/11-lateral.md",
+      "bytes": 12163,
+      "sha256": "7484d11381abefe76bdc9d1c56e0fc7cbed5d09a901a0b00b3edd55576cf46eb"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/intranet-postexp/12-privesc.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/intranet-postexp/12-privesc.md",
+      "bytes": 14417,
+      "sha256": "8252bcba2e423204410a5273a309628474c3e6323ddb89a4c294fa5764dcbf4e"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/intranet-postexp/13-evasion.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/intranet-postexp/13-evasion.md",
+      "bytes": 12765,
+      "sha256": "efe1195697938e3c5ecceb06921bfeba80673385e1e4a6daf23184e8ae6806af"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/intranet-postexp/14-domain.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/intranet-postexp/14-domain.md",
+      "bytes": 12094,
+      "sha256": "776b9a5c88af71e23a8553ba20270a68d7751a556064245364a82db3f4e34b81"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/intranet-postexp/15-tunneling.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/intranet-postexp/15-tunneling.md",
+      "bytes": 7378,
+      "sha256": "0e371e3385509c2e213c85dbb74de8268cc3344cef5988d7fbb007bc932af1d7"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/intranet-postexp/16-recon.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/intranet-postexp/16-recon.md",
+      "bytes": 13799,
+      "sha256": "a950026becb5e9ee578a0a8376c60de603cd8b3e740b8f61fc08e6b845753a66"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/intranet-postexp/17-persistence.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/intranet-postexp/17-persistence.md",
+      "bytes": 9370,
+      "sha256": "089d84e48620a968e09a3ca8ec3d1d40cfd6b3006b220c0394c8a2911df21274"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/intranet-postexp/18-exchange.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/intranet-postexp/18-exchange.md",
+      "bytes": 4088,
+      "sha256": "06b8e63f6bcaa67ebb6ad4fde079d32b19e67f884b0ea1e29f47b6481fea2a87"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/intranet-postexp/19-adcs.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/intranet-postexp/19-adcs.md",
+      "bytes": 4162,
+      "sha256": "217c1a9fe7d22400627c1e7a2fda04fec7131b10fdda87cd047babfd28a59107"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/intranet-postexp/20-sharepoint.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/intranet-postexp/20-sharepoint.md",
+      "bytes": 2046,
+      "sha256": "1c2a8912fc736e24b307e8a55457ed45a9aed4eae54c3995a3757a4717d88bb8"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/llm-prompt-injection/00-index.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/llm-prompt-injection/00-index.md",
+      "bytes": 9448,
+      "sha256": "e07aeba7341b675a5a4f6b1e0dd44ab2482769b2a69c3db05ba156ec5ddcbfed"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/llm-prompt-injection/10-direct-prompt.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/llm-prompt-injection/10-direct-prompt.md",
+      "bytes": 4394,
+      "sha256": "f67fa2ff004b6ca0128c2cf839bf44b6dc8cba5bc38e84210c13e0dbb3a17d26"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/llm-prompt-injection/11-indirect-rag.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/llm-prompt-injection/11-indirect-rag.md",
+      "bytes": 5686,
+      "sha256": "d15f7863686540b32060bf3cfc1a880865abaf1e82145d272a866ce078ce3261"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/llm-prompt-injection/12-agent-vulns.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/llm-prompt-injection/12-agent-vulns.md",
+      "bytes": 6144,
+      "sha256": "90094b1cac4b6a6a4f8b114c68b5c23d7b9cc3263612b3d377b9215063b002f6"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/llm-prompt-injection/13-model-attacks.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/llm-prompt-injection/13-model-attacks.md",
+      "bytes": 10855,
+      "sha256": "32b5c4c78f607f55e8dab0b03baf90ae4c649260a8c5ecf98d3c09810013719a"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/llm-prompt-injection/14-techniques.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/llm-prompt-injection/14-techniques.md",
+      "bytes": 22403,
+      "sha256": "f90e3a781103963c7f6e8540dc1518f51a151a5605ae6a635d91900f5214e951"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/logic-flaws/00-index.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/logic-flaws/00-index.md",
+      "bytes": 17144,
+      "sha256": "371a812880c8a4997176bc658028155e23a7355459391845e9184d5ec1b2fe68"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/logic-flaws/10-csrf.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/logic-flaws/10-csrf.md",
+      "bytes": 13332,
+      "sha256": "5e3a85d115ee0873855fc5ff7ed863018e72cbbaf6c77e08d8455f6e6fd354a0"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/logic-flaws/11-business-logic.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/logic-flaws/11-business-logic.md",
+      "bytes": 12813,
+      "sha256": "ed0472000a5eb77f15a1e99e930b5076129f9bc29712cb8b09539b2811b269e7"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/logic-flaws/12-clickjacking.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/logic-flaws/12-clickjacking.md",
+      "bytes": 10241,
+      "sha256": "be76330e0cea2fda8ee3b615dfc25b401e37b5cdbe4c87d6c8d47aceb020cc44"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/mobile.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/mobile.md",
+      "bytes": 13805,
+      "sha256": "8733f22a3600cd237041a8b1755855b2a0b756d6a6fefb720af8cc529fb54810"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/oauth-saml-jwt/00-index.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/oauth-saml-jwt/00-index.md",
+      "bytes": 14629,
+      "sha256": "5756600486dca18f4dfce418ecc24b703bf9b89f537a0cf01b803a3b8958b68b"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/oauth-saml-jwt/10-oauth-redirect.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/oauth-saml-jwt/10-oauth-redirect.md",
+      "bytes": 16269,
+      "sha256": "39d5eac6a7682593a335f9296c77178024ea09d9ffec5e748f96568931ed62ad"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/oauth-saml-jwt/11-saml.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/oauth-saml-jwt/11-saml.md",
+      "bytes": 4648,
+      "sha256": "709808486b25f784ee2812ef98d10e45697e63e31bce0eabbe7173cb1513f389"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/oauth-saml-jwt/12-jwt.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/oauth-saml-jwt/12-jwt.md",
+      "bytes": 15723,
+      "sha256": "3e4eba67fa25a947f8b1867d66bc1431e2c07c14677fe4c8043b4a9da1318bd9",
+      "srcBytes": 15830,
+      "srcSha256": "f17aa3df4555ccacf78899950288d62f9a9013e535f0dd13d99a229bdfbbc5ff",
+      "sanitized": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/oauth-saml-jwt/13-auth-misc.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/oauth-saml-jwt/13-auth-misc.md",
+      "bytes": 29810,
+      "sha256": "7b5a020998489e3d3fed8aa7a69b72301b28fde7e518b27bd766f7caafb3efab"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/path-traversal/00-index.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/path-traversal/00-index.md",
+      "bytes": 14785,
+      "sha256": "5bbd40761cb422585f26594508170c8731dfb08a88278b87db1bdae25de38038"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/path-traversal/10-traversal-lfi.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/path-traversal/10-traversal-lfi.md",
+      "bytes": 3378,
+      "sha256": "aa9374cad79bf7949ae08809007128437f9d1a2ce9f56eb7c9bb1443662a98e8"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/path-traversal/11-rfi-logpoison.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/path-traversal/11-rfi-logpoison.md",
+      "bytes": 3450,
+      "sha256": "55aa784da83cba5e7d0b14d0855647b7e6f84ae035d510a99dcf5204596e5d34"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/path-traversal/12-php-wrappers.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/path-traversal/12-php-wrappers.md",
+      "bytes": 10206,
+      "sha256": "0fe1aa63b0d6f36ecf619fa44ad65c6aa4983aa935c4ac2da2e832d58eda84d2"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/path-traversal/13-phar-session-proc.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/path-traversal/13-phar-session-proc.md",
+      "bytes": 4522,
+      "sha256": "5f885ac84b3627d4bf252b0a24ace5eb02b0d745f7b3371c89f6e7b91d5e8532"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/race-conditions.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/race-conditions.md",
+      "bytes": 7308,
+      "sha256": "7436049e4d5b106a7a8c176bfc0619f1a447764b99d5bc73b021a254dbf63988"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/rce/00-index.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/rce/00-index.md",
+      "bytes": 21651,
+      "sha256": "5ffefb3936f5e8448e3e40647ee20be723bbe1c4057e49831cff5cc8ed5b78bd"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/rce/10-framework.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/rce/10-framework.md",
+      "bytes": 41381,
+      "sha256": "ee5c0ecf43a163055f9a364228ecb7197e2759992353cec29a0a246837868982"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/rce/11-command-injection.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/rce/11-command-injection.md",
+      "bytes": 6318,
+      "sha256": "a0a277cdf9e35e035293aa2b689728c6641ee9496642e80a0c5881eafbe2d944"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/rce/12-deserialization.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/rce/12-deserialization.md",
+      "bytes": 4854,
+      "sha256": "ac519d739ccacb99f6cb2a28b9286e7abda4b727820e243ebc210b0e6312adcc"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/rce/13-file-rce-chain.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/rce/13-file-rce-chain.md",
+      "bytes": 6581,
+      "sha256": "e81132eb6710fa63e572fd7ec50a06e288e443ae865ef3c5e440020a9c3dfaba"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/rce/14-ssti.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/rce/14-ssti.md",
+      "bytes": 16316,
+      "sha256": "298e8f7bed23c81cddd034cc8f04427900dce1b404416f93507ba4805148e776"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/rce/15-xxe.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/rce/15-xxe.md",
+      "bytes": 9579,
+      "sha256": "0b104b5700ee727ad5f57fe6a512b8c52b047568709e9d0b5c1e6dd4be84c105"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/rce/16-supply-chain.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/rce/16-supply-chain.md",
+      "bytes": 9682,
+      "sha256": "01fca7a55e3aa56c8c0ddf7947dd46b14c91f85b316f91bdcbc6400ab18ce9d2"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/rce/17-prototype-pollution.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/rce/17-prototype-pollution.md",
+      "bytes": 10402,
+      "sha256": "ec5accc0917002fbd5a8662699eb00ae30de125efe9581713df93b7cc8c97c5d"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/sqli.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/sqli.md",
+      "bytes": 45392,
+      "sha256": "2a483e43d3b627de11196a99e05ae87a96f799006e2760fc1890785877cd3aff"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/ssrf-cache-host/00-index.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/ssrf-cache-host/00-index.md",
+      "bytes": 15926,
+      "sha256": "fce9342c2b83be868d2b281c7302a1a4116e23fc33cdd64b141cb4b9f0330997"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/ssrf-cache-host/10-ssrf-core.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/ssrf-cache-host/10-ssrf-core.md",
+      "bytes": 21563,
+      "sha256": "7ae29eb32f4c8670d8252a783e4edd2ae7e4bdab3ad9f9bdf02224bd60d8753d"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/ssrf-cache-host/11-cloud.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/ssrf-cache-host/11-cloud.md",
+      "bytes": 15404,
+      "sha256": "92671f6837255b67eb15a11b5af97b3822a4902a9c352a98f40da7c8dcabb540"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/ssrf-cache-host/12-cache.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/ssrf-cache-host/12-cache.md",
+      "bytes": 11874,
+      "sha256": "d38273197ecabe734c522320603023b0b4b97870d63c13d154e7041386d6de04"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/unauth-access.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/unauth-access.md",
+      "bytes": 14524,
+      "sha256": "a8173f40576643a66c8edaa3868224a5ac0fd3a1e4a7e6364f0c1699f9ea5c20"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/xss/00-index.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/xss/00-index.md",
+      "bytes": 13502,
+      "sha256": "5dc01c2b0347645332e5be9e9fb24c0383b34052badbebdb1f800e0e4e586fbf"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/xss/10-xss-by-type.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/xss/10-xss-by-type.md",
+      "bytes": 5556,
+      "sha256": "d8a2ce6eda2a22c27eefc9798590d7e4311254a1360497eee69dc35fece4eca8"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/xss/11-bypass.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/xss/11-bypass.md",
+      "bytes": 8420,
+      "sha256": "1950934d11b538e95d8dd21fe59617dabeae04bd8e20f38bd5bcf83d3ac881fc"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/xss/12-exploitation.md",
+      "dst": "refs/漏洞技能skill/references/playbooks/xss/12-exploitation.md",
+      "bytes": 4889,
+      "sha256": "8fc1165e6cc2f9efbcd19ca471110c2daf87e85e926691c30055b45d61b2b2a1"
+    },
+    {
+      "src": "漏洞技能skill/references/templates/report-submission.md",
+      "dst": "refs/漏洞技能skill/references/templates/report-submission.md",
+      "bytes": 14083,
+      "sha256": "d83ce4ab1b947aeba0b2bb01127efc98d0fa42663aef20a54b9ce9f2e6d26dbb"
+    },
+    {
+      "src": "漏洞技能skill/routing.md",
+      "dst": "refs/漏洞技能skill/routing.md",
+      "bytes": 7267,
+      "sha256": "1cf762ef86a7d2b6855381c8cbca2e32e5423bff20bfa1e9ac1a3c8b9fc27afe"
+    },
+    {
+      "src": "漏洞技能skill/scripts/exploit/auto_pwn.py",
+      "dst": "refs/漏洞技能skill/scripts/exploit/auto_pwn.py",
+      "bytes": 39242,
+      "sha256": "17b29fa1aeb2ae06ddc98f81c6d11fd432fdc12cd711856afd518393090c8f8e"
+    },
+    {
+      "src": "漏洞技能skill/scripts/exploit/cve_lookup.py",
+      "dst": "refs/漏洞技能skill/scripts/exploit/cve_lookup.py",
+      "bytes": 14307,
+      "sha256": "27c1f80d212d3586a1a8b0b6cbb8234620dd97afcfbfd73062c7b17924183244"
+    },
+    {
+      "src": "漏洞技能skill/scripts/exploit/red_team_auth.py",
+      "dst": "refs/漏洞技能skill/scripts/exploit/red_team_auth.py",
+      "bytes": 20627,
+      "sha256": "6ed61582203177a0ad10be50c00654b24cfeed0b1e955f47a59419577331b9fc"
+    },
+    {
+      "src": "漏洞技能skill/scripts/exploit/shell_gen.py",
+      "dst": "refs/漏洞技能skill/scripts/exploit/shell_gen.py",
+      "bytes": 12275,
+      "sha256": "18ff67721b9f405152dd36c8c6bd1670627960bdd8c0d7f3ac29e0014f7d7606"
+    },
+    {
+      "src": "漏洞技能skill/scripts/exploit/web_exploit.py",
+      "dst": "refs/漏洞技能skill/scripts/exploit/web_exploit.py",
+      "bytes": 34749,
+      "sha256": "4220b863baf178fdb9564d44754f84d7ccc4c745b2952a5ec77465610f057b8e"
+    },
+    {
+      "src": "漏洞技能skill/scripts/incident/incident_check.py",
+      "dst": "refs/漏洞技能skill/scripts/incident/incident_check.py",
+      "bytes": 4587,
+      "sha256": "b3201c8bdbfe5e450a75846273514ec10e0284c24c259d3606eafef5340f72b6"
+    },
+    {
+      "src": "漏洞技能skill/scripts/incident/incident_triage.py",
+      "dst": "refs/漏洞技能skill/scripts/incident/incident_triage.py",
+      "bytes": 27518,
+      "sha256": "5b035a2c5f5f9a8285e6a62e9e07a75af02f551aa505901796ad4bba3b0d8e7b"
+    },
+    {
+      "src": "漏洞技能skill/scripts/incident/threat_signal_analyzer.py",
+      "dst": "refs/漏洞技能skill/scripts/incident/threat_signal_analyzer.py",
+      "bytes": 25673,
+      "sha256": "2c97b6d871fa8e8a9b7332a5381f989131c6f023f79527b9844c6d6c09ffecf0"
+    },
+    {
+      "src": "漏洞技能skill/scripts/network/password_tools.py",
+      "dst": "refs/漏洞技能skill/scripts/network/password_tools.py",
+      "bytes": 4480,
+      "sha256": "71069c1140db7c3a1980d2f08e363594ff4a903fa494e711aa741e57a9128dcf"
+    },
+    {
+      "src": "漏洞技能skill/scripts/network/privesc_check.py",
+      "dst": "refs/漏洞技能skill/scripts/network/privesc_check.py",
+      "bytes": 3891,
+      "sha256": "ba42f053feb156a6df75a7dd4defa6e26b19f9dbd94af10e9017bf322a8857bd"
+    },
+    {
+      "src": "漏洞技能skill/scripts/projectdiscovery/csrf_scanner.py",
+      "dst": "refs/漏洞技能skill/scripts/projectdiscovery/csrf_scanner.py",
+      "bytes": 16578,
+      "sha256": "604bcd38c90242bba329a9a0ed350fdbed924ada51da3080226c4ce5fcfab088"
+    },
+    {
+      "src": "漏洞技能skill/scripts/projectdiscovery/deser_scanner.py",
+      "dst": "refs/漏洞技能skill/scripts/projectdiscovery/deser_scanner.py",
+      "bytes": 19723,
+      "sha256": "7fe1fe99d891217b17b9f318bdae2ed40c1df342c2d3b7de959693cd517d8c36"
+    },
+    {
+      "src": "漏洞技能skill/scripts/projectdiscovery/nuclei_result_parser.py",
+      "dst": "refs/漏洞技能skill/scripts/projectdiscovery/nuclei_result_parser.py",
+      "bytes": 15109,
+      "sha256": "da0cacefbcf0419e6832133c29ae1465ea7e7f9e5c7af1f9e0706e4ec9734ebf"
+    },
+    {
+      "src": "漏洞技能skill/scripts/projectdiscovery/nuclei_run.py",
+      "dst": "refs/漏洞技能skill/scripts/projectdiscovery/nuclei_run.py",
+      "bytes": 18154,
+      "sha256": "024aad75fc20a7c1a3080362503dbd353ae59ca375ea2f9ee9c67466e6d726a4"
+    },
+    {
+      "src": "漏洞技能skill/scripts/projectdiscovery/nuclei_template_mgr.py",
+      "dst": "refs/漏洞技能skill/scripts/projectdiscovery/nuclei_template_mgr.py",
+      "bytes": 12795,
+      "sha256": "0b1e534db30204852dee32715c5611369da2c7cc20665daf4aa4506a0629832a"
+    },
+    {
+      "src": "漏洞技能skill/scripts/projectdiscovery/ssrf_scanner.py",
+      "dst": "refs/漏洞技能skill/scripts/projectdiscovery/ssrf_scanner.py",
+      "bytes": 17259,
+      "sha256": "3c9bab3ed119cb0b9cb5253950db66d27617309cdda0637a1f1fc4b3a32f7df2"
+    },
+    {
+      "src": "漏洞技能skill/scripts/projectdiscovery/upload_scanner.py",
+      "dst": "refs/漏洞技能skill/scripts/projectdiscovery/upload_scanner.py",
+      "bytes": 18295,
+      "sha256": "0e657f582c45f6c14e8ec50c29017dcf3458424f829cfe1b5e15ab358af7d042"
+    },
+    {
+      "src": "漏洞技能skill/scripts/projectdiscovery/xxe_scanner.py",
+      "dst": "refs/漏洞技能skill/scripts/projectdiscovery/xxe_scanner.py",
+      "bytes": 15135,
+      "sha256": "0cac307eb43acaf71ea0dd7cb56d7d24ec609691ac05ab4f58673fbbfd2c2811"
+    },
+    {
+      "src": "漏洞技能skill/scripts/recon/dns_tools.py",
+      "dst": "refs/漏洞技能skill/scripts/recon/dns_tools.py",
+      "bytes": 3374,
+      "sha256": "d2b2b8ab28075644022259971e80e64db42949da35a178bcad6b515905d34933"
+    },
+    {
+      "src": "漏洞技能skill/scripts/recon/http_probe.py",
+      "dst": "refs/漏洞技能skill/scripts/recon/http_probe.py",
+      "bytes": 3311,
+      "sha256": "b3951161550a965bc68ad0ec51147244df9a7fbd0470658e3e7ae6df486068a9"
+    },
+    {
+      "src": "漏洞技能skill/scripts/recon/osint_gather.py",
+      "dst": "refs/漏洞技能skill/scripts/recon/osint_gather.py",
+      "bytes": 3338,
+      "sha256": "64fbfd79f37bb0c900c4508160b074b25aeb29eba110ce150335c6c6885d34a2"
+    },
+    {
+      "src": "漏洞技能skill/scripts/recon/subdomain_enum.py",
+      "dst": "refs/漏洞技能skill/scripts/recon/subdomain_enum.py",
+      "bytes": 2783,
+      "sha256": "b67f69249ad300ce1d34c59d74e4dd1d85e067e7a1cca870f880586281501804"
+    },
+    {
+      "src": "漏洞技能skill/scripts/reverse/binary_analyze.py",
+      "dst": "refs/漏洞技能skill/scripts/reverse/binary_analyze.py",
+      "bytes": 22438,
+      "sha256": "38434ffeec549b7a2b7ccb99083f27cfcc3b8985c5f8f4224a42a93f4bd559b9"
+    },
+    {
+      "src": "漏洞技能skill/scripts/reverse/binary_quick.py",
+      "dst": "refs/漏洞技能skill/scripts/reverse/binary_quick.py",
+      "bytes": 3497,
+      "sha256": "779035a68bab945529b76eaa1a60ea5961fb0d56f447ad5fd1837424d7f4658d"
+    },
+    {
+      "src": "漏洞技能skill/scripts/reverse/disasm.py",
+      "dst": "refs/漏洞技能skill/scripts/reverse/disasm.py",
+      "bytes": 14079,
+      "sha256": "f54bcbfe46456d61b69b88e3dc27db7b7eff91b256aedc6a2d4436b42b0fef1f"
+    },
+    {
+      "src": "漏洞技能skill/scripts/reverse/func_graph.py",
+      "dst": "refs/漏洞技能skill/scripts/reverse/func_graph.py",
+      "bytes": 17949,
+      "sha256": "6383e53292edcb59c8a826e66bc27b9b74e875dd0ea0ff4ab5741ca031c7ffca"
+    },
+    {
+      "src": "漏洞技能skill/scripts/reverse/mobile_tools.py",
+      "dst": "refs/漏洞技能skill/scripts/reverse/mobile_tools.py",
+      "bytes": 4012,
+      "sha256": "ae3da6d928f33a6fbb6eee3a315575569823a13cf4cd9a95803efbce0707f68e"
+    },
+    {
+      "src": "漏洞技能skill/scripts/reverse/string_extract.py",
+      "dst": "refs/漏洞技能skill/scripts/reverse/string_extract.py",
+      "bytes": 9379,
+      "sha256": "1bb37cf7c548d9a2ef2d1078cf10dc60522bb0eff45a66abbbcd8c8f3246404f"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/compliance_checker.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/compliance_checker.py",
+      "bytes": 38622,
+      "sha256": "1992ca50b0b94677b085c8e453392d3066243f458d03819b8009282a54866abb"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/dependency_auditor.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/dependency_auditor.py",
+      "bytes": 21056,
+      "sha256": "9f7f48173fc20a464e314eae62ebb9c2fceed17715e980582def25d972d38cf0"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/pentest_report_generator.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/pentest_report_generator.py",
+      "bytes": 19028,
+      "sha256": "14d8cabbfadf30305c46baa1cc0e974b137270a58451a395739b013fde74a3a9"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/port_scanner.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/port_scanner.py",
+      "bytes": 3735,
+      "sha256": "9779c60cf7206666a1c4b9bceb8dd0f52be3c224693a1c6f7707d2f2c6990dfc"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/report_gen.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/report_gen.py",
+      "bytes": 3569,
+      "sha256": "df14e021703109b2a3ae2dc648a75a4c6b4fae6caf2bb3476acd5d85fefb04be"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/security_scanner.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/security_scanner.py",
+      "bytes": 16570,
+      "sha256": "522fd8cc74e8473e5556257e29566387f3973a7b1e2b2331e91dc50a39e8d11a"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/source-audit/audit_auto.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/source-audit/audit_auto.py",
+      "bytes": 7126,
+      "sha256": "3fe10b6973972bab13d727e005140180df509acecced85c4e367296299e86d45"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/source-audit/audit_java.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/source-audit/audit_java.py",
+      "bytes": 16760,
+      "sha256": "9022d1cf9b80b353c9dc1cb4fb321f3b7c7a56c2402c6a740d93c2f66a667edf"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/source-audit/audit_python.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/source-audit/audit_python.py",
+      "bytes": 28610,
+      "sha256": "3ddf8fe9d9bea1dc64d3daedcce3d45d6e69f581801d1f320e2278537e7cd29d"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/source-audit/audit_web.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/source-audit/audit_web.py",
+      "bytes": 16208,
+      "sha256": "9ca1fc9df6b1e4aa6cd59de21b9a01ce9adb1acc63743da6a0ca3217d23023b1"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/source_audit.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/source_audit.py",
+      "bytes": 5168,
+      "sha256": "56be91a9e49829f2c8d51153fc59ede8e092a49465392de7239d7bcc414eeb19"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/stego_tools.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/stego_tools.py",
+      "bytes": 4138,
+      "sha256": "ec7123116051b5ae91966b835bf2e791b46957c6b438ea7acb73a32a9b5eee4b"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/vulnerability_assessor.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/vulnerability_assessor.py",
+      "bytes": 20415,
+      "sha256": "93e17821b26dec7852dedafeb00c6b2448ee342c4593ed92b76b9b20078e9eda"
+    },
+    {
+      "src": "漏洞技能skill/scripts/utils/vulnerability_scanner.py",
+      "dst": "refs/漏洞技能skill/scripts/utils/vulnerability_scanner.py",
+      "bytes": 27269,
+      "sha256": "cbea336b58ee9453cf227d8dbf75d95cabd9ead2d2bc602bc928a5424fab7b14"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/adaptive_bypass.py",
+      "dst": "refs/漏洞技能skill/scripts/web/adaptive_bypass.py",
+      "bytes": 17161,
+      "sha256": "4f368d938a6b807326d9f947361f58d6824645e8e156ca703b9c91d99be70f4f"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/cloud_scan.py",
+      "dst": "refs/漏洞技能skill/scripts/web/cloud_scan.py",
+      "bytes": 3140,
+      "sha256": "002f5ede1071092c67e38d814e67db9f18241e583732dd9bc88f9db50893a7c7"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/cmd_bypass.py",
+      "dst": "refs/漏洞技能skill/scripts/web/cmd_bypass.py",
+      "bytes": 17504,
+      "sha256": "49551e9645a69594dad5f431fd43486cc33b1236b02c90573b211c8a6fe55ca7"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/dir_brute.py",
+      "dst": "refs/漏洞技能skill/scripts/web/dir_brute.py",
+      "bytes": 3201,
+      "sha256": "db3069aea6c0987d5ce9b7ed39eb6a9b23f70d24d7383437f1955c6e92cb075b"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/jwt_analyze.py",
+      "dst": "refs/漏洞技能skill/scripts/web/jwt_analyze.py",
+      "bytes": 3412,
+      "sha256": "23978f631c1f2cb6193bac2faed2e9ed6c3c06914d2542a397c8c4676e949515"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/payload_mutator.py",
+      "dst": "refs/漏洞技能skill/scripts/web/payload_mutator.py",
+      "bytes": 12394,
+      "sha256": "e72e0f5915e9a406e0f090cb7cc6f3d186ac3311d6b4549fad552e4e32de6dfa"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/sql_bypass.py",
+      "dst": "refs/漏洞技能skill/scripts/web/sql_bypass.py",
+      "bytes": 22457,
+      "sha256": "4cb9142f3c69d492cec86e6053fe9652806349ec0bd6823d5edbf8e90cfee954"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/sqli_quick.py",
+      "dst": "refs/漏洞技能skill/scripts/web/sqli_quick.py",
+      "bytes": 3566,
+      "sha256": "57e4558ecab6761b3294ae92a20f43df320a07bd4961b1412b02260bd4f3a7f8"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/ssrf_check.py",
+      "dst": "refs/漏洞技能skill/scripts/web/ssrf_check.py",
+      "bytes": 2973,
+      "sha256": "1c87d9000c4bdce93776bf9dc458c5e80002ab1936d0925e2ceb4e20094a9220"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/tls_scan.py",
+      "dst": "refs/漏洞技能skill/scripts/web/tls_scan.py",
+      "bytes": 2798,
+      "sha256": "1b3dc68342efa1b4eabc86b45f97c7181c80ffbf6ae667f647cd6fcfb70c432b"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/waf_adaptive_detect.py",
+      "dst": "refs/漏洞技能skill/scripts/web/waf_adaptive_detect.py",
+      "bytes": 19135,
+      "sha256": "6a540b667e1483125e3504b948436f2ae5021ed0c49f556a4c736c0a5f151578"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/waf_detect.py",
+      "dst": "refs/漏洞技能skill/scripts/web/waf_detect.py",
+      "bytes": 12405,
+      "sha256": "91fa6934a9d0197cebe91b5680583b76a5eec1438f1ad6fde5a3cf8f5e0dd44c"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/waf_fingerprint.py",
+      "dst": "refs/漏洞技能skill/scripts/web/waf_fingerprint.py",
+      "bytes": 19858,
+      "sha256": "2745001175a755f9be22d4aa7f2bac64e1b5a8578c58b71f5df0451f81c6d7fe"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/xss_bypass.py",
+      "dst": "refs/漏洞技能skill/scripts/web/xss_bypass.py",
+      "bytes": 20179,
+      "sha256": "0e6d07cd5aa385b712c8d7029ba3b61a3a719b696f8357e4cf5a2a6da192bd00"
+    },
+    {
+      "src": "漏洞技能skill/scripts/web/xss_quick.py",
+      "dst": "refs/漏洞技能skill/scripts/web/xss_quick.py",
+      "bytes": 2529,
+      "sha256": "92317c011a117a0f32928b0adaba4939f73ec931417c01d500692a4dac51a827"
+    },
+    {
+      "src": "漏洞技能skill/scripts/zhekk.py",
+      "dst": "refs/漏洞技能skill/scripts/zhekk.py",
+      "bytes": 13755,
+      "sha256": "78a117af79aab6f0aef879097d4eee36fc88cca3f17ecf16dff1b5f7a5a5b7c9"
+    },
+    {
+      "src": "漏洞技能skill/tool-index.md",
+      "dst": "refs/漏洞技能skill/tool-index.md",
+      "bytes": 5158,
+      "sha256": "87b3589e4e9dcbb05afbead822b41a03bff93b75f1368d49b07f59473812e004"
+    },
+    {
+      "src": "refs/INDEX.md",
+      "dst": "refs/INDEX.md",
+      "bytes": 39591,
+      "sha256": "6a8743e7dbb659403b1a7dc166dfc53d010f9d8bad5e460e2612cb761ad53af8"
+    }
+  ],
+  "skipped": [],
+  "sanitized": [
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/code-injection.md",
+      "rules": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ],
+      "srcSha256": "178e9705851aa5fc7d4c3d59c43880bddbba613ceb74097fdd0409a86d7b2e3c",
+      "outSha256": "d2cd828d410f25e6d557ccd1bd0f1880423dd04dcb4ad8e01d376a9e8a84f52d"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/command-injection-generic.md",
+      "rules": [
+        {
+          "rule": "aws-key-id",
+          "count": 1
+        },
+        {
+          "rule": "aws-secret-access-key",
+          "count": 1
+        },
+        {
+          "rule": "aws-session-token",
+          "count": 1
+        }
+      ],
+      "srcSha256": "489276b34f2d0ba27ad9c5d395c75f773ef6ada09c3813510a26dc7db7907b7b",
+      "outSha256": "ff299d7ef94bd17edceed16b1d2741b6178dceed383ca26420bda9d7afc4d1a5"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/cross-site-scripting-xss-generic.md",
+      "rules": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ],
+      "srcSha256": "873e08745577d46e9bfd6fbd966f548988f255128dad4e0654cd70e95270164b",
+      "outSha256": "654834b0d4a432663c1fe6634db39d9912f76646a9e8468564b4aecb051b0e3f"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/cross-site-scripting-xss-stored.md",
+      "rules": [
+        {
+          "rule": "github-token",
+          "count": 3
+        }
+      ],
+      "srcSha256": "47535449f56fdff28dca2aee72988ead96115f99fd35ec05b4b3ca6a04bd2463",
+      "outSha256": "e203c43b5d23b60d9e25f700e1067c49d7032cd8f4e8697063e4f6dd2e72acaa"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-access-control-generic.md",
+      "rules": [
+        {
+          "rule": "google-api-key",
+          "count": 2
+        },
+        {
+          "rule": "jwt",
+          "count": 3
+        },
+        {
+          "rule": "salesforce-access-token",
+          "count": 4
+        },
+        {
+          "rule": "facebook-access-token",
+          "count": 1
+        }
+      ],
+      "srcSha256": "d52bc343d3d5b849d743ba31776ad53745ca2ebcac84e5dee7db4bd57241af90",
+      "outSha256": "f331ba0362e371bd6b6916c56a6bfeac3b3865631b1d70286a07eb3cc8f891e9"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-authentication-generic.md",
+      "rules": [
+        {
+          "rule": "jwt",
+          "count": 9
+        }
+      ],
+      "srcSha256": "c2dd1ffe0327d6212ca2cddb24bf35a019e57ac5c9e051bba7eeb84b720ade0e",
+      "outSha256": "939320f53ddacf1f51a304d50e646d3c77a4aefd68ca8c896620b493f1234b16"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-authorization.md",
+      "rules": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ],
+      "srcSha256": "5e5eea2daf87ade0fbb5d0339988dbc3094f20efdc23ee2b3225b0d27ec5e285",
+      "outSha256": "1ba0ecde9a5aa57c464f7cb2cc3a3de0ea18849e5aa0b29514c92182d439c9ba"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/improper-certificate-validation.md",
+      "rules": [
+        {
+          "rule": "private-key-block",
+          "count": 3
+        }
+      ],
+      "srcSha256": "6af5aefbbda427daf15827065624a0ec1016d51ca50ce1089cd4d522b38e6fcf",
+      "outSha256": "30817142dd684ca33888da8d6f00eef34e7fb4b85f8b99d006b9f3ef8c5ef4d3"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/insecure-storage-of-sensitive-information.md",
+      "rules": [
+        {
+          "rule": "google-api-key",
+          "count": 1
+        }
+      ],
+      "srcSha256": "43ff7d14775845234293ecbf630e314cba033795873bd9055e3fdf7f5ae6076a",
+      "outSha256": "d731cc0d9ab776bf256053863f1ad89494d3618bac35ebbd109cfa3a41d890a7"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/missing-encryption-of-sensitive-data.md",
+      "rules": [
+        {
+          "rule": "npm-auth-token",
+          "count": 1
+        }
+      ],
+      "srcSha256": "4959124e53d78560288c1cf7293461d23762c661652296edfba8cc83d354389e",
+      "outSha256": "f2aeb3a7f3c4eb34a29da26ba60f8a2e6d481d9ebef8603db102116ab331faa6"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/os-command-injection.md",
+      "rules": [
+        {
+          "rule": "github-token",
+          "count": 1
+        }
+      ],
+      "srcSha256": "9f23c470610c6df7c91f11b24d6b0c6d9cad4a04f14ea0558990b218b82b1312",
+      "outSha256": "8a0cc3baa84019f12e77ece72de8edacf88d6e7da0be143e08f37ae4495ec612"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/password-in-configuration-file.md",
+      "rules": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ],
+      "srcSha256": "e0174dcad587fbd6c9d89c9ca61ada67af1994b6c4f1ca50b32a84c97d45941a",
+      "outSha256": "d48f9fe098c9f9af777adc846039525dd4ff2716a1a7d4e662df25d6e53eb2f4"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/server-side-request-forgery-ssrf.md",
+      "rules": [
+        {
+          "rule": "aws-key-id",
+          "count": 1
+        },
+        {
+          "rule": "aws-secret-access-key",
+          "count": 1
+        },
+        {
+          "rule": "aws-session-token",
+          "count": 1
+        }
+      ],
+      "srcSha256": "3db189c4ba16606ea1d9244f216b13fb9a1b6245f044e0054bc73dd7d71258d3",
+      "outSha256": "98fd206b4c0479fa4aef5d8bd081095d22a3595fe73ec1494348af62aa48f182"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/sql-injection.md",
+      "rules": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ],
+      "srcSha256": "61dabd7ac10d7c162fa466d7103fbe8129a9c7bf4f0fbd4030dcb644ef20d6e5",
+      "outSha256": "862eeacfddd56c818aa47f14dfae7b47180ead9f7781958afa03dfc3a6277e47"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/uncontrolled-resource-consumption.md",
+      "rules": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ],
+      "srcSha256": "11a965945cffd82aca9f2891130c5f8473c56e70333c17b06772a00c0509c471",
+      "outSha256": "ab1804b7f8ff7a60ff184bd7b392ed8f04dcb0ddef7c474f1a6597b810d8e659"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/use-after-free.md",
+      "rules": [
+        {
+          "rule": "private-key-block",
+          "count": 1
+        }
+      ],
+      "srcSha256": "72ea98a6083b67095b2b6e41faeef75bb1a3d42439d3b60e29b325e75f0051a8",
+      "outSha256": "88fc93f0153e90d40083f2487be6cc49bc96d5fa59eb4d09915e74672b39b591"
+    },
+    {
+      "src": "漏洞技能skill/references/h1-reports/by-weakness/violation-of-secure-design-principles.md",
+      "rules": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ],
+      "srcSha256": "b27432f8bc9438eb10ca855169f64359378892c724ba5c008549714862f55230",
+      "outSha256": "8d4cdf134528f1e62110b3ef321a9dc5b95d0787c3ff0115cee09251d5645570"
+    },
+    {
+      "src": "漏洞技能skill/references/playbooks/oauth-saml-jwt/12-jwt.md",
+      "rules": [
+        {
+          "rule": "jwt",
+          "count": 1
+        }
+      ],
+      "srcSha256": "f17aa3df4555ccacf78899950288d62f9a9013e535f0dd13d99a229bdfbbc5ff",
+      "outSha256": "3e4eba67fa25a947f8b1867d66bc1431e2c07c14677fe4c8043b4a9da1318bd9"
+    }
+  ],
+  "counts": {
+    "copied": 321,
+    "skipped": 0,
+    "sanitized": 18
+  },
+  "bytes": 11112957,
+  "indexSha256": "6a5e6e4542d28b9c6ab2f433d90b2df06941334fa3e3dc941e1bae671b9ddc01",
+  "indexBytes": 2010
+}
