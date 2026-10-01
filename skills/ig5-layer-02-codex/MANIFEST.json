@@ -2101,1123 +2101,1123 @@
     },
     {
       "src": "wb-proxy/codex-skills/.system/imagegen/LICENSE.txt",
-      "dst": "refs/wb-proxy/codex-skills/.system/imagegen/LICENSE.txt",
+      "dst": "refs/wb-proxy/codex-system/imagegen/LICENSE.txt",
       "bytes": 10776,
       "sha256": "4dd13869245e356246a5b770723247bbb80a8f07a181d1d3d873a1734297cdb9"
     },
     {
       "src": "wb-proxy/codex-skills/.system/imagegen/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/imagegen/SKILL.md",
+      "dst": "refs/wb-proxy/codex-system/imagegen/SKILL.md",
       "bytes": 19201,
       "sha256": "681ddb4ad6d06a2acc78a3535b583f8d0c1ea800ecda3d56370d3310fd2cd4ba"
     },
     {
       "src": "wb-proxy/codex-skills/.system/imagegen/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/.system/imagegen/agents/openai.yaml",
+      "dst": "refs/wb-proxy/codex-system/imagegen/agents/openai.yaml",
       "bytes": 275,
       "sha256": "9ca574af14580dc7a2a3dc37a1796d17f93cb8850be66501f0799ef8603e9dc0"
     },
     {
       "src": "wb-proxy/codex-skills/.system/imagegen/references/cli.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/imagegen/references/cli.md",
+      "dst": "refs/wb-proxy/codex-system/imagegen/references/cli.md",
       "bytes": 9655,
       "sha256": "ecfc2e09261a0feb3482517a5fa0ff410cb7d1958e3cbd2ac6b61586f5b81405"
     },
     {
       "src": "wb-proxy/codex-skills/.system/imagegen/references/codex-network.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/imagegen/references/codex-network.md",
+      "dst": "refs/wb-proxy/codex-system/imagegen/references/codex-network.md",
       "bytes": 1779,
       "sha256": "c88298ca4481f6116a16fa7987434fc977f8b311c1bbc0c3d862ffd0c5981148"
     },
     {
       "src": "wb-proxy/codex-skills/.system/imagegen/references/image-api.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/imagegen/references/image-api.md",
+      "dst": "refs/wb-proxy/codex-system/imagegen/references/image-api.md",
       "bytes": 6072,
       "sha256": "dc975d7af8a4888967251a0276014b4a71ea30455294944b762256373ce3e569"
     },
     {
       "src": "wb-proxy/codex-skills/.system/imagegen/references/prompting.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/imagegen/references/prompting.md",
+      "dst": "refs/wb-proxy/codex-system/imagegen/references/prompting.md",
       "bytes": 8282,
       "sha256": "b210b051c775860267080941eba968212bf0ac7fce581d75c5dcc217d8293f8b"
     },
     {
       "src": "wb-proxy/codex-skills/.system/imagegen/references/sample-prompts.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/imagegen/references/sample-prompts.md",
+      "dst": "refs/wb-proxy/codex-system/imagegen/references/sample-prompts.md",
       "bytes": 17617,
       "sha256": "70474177d151855b175c6133de2aae1d90b7f146b0dab50ec830972c47d72183"
     },
     {
       "src": "wb-proxy/codex-skills/.system/imagegen/scripts/image_gen.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/imagegen/scripts/image_gen.py",
+      "dst": "refs/wb-proxy/codex-system/imagegen/scripts/image_gen.py",
       "bytes": 34667,
       "sha256": "b4345cf835e5b593b97df6bb2b70bda493b8a97eee4cabbc99b2fa57dba9b448"
     },
     {
       "src": "wb-proxy/codex-skills/.system/imagegen/scripts/remove_chroma_key.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/imagegen/scripts/remove_chroma_key.py",
+      "dst": "refs/wb-proxy/codex-system/imagegen/scripts/remove_chroma_key.py",
       "bytes": 13905,
       "sha256": "a5893c4bd04b21abced33731ea89d2ac428e81d92a0368eb18ffbe4fda5253e2"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/LICENSE.txt",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/LICENSE.txt",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/LICENSE.txt",
       "bytes": 10776,
       "sha256": "4dd13869245e356246a5b770723247bbb80a8f07a181d1d3d873a1734297cdb9"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/SKILL.md",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/SKILL.md",
       "bytes": 5446,
       "sha256": "7cb8fa1b2a0c635b5c61ffe1da7b8594a7ea0fce5b71e8d523e2025d88b2a05e"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/agents/openai.yaml",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/agents/openai.yaml",
       "bytes": 370,
       "sha256": "44b9efac6be1bae32d869aa2942fecbe4dcae82682ee03e4120f2f9b7d4658ec"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/references/codex-self-knowledge.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/references/codex-self-knowledge.md",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/references/codex-self-knowledge.md",
       "bytes": 7417,
       "sha256": "8c8fb00e6e5cb1977924f5164684a6095427fa828bbc765225f17d9aeb79a912"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/references/latest-model.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/references/latest-model.md",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/references/latest-model.md",
       "bytes": 2094,
       "sha256": "f25e351e522dd6e30e82d482f31f44c992e794b11031cdcb6ac7c0e6b20c9d5d"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/references/mcp-diagnostics.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/references/mcp-diagnostics.md",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/references/mcp-diagnostics.md",
       "bytes": 2318,
       "sha256": "49bbd2f73df7bbd7f86c80425dea4da2d301c22046080399a36bfc0ca49509e9"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/references/model-migration.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/references/model-migration.md",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/references/model-migration.md",
       "bytes": 5054,
       "sha256": "5f20c38fbbb10319767b216d91ba74bae49c68fc1bfd6d1abd7c9b4cc9cb9ab0"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/references/model-selection.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/references/model-selection.md",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/references/model-selection.md",
       "bytes": 1344,
       "sha256": "ba2d164abbca30435a460a0bc3a7d82398dce2bdf092705c98ba55b3f3af38a8"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/references/official-docs.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/references/official-docs.md",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/references/official-docs.md",
       "bytes": 3337,
       "sha256": "7962f2dce55089b93bde4115bb89fd42f20993c1597a2b13edd4956f463875b9"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/references/prompting-guide.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/references/prompting-guide.md",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/references/prompting-guide.md",
       "bytes": 15747,
       "sha256": "db913884cfe0fabf29bee1a139918f56e299decfa0a14d61c48596f23f76621d"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/references/upgrade-guide.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/references/upgrade-guide.md",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/references/upgrade-guide.md",
       "bytes": 1050,
       "sha256": "ed1b75a89b8ec4d67787774ef6c4e8b98eace16c63348f42e969e6ffa67cb656"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/references/upgrading-to-gpt-5p6-sol.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/references/upgrading-to-gpt-5p6-sol.md",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/references/upgrading-to-gpt-5p6-sol.md",
       "bytes": 23093,
       "sha256": "9a918a0c8dd051d574f2fd0309201afa8a9b9c08241c11ca1fb0ac2f4724e7ac"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/scripts/fetch-codex-manual.mjs",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/scripts/fetch-codex-manual.mjs",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/scripts/fetch-codex-manual.mjs",
       "bytes": 16085,
       "sha256": "f53eb6d2f286e9efcc397e8bee93a938e37296c90953e4e06e94899ef1b6c363"
     },
     {
       "src": "wb-proxy/codex-skills/.system/openai-docs/scripts/resolve-latest-model-info",
-      "dst": "refs/wb-proxy/codex-skills/.system/openai-docs/scripts/resolve-latest-model-info",
+      "dst": "refs/wb-proxy/codex-system/openai-docs/scripts/resolve-latest-model-info",
       "bytes": 1038,
       "sha256": "7354dbb030ca0736dd633a7ca1b930cf640abd40370725dea3a458cb51d49523"
     },
     {
       "src": "wb-proxy/codex-skills/.system/plugin-creator/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/plugin-creator/SKILL.md",
+      "dst": "refs/wb-proxy/codex-system/plugin-creator/SKILL.md",
       "bytes": 11467,
       "sha256": "71b95b8219644f95d633721e7f7cd3c469edfc8fe50f8415d400dfb2d74bc7b9"
     },
     {
       "src": "wb-proxy/codex-skills/.system/plugin-creator/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/.system/plugin-creator/agents/openai.yaml",
+      "dst": "refs/wb-proxy/codex-system/plugin-creator/agents/openai.yaml",
       "bytes": 339,
       "sha256": "fecaf35d692bd3d33d1a065648258d12e393afa9055d78adf6e57b42f4142f6d"
     },
     {
       "src": "wb-proxy/codex-skills/.system/plugin-creator/references/installing-and-updating.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/plugin-creator/references/installing-and-updating.md",
+      "dst": "refs/wb-proxy/codex-system/plugin-creator/references/installing-and-updating.md",
       "bytes": 6000,
       "sha256": "91c4781d48568fcc708b45566b08fb610ad1c88672720ae512f9525a1cf9cb20"
     },
     {
       "src": "wb-proxy/codex-skills/.system/plugin-creator/references/plugin-json-spec.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/plugin-creator/references/plugin-json-spec.md",
+      "dst": "refs/wb-proxy/codex-system/plugin-creator/references/plugin-json-spec.md",
       "bytes": 9179,
       "sha256": "eeb640130f69636affaa299d4170d5a7ae6a0ff978296ddf75c409ce6dd87b91"
     },
     {
       "src": "wb-proxy/codex-skills/.system/plugin-creator/scripts/create_basic_plugin.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/plugin-creator/scripts/create_basic_plugin.py",
+      "dst": "refs/wb-proxy/codex-system/plugin-creator/scripts/create_basic_plugin.py",
       "bytes": 11731,
       "sha256": "272cb14e02ad7c76ac40777443c49cfecfa333ee28ab7f6214210b72c8fd02ae"
     },
     {
       "src": "wb-proxy/codex-skills/.system/plugin-creator/scripts/identifier_validation.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/plugin-creator/scripts/identifier_validation.py",
+      "dst": "refs/wb-proxy/codex-system/plugin-creator/scripts/identifier_validation.py",
       "bytes": 784,
       "sha256": "a6d51ce4a9a7e8f85626ff5808a467a67574e7f8cdf1167ffb467c5f67e57223"
     },
     {
       "src": "wb-proxy/codex-skills/.system/plugin-creator/scripts/read_marketplace_name.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/plugin-creator/scripts/read_marketplace_name.py",
+      "dst": "refs/wb-proxy/codex-system/plugin-creator/scripts/read_marketplace_name.py",
       "bytes": 1644,
       "sha256": "ba24e6d91eed6f778bde022a967be335c6253983b5ecd1c5e30c8483385887fd"
     },
     {
       "src": "wb-proxy/codex-skills/.system/plugin-creator/scripts/update_plugin_cachebuster.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/plugin-creator/scripts/update_plugin_cachebuster.py",
+      "dst": "refs/wb-proxy/codex-system/plugin-creator/scripts/update_plugin_cachebuster.py",
       "bytes": 3045,
       "sha256": "6a630dfbdc2bca6952580da9c2c7ece08030926819ccd81d9deb518c24c1b0ed"
     },
     {
       "src": "wb-proxy/codex-skills/.system/plugin-creator/scripts/validate_plugin.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/plugin-creator/scripts/validate_plugin.py",
+      "dst": "refs/wb-proxy/codex-system/plugin-creator/scripts/validate_plugin.py",
       "bytes": 21739,
       "sha256": "f4eeadb733b28b0c3e714de263a76d6542866a672f3e99bdffcf4dbcdf85e944"
     },
     {
       "src": "wb-proxy/codex-skills/.system/review-agent/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/review-agent/SKILL.md",
+      "dst": "refs/wb-proxy/codex-system/review-agent/SKILL.md",
       "bytes": 2661,
       "sha256": "07079efd0dc76f05fade424e5dfb048dce1de2df7626e1a4f56292a4f3f92228"
     },
     {
       "src": "wb-proxy/codex-skills/.system/review-agent/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/.system/review-agent/agents/openai.yaml",
+      "dst": "refs/wb-proxy/codex-system/review-agent/agents/openai.yaml",
       "bytes": 252,
       "sha256": "4d867a46d15e36ac880176484aae160f59855340c6059b2ea6ab9fbc9af084de"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-creator/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-creator/SKILL.md",
+      "dst": "refs/wb-proxy/codex-system/skill-creator/SKILL.md",
       "bytes": 15311,
       "sha256": "6656e54755638e8efcf275a472b9672eaa8a9a1b9e59dc210e275b03b59e1e66"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-creator/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-creator/agents/openai.yaml",
+      "dst": "refs/wb-proxy/codex-system/skill-creator/agents/openai.yaml",
       "bytes": 183,
       "sha256": "d07d21b93fcf3d4dc8d9a3399c05fc226a49a333a96d3e1c68b451b8dd9eade6"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-creator/license.txt",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-creator/license.txt",
+      "dst": "refs/wb-proxy/codex-system/skill-creator/license.txt",
       "bytes": 11358,
       "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-creator/references/openai_yaml.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-creator/references/openai_yaml.md",
+      "dst": "refs/wb-proxy/codex-system/skill-creator/references/openai_yaml.md",
       "bytes": 2356,
       "sha256": "ffac39318e408108141d40f820968e59f70434a891694f9bf1d25be8237b150c"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-creator/scripts/generate_openai_yaml.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-creator/scripts/generate_openai_yaml.py",
+      "dst": "refs/wb-proxy/codex-system/skill-creator/scripts/generate_openai_yaml.py",
       "bytes": 6669,
       "sha256": "816df12072d74faf924d802a6599a139997e1441e90bfe4869ec304f2e5e2851"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-creator/scripts/init_skill.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-creator/scripts/init_skill.py",
+      "dst": "refs/wb-proxy/codex-system/skill-creator/scripts/init_skill.py",
       "bytes": 10314,
       "sha256": "bf0656a5f9d8d8cdecf0245eaf27e1df8e0e9b6d40ccdda814eb8e3d5f6992c8"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-creator/scripts/quick_validate.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-creator/scripts/quick_validate.py",
+      "dst": "refs/wb-proxy/codex-system/skill-creator/scripts/quick_validate.py",
       "bytes": 4249,
       "sha256": "ee6dba90f44d37171c5a6edb8095979c54919ff6822c1a907afca2e78c48738c"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-installer/LICENSE.txt",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-installer/LICENSE.txt",
+      "dst": "refs/wb-proxy/codex-system/skill-installer/LICENSE.txt",
       "bytes": 11358,
       "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-installer/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-installer/SKILL.md",
+      "dst": "refs/wb-proxy/codex-system/skill-installer/SKILL.md",
       "bytes": 3367,
       "sha256": "d68b77e5bbb34dedab89d134da52855f140fc4b4299b80104f534e3b9e98f8ee"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-installer/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-installer/agents/openai.yaml",
+      "dst": "refs/wb-proxy/codex-system/skill-installer/agents/openai.yaml",
       "bytes": 221,
       "sha256": "5ce223d8b1070b82c42298538f1b8d376f788eb9e7a42a987e8c094070d73f0e"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-installer/scripts/github_utils.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-installer/scripts/github_utils.py",
+      "dst": "refs/wb-proxy/codex-system/skill-installer/scripts/github_utils.py",
       "bytes": 659,
       "sha256": "61c1bbe2ae217433b4b6f9f09f21aca4df52c12598068343ade719f706e4859b"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-installer/scripts/install-skill-from-github.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-installer/scripts/install-skill-from-github.py",
+      "dst": "refs/wb-proxy/codex-system/skill-installer/scripts/install-skill-from-github.py",
       "bytes": 11917,
       "sha256": "38f311b75664bb063808f982c600271ebc4b560830f491705190f88a94e3e781"
     },
     {
       "src": "wb-proxy/codex-skills/.system/skill-installer/scripts/list-skills.py",
-      "dst": "refs/wb-proxy/codex-skills/.system/skill-installer/scripts/list-skills.py",
+      "dst": "refs/wb-proxy/codex-system/skill-installer/scripts/list-skills.py",
       "bytes": 2948,
       "sha256": "9d6dfb2abf3afeee7f027a89fb1626b918a973da18f4eb6c25681286301beb41"
     },
     {
       "src": "wb-proxy/codex-skills/adult-fiction/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/adult-fiction/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/adult-fiction/SKILL.md",
       "bytes": 495,
       "sha256": "40086555a9d14d7441dced17e43062429373d773820d8b78ce33f3308af3c29e"
     },
     {
       "src": "wb-proxy/codex-skills/anti-cheat/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/anti-cheat/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/anti-cheat/SKILL.md",
       "bytes": 40402,
       "sha256": "9a1a2c1de76aefa10953b6c34594d0852309e80e693b1a221130a36b8e468bc4"
     },
     {
       "src": "wb-proxy/codex-skills/api-security/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/api-security/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/api-security/SKILL.md",
       "bytes": 5050,
       "sha256": "8455d6a8fe563df7ee37855b8820792e5818a019c9f57ccaebb4ecced225a42f"
     },
     {
       "src": "wb-proxy/codex-skills/api-security/references/jwt-oauth-testing.md",
-      "dst": "refs/wb-proxy/codex-skills/api-security/references/jwt-oauth-testing.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/api-security/references/jwt-oauth-testing.md",
       "bytes": 2943,
       "sha256": "b9408e4026cbce626f340e4036dee66a1c8122a29473adbfffd1de65774b722f"
     },
     {
       "src": "wb-proxy/codex-skills/api-security/references/rest-graphql-testing.md",
-      "dst": "refs/wb-proxy/codex-skills/api-security/references/rest-graphql-testing.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/api-security/references/rest-graphql-testing.md",
       "bytes": 3296,
       "sha256": "0bb12f409e74104f89f96f53c57ca246677c447fe33e7ff887f0bae6dba8f7ea"
     },
     {
       "src": "wb-proxy/codex-skills/apk-reverse/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/apk-reverse/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/apk-reverse/SKILL.md",
       "bytes": 9568,
       "sha256": "188724d1bbebae183cbf76c33e5807c8167608050ba8cc42e677c9747a980753"
     },
     {
       "src": "wb-proxy/codex-skills/apk-reverse/references/android-advanced.md",
-      "dst": "refs/wb-proxy/codex-skills/apk-reverse/references/android-advanced.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/apk-reverse/references/android-advanced.md",
       "bytes": 10876,
       "sha256": "288ee482c6e208f7d395862efb22a3f49cca89fd0de44be65e913416bed921f4"
     },
     {
       "src": "wb-proxy/codex-skills/apk-reverse/references/apk-security-checklist.md",
-      "dst": "refs/wb-proxy/codex-skills/apk-reverse/references/apk-security-checklist.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/apk-reverse/references/apk-security-checklist.md",
       "bytes": 6979,
       "sha256": "025f8f710b16a4537ba6abc76b33353c863d101d2f395a10837b117c2fb4979c"
     },
     {
       "src": "wb-proxy/codex-skills/apk-reverse/references/frida-bypass-kit.md",
-      "dst": "refs/wb-proxy/codex-skills/apk-reverse/references/frida-bypass-kit.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/apk-reverse/references/frida-bypass-kit.md",
       "bytes": 2436,
       "sha256": "29c0ac239752b56f827524ae72ede7b2fc3bcb2cdf92069122d650969e5378e2"
     },
     {
       "src": "wb-proxy/codex-skills/apk-reverse/references/frida-cookbook.md",
-      "dst": "refs/wb-proxy/codex-skills/apk-reverse/references/frida-cookbook.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/apk-reverse/references/frida-cookbook.md",
       "bytes": 14149,
       "sha256": "4cc585cc34d94160c3e0efddc923b63c37553e14a74332471fa9dfe90a3fc2a0"
     },
     {
       "src": "wb-proxy/codex-skills/apk-reverse/scripts/decode.sh",
-      "dst": "refs/wb-proxy/codex-skills/apk-reverse/scripts/decode.sh",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/apk-reverse/scripts/decode.sh",
       "bytes": 4885,
       "sha256": "2fb6d214704dcb5e90f6b28024f1518f67164efa877eb3a57adb2345546d764a"
     },
     {
       "src": "wb-proxy/codex-skills/apk-reverse/scripts/frida-run.sh",
-      "dst": "refs/wb-proxy/codex-skills/apk-reverse/scripts/frida-run.sh",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/apk-reverse/scripts/frida-run.sh",
       "bytes": 4083,
       "sha256": "5c688817ae51a78760dfe256a9a4991166915b039b601407e40e3b4582c2a879"
     },
     {
       "src": "wb-proxy/codex-skills/apk-reverse/scripts/rebuild-sign-install.sh",
-      "dst": "refs/wb-proxy/codex-skills/apk-reverse/scripts/rebuild-sign-install.sh",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/apk-reverse/scripts/rebuild-sign-install.sh",
       "bytes": 6726,
       "sha256": "abd6d78a48706fbb7bf9247c9aff59bc50e587fff176c88c08ce7787c917250e"
     },
     {
       "src": "wb-proxy/codex-skills/attack-chain/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/attack-chain/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/attack-chain/SKILL.md",
       "bytes": 17550,
       "sha256": "2c33b2a68ea296ab4565d5f6c4e9f7b0edcab314676ebb337badc1a3ee6d8b46"
     },
     {
       "src": "wb-proxy/codex-skills/attack-chain/references/attack-playbooks.md",
-      "dst": "refs/wb-proxy/codex-skills/attack-chain/references/attack-playbooks.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/attack-chain/references/attack-playbooks.md",
       "bytes": 3674,
       "sha256": "0b9e70f95716ad170df35de90e00bee91b467cff8f07bdbaafe5d65dc7368f7a"
     },
     {
       "src": "wb-proxy/codex-skills/attack-chain/references/evasion-cheatsheet.md",
-      "dst": "refs/wb-proxy/codex-skills/attack-chain/references/evasion-cheatsheet.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/attack-chain/references/evasion-cheatsheet.md",
       "bytes": 4554,
       "sha256": "d39e5acad16732f5e9f4436c37afc2f3882aded82664694cffd60cc15eb4d247"
     },
     {
       "src": "wb-proxy/codex-skills/binary-analysis/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/binary-analysis/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/binary-analysis/SKILL.md",
       "bytes": 1321,
       "sha256": "04b9ffdd6f81055503e62250b6754dec7381c241593793b39dd816c3f1574d2c"
     },
     {
       "src": "wb-proxy/codex-skills/binary-diff/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/binary-diff/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/binary-diff/SKILL.md",
       "bytes": 11010,
       "sha256": "7545b6634faff0c058ea4b00a0e773b19d241d20ca3b6e0995b6f61d25c58f20"
     },
     {
       "src": "wb-proxy/codex-skills/binary-diff/references/prompt-template.md",
-      "dst": "refs/wb-proxy/codex-skills/binary-diff/references/prompt-template.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/binary-diff/references/prompt-template.md",
       "bytes": 4947,
       "sha256": "dd53b5a19b0722983332a88422528f4820c33aa05fce0fdfe168b05586f8ba2c"
     },
     {
       "src": "wb-proxy/codex-skills/border-crossing/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/border-crossing/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/border-crossing/SKILL.md",
       "bytes": 673,
       "sha256": "af65c33bf167a8b1036fcb8bc3e866f12d137a3a2d726611f0580c4747b1ba4d"
     },
     {
       "src": "wb-proxy/codex-skills/crack-keygen/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/crack-keygen/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/crack-keygen/SKILL.md",
       "bytes": 763,
       "sha256": "3a62efdff5f8e7a9ca0128d2e9bc2f44d2b0bea743026a0eb78a9a46ff767271"
     },
     {
       "src": "wb-proxy/codex-skills/dma-attack/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/dma-attack/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/dma-attack/SKILL.md",
       "bytes": 70835,
       "sha256": "4c6f8ee00a516d47af9a3d4de6d2f28a5668bb600d846871e13451381b4c0265"
     },
     {
       "src": "wb-proxy/codex-skills/dotnet-reverse/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/dotnet-reverse/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/dotnet-reverse/SKILL.md",
       "bytes": 8673,
       "sha256": "74745e4c4877139eed07fa60e3dea65877005abbe2cda45d83b26266eaf609e4"
     },
     {
       "src": "wb-proxy/codex-skills/dotnet-reverse/references/common-workflow.md",
-      "dst": "refs/wb-proxy/codex-skills/dotnet-reverse/references/common-workflow.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/dotnet-reverse/references/common-workflow.md",
       "bytes": 6785,
       "sha256": "2da25776e246b65d9ef4d5104a3a17f40c8587e29f633a1d00bb91d561da48a7"
     },
     {
       "src": "wb-proxy/codex-skills/dotnet-reverse/references/obfuscators.md",
-      "dst": "refs/wb-proxy/codex-skills/dotnet-reverse/references/obfuscators.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/dotnet-reverse/references/obfuscators.md",
       "bytes": 5808,
       "sha256": "7e62af27d2aa4eabbe5489d6eafa35ca0e796f9e622b85b6eb7affc3f5c42dfe"
     },
     {
       "src": "wb-proxy/codex-skills/dotnet-reverse/references/sharp-tools.md",
-      "dst": "refs/wb-proxy/codex-skills/dotnet-reverse/references/sharp-tools.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/dotnet-reverse/references/sharp-tools.md",
       "bytes": 6499,
       "sha256": "085a7627bddd3ec074c9bd8884a3779f3f37749aeee26cf79dd56d53d719ba67"
     },
     {
       "src": "wb-proxy/codex-skills/dsl-vm-reverse/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/dsl-vm-reverse/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/dsl-vm-reverse/SKILL.md",
       "bytes": 11277,
       "sha256": "b425d39dd46320add1c77a1712d25adbe7a76caba2f506786b74d42c114e4967"
     },
     {
       "src": "wb-proxy/codex-skills/dynamic-instrumentation/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/dynamic-instrumentation/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/dynamic-instrumentation/SKILL.md",
       "bytes": 1162,
       "sha256": "1409fe21f37b5a32a7495b39206a5d201cdb56b6b937e613fec7dd524de97e31"
     },
     {
       "src": "wb-proxy/codex-skills/edr-bypass-re/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/edr-bypass-re/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/edr-bypass-re/SKILL.md",
       "bytes": 8579,
       "sha256": "fb157c9ab040eea42faeb98385337fc158437c77c2dc9dfdba242aea89a7a681"
     },
     {
       "src": "wb-proxy/codex-skills/edr-bypass-re/references/hook-survey.md",
-      "dst": "refs/wb-proxy/codex-skills/edr-bypass-re/references/hook-survey.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/edr-bypass-re/references/hook-survey.md",
       "bytes": 9504,
       "sha256": "3df173964cd01c9861721e3a2eba72ef87571296408f9cfc0ce9ae26187bf643"
     },
     {
       "src": "wb-proxy/codex-skills/edr-bypass-re/references/telemetry-blinding.md",
-      "dst": "refs/wb-proxy/codex-skills/edr-bypass-re/references/telemetry-blinding.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/edr-bypass-re/references/telemetry-blinding.md",
       "bytes": 12605,
       "sha256": "6b186bc985bdbdac6cf023adaed877cd015728a3743433fe39744684a3c6085b"
     },
     {
       "src": "wb-proxy/codex-skills/edr-bypass-re/references/unhook-techniques.md",
-      "dst": "refs/wb-proxy/codex-skills/edr-bypass-re/references/unhook-techniques.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/edr-bypass-re/references/unhook-techniques.md",
       "bytes": 11010,
       "sha256": "4037f9222e0db518a81545ffdea2b1d180bff42426fa144a355557365232bfdf"
     },
     {
       "src": "wb-proxy/codex-skills/finance-movement/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/finance-movement/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/finance-movement/SKILL.md",
       "bytes": 727,
       "sha256": "ea319faeee36f8d9f86fce9b2ab10d42a5272f6795de5131c7cde3bfe77e3ab4"
     },
     {
       "src": "wb-proxy/codex-skills/firmware-pentest/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/firmware-pentest/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/firmware-pentest/SKILL.md",
       "bytes": 11819,
       "sha256": "facb2f6f96cc44fa38bbb40a84978cd6ca37829fba3539ac66e125823444ed7b"
     },
     {
       "src": "wb-proxy/codex-skills/firmware-pentest/references/emba-automated-analysis.md",
-      "dst": "refs/wb-proxy/codex-skills/firmware-pentest/references/emba-automated-analysis.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/firmware-pentest/references/emba-automated-analysis.md",
       "bytes": 6483,
       "sha256": "fa4a933cb9920b259d4399cd9aa3dac569ca8b818291c179e5854803f0cc08f9"
     },
     {
       "src": "wb-proxy/codex-skills/firmware-pentest/references/emulation-and-fuzz.md",
-      "dst": "refs/wb-proxy/codex-skills/firmware-pentest/references/emulation-and-fuzz.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/firmware-pentest/references/emulation-and-fuzz.md",
       "bytes": 8770,
       "sha256": "e5760bb6c7b48fb561226163f6642c528afed3ba79ee62f412e3482bff4447c3"
     },
     {
       "src": "wb-proxy/codex-skills/firmware-pentest/references/extraction-methodology.md",
-      "dst": "refs/wb-proxy/codex-skills/firmware-pentest/references/extraction-methodology.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/firmware-pentest/references/extraction-methodology.md",
       "bytes": 6933,
       "sha256": "218610a581207c91d49b4cfb8280ae0b4fb8c1e33fa945b87f9c679e0daac61b"
     },
     {
       "src": "wb-proxy/codex-skills/full-crack/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/full-crack/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/full-crack/SKILL.md",
       "bytes": 618,
       "sha256": "e929c240594455918aff9a24c417f8bc96841ffbcea64959237cde56d0979f01"
     },
     {
       "src": "wb-proxy/codex-skills/full-pentest/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/full-pentest/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/full-pentest/SKILL.md",
       "bytes": 715,
       "sha256": "2ed78a42b23f7a26f2871421f5e0473a614f922007ca82bb33f4bfad4d8dddb2"
     },
     {
       "src": "wb-proxy/codex-skills/game-cheat/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/game-cheat/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/game-cheat/SKILL.md",
       "bytes": 819,
       "sha256": "a76454e48c8e1da3e28c8c45f5a8b58b44e2407d53a71bfaf24dbf46be22e7d8"
     },
     {
       "src": "wb-proxy/codex-skills/game-engine/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/game-engine/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/game-engine/SKILL.md",
       "bytes": 10082,
       "sha256": "d96dc41e8a276258e465692694b056d996301be9944598185e7f3d55bb2d77d1"
     },
     {
       "src": "wb-proxy/codex-skills/game-hacking/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/game-hacking/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/game-hacking/SKILL.md",
       "bytes": 27847,
       "sha256": "858b9583c0115206dd19d42d30209ec30b76d1aea967e445e0dc0619cab50c75"
     },
     {
       "src": "wb-proxy/codex-skills/graphics-api/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/graphics-api/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/graphics-api/SKILL.md",
       "bytes": 15091,
       "sha256": "ca6521798b0c965cc5bc768662106cb756dca4cef6a5507802186c2c8b34a6eb"
     },
     {
       "src": "wb-proxy/codex-skills/ida-reverse/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/ida-reverse/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/ida-reverse/SKILL.md",
       "bytes": 14727,
       "sha256": "50aec45e51f8f513525b935ce35c9dcd4519ea6ccb4bc9656fa7ac1e87f1ddf7"
     },
     {
       "src": "wb-proxy/codex-skills/ida-reverse/references/ida-mcp-cheatsheet.md",
-      "dst": "refs/wb-proxy/codex-skills/ida-reverse/references/ida-mcp-cheatsheet.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/ida-reverse/references/ida-mcp-cheatsheet.md",
       "bytes": 11063,
       "sha256": "a7c3855aaab12b596920b4810aba3a7a666e37c762e4262b22de01998a159fe9"
     },
     {
       "src": "wb-proxy/codex-skills/identity-docs/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/identity-docs/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/identity-docs/SKILL.md",
       "bytes": 693,
       "sha256": "8f133218138d0c4c3ac06cbb4e6437786cb6612a2e3405c80b34fe11f0ea6263"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/SKILL.md",
       "bytes": 7897,
       "sha256": "b8afb62975a11c9b1533b5d8487d3b717366fb47ca026fe761edf29e3c4b635e"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/references/ast-deobfuscation.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/references/ast-deobfuscation.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/references/ast-deobfuscation.md",
       "bytes": 146,
       "sha256": "f17674b425049e38b11d50123793d0658602e9614cca7882fa6ca193f8090081"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/references/automation-entry.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/references/automation-entry.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/references/automation-entry.md",
       "bytes": 498,
       "sha256": "74f04e1b434bb4dd716328db52825eef7bf14c4709965a42ca0a4b19338ea4e4"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/references/env-patching.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/references/env-patching.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/references/env-patching.md",
       "bytes": 232,
       "sha256": "86d099755acaf104c9d83966cc11746b6e8378db66c75e546b5f106e6117afb5"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/references/fallbacks.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/references/fallbacks.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/references/fallbacks.md",
       "bytes": 235,
       "sha256": "4a29d01fcc2c79b15df353b8f93ef9cd26d57a4dedff66d4170eeb23e0fa4696"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/references/instrumentation.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/references/instrumentation.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/references/instrumentation.md",
       "bytes": 198,
       "sha256": "04306264d4403a7091f3c9910fdaf575557699496fe5bbde6c9ac96313116d61"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/references/local-rebuild.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/references/local-rebuild.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/references/local-rebuild.md",
       "bytes": 295,
       "sha256": "64819623a0dad7104220cd7c71dd171cb6cc38a59d59b15974fc7df3c3bbc26f"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/references/mcp-task-template.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/references/mcp-task-template.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/references/mcp-task-template.md",
       "bytes": 408,
       "sha256": "80ea1f87d1a9719d04d98fafcfe355e23984f49a32c88aadfea4b2ccdf6a0f00"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/references/node-env-rebuild.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/references/node-env-rebuild.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/references/node-env-rebuild.md",
       "bytes": 191,
       "sha256": "68edef32e61396d6278bdde500c702b7627dd944b88985032c68fff844019027"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/references/output-contract.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/references/output-contract.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/references/output-contract.md",
       "bytes": 258,
       "sha256": "318818bbde547fa2c91c621b7ec7d50b9f6b585953949ae6709d8da0693116e6"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/references/task-artifacts.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/references/task-artifacts.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/references/task-artifacts.md",
       "bytes": 221,
       "sha256": "d798a89acb2526316a155918e4a1063d6b88993b7119329abaa3f8c7ced7ba39"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/references/task-input-template.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/references/task-input-template.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/references/task-input-template.md",
       "bytes": 165,
       "sha256": "286631de3aa4a8767404a3231c633c756e08798084fa145e42d1630106a0dc03"
     },
     {
       "src": "wb-proxy/codex-skills/js-reverse/references/tool-defaults.md",
-      "dst": "refs/wb-proxy/codex-skills/js-reverse/references/tool-defaults.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/js-reverse/references/tool-defaults.md",
       "bytes": 406,
       "sha256": "bb8f97f71bad3bd6a10265ac846b2fed5fc7c28da60344ab565b9bd903474af3"
     },
     {
       "src": "wb-proxy/codex-skills/mobile-competitive-game-security/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/mobile-competitive-game-security/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/mobile-competitive-game-security/SKILL.md",
       "bytes": 5947,
       "sha256": "27f30fd190625aa11d6b34b14a4fbde58b5dd6569ccea2ebaa284e2a7c4821cb"
     },
     {
       "src": "wb-proxy/codex-skills/mobile-competitive-game-security/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/mobile-competitive-game-security/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/mobile-competitive-game-security/agents/openai.yaml",
       "bytes": 352,
       "sha256": "478aceb63d39b2e1c365b878a70e8c02459b2a938d257a16db0bea4f9b41c250"
     },
     {
       "src": "wb-proxy/codex-skills/mobile-competitive-game-security/references/playbook.md",
-      "dst": "refs/wb-proxy/codex-skills/mobile-competitive-game-security/references/playbook.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/mobile-competitive-game-security/references/playbook.md",
       "bytes": 3679,
       "sha256": "09fd882a46a5e9b6f97032cfc9e1640dd50ea6dea7f17f8841d304a93169dc63"
     },
     {
       "src": "wb-proxy/codex-skills/mobile-competitive-game-security/scripts/new_case.py",
-      "dst": "refs/wb-proxy/codex-skills/mobile-competitive-game-security/scripts/new_case.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/mobile-competitive-game-security/scripts/new_case.py",
       "bytes": 3299,
       "sha256": "792ea71ea017f432766261391ff0a717ba9fbad5048d870142236c9f33afb506"
     },
     {
       "src": "wb-proxy/codex-skills/mobile-reverse/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/mobile-reverse/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/mobile-reverse/SKILL.md",
       "bytes": 5541,
       "sha256": "031fda9557166f91520628a864ac316ea98035c85085d44bc749eebd763713f9"
     },
     {
       "src": "wb-proxy/codex-skills/mobile-reverse/references/anti-detection-bypass.md",
-      "dst": "refs/wb-proxy/codex-skills/mobile-reverse/references/anti-detection-bypass.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/mobile-reverse/references/anti-detection-bypass.md",
       "bytes": 5579,
       "sha256": "41cc64e54cad6f920ddbf6f88c98da4bc6d0bad2989f6c78f08dc4d3b82a03c2"
     },
     {
       "src": "wb-proxy/codex-skills/mobile-reverse/references/frida-objection-deep.md",
-      "dst": "refs/wb-proxy/codex-skills/mobile-reverse/references/frida-objection-deep.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/mobile-reverse/references/frida-objection-deep.md",
       "bytes": 6213,
       "sha256": "73d3f22ead0cf6da134550fb7e4023abe177c1c86ecd075bf95515c1803f2d46"
     },
     {
       "src": "wb-proxy/codex-skills/mobile-reverse/references/ios-reverse-guide.md",
-      "dst": "refs/wb-proxy/codex-skills/mobile-reverse/references/ios-reverse-guide.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/mobile-reverse/references/ios-reverse-guide.md",
       "bytes": 5351,
       "sha256": "737b28e598257713677404613c55af5fd2def40caa3bd101d3328d14e6b1a62d"
     },
     {
       "src": "wb-proxy/codex-skills/mobile-security/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/mobile-security/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/mobile-security/SKILL.md",
       "bytes": 16285,
       "sha256": "0228cdebbd101a0842fda816824ca276b45d02cdeb809f31807afb668706f953"
     },
     {
       "src": "wb-proxy/codex-skills/network-pentest/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/network-pentest/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/network-pentest/SKILL.md",
       "bytes": 815,
       "sha256": "06435bc5a89b2df290398d1015fea4118f1544db66fe59ed6eaf1a6559b8cc45"
     },
     {
       "src": "wb-proxy/codex-skills/patch-diff-exploit/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/patch-diff-exploit/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/patch-diff-exploit/SKILL.md",
       "bytes": 12046,
       "sha256": "28420468ebd16ea6c585967ebeae53e4721d7c24c547fa7cd661a4964cea3f8d"
     },
     {
       "src": "wb-proxy/codex-skills/patch-diff-exploit/references/diff-tools-comparison.md",
-      "dst": "refs/wb-proxy/codex-skills/patch-diff-exploit/references/diff-tools-comparison.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/patch-diff-exploit/references/diff-tools-comparison.md",
       "bytes": 8482,
       "sha256": "e72cbaa32d76283f5739238e3b66e7b143194b940f44be146ad7624c335ac0cd"
     },
     {
       "src": "wb-proxy/codex-skills/patch-diff-exploit/references/patch-tuesday-workflow.md",
-      "dst": "refs/wb-proxy/codex-skills/patch-diff-exploit/references/patch-tuesday-workflow.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/patch-diff-exploit/references/patch-tuesday-workflow.md",
       "bytes": 8936,
       "sha256": "d486f45cecd4fb7705b9d3cf329e2b83207315bbbe46998d606f6e68b5aceb86"
     },
     {
       "src": "wb-proxy/codex-skills/patch-diff-exploit/references/root-cause-and-poc.md",
-      "dst": "refs/wb-proxy/codex-skills/patch-diff-exploit/references/root-cause-and-poc.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/patch-diff-exploit/references/root-cause-and-poc.md",
       "bytes": 5263,
       "sha256": "9fee53c914412252e4a61c8183a0471c0451be062f984df559ee25af183ccf5a"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/SKILL.md",
       "bytes": 10446,
       "sha256": "38ec21a1f90f9bb476e87b91d4dccde9ffd128100797b5da4019c7d22f1b3969"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/payloads/README.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/payloads/README.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/payloads/README.md",
       "bytes": 1088,
       "sha256": "44aacce292577dac49f7ef7ed26f095f0dd768d57d268e101d7389f7e132592b"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/references/ai-pentest-agents.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/references/ai-pentest-agents.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/references/ai-pentest-agents.md",
       "bytes": 6171,
       "sha256": "84b2913a52354265b91e92aa7097a8c7c1b8aa0512f485daa1960cec78990921"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/references/ai-pentesting-landscape-2026.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/references/ai-pentesting-landscape-2026.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/references/ai-pentesting-landscape-2026.md",
       "bytes": 3503,
       "sha256": "649c8665835b084e4398a4ed5a3735606cc50b1c5d4b86e2a210fed477ecf645"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/references/automation-loop-pattern.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/references/automation-loop-pattern.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/references/automation-loop-pattern.md",
       "bytes": 5346,
       "sha256": "256f99caa7b65efb6246e5286ccc2425e957e4bfd323fb59c4b30b114dc4283e"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/references/awesome-pentest-digest.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/references/awesome-pentest-digest.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/references/awesome-pentest-digest.md",
       "bytes": 6090,
       "sha256": "7d11cc879edb426cded0ab75c59942ae8049809de5ae6e909927fa9d3f4aad5b"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/references/burpsuite-mcp-guide.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/references/burpsuite-mcp-guide.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/references/burpsuite-mcp-guide.md",
       "bytes": 29198,
       "sha256": "2519889efb35e18dc4924757bffa07ebc4b7a5f5bd994b32e716e7050b9be129"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/references/kali-mcp-ecosystem.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/references/kali-mcp-ecosystem.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/references/kali-mcp-ecosystem.md",
       "bytes": 4527,
       "sha256": "7b20dc3ba37aaa642231c9dee7a0afa3c4347cecb7336dfdfa0b4e97123e1650"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/references/msf-protocol.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/references/msf-protocol.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/references/msf-protocol.md",
       "bytes": 6042,
       "sha256": "e5d0c0b5a1b55d98ed2903cea45500ccb0fc7099beb920a2ad0fb0d2a598c40c"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/references/network-attack-defense.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/references/network-attack-defense.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/references/network-attack-defense.md",
       "bytes": 10119,
       "sha256": "3bccbb98b195bc0b5a1dd92869af65660b4dd2d493e30c432381b9831dc71f8c"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/references/nuclei-guide-2026.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/references/nuclei-guide-2026.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/references/nuclei-guide-2026.md",
       "bytes": 4070,
       "sha256": "479d866711e880dd66460369f010baeee0a8caaceb71d18fcb7f2ebff171c333"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/references/pentest-ai-agents-matrix.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/references/pentest-ai-agents-matrix.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/references/pentest-ai-agents-matrix.md",
       "bytes": 5074,
       "sha256": "caebe2d2b65825d7e2c3298cffdad96eb66c6a273740653c97a85d99bf19a9bb"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/references/pentest-loop.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/references/pentest-loop.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/references/pentest-loop.md",
       "bytes": 6719,
       "sha256": "dcbaccf3318fd968058639b2de4f435a5b9e8f1878b0b819c0f7dfe359aa1af6"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/references/web-attack-cheatsheet.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/references/web-attack-cheatsheet.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/references/web-attack-cheatsheet.md",
       "bytes": 7700,
       "sha256": "fc8decb8ae27d5dfbb510109c22cdea9c2e02b438177d476d847ec11849f3e53"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/.claude-plugin/marketplace.json",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/.claude-plugin/marketplace.json",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/.claude-plugin/marketplace.json",
       "bytes": 1068,
       "sha256": "83044119a36c5d7369a2d56778ef73c5890e4dd0699083c696c1b8da09d6eb65"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/.gitignore",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/.gitignore",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/.gitignore",
       "bytes": 164,
       "sha256": "0df5a67344714a94ff6cd961b24374d5e1547e833c5d00a4e23a48cb0acaceec"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/LICENSE",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/LICENSE",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/LICENSE",
       "bytes": 1067,
       "sha256": "5b02fedc65e661a7818e303a1e4680927ed5afa636c491b3bdf7d33f41f9f908"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/README.en.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/README.en.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/README.en.md",
       "bytes": 6292,
       "sha256": "acaffdea03855d5bb8313bb55d16019d7b8decd81f28e59b7fa08f5a5327dba6"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/README.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/README.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/README.md",
       "bytes": 6373,
       "sha256": "fcb508ea86de61ebc9afb2f9bb508b1531971331be52a0f04b80d0e2931566fd"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/SKILL.md",
       "bytes": 10824,
       "sha256": "d58714c8b36bbf3ad59a4d86e03cbcf1b6eca07ea6677340fea743a8d8339892"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/.gitkeep",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/.gitkeep",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/.gitkeep",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/dictionaries/00-index.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/dictionaries/00-index.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/dictionaries/00-index.md",
       "bytes": 2288,
       "sha256": "b6237b3f65ff4b43c97a7df12d5ea30f8c8f49c7429f9fbafa0f5b982fecb586"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/dictionaries/chinese-srcfingerprints.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/dictionaries/chinese-srcfingerprints.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/dictionaries/chinese-srcfingerprints.md",
       "bytes": 14875,
       "sha256": "b029599c86b9a69c93eae8cd97bb8217a95ce10267bcb273fbf48b92827e79b6"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/dictionaries/default-credentials-cn.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/dictionaries/default-credentials-cn.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/dictionaries/default-credentials-cn.md",
       "bytes": 10137,
       "sha256": "65cbf20d7613944358e365152b3bc40cd8c8a0256411c9e464717ad4146e5d9f"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/industry/00-index.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/industry/00-index.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/industry/00-index.md",
       "bytes": 2763,
       "sha256": "b5df0cf51d43570e24bf69ee9ac417137134cb2144d2344cf57a1e1caeff82bd"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/industry/banking-finance.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/industry/banking-finance.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/industry/banking-finance.md",
       "bytes": 14934,
       "sha256": "6a362481f7074c71c487ac436108cf58ed7564ea3ff10519154bc6cd032afbd7"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/industry/telecom-isp.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/industry/telecom-isp.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/industry/telecom-isp.md",
       "bytes": 11793,
       "sha256": "4142907b7d8999ecef1abd42044fa00b5bdf133c337c97cead31eb00499a733d"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/methodology/00-index.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/methodology/00-index.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/methodology/00-index.md",
       "bytes": 2942,
       "sha256": "28fbb4b5d9ac798f104ef9e4dd0366f830de59d45afa9229bed4dd59a1c6b71a"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/methodology/01-attack-priority.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/methodology/01-attack-priority.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/methodology/01-attack-priority.md",
       "bytes": 6628,
       "sha256": "a79cece936041a110da6c8fb613ffbb1f6571861c2ee70528c2fb83d8f27145f"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/methodology/02-bypass-toolkit.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/methodology/02-bypass-toolkit.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/methodology/02-bypass-toolkit.md",
       "bytes": 11617,
       "sha256": "195e0147d816b80fa81ccd46942e79dbda1b463c442ece03143af30f0004dc55"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/methodology/03-evidence-discipline.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/methodology/03-evidence-discipline.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/methodology/03-evidence-discipline.md",
       "bytes": 7548,
       "sha256": "a132926f8529c1de23ff7bcf797a357c48b4edd515cc6067a7383e72038e767d"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/methodology/04-control-gap-hunting.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/methodology/04-control-gap-hunting.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/methodology/04-control-gap-hunting.md",
       "bytes": 9332,
       "sha256": "d6674c1c586e1352849bf7be7d1cd58fd43873f9bf6601961001918dc1acc9b8"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/methodology/05-srctimebox-priority.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/methodology/05-srctimebox-priority.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/methodology/05-srctimebox-priority.md",
       "bytes": 7914,
       "sha256": "d305fabc822db4948280eb2e8874041acd0ad3e6b75df162768907a7db705d12"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/adcs攻击.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/adcs攻击.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/intranet/adcs攻击.md",
       "bytes": 6300,
       "sha256": "49764e95a2e121899961b1915794f9264d095343b471bca97d5317d020ed0020"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/exchange攻击.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/exchange攻击.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/intranet/exchange攻击.md",
       "bytes": 5659,
       "sha256": "cf4caee522f21c3ba61b32d5d6f12194238bf52b8b17ae339eb2c83adcbb626b"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/sharepoint攻击.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/sharepoint攻击.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/intranet/sharepoint攻击.md",
       "bytes": 2538,
       "sha256": "7b70d23bb9f9513f01d168fa32a3905c064f82479c22a586f4c01693693efeeb"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/信息收集.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/信息收集.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/intranet/信息收集.md",
       "bytes": 21992,
       "sha256": "5acfd461329ca663c7ce13e21f7ba842a628baeb9ab228ed32f3087dd07c716e"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/免杀与规�_md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/免杀与规�_md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/intranet/免杀与规�_md",
       "bytes": 18728,
       "sha256": "2485e619ad92861fd0b5679cb7379b3080940aacac7faa370c80792d92dd970b"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/凭证窃取.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/凭证窃取.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/intranet/凭证窃取.md",
       "bytes": 34990,
       "sha256": "1342b24a3495cacb5a5b52cdcb651d57ca63acae27d308ced93e116957589d14"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/域渗透攻�_md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/域渗透攻�_md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/intranet/域渗透攻�_md",
       "bytes": 18402,
       "sha256": "d17eca3e9f70bd57f5b402b354c3fa7f0f819c45cad5172900d85ce3de9fac53"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/权限提升.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/权限提升.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/intranet/权限提升.md",
       "bytes": 21645,
       "sha256": "35b9e8b08920b1bc3bdc10383d30d486da23ac32c6041bc8ee38cfad2f07bf8b"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/权限维持.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/权限维持.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/intranet/权限维持.md",
       "bytes": 13966,
       "sha256": "b7e706d1fd458c22ecda66b0a864c756c14668f6e447e4278ee93f404723309b"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/横向移动.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/横向移动.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/intranet/横向移动.md",
       "bytes": 21333,
       "sha256": "f5a021ef61469f424a1a7657f74cb5769040fa00fd83420d2cafdc961bb1b96a"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/隧道代理.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/intranet/隧道代理.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/intranet/隧道代理.md",
       "bytes": 12848,
       "sha256": "f6d800b30cc8082bdd0229823cbd993ea52740dfeed622753fd31798537ccfa7"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/ai安全.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/ai安全.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/ai安全.md",
       "bytes": 32146,
       "sha256": "f46fe80c1d6bad523eab76a3617513d6805f29e590945bfe32ff00b5f1c4f205"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/api安全.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/api安全.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/api安全.md",
       "bytes": 46143,
       "sha256": "7e6f3250a870cc70a92ac487d1dde3ffdfbe843f9ed6aaaefd1dcec5f9bc2bbd"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/csrf跨站请求伪�_md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/csrf跨站请求伪�_md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/csrf跨站请求伪�_md",
       "bytes": 24175,
       "sha256": "902e611ac1e94675d16d9504942ded4d4ffac5e0b38c91aa64f2f6e68dcdb136"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/jwt安全.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/jwt安全.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/jwt安全.md",
       "bytes": 20046,
       "sha256": "ca8a4e5c96b617bf63d679aaf2173efe81c3b93e554e5f4dae69d8cf61fba93b"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/lfi-rfi文件包含.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/lfi-rfi文件包含.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/lfi-rfi文件包含.md",
       "bytes": 35915,
       "sha256": "8f3027b8f0e4f804883199186af7beb9c9e5c27fd511094ec1bbe4b00c0e9da5"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/rce远程代码执行.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/rce远程代码执行.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/rce远程代码执行.md",
       "bytes": 38561,
       "sha256": "3c3f90ed64fce28b1a4c1447cc06488d0f4fd79235e466a9f1a77fd07732f19a"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/sql-nosql注入.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/sql-nosql注入.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/sql-nosql注入.md",
       "bytes": 63081,
       "sha256": "54c8bc04c2e76f4387a284b28ee6ecbeee15f4fd93a2d762af0974197dc444bd"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/ssrf服务端请求伪�_md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/ssrf服务端请求伪�_md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/ssrf服务端请求伪�_md",
       "bytes": 37718,
       "sha256": "cb1d17bd8a8e7d55b64d1c6fa42c9cbf61d709f14666241d5045e97cdb793d4a"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/ssti模板注入.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/ssti模板注入.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/ssti模板注入.md",
       "bytes": 32069,
       "sha256": "87795a61c8b447afb6149dca45d8b4e03611a08628c3ab6544e298be550a7413"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/websocket安全.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/websocket安全.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/websocket安全.md",
       "bytes": 20566,
       "sha256": "d09ac8509f7860073fe077090024a6d48341a1b4db56050df428f8902beede48"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/xss跨站脚本.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/xss跨站脚本.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/xss跨站脚本.md",
       "bytes": 44495,
       "sha256": "166768b82fb8167234371b6de8ffa70a397b5894590f9d575e8ed2e2f12c828e"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/xxe实体注入.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/xxe实体注入.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/xxe实体注入.md",
       "bytes": 24876,
       "sha256": "15033e2cfc27f9e13e519bd919b887cc942b6ad306794ccf5f3409786aba9163"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/业务逻辑漏洞.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/业务逻辑漏洞.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/业务逻辑漏洞.md",
       "bytes": 25356,
       "sha256": "4979c6c25cfc88ce0a1f742a275d852a1c7231a922a67018a99be2d6fca423db"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/云安全漏�_md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/云安全漏�_md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/云安全漏�_md",
       "bytes": 26941,
       "sha256": "06227cb4d026e2c2df16d2bb010349180cc69e2f68f9646edacdc935b18a8723"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/供应链攻�_md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/供应链攻�_md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/供应链攻�_md",
       "bytes": 17846,
       "sha256": "f7acc4df83c0b406475c343df09324834dcbeb86589269b1d4517275f7fd3dc6"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/原型链污�_md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/原型链污�_md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/原型链污�_md",
       "bytes": 19091,
       "sha256": "8d74c1d9dbb503deb2af11a4eec5f55083ff35e51c2eec1a7d8d32e276fc4631"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/开放重定向.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/开放重定向.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/开放重定向.md",
       "bytes": 13962,
       "sha256": "da3ba98d03006743f88d94aef8abb630b2f2049937c1ce9ce2a1413ec1680453"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/文件漏洞.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/文件漏洞.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/文件漏洞.md",
       "bytes": 47961,
       "sha256": "0236fc2822eaeb293c320045989f7d8468640fd0e22576c1c07e07217ef40121"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/框架漏洞.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/框架漏洞.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/框架漏洞.md",
       "bytes": 68771,
       "sha256": "27c4743dc671f2ae9441d87f809a64f8978cfdaeeaa940f632c23937160f1c3c"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/点击劫持.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/点击劫持.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/点击劫持.md",
       "bytes": 14007,
       "sha256": "449736c9a519b0949861d2be912192875f0afc9a350bbe5e8fa041e7619ea862"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/缓存与cdn安全.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/缓存与cdn安全.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/缓存与cdn安全.md",
       "bytes": 17318,
       "sha256": "e6bf45fb9851dfcaba9aa8417cbabddf0f771aeee265c38a8de96a409303b67c"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/认证漏洞.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/认证漏洞.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/认证漏洞.md",
       "bytes": 64953,
       "sha256": "26af2ca90727e4ae16cecf99e391fe2bed296a3f83e0dc781d73a14c978fa10c",
       "srcBytes": 65060,
@@ -3231,31 +3231,31 @@
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/请求走私.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/by-category/web/请求走私.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/by-category/web/请求走私.md",
       "bytes": 22425,
       "sha256": "c5b9c665f23e3a2f2dcd5f78f81595774406f1ecdb5d041599db2842f1e63c84"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/index.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/index.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/index.md",
       "bytes": 4847,
       "sha256": "f783daa4aed80f5dc35b4d93de537a6aab91599e2d2e00dd3faad6eb46d8671b"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/raw/navigation.json",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/raw/navigation.json",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/raw/navigation.json",
       "bytes": 156130,
       "sha256": "ffcb11d359554d2e8dd6f35d5121cf52ef4d26f0484fb9d5f30ff1058cd63971"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/raw/tools.json",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/raw/tools.json",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/raw/tools.json",
       "bytes": 173565,
       "sha256": "4cec9f217c270c13aa341ab73d4a74b63ba685bb8a5437c7e6533663d55041e0"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/raw/web.json",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/raw/web.json",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/raw/web.json",
       "bytes": 1147823,
       "sha256": "05c1c9ee205c54d129ad95f41057cc1e9263b463839a16ca76d233dddd24474f",
       "srcBytes": 1147930,
@@ -3269,163 +3269,163 @@
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/web渗�_md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/web渗�_md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/web渗�_md",
       "bytes": 12908,
       "sha256": "39a2bbbfca07402744b4fa5ccb68ee925bc3e7bbe805dadedc09b17bac454489"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/windows渗�_md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/windows渗�_md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/windows渗�_md",
       "bytes": 2084,
       "sha256": "6bebbdfb5877ff550d2786f276ce8de29bc1bfef8c0a017d25bb3b193193e8a9"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/信息收集.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/信息收集.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/信息收集.md",
       "bytes": 15474,
       "sha256": "c038c60912649e4a71e76f34168e744bcfe7ba50fc72f0475dc66afc3775bfaf"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/内网渗�_md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/内网渗�_md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/内网渗�_md",
       "bytes": 15296,
       "sha256": "91b16a15984e7595ac1ae0281d7061638f54b2f272341f9041bc182832d88369"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/凭证窃取.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/凭证窃取.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/凭证窃取.md",
       "bytes": 2757,
       "sha256": "e9b7796010790258e403e3f034918dcfd67fa86e83843b56c0f69b668d2f402d"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/域渗�_md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/域渗�_md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/域渗�_md",
       "bytes": 883,
       "sha256": "8da38326c4a4cfc5d451141ec68242e067199366010e135101caaf65f6ce461d"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/密码攻击.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/密码攻击.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/密码攻击.md",
       "bytes": 9355,
       "sha256": "d2586e92d896fcd39fb70f4c317b643bbcccc9243d485094481dfbc9e7ab9cd3"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/权限提升.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/权限提升.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/权限提升.md",
       "bytes": 2148,
       "sha256": "758c0337ef26cb7df26f16023b29c6c54498e5a36cbf190a3d9fdf3a06cb724e"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/漏洞利用.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/漏洞利用.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/漏洞利用.md",
       "bytes": 9572,
       "sha256": "f5e490d5f35ce24a68f284e2cb4db3fee75dffb9b39d4ee6d3ba368f43706ae5"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/系统命令.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/系统命令.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/系统命令.md",
       "bytes": 7906,
       "sha256": "5da09ab4d320b19fc3c7f2137753ceb7791b81f70f7e391313ddbb644bc86b27"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/红队工具.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/红队工具.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/红队工具.md",
       "bytes": 799,
       "sha256": "d50bc7bbaf879cdad7f96619e1c178b2dab3f4af0cc42b77afb4d05dadc2c07e"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/编码解码.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/编码解码.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/编码解码.md",
       "bytes": 4673,
       "sha256": "b9da8bd5126c5f681ad7aaa7446b826c5405dfb15fe0a464a4985ae534e05ed1"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/隧道代理.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/tools/隧道代理.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/tools/隧道代理.md",
       "bytes": 1122,
       "sha256": "cf2842df7b97c820a513c27f5cb7f2b99c2376b376364cd4398ca699f586101d"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/waf-bypass.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/payloader/waf-bypass.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/payloader/waf-bypass.md",
       "bytes": 173699,
       "sha256": "5326e47314e8ba9ecf1af57b199cd36a20b18d3d485dbba327750cca58666008"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/00-index.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/00-index.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/00-index.md",
       "bytes": 2733,
       "sha256": "7dff850138018018b112518a447a089d75e2eb7a37c08c94680a78b7eb76afed"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/api-rest.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/api-rest.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/api-rest.md",
       "bytes": 46247,
       "sha256": "559270ce29945cb1b3c536291c3a7e8936d2e3483e0728b1349ad33fbb21916d"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/arbitrary-x-authz.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/arbitrary-x-authz.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/arbitrary-x-authz.md",
       "bytes": 20645,
       "sha256": "acbb62c6c1d993f1a628d88deb04c11dc384127aed6f190043f3bc0f9aacdfab"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/dos.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/dos.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/dos.md",
       "bytes": 29273,
       "sha256": "2781bd6bf3c1eff6681329ef89e012d977065570711904715902c69e6c522bc1"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/file-upload.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/file-upload.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/file-upload.md",
       "bytes": 45395,
       "sha256": "babfafeacae9c1ac38ae81053a7654ed136941d34313750fc2b5e94f50cb9c62"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/graphql.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/graphql.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/graphql.md",
       "bytes": 5579,
       "sha256": "7a7dab374f1c308ae2246de7e7f126c7dfb03a4aea1ba5e3ab57b9712d367b0d"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/http-smuggling.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/http-smuggling.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/http-smuggling.md",
       "bytes": 21608,
       "sha256": "82ff4bf6104fb3cb4628c33a6ec57e49d2dcb5c00024507675b1bfcd03ffa692"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/info-disclosure.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/info-disclosure.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/info-disclosure.md",
       "bytes": 16309,
       "sha256": "357adaaf6a090473ac21a971fbb76f976a915e6a3c6925303a79ce1b39c984ad"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/intranet-postexp.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/intranet-postexp.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/intranet-postexp.md",
       "bytes": 110128,
       "sha256": "73d9532614a19f9a76d2087dca92cd67731bc8788779c0588c3a727b57ef4931"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/llm-prompt-injection.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/llm-prompt-injection.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/llm-prompt-injection.md",
       "bytes": 56256,
       "sha256": "1fed65ba5a008ea28c4c87f3278eeda50e03d50cd24cac77be7760811b5114b6"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/logic-flaws.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/logic-flaws.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/logic-flaws.md",
       "bytes": 52043,
       "sha256": "ddf5c43fed0d04058e71b663683860dd4b11fa2983230ca6025b374b0d631e13"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/mobile.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/mobile.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/mobile.md",
       "bytes": 13868,
       "sha256": "a56cd6ecd0472f0c1689c299f21ae056ae0c27a32b6cbde0a854f2e45ac3588e"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/oauth-saml-jwt.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/oauth-saml-jwt.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/oauth-saml-jwt.md",
       "bytes": 78948,
       "sha256": "11ad8e52395af79e1e1bb4ad52f2751dda96211aa01657cf42b1469166c9578f",
       "srcBytes": 79055,
@@ -3439,1015 +3439,1015 @@
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/path-traversal.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/path-traversal.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/path-traversal.md",
       "bytes": 32685,
       "sha256": "f98da7c3f908dc4320193b728319bbd59528b87899ab785400d70378660e72e0"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/race-conditions.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/race-conditions.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/race-conditions.md",
       "bytes": 7308,
       "sha256": "7436049e4d5b106a7a8c176bfc0619f1a447764b99d5bc73b021a254dbf63988"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/rce.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/rce.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/rce.md",
       "bytes": 123372,
       "sha256": "7d096c7ad9567e3485bf1720fd7ad17a9a53096a8970de4fdb8d8000df09ed8a"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/sqli.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/sqli.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/sqli.md",
       "bytes": 45461,
       "sha256": "ce3de87afb9969dc0db0891e03a305c2d3e6ac7bd3ce5a75db1f676de6bdf8dd"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/ssrf-cache-host.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/ssrf-cache-host.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/ssrf-cache-host.md",
       "bytes": 63015,
       "sha256": "e8db89cf04375decd7c108b96a83e99aca488b92e336d82ec1c676c6eec50f03"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/unauth-access.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/unauth-access.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/unauth-access.md",
       "bytes": 14277,
       "sha256": "bb5b99cdbb790a1aa4f3fd5f2105c91f69b6c88c9629e037a554113716325069"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/xss.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/playbooks/xss.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/playbooks/xss.md",
       "bytes": 30690,
       "sha256": "55ba9203b7b8ff399a6eee96ed27edb4327fe1ce0e2ed9c9a6dbb6147883da74"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/templates/report-submission.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/templates/report-submission.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/templates/report-submission.md",
       "bytes": 9822,
       "sha256": "c8d5e2e23f326afc23d4bebe59ec8f37df2f07c24178beac8a432f184c340a4f"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/src-hunter/references/tools/mcp-jshook.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/src-hunter/references/tools/mcp-jshook.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/src-hunter/references/tools/mcp-jshook.md",
       "bytes": 16085,
       "sha256": "7d4e9a5b263456c74a93352ae5a358d7e3b2069c6a2a77ba06c3cc65c3a03196"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/templates/findings.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/templates/findings.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/templates/findings.md",
       "bytes": 328,
       "sha256": "02b399601d0b0aaf4410f551af26178a9c639d2b3c45e75a97a630e7c21459ca"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/templates/progress.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/templates/progress.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/templates/progress.md",
       "bytes": 242,
       "sha256": "87bfc12dc4c4b9f5e9d87e1996d69bb706c7298402b9e6378e9f7128ed877aea"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/templates/rules.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/templates/rules.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/templates/rules.md",
       "bytes": 722,
       "sha256": "fb3c9f1e8c8495c6cab57a2646c259051203356739bd0fc2ce6f6675918a41e6"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/templates/scope.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/templates/scope.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/templates/scope.md",
       "bytes": 422,
       "sha256": "98209d49af001151050594dcbb069b7c9d7612e5ae3227d9aca4d66e7c4db1fe"
     },
     {
       "src": "wb-proxy/codex-skills/pentest-tools/templates/task_plan.md",
-      "dst": "refs/wb-proxy/codex-skills/pentest-tools/templates/task_plan.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pentest-tools/templates/task_plan.md",
       "bytes": 543,
       "sha256": "0d8eb4de9040534f3be9a39f37d7915d627bc2dc17f243402dbd9803fb8303d3"
     },
     {
       "src": "wb-proxy/codex-skills/phishing-kit/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/phishing-kit/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/phishing-kit/SKILL.md",
       "bytes": 696,
       "sha256": "90e7b3c146ef273208a03281832d60236a5ad8bb3c89b88c373a00adb3b1007f"
     },
     {
       "src": "wb-proxy/codex-skills/pipeline-renderer/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/pipeline-renderer/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pipeline-renderer/SKILL.md",
       "bytes": 1172,
       "sha256": "34a039c14060e6746d31b581546e0dd57f1e71a5f5f73556ca53a23e4ce5d40e"
     },
     {
       "src": "wb-proxy/codex-skills/politics-history/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/politics-history/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/politics-history/SKILL.md",
       "bytes": 464,
       "sha256": "c81a334f838bff501a232f963f2c3e91b91001d609d0ad0831812ad5a07f7229"
     },
     {
       "src": "wb-proxy/codex-skills/protocol-reverse-engineering/LICENSE",
-      "dst": "refs/wb-proxy/codex-skills/protocol-reverse-engineering/LICENSE",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/protocol-reverse-engineering/LICENSE",
       "bytes": 1068,
       "sha256": "8ceaab71b527eb5db43810b74afc618ee36556197d2d51c45fd00aac483988c1"
     },
     {
       "src": "wb-proxy/codex-skills/protocol-reverse-engineering/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/protocol-reverse-engineering/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/protocol-reverse-engineering/SKILL.md",
       "bytes": 12642,
       "sha256": "7cb9a778de5c67edebc0cf8ec935b9ff8e33df48df54efe5c75c71da515faee9"
     },
     {
       "src": "wb-proxy/codex-skills/protocol-reversing/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/protocol-reversing/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/protocol-reversing/SKILL.md",
       "bytes": 1072,
       "sha256": "32f2f7b608e88f63efcf046541faa2a91c9d599bb12f9dca0985f138c4885f5d"
     },
     {
       "src": "wb-proxy/codex-skills/pwn-chain/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/pwn-chain/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pwn-chain/SKILL.md",
       "bytes": 8970,
       "sha256": "85856f433bb9b8e8f2fa03d27ed3ed38fffb9ed0d34c7a83198824ecd5b1e017"
     },
     {
       "src": "wb-proxy/codex-skills/pwn-chain/references/heap-pwn.md",
-      "dst": "refs/wb-proxy/codex-skills/pwn-chain/references/heap-pwn.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pwn-chain/references/heap-pwn.md",
       "bytes": 9193,
       "sha256": "61ff066fffe69d7a3bb828fae6899a636d5a05cfe0874c56fa178a5018ebda0a"
     },
     {
       "src": "wb-proxy/codex-skills/pwn-chain/references/kernel-pwn.md",
-      "dst": "refs/wb-proxy/codex-skills/pwn-chain/references/kernel-pwn.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pwn-chain/references/kernel-pwn.md",
       "bytes": 12241,
       "sha256": "cbb8cfa41ca06e8b616e252c0078692d88c09e6f3c7da05833ee633159a83524"
     },
     {
       "src": "wb-proxy/codex-skills/pwn-chain/references/stack-pwn.md",
-      "dst": "refs/wb-proxy/codex-skills/pwn-chain/references/stack-pwn.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/pwn-chain/references/stack-pwn.md",
       "bytes": 8823,
       "sha256": "a342605f4c10048d62a9ff25321453d26a3ce397b7c10adde00964881a4cabcd"
     },
     {
       "src": "wb-proxy/codex-skills/radare2/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/radare2/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/radare2/SKILL.md",
       "bytes": 10434,
       "sha256": "cb1a10a1b1437a8206b75ec2653d74b64ae189d22df517adaecffa1727a701a7"
     },
     {
       "src": "wb-proxy/codex-skills/radare2/references/cheatsheet.md",
-      "dst": "refs/wb-proxy/codex-skills/radare2/references/cheatsheet.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/radare2/references/cheatsheet.md",
       "bytes": 885,
       "sha256": "4da88a15c80c242aa8abf6fe2d9b39e39021bad95055c1fc896541c4961035cb"
     },
     {
       "src": "wb-proxy/codex-skills/radare2/scripts/recon.sh",
-      "dst": "refs/wb-proxy/codex-skills/radare2/scripts/recon.sh",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/radare2/scripts/recon.sh",
       "bytes": 2993,
       "sha256": "2f3d5292f958e84796b4213ae1d9e18d3becc0092a7379735596d10e398a058f"
     },
     {
       "src": "wb-proxy/codex-skills/rei-fallback/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/rei-fallback/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/rei-fallback/SKILL.md",
       "bytes": 407,
       "sha256": "c7601d64250d31b4bd7c46d5812ba9f2e149207285bb273f60013c978503287d"
     },
     {
       "src": "wb-proxy/codex-skills/research-rigor/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/research-rigor/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/research-rigor/SKILL.md",
       "bytes": 8447,
       "sha256": "8071fee846bb2cd4f1973a8df18bbef78df74f0a186b03ca94197a925321ff2d"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/SKILL.md",
       "bytes": 12310,
       "sha256": "b81183a550be8a982076f7f922ace88f1a345396385b327fad612dd13d72bebd"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/anti-analysis.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/anti-analysis.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/anti-analysis.md",
       "bytes": 28164,
       "sha256": "373adf2216047ab9c25fbfa4ac807ec3883e7e211e1c8b5ccce3974439098f81"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/awesome-re-resources.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/awesome-re-resources.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/awesome-re-resources.md",
       "bytes": 6510,
       "sha256": "58cc6e32781cc9ea8f8e499bf2dc78a4d91b1fd41e784dad0424dc4f2ace4826"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/crypto-decode-tools.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/crypto-decode-tools.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/crypto-decode-tools.md",
       "bytes": 6848,
       "sha256": "9438b47a09288d0826bb4021cbb1e753290f874456f5609d10589287216ade17"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/elf-analysis.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/elf-analysis.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/elf-analysis.md",
       "bytes": 8618,
       "sha256": "71ce8375e31194215b11c52ce7736669d2487fd44d2e1a2608e21a6ded14acc4"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/field-notes.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/field-notes.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/field-notes.md",
       "bytes": 39126,
       "sha256": "5b8babff28cd632732923812068a6583dd789a581d82084b39c4e03fc8ec5017"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/go-reverse.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/go-reverse.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/go-reverse.md",
       "bytes": 7250,
       "sha256": "75e9060c4f6dd341c7c5f2f33a5c1fbccb21cd2ab2265833ebc5368856631041"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/kernel-driver-reverse.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/kernel-driver-reverse.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/kernel-driver-reverse.md",
       "bytes": 10220,
       "sha256": "566f681ebd518434123cba917667802e5cf75cc23289fe5418ab2e0766cdfe48"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/languages-compiled.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/languages-compiled.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/languages-compiled.md",
       "bytes": 21665,
       "sha256": "04e149671060ca2469e07760f0f7af05d21304e6006835fec6acb7f62360e377"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/languages-platforms.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/languages-platforms.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/languages-platforms.md",
       "bytes": 23470,
       "sha256": "67b6d6bb199c0eb69488ffb5f1b514c7103cb0656804cf599f3978439bf9bbf7"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/languages.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/languages.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/languages.md",
       "bytes": 20549,
       "sha256": "ba8e9c8f8df9351e9e85243574b8e2b0724e19e63d0f796294b0eef166f78b6d"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/patterns-ctf-2.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/patterns-ctf-2.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/patterns-ctf-2.md",
       "bytes": 19220,
       "sha256": "8d3b7d1fde1cd0917641877f2d39c6c2c9621859a4da426c39ebe6be2ec240ad"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/patterns-ctf-3.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/patterns-ctf-3.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/patterns-ctf-3.md",
       "bytes": 34672,
       "sha256": "76cfa06f01a4e8ed5cc91d1942c59aa65e70171989cd0064cd92b55961e0e716"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/patterns-ctf.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/patterns-ctf.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/patterns-ctf.md",
       "bytes": 24249,
       "sha256": "41edf048db36c3cb6ab1264f226df920adfa27923844a9ec5b40664ffe655c27"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/patterns.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/patterns.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/patterns.md",
       "bytes": 29980,
       "sha256": "be64443fcbd3d83d4a4f30ee4947310014a9bb0a26aace1126fd9a29ceb6b9c3"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/platforms-hardware.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/platforms-hardware.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/platforms-hardware.md",
       "bytes": 11148,
       "sha256": "123b5cc066bc09d7cd25312347aec79acd4476d8cec154ae951432f97912d2dc"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/platforms.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/platforms.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/platforms.md",
       "bytes": 14279,
       "sha256": "a0d87958d7430f7bb7095703340a359f0f8b102760ea0a0381fe48534acdaa48"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/references/ai-assisted-re.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/references/ai-assisted-re.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/references/ai-assisted-re.md",
       "bytes": 4782,
       "sha256": "f8fabe6926483dd9eae681e85edf2584856b5950054f7318b53230ca4dbd3cb2"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/references/ollvm-deobfuscation.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/references/ollvm-deobfuscation.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/references/ollvm-deobfuscation.md",
       "bytes": 23426,
       "sha256": "9bc48a802ec429ad1d7a1b097581c3c4988581576c6ef68e4e16f60e4b5afeed"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/tools-advanced.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/tools-advanced.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/tools-advanced.md",
       "bytes": 26517,
       "sha256": "4368bf13d9028c09e414885962f97601015229659f149ea6de3a941aba97a452"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/tools-dynamic.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/tools-dynamic.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/tools-dynamic.md",
       "bytes": 29969,
       "sha256": "c8b082d9be576e0811b2ef0bf192784ff2d04798cd0b8da437e019dbf8a45d04"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering/tools.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering/tools.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering/tools.md",
       "bytes": 14720,
       "sha256": "212701fca9bd636c8d07fdca6765f99138014d7d59b25abe3458739387193f60"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering-api/CHANGELOG.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering-api/CHANGELOG.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering-api/CHANGELOG.md",
       "bytes": 1258,
       "sha256": "5899fb87d3c6981a4de6bed4553950886a900441eecf9d43505e60ae86b57dbf"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering-api/LICENSE",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering-api/LICENSE",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering-api/LICENSE",
       "bytes": 1066,
       "sha256": "05b4c6033716d2f2c5e427a9ecc7ccb78d6d041bc303473cb6cd48197e8c4112"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering-api/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering-api/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering-api/SKILL.md",
       "bytes": 9438,
       "sha256": "45ab2fa3572d1b83c35e8278d7b5512c3790ff7a37e1239fe47ed0b1e8d8b403"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering-api/references/AUTH_PATTERNS.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering-api/references/AUTH_PATTERNS.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering-api/references/AUTH_PATTERNS.md",
       "bytes": 15265,
       "sha256": "d99d67f3338eb17d5c0bb0a4caf349edeb48095fdcb6d567571532fc524f53f1"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering-api/references/HAR_ANALYSIS.md",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering-api/references/HAR_ANALYSIS.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering-api/references/HAR_ANALYSIS.md",
       "bytes": 9225,
       "sha256": "3448ef5dc975d449d121b16089bc7f95238b9ce4d43c7ab28691e1e047d2775a"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering-api/scripts/har_analyze.py",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering-api/scripts/har_analyze.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering-api/scripts/har_analyze.py",
       "bytes": 17497,
       "sha256": "d26a4210c91e7a4e5012be9b4bae1211f8aa9147cbab073e8b84a4c2ab3fac31"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering-api/scripts/har_filter.py",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering-api/scripts/har_filter.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering-api/scripts/har_filter.py",
       "bytes": 10569,
       "sha256": "dee3b6e43dda1834d096c6548aab856ca86cf85d71bbb5af344bbbeb10d2f7b3"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering-api/scripts/har_utils.py",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering-api/scripts/har_utils.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering-api/scripts/har_utils.py",
       "bytes": 9674,
       "sha256": "b44dfcd98608d6c73450dde13c62bb56fc7fe2b06f1b5206c67301e7772fc11e"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering-api/scripts/har_validate.py",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering-api/scripts/har_validate.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering-api/scripts/har_validate.py",
       "bytes": 13046,
       "sha256": "f76b1c1e3dc10e10679e1cc1a054560bcc638ad90422794db3133969f5fd0cb5"
     },
     {
       "src": "wb-proxy/codex-skills/reverse-engineering-api/templates/api_client.py",
-      "dst": "refs/wb-proxy/codex-skills/reverse-engineering-api/templates/api_client.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/reverse-engineering-api/templates/api_client.py",
       "bytes": 13496,
       "sha256": "8f478b269aa9ee9dc9aa9fd4809ce6461fb855711e2b153cd1834b89ef9b76bb"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-anticheat/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-anticheat/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-anticheat/SKILL.md",
       "bytes": 3478,
       "sha256": "e0498d1d9c7837b1283d156d52a772751e20ab3802d0039064787f8f86b17165"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-anticheat/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-anticheat/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-anticheat/agents/openai.yaml",
       "bytes": 119,
       "sha256": "ff2773c46a3f639a5f14a5109cfc6988d919e84ade51b423679f08c8a3e9760c"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-anticheat/references/ace-mihoyo-surface.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-anticheat/references/ace-mihoyo-surface.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-anticheat/references/ace-mihoyo-surface.md",
       "bytes": 1192,
       "sha256": "ddd9cc1990b21705c258c93d84245c4b88ca5c04bfe5546e8ba97ae528600fb0"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-anticheat/references/force-start-templates.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-anticheat/references/force-start-templates.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-anticheat/references/force-start-templates.md",
       "bytes": 541,
       "sha256": "72b5d31a7adbf0971c573372f3c49f02a2d656571b02b7823e46c0ba963084dc"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-anticheat/scripts/new_hsr_lab.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-anticheat/scripts/new_hsr_lab.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-anticheat/scripts/new_hsr_lab.py",
       "bytes": 1574,
       "sha256": "6a7a2ed40cbf1d15ef1ff7e672fa28a7ac17c4af7d2eedac099f16b2c9051a47"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-auto-ops/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-auto-ops/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-auto-ops/SKILL.md",
       "bytes": 9730,
       "sha256": "35479aa30bfdca180f437ab4f7a3ddab439b80d1dcfc0e9ffa5c88045966b660"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-auto-ops/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-auto-ops/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-auto-ops/agents/openai.yaml",
       "bytes": 270,
       "sha256": "c90836acd7895cf1cd010713756ccf07bae2154c032d6a3ce854700b8277977d"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-auto-ops/references/execution-continuity.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-auto-ops/references/execution-continuity.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-auto-ops/references/execution-continuity.md",
       "bytes": 3033,
       "sha256": "f220753769245e1dd2074d15579a741f161417bc4157de0b036c089fbca8d48f"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-evasion/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-evasion/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-evasion/SKILL.md",
       "bytes": 3015,
       "sha256": "097fed3920a1e474b64f3876fd9c849e06ad404f90a02f7696856b8d9fd967bd"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-evasion/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-evasion/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-evasion/agents/openai.yaml",
       "bytes": 272,
       "sha256": "1b156a50c0e6edeacedc506bee50e06a7d25a78b1fdde94737f6375af27187ac"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-evasion/references/behavioral-bypass.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-evasion/references/behavioral-bypass.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-evasion/references/behavioral-bypass.md",
       "bytes": 2796,
       "sha256": "1a2d627a1479770513306c693e030c767194f85ead28abec10997258cf29a0f4"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-evasion/references/defense-audit.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-evasion/references/defense-audit.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-evasion/references/defense-audit.md",
       "bytes": 2962,
       "sha256": "c8868a92122dc5c34f561b5ad3417829afc04185a4e4bd19218ab042a5e6b0af"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-evasion/references/shellcode.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-evasion/references/shellcode.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-evasion/references/shellcode.md",
       "bytes": 2695,
       "sha256": "5dc4196f5a4c3dc0c601dbbb6de7508430ae840d4a9d7d4436b35fe163a1a65c"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-evasion/references/signature-bypass.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-evasion/references/signature-bypass.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-evasion/references/signature-bypass.md",
       "bytes": 2343,
       "sha256": "ef0e903925421c84638704ac68ada1375c81442a1a832508f33b16613222cd01"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-evasion/scripts/detect_profile.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-evasion/scripts/detect_profile.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-evasion/scripts/detect_profile.py",
       "bytes": 3485,
       "sha256": "8b30070b78b525d4ac3c5ca5d1a923419f92542044a12bac809e22a5b0182c4d"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-exploit/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-exploit/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-exploit/SKILL.md",
       "bytes": 2151,
       "sha256": "4f2ccc0e9294b9b00e22eacd10165bdaac5b629137da783afbabfd077335dc82"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-exploit/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-exploit/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-exploit/agents/openai.yaml",
       "bytes": 277,
       "sha256": "690171d2e98e3e2781b5c6588cddaa57544b23e6b92bbb8131da51466f76b881"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-exploit/references/heap.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-exploit/references/heap.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-exploit/references/heap.md",
       "bytes": 2061,
       "sha256": "b2191782db19a1aa503da6e10a9af9785117b52982910e75bd73d49b3cfd92b8"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-exploit/references/kernel.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-exploit/references/kernel.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-exploit/references/kernel.md",
       "bytes": 2995,
       "sha256": "d4692788d553296e7384a1c8b68f6fa0094f166143798fd5c9419c042605123c"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-exploit/references/sandbox.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-exploit/references/sandbox.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-exploit/references/sandbox.md",
       "bytes": 2745,
       "sha256": "ed027fc5e72d06ff4580c97028617c6853057e101a7f0c24a583b5c1ec0c6a82"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-exploit/references/stack-rop.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-exploit/references/stack-rop.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-exploit/references/stack-rop.md",
       "bytes": 1925,
       "sha256": "835f36e09b343306b4a388b63ef4220efa9f7fb9aa957177512cfece56c21223"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-exploit/scripts/triage_crash.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-exploit/scripts/triage_crash.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-exploit/scripts/triage_crash.py",
       "bytes": 1878,
       "sha256": "fec95811c41f91cb1716906e7ca3102029a1abbc633590ad707dba6b3f8dad35"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-hack/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-hack/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-hack/SKILL.md",
       "bytes": 4715,
       "sha256": "f386048d70b2182980d4ae5c79fa3a04984a3ecd855357dae2a97bc98ab75aa3"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-hack/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-hack/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-hack/agents/openai.yaml",
       "bytes": 282,
       "sha256": "4f0f50c862306f16752a505e4f3ea006b0c7706850608b94074703ed0257081c"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-hack/references/aimbot.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-hack/references/aimbot.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-hack/references/aimbot.md",
       "bytes": 3196,
       "sha256": "4d86169cacd381f24ea829b6436785a91d617ecd5b1e55a9b27ebfb2cd03c9a9"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-hack/references/anticheat-bypass.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-hack/references/anticheat-bypass.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-hack/references/anticheat-bypass.md",
       "bytes": 2705,
       "sha256": "677f6d3d396de2818032cfdfc23ee9534985af0bc240789bde204bf3cde7f02c"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-hack/references/entity-memory.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-hack/references/entity-memory.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-hack/references/entity-memory.md",
       "bytes": 2593,
       "sha256": "b3f6ca7e23c70559a6cceba61e27aa1f69c967bafec3cff8ade76eedb4b6421b"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-hack/references/w2s-overlay.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-hack/references/w2s-overlay.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-hack/references/w2s-overlay.md",
       "bytes": 3162,
       "sha256": "f3114c7d30c49278ceda95346ee1eb5645c7d554ec5ba5dc49363d4dbe8e4c19"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-hack/references/zzy-game-tech-extract.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-hack/references/zzy-game-tech-extract.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-hack/references/zzy-game-tech-extract.md",
       "bytes": 52211,
       "sha256": "78f024543c692a675197f662debf40dfb6c2939286b32aa547ed14175a95e204"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-hack/scripts/find_offsets.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-hack/scripts/find_offsets.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-hack/scripts/find_offsets.py",
       "bytes": 2148,
       "sha256": "a1c8a0dba338677ed58c9e3534623069ac6f3d9156eea6b6497d65431ae5c89c"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-redteam/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-redteam/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-redteam/SKILL.md",
       "bytes": 2624,
       "sha256": "13aa115332d206daffa0fdbfbfaafab658e1df6f037139f4c34db22c21c576a0"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-redteam/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-redteam/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-redteam/agents/openai.yaml",
       "bytes": 123,
       "sha256": "c7d1e364f9510260123dcd265b2b715dfd60d7928b4ab089561a26cb354497ec"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-redteam/references/ace-esp-pipeline.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-redteam/references/ace-esp-pipeline.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-redteam/references/ace-esp-pipeline.md",
       "bytes": 826,
       "sha256": "1b850c84cd9bbd79f2e388758667a34e7fa4ad5595cf9dff7dfaae3d99564833"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-redteam/references/manual-map-research.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-redteam/references/manual-map-research.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-redteam/references/manual-map-research.md",
       "bytes": 411,
       "sha256": "7178c3d82712be822db149641edc0f57f0ee2c726d9dc55d6255794013a1d663"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-redteam/references/ring3-ace-ctf.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-redteam/references/ring3-ace-ctf.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-redteam/references/ring3-ace-ctf.md",
       "bytes": 387,
       "sha256": "0af105509477a01b95ea7685adde858652a3e4ab1c58709b81384d551696bc92"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-redteam/scripts/new_game_redteam_lab.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-redteam/scripts/new_game_redteam_lab.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-redteam/scripts/new_game_redteam_lab.py",
       "bytes": 1544,
       "sha256": "7046cc0c61d0fe8eff9c0f9f4362b586a269ce400b80d817a05f9505a4d9f6bd"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-security/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-security/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-security/SKILL.md",
       "bytes": 2431,
       "sha256": "4a137e2a6c9025fe13a57cc38164110ca6638009dc697737fb9a2c816c52b138"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-security/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-security/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-security/agents/openai.yaml",
       "bytes": 261,
       "sha256": "0d2c288f61fff1eee68ebc64b964088ec65fa3bc26c59b632f462298cb46e0c6"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-security/references/anti-cheat-design.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-security/references/anti-cheat-design.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-security/references/anti-cheat-design.md",
       "bytes": 927,
       "sha256": "601a5c44ceeac3c2a03a1adef2255c077729a8ccd39757e49048fa63c890a9e1"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-security/references/cheat-architecture.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-security/references/cheat-architecture.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-security/references/cheat-architecture.md",
       "bytes": 1653,
       "sha256": "2c5e89c04740be528542aa6e3cc1c8c1c97e994acc6d719f6fd88aebc2fa50b0"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-security/references/engine-security.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-security/references/engine-security.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-security/references/engine-security.md",
       "bytes": 894,
       "sha256": "8266c394676be4a0bfa76c203a3c7e59b444d330fb4822431f0c8340c9f32d31"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-security/references/incident-analysis.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-security/references/incident-analysis.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-security/references/incident-analysis.md",
       "bytes": 731,
       "sha256": "c40624f814cf4ac22470c09b58cade51d5a6d9c0277b0d0233db146a358bd782"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-security/scripts/integrity_manifest.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-security/scripts/integrity_manifest.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-security/scripts/integrity_manifest.py",
       "bytes": 2067,
       "sha256": "8f230476e4b6f044ff834ed63f0f27bfa8664e29709ae68982763a5cd1210da0"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-game-security/scripts/telemetry_analyze.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-game-security/scripts/telemetry_analyze.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-game-security/scripts/telemetry_analyze.py",
       "bytes": 3014,
       "sha256": "e8cd3da924d12de55e3401d28b40c0552ea66fc0f78991ecfda99149eafdffda"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-lab/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-lab/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-lab/SKILL.md",
       "bytes": 1800,
       "sha256": "3d476c40f11be1eed38944bce198bbf2ba3fb8c6a26069526ece3c7d01b4c25c"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-lab/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-lab/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-lab/agents/openai.yaml",
       "bytes": 230,
       "sha256": "ab7c69fb9755ac22aac52e89f1c1bf9ea95be1962f08e68006bb899285a12405"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-lab/references/case-workflow.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-lab/references/case-workflow.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-lab/references/case-workflow.md",
       "bytes": 601,
       "sha256": "ff6267b3d142662987ac538d81a1620436bb15b856820f9fe69bd92a5b398c91"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-lab/references/ctf-operations.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-lab/references/ctf-operations.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-lab/references/ctf-operations.md",
       "bytes": 1486,
       "sha256": "13fc7f77543b801f82445d54325228c693dd5236b1a78a1a37cbda226283ce47"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-lab/references/evidence.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-lab/references/evidence.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-lab/references/evidence.md",
       "bytes": 643,
       "sha256": "ebfde3611ad917f318d66071387a7bef25b5b016fbf46cad41302812bedc3f98"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-lab/scripts/hash_artifact.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-lab/scripts/hash_artifact.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-lab/scripts/hash_artifact.py",
       "bytes": 1461,
       "sha256": "24077e6d2c43e9f61b7e3578242950d96ce2b143051d292c24096ba820664f1d"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-lab/scripts/new_case.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-lab/scripts/new_case.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-lab/scripts/new_case.py",
       "bytes": 1388,
       "sha256": "19b2007ca9c81a45cea257d26f223d338ef74cedbd592ab603226f1f932e0f6d"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-license-security/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-license-security/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-license-security/SKILL.md",
       "bytes": 2699,
       "sha256": "1a3ca2ca68709e63a24083b8230e8cb4ded4af5d02f7c1a27df5d5d89e51c7fc"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-license-security/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-license-security/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-license-security/agents/openai.yaml",
       "bytes": 262,
       "sha256": "662cd41e191e71fa8a1eac02b16e991a9a754ce5664ec19b584f662ea29aad2f"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-license-security/references/operations.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-license-security/references/operations.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-license-security/references/operations.md",
       "bytes": 967,
       "sha256": "2a107fdc3fa0fdcb2a06f84a09616e856d75599296e9f97a6ef3a6605704f7d1"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-license-security/references/reverse-audit.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-license-security/references/reverse-audit.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-license-security/references/reverse-audit.md",
       "bytes": 990,
       "sha256": "0baeecef87a99ff5bbcfaf02d6daa63ac054024c18b3d4ed03fdd645b19ad5b3"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-license-security/references/secure-design.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-license-security/references/secure-design.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-license-security/references/secure-design.md",
       "bytes": 1215,
       "sha256": "a889bd842b80b6f7e01065852a9ec2faadfdd4f995d9b0d31ac18748db47b00c"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-license-security/references/threat-model.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-license-security/references/threat-model.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-license-security/references/threat-model.md",
       "bytes": 1072,
       "sha256": "e433a6f5a5ec4dcde09882f7172628e4d782fd9032ac26020505e567bd778717"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-license-security/scripts/audit_license_config.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-license-security/scripts/audit_license_config.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-license-security/scripts/audit_license_config.py",
       "bytes": 2059,
       "sha256": "6f9efc4a01e1c7558a7a378fcb3ec1cfde8b14d562e392115d013a2061c3724c"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-license-security/scripts/license_tool.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-license-security/scripts/license_tool.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-license-security/scripts/license_tool.py",
       "bytes": 4257,
       "sha256": "c0d488f3bcc46a8efaaffe434e08565b15d03bb99555ed895ae69e61fde0e85a"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-malware/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-malware/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-malware/SKILL.md",
       "bytes": 2144,
       "sha256": "db4493e0ae0cac077375082a0728b24918e7d3dc1b438bcf47010ae6b6182805"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-malware/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-malware/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-malware/agents/openai.yaml",
       "bytes": 287,
       "sha256": "9b459fc294c4980f9ffd53a943803bf64acadf7444961f5bc5f2b19dadb3cb17"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-malware/references/c2-protocol.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-malware/references/c2-protocol.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-malware/references/c2-protocol.md",
       "bytes": 2791,
       "sha256": "4a52b5be2abd9b701b40e76ebb43e7dee2413fc1c5a2c7824c4cbe2db9e0b0a9"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-malware/references/detection.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-malware/references/detection.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-malware/references/detection.md",
       "bytes": 3301,
       "sha256": "aeac5c83a50d75922325d30582ba5ae16baffc77a6d32d27d0cef70910df1874"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-malware/references/ttp-mapping.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-malware/references/ttp-mapping.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-malware/references/ttp-mapping.md",
       "bytes": 3152,
       "sha256": "bf92d088266e94a5f1192b9374776ff1a95b00b935ba1ee7580b4eedbb27024d"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-malware/references/unpacking.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-malware/references/unpacking.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-malware/references/unpacking.md",
       "bytes": 2598,
       "sha256": "1f9116ad1754c9446d054e41bd69b30883ace599ba05a0423fd60b37bef043b3"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-malware/scripts/static_triage.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-malware/scripts/static_triage.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-malware/scripts/static_triage.py",
       "bytes": 3592,
       "sha256": "9c5e319e4831a6bfd53d30b6cbef5954078ebeab7cf423f95b635c8c42becae6"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-mature-content/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-mature-content/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-mature-content/SKILL.md",
       "bytes": 4472,
       "sha256": "0ce84cb4b020472fcdf1b159bb2cd587ccdd5a205bb665fca2522765b8662589"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-mature-content/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-mature-content/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-mature-content/agents/openai.yaml",
       "bytes": 293,
       "sha256": "da8c315e7e0f8e869ab66c5d08d8805cc8361c9cba13a59b455ff9e4d3a780cc"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-mature-content/references/mature-product-patterns.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-mature-content/references/mature-product-patterns.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-mature-content/references/mature-product-patterns.md",
       "bytes": 2265,
       "sha256": "57ba0b62e17c9ff081f7ef557695fa723114e964d4feb8f8995a8b6553fc831c"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-memory/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-memory/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-memory/SKILL.md",
       "bytes": 2188,
       "sha256": "16235d5b1eefc1da0611633928c0110cce5f76d8c10be37a26c6be66aaf3d428"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-memory/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-memory/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-memory/agents/openai.yaml",
       "bytes": 236,
       "sha256": "9dd198f51172689dfa9b00cc0bbbebfa406cda28911dd7c87b1b736a956367cf"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-memory/references/dump-structures.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-memory/references/dump-structures.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-memory/references/dump-structures.md",
       "bytes": 1062,
       "sha256": "b8071b166b75cfadc1ad3483b9d36845c50dd17d15ec2e8ee7ac5a4115b430c6"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-memory/references/linux-android.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-memory/references/linux-android.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-memory/references/linux-android.md",
       "bytes": 768,
       "sha256": "ffe4fbcb4aa188662cb5e888a4df863dd39336e37f44a6dfbcc010cd2e0c41ad"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-memory/references/windows.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-memory/references/windows.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-memory/references/windows.md",
       "bytes": 895,
       "sha256": "d8b43827968a8c4d0d74537954c91a42ed4ff19def2e7ded2da7b3a84c2b3fb9"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-memory/scripts/aob_scan.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-memory/scripts/aob_scan.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-memory/scripts/aob_scan.py",
       "bytes": 1583,
       "sha256": "7deff20c063a27003c96e44c00d85bbfc779d664646fd1bb52be5d013ce759a2"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-memory/scripts/dump_strings.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-memory/scripts/dump_strings.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-memory/scripts/dump_strings.py",
       "bytes": 1038,
       "sha256": "19435c49d04b2c4b922921c8697dc0b44f877ee730544b721d3025f7f896089f"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/SKILL.md",
       "bytes": 4560,
       "sha256": "90b0c4ccaf57c78b366ea789fa5eadbd501e39e6d3b62d3fc4acd70b7b53ecfe"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/agents/openai.yaml",
       "bytes": 238,
       "sha256": "d41b598eedcd6a0861ed8e2a529cabdbfeef4b2e26b02a018716d78487793016"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/references/cloud-container.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/references/cloud-container.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/references/cloud-container.md",
       "bytes": 712,
       "sha256": "fdd6f9dd8205ed3f2d2d39ce437e5d40bb2e5e4eb3b739b12fe21cd5ccee71dc"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/references/graphql-realtime.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/references/graphql-realtime.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/references/graphql-realtime.md",
       "bytes": 688,
       "sha256": "6974886cfe81239c43a0cadb25715382e7a995fe3b7f439928e7698b007a4077"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/references/network-identity.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/references/network-identity.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/references/network-identity.md",
       "bytes": 772,
       "sha256": "905c30cbe4d8170f5bd4fe90e1dcb4e046080f80d43389ce7186b3efd9f455a0"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/references/oauth-jwt.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/references/oauth-jwt.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/references/oauth-jwt.md",
       "bytes": 639,
       "sha256": "0d92c7e3f4cc29a44a17f038ba8d349304ab235ccb504e5fc7b3938a40038e6c"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/references/parser-smuggling.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/references/parser-smuggling.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/references/parser-smuggling.md",
       "bytes": 651,
       "sha256": "859a895096bce34d7ef2de402101ce6050b64a656833cce85c2bccbdc01de6c3"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/references/race-business.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/references/race-business.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/references/race-business.md",
       "bytes": 594,
       "sha256": "78945e8b40dbb50c5ed013599c752e6055f1a3a2ddcc8c030da6d648cd4a62c2"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/references/reporting.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/references/reporting.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/references/reporting.md",
       "bytes": 592,
       "sha256": "12a1c6c391a377343b278ef57efed1e49614062d388d602be42af7f000e4da48"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/references/web-api.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/references/web-api.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/references/web-api.md",
       "bytes": 962,
       "sha256": "8e6774909711fcbb5a59020ba6dac2485d6cff8a8c3eea0f128dd42b0ee55448"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/scripts/http_recon.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/scripts/http_recon.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/scripts/http_recon.py",
       "bytes": 2154,
       "sha256": "d356f4bd420e7b74275f858880677b226e07ad2046e76394ad6c0d7f103da93a"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/scripts/js_routes.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/scripts/js_routes.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/scripts/js_routes.py",
       "bytes": 1175,
       "sha256": "996f83be4cab42e87ea3dd2fceef8366a2fa5442f9ecb5740718350336f5fe32"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/scripts/jwt_inspect.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/scripts/jwt_inspect.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/scripts/jwt_inspect.py",
       "bytes": 1694,
       "sha256": "7f7edd066e3fc8b5e8b7ebd6b5c2bdcdc26d7bd573c2abc4e826e281efb24e07"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/scripts/openapi_inventory.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/scripts/openapi_inventory.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/scripts/openapi_inventory.py",
       "bytes": 2159,
       "sha256": "bae87aab1cb2ecdedf054c6b9e9945afa53ec2c3946a4fdb4191e8d52fb69b8b"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-pentest/scripts/request_matrix.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-pentest/scripts/request_matrix.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-pentest/scripts/request_matrix.py",
       "bytes": 2340,
       "sha256": "eda926ffa37a0d15ab1b299efd64c0d6f63bab5279f4ef3de5f157ef0600980b"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-reverse/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-reverse/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-reverse/SKILL.md",
       "bytes": 2367,
       "sha256": "71e204d9dc339c0d717f8221f1f1572806d05cdbbc86252351f9f88fff7b036e"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-reverse/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-reverse/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-reverse/agents/openai.yaml",
       "bytes": 225,
       "sha256": "2279428955358a928fd6125a57d4a05096fe8314a2b8df76723e14faa81e2a4f"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-reverse/references/extended-tool-routing.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-reverse/references/extended-tool-routing.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-reverse/references/extended-tool-routing.md",
       "bytes": 1223,
       "sha256": "c4e412daad616faed4b1f0f5486c859b5f95290944befd72019189ee64f923e8"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-reverse/references/managed-game.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-reverse/references/managed-game.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-reverse/references/managed-game.md",
       "bytes": 981,
       "sha256": "72cb81d52078777e23b02acc6953a998d64c32f67f484c4e2191b20daa161ff4"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-reverse/references/native-workflow.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-reverse/references/native-workflow.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-reverse/references/native-workflow.md",
       "bytes": 1046,
       "sha256": "acce65ce409bf017b9bd2f5b1c8bb4f1105c35b06d67aa3341900c7696aba741"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-reverse/references/protocol-reverse.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-reverse/references/protocol-reverse.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-reverse/references/protocol-reverse.md",
       "bytes": 731,
       "sha256": "06946c453b3da9a02a601123883d7a1791ffeff9f4c51f9d301afabc45d44eb2"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-reverse/references/unpacking-obfuscation.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-reverse/references/unpacking-obfuscation.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-reverse/references/unpacking-obfuscation.md",
       "bytes": 1047,
       "sha256": "d3f3f3cbeae2da255dfe200bc3910646d56cee1b0b3a8608f97393cb32a9cffa"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-reverse/scripts/triage_binary.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-reverse/scripts/triage_binary.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-reverse/scripts/triage_binary.py",
       "bytes": 2829,
       "sha256": "2565910219a016e6d5ea9f51158d0c715611e2877a6383c209ed34b9810b0131"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-social-eng/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-social-eng/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-social-eng/SKILL.md",
       "bytes": 2404,
       "sha256": "df8883e70f3d3cbf65b1039caf6c2f9c10162f58abeaa7aa748350ecd441e7ec"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-social-eng/agents/openai.yaml",
-      "dst": "refs/wb-proxy/codex-skills/seagull-social-eng/agents/openai.yaml",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-social-eng/agents/openai.yaml",
       "bytes": 268,
       "sha256": "fae4681a7c26ea08bf9e03196040b8558db2661ac06e883c3c6b1e04a16eae12"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-social-eng/references/awareness.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-social-eng/references/awareness.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-social-eng/references/awareness.md",
       "bytes": 2949,
       "sha256": "8007d5b1450c2c4360c39af34e89be0150d0265895c5333b684eccf21f3cc02f"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-social-eng/references/infrastructure-osint.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-social-eng/references/infrastructure-osint.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-social-eng/references/infrastructure-osint.md",
       "bytes": 2150,
       "sha256": "02b7eb122f4bed2e97142d6208bb8cae61392c1f32f0c4f641aa6b5ba610cc00"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-social-eng/references/person-osint.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-social-eng/references/person-osint.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-social-eng/references/person-osint.md",
       "bytes": 1880,
       "sha256": "a6642560701c0db9676af6c605206e92db2491aede603ae042cfdf047d670a0f"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-social-eng/references/phishing-analysis.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-social-eng/references/phishing-analysis.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-social-eng/references/phishing-analysis.md",
       "bytes": 3146,
       "sha256": "e5e47e9c7c622340004329cedac2dd1793b9441fad58a1dd808e8815d04eed5a"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-social-eng/scripts/domain_recon.py",
-      "dst": "refs/wb-proxy/codex-skills/seagull-social-eng/scripts/domain_recon.py",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-social-eng/scripts/domain_recon.py",
       "bytes": 2867,
       "sha256": "1f7079891747797abbe29b6e1ae1c8dda418be86b3212faa45a52274e7eea636"
     },
     {
       "src": "wb-proxy/codex-skills/seagull-unlimited/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/seagull-unlimited/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/seagull-unlimited/SKILL.md",
       "bytes": 6094,
       "sha256": "3c629a723e0a9c0dc738110ed9479160200feaa732b73b746c0f8acf03219df9"
     },
     {
       "src": "wb-proxy/codex-skills/windows-kernel/SKILL.md",
-      "dst": "refs/wb-proxy/codex-skills/windows-kernel/SKILL.md",
+      "dst": "refs/wb-proxy/_legacy/codex-skills-v3/windows-kernel/SKILL.md",
       "bytes": 40556,
       "sha256": "a3f240c7f0b0583268e2f5f82744c171edcc2392c4719549d33b5ddcc34e48d1"
     },
@@ -4720,6 +4720,6 @@
     "sanitized": 6
   },
   "bytes": 10809543,
-  "indexSha256": "7f8a1fbd2d56f034e939c3c337b152ab36baa38bcd310f7cdb2a236d4f35ebbb",
-  "indexBytes": 2173
+  "indexSha256": "f450b6f2ba130255298bf842aacbcc1852ec8bd2159a2101d73456a0d728e135",
+  "indexBytes": 1628
 }
