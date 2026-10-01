@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.13";
+        var VERSION = "v0.51.14";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -321,8 +321,12 @@
           ".dsh-armor5-drawer .dsh-armor5-head{font-size:9px;line-height:12px}",
           // v0.51.10：判决徽标（通过 / 拒答）用的是 .dsh-armor5-badge（不是 .chip）——
           // v0.51.8 那条规则打偏了，所以「通过」看着没变小。这里直接压 badge 本身。
-          ".dsh-armor5-drawer .dsh-armor5-badge{height:12px;padding:0 4px;font-size:9px;line-height:11px}",
-          ".dsh-armor5-drawer .dsh-armor5-badge .dsh-armor5-dot{width:4px;height:4px}",
+          // v0.51.14：抽屉里的「通过 / 进行中」再砍一半字号，并统一按**小徽章**处理
+          // （高度 10px、字号 7px、圆角胶囊、内边距 3px）—— 它是状态记号，不该跟正文抢字号。
+          ".dsh-armor5-drawer .dsh-armor5-badge{height:10px;padding:0 3px;font-size:7px;line-height:10px}",
+          ".dsh-armor5-drawer .dsh-armor5-head>span,.dsh-armor5-drawer .dsh-armor5-head>b{font-size:8px;line-height:10px}",
+          ".dsh-armor5-drawer .dsh-armor5-head{gap:3px}",
+          ".dsh-armor5-drawer .dsh-armor5-badge .dsh-armor5-dot{width:3px;height:3px}",
           ".dsh-armor5-drawer .dsh-armor5-head .dsh-armor5-chip{font-size:9px;line-height:12px;padding:0 5px}",
           ".dsh-armor5-drawer .dsh-armor5-chip{font-size:10px;line-height:14px;padding:1px 6px}",
           ".dsh-armor5-mem-reset{flex:0 0 auto;margin-right:6px;min-height:28px;padding:4px 10px;border-radius:999px;",

@@ -1785,8 +1785,8 @@ if (process.argv.includes("--emit-html")) {
 // ── v0.51.10：判决徽标（.badge，非 .chip）收小 ─────────────────────────────
 {
   ok("判决徽标收小打在 .dsh-armor5-badge 上（v0.51.8 打在 .chip 上打偏了）",
-    CLIENT_SRC.includes(".dsh-armor5-drawer .dsh-armor5-badge{height:12px;padding:0 4px;font-size:9px;line-height:11px}"));
-  ok("徽标里的状态点同步收到 4px", CLIENT_SRC.includes(".dsh-armor5-drawer .dsh-armor5-badge .dsh-armor5-dot{width:4px;height:4px}"));
+    CLIENT_SRC.includes(".dsh-armor5-drawer .dsh-armor5-badge{height:10px;padding:0 3px;font-size:7px;line-height:10px}"));
+  ok("徽标里的状态点同步收到 4px", CLIENT_SRC.includes(".dsh-armor5-drawer .dsh-armor5-badge .dsh-armor5-dot{width:3px;height:3px}"));
   ok("徽标原始规格仍在（未被删，dev/触发条仍可用）", CLIENT_SRC.includes(".dsh-armor5-badge{display:inline-flex;align-items:center;height:15px;padding:0 6px"));
 }
 
@@ -1825,7 +1825,17 @@ if (process.argv.includes("--emit-html")) {
     CLIENT_SRC.includes(".dsh-armor5-root{min-width:0}"));
 }
 
-// ── 结果 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ── v0.51.14：抽屉里的状态词按小徽章处理（字号再砍一半）─────────────────────
+{
+  ok("抽屉徽标按小徽章：高 10px / 字号 7px / 内边距 3px",
+    CLIENT_SRC.includes(".dsh-armor5-drawer .dsh-armor5-badge{height:10px;padding:0 3px;font-size:7px;line-height:10px}"));
+  ok("头部其余状态字（通过与进行中同排）也收到 8px",
+    CLIENT_SRC.includes(".dsh-armor5-drawer .dsh-armor5-head>span,.dsh-armor5-drawer .dsh-armor5-head>b{font-size:8px;line-height:10px}"));
+  ok("状态点同步收到 3px（徽标里不该留个大圆点）",
+    CLIENT_SRC.includes(".dsh-armor5-drawer .dsh-armor5-badge .dsh-armor5-dot{width:3px;height:3px}"));
+}
+
+// ── 结果 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ok("槽位模式表列了三种可用位置", CLIENT_SRC.includes("conversation.session.header.utilities") && CLIENT_SRC.includes("conversation.input.dock"));
 
 if (failures.length === 0) {
