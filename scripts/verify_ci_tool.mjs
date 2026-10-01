@@ -40,5 +40,25 @@ else {
     /ghp_|github_pat_/.test(out) ? bad("回执里出现 token 明文痕迹") : ok("回执无 token 痕迹");
   }
 }
+// ── v0.51.21：静默失败回归锁（早期 return 的回执必须被打印出来）─────────────
+{
+  const SOURCE = readFileSync("scripts/ig5-ci.mjs", "utf8");
+  /function fail\(reason, extra = \{\}\) \{[\s\S]{0,500}console\.log\(JSON\.stringify\(receipt/.test(SOURCE)
+    ? ok("fail() 自己出回执（不再静默 return）")
+    : bad("fail() 仍是静默 return");
+  let out = "";
+  try {
+    out = execFileSync("node", ["scripts/ig5-ci.mjs", "status", "--repo", REPO],
+      { stdio: "pipe", timeout: 30000, env: { ...process.env, IG5_GH_TOKEN: "github_pat_INVALID_FOR_TEST", IG5_HOME: "/tmp/ig5-no-such-home" } }).toString();
+  } catch (e) { out = String(e.stdout || ""); }
+  if (!out.trim()) bad("无效凭据下零输出（静默失败的形状）");
+  else {
+    let doc = null;
+    try { doc = JSON.parse(out); } catch { doc = null; }
+    doc && doc.ok === false ? ok("无效凭据 → 有回执且 ok=false（错误可见）") : bad("无效凭据的回执形状不对");
+    /github_pat_INVALID_FOR_TEST/.test(out) ? bad("回执里回显了凭据！") : ok("回执不回显凭据");
+  }
+}
+
 console.log(`\nGITHUB-CI 协议门禁：${pass} 通过 / ${fail} 失败 / ${skip} 跳过`);
 process.exit(fail === 0 ? 0 : 1);
