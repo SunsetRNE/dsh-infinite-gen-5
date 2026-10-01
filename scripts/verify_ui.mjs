@@ -1760,7 +1760,7 @@ if (process.argv.includes("--emit-html")) {
     CLIENT_SRC.includes("accOrRaw(risk, \"risks\", \"risk\")") &&
     CLIENT_SRC.includes("accOrRaw(safe, \"safe\", \"safe\")"));
   ok("累计 chip 带 ×次数（同一标识只占一格）",
-    /row\.name \+ " ×" \+ row\.count/.test(CLIENT_SRC) && CLIENT_SRC.includes('"mem-" + kind'));
+    /row\.name \+ " ×" \+ row\.count/.test(CLIENT_SRC) && CLIENT_SRC.includes('count: 1'));
   ok("还没累计时按 ×1 兜底（格子不空、形状也不变）",
     CLIENT_SRC.includes("return { name: name, count: 1 };"));
   ok("两个未翻译字段名已入词表并包 L()",
@@ -1795,7 +1795,7 @@ if (process.argv.includes("--emit-html")) {
   ok("触发条带面板模式标记（CSS 才有钩子）",
     CLIENT_SRC.includes('"data-panel": dockPrefs.panelMode === "dev" ? "dev" : "user"'));
   ok("用户模式触发条状态文字收一档（11px / 限宽 14ch）",
-    CLIENT_SRC.includes(".dsh-armor5-root[data-panel='user'] .dsh-armor5-text{font-size:11px;line-height:14px;max-width:14ch}"));
+    CLIENT_SRC.includes("font-size:10px;line-height:13px;max-width:12ch;min-width:0"));
   ok("dev 模式不套这条规则（开发者保留可读尺寸）",
     CLIENT_SRC.includes(".dsh-armor5-root[data-panel='user']{gap:4px}"));
 }
@@ -1806,13 +1806,26 @@ if (process.argv.includes("--emit-html")) {
     CLIENT_SRC.includes("var rows = (acc && acc.length)") &&
     CLIENT_SRC.includes("return { name: name, count: 1 };") &&
     !CLIENT_SRC.includes("if (!Array.isArray(acc) || acc.length === 0) return chipList(rawList, kind"));
-  ok("着色固定走 mem-*（不再随数据到位与否在 hit/risk/safe 之间跳）",
-    CLIENT_SRC.includes('return chipRowEarly(rows, "mem-" + kind);'));
+  ok("着色固定（单一路径 + 基础 kind，两条路径不再各给一套色）",
+    CLIENT_SRC.includes('return chipRowEarly(rows, kind);'));
   ok("dev 模式仍走原始词（开发者不参与这条路径）",
     CLIENT_SRC.includes('if (PANEL_LEX_STATE.dev) return chipList(rawList, kind, "无");'));
 }
 
-// ── 结果 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ── v0.51.13：有数字没颜色（kind 无配色）+ 状态词溢出 ───────────────────────
+{
+  ok("磁贴 chip 用基础 kind（hit/risk/safe 才有配色规则）",
+    CLIENT_SRC.includes('return chipRowEarly(rows, kind);') &&
+    !CLIENT_SRC.includes('return chipRowEarly(rows, "mem-" + kind);'));
+  ok("记忆区 mem-* 四种 kind 补上配色",
+    CLIENT_SRC.includes(".dsh-armor5-chip[data-kind=mem-marker],.dsh-armor5-chip[data-kind=mem-domain]{background:rgba(77,107,254,.14)") &&
+    CLIENT_SRC.includes(".dsh-armor5-chip[data-kind=mem-risk]{background:rgba(248,81,73,.14)"));
+  ok("状态词再小一档并允许收缩（min-width:0 治溢出）",
+    CLIENT_SRC.includes("font-size:10px;line-height:13px;max-width:12ch;min-width:0") &&
+    CLIENT_SRC.includes(".dsh-armor5-root{min-width:0}"));
+}
+
+// ── 结果 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ok("槽位模式表列了三种可用位置", CLIENT_SRC.includes("conversation.session.header.utilities") && CLIENT_SRC.includes("conversation.input.dock"));
 
 if (failures.length === 0) {

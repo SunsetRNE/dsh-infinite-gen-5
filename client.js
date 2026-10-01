@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.12";
+        var VERSION = "v0.51.13";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -112,7 +112,11 @@
           ".dsh-armor5-text{max-width:22ch;overflow:hidden;text-overflow:ellipsis}",
           // v0.51.11：用户模式下触发条的状态文字（空闲 / 执行中 / 通过…）收一档并限宽，
           // 不再让那串字跟正文一样大。dev 模式保留可读尺寸（开发者要看全）。
-          ".dsh-armor5-root[data-panel='user'] .dsh-armor5-text{font-size:11px;line-height:14px;max-width:14ch}",
+          // v0.51.13：状态词（通过 / 进行中）再小一档并允许收缩 —— flex 子项不给 min-width:0 就不会缩，
+          // 字一长就顶出去（这就是「会溢出」的直接原因）。
+          ".dsh-armor5-root[data-panel='user'] .dsh-armor5-text{font-size:10px;line-height:13px;max-width:12ch;min-width:0}",
+          ".dsh-armor5-root{min-width:0}",
+          ".dsh-armor5-root[data-panel='user']{max-width:100%}",
           ".dsh-armor5-root[data-panel='user']{gap:4px}",
           // v0.49.0（C 方案）：原位浮层 .dsh-armor5-panel 的规则已删除；下方 head/sec/hits 等为抽屉共用，保留。
           // 头部：判决徽标 + 标题 + 版本/时刻（右对齐）。徽标按 tone 上色，一眼分辨通过/拒绝/执行中。
@@ -164,6 +168,11 @@
           ".dsh-armor5-chip[data-kind=safe]{background:rgba(63,185,80,.14);",
           "color:var(--dsw-alias-state-success-primary,#3fb950)}",
           ".dsh-armor5-chip[data-kind=none]{padding:1px 0;background:0 0;color:var(--dsw-alias-label-caption,#8b8b8b)}",
+          // v0.51.13：记忆区四种 kind 之前也没有配色规则（同样表现为「有数字没颜色」），这里补齐。
+          ".dsh-armor5-chip[data-kind=mem-marker],.dsh-armor5-chip[data-kind=mem-domain]{background:rgba(77,107,254,.14);",
+          "border:1px solid rgba(77,107,254,.32)}",
+          ".dsh-armor5-chip[data-kind=mem-risk]{background:rgba(248,81,73,.14);border:1px solid rgba(248,81,73,.32)}",
+          ".dsh-armor5-chip[data-kind=mem-safe]{background:rgba(63,185,80,.14);border:1px solid rgba(63,185,80,.32)}",
           // 最近命中流水：一条 = 时刻 · 判决 · 领域(命中数) · 载荷数，副行是那次的命中词。
           ".dsh-armor5-hits{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;",
           "max-height:120px;overflow:auto}",
@@ -818,7 +827,9 @@
               : (Array.isArray(rawList) ? rawList : []).map(function (name) {
                 return { name: name, count: 1 };
               });
-            return chipRowEarly(rows, "mem-" + kind);
+            // v0.51.13：着色用的是 `[data-kind=hit|risk|safe]`（mem-* 没有对应规则，所以上一版「有数字没颜色」）。
+            // 磁贴这里固定用基础 kind，颜色与数字就同时在了。
+            return chipRowEarly(rows, kind);
           };
           var tileLabel = function (key, rawList) {
             return PANEL_LEX_STATE.dev && rawList && rawList.length
