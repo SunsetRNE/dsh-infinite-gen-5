@@ -47,7 +47,12 @@ async function gh(path) {
 }
 
 function fail(reason, extra = {}) {
-  return { ok: false, error: reason, hint: "在设置台「远端凭据」配置 token（SECRETS 协议），或导出 GITHUB_TOKEN", ...extra };
+  const receipt = { ok: false, error: reason, hint: "在设置台「远端凭据」配置 token（SECRETS 协议），或导出 GITHUB_TOKEN", ...extra };
+  // v0.51.21 修（真凶）：早期 return 的回执从来没被打印 —— 于是「凭据无效 / 仓库不存在 / API 报错」
+  // 这三种情况下工具零输出、退出码还是 0，看起来就像什么都没发生。现在统一在这里出回执。
+  console.log(JSON.stringify(receipt, null, asJson ? 2 : 0));
+  process.exitCode = 1;
+  return receipt;
 }
 
 function sha256(buf) { return createHash("sha256").update(buf).digest("hex"); }
