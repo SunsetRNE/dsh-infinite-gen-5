@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.10";
+        var VERSION = "v0.51.11";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -110,6 +110,10 @@
           "background:var(--dsw-alias-state-business-primary,#4d6bfe);",
           "animation:dshArmor5Pending 1s ease-in-out infinite alternate}",
           ".dsh-armor5-text{max-width:22ch;overflow:hidden;text-overflow:ellipsis}",
+          // v0.51.11：用户模式下触发条的状态文字（空闲 / 执行中 / 通过…）收一档并限宽，
+          // 不再让那串字跟正文一样大。dev 模式保留可读尺寸（开发者要看全）。
+          ".dsh-armor5-root[data-panel='user'] .dsh-armor5-text{font-size:11px;line-height:14px;max-width:14ch}",
+          ".dsh-armor5-root[data-panel='user']{gap:4px}",
           // v0.49.0（C 方案）：原位浮层 .dsh-armor5-panel 的规则已删除；下方 head/sec/hits 等为抽屉共用，保留。
           // 头部：判决徽标 + 标题 + 版本/时刻（右对齐）。徽标按 tone 上色，一眼分辨通过/拒绝/执行中。
           ".dsh-armor5-head{display:flex;align-items:center;gap:4px}",
@@ -1116,6 +1120,9 @@
                 "data-armor": "gen5",
                 "data-tone": tone,
                 "data-pressing": pressing ? "1" : undefined,
+                // v0.51.11：触发条也带上面板模式 —— 「执行中 / 空闲」这类状态文字长在触发条上，
+                // 上一版只收小了抽屉里的徽标，所以触发条上那串字看着还是大。
+                "data-panel": dockPrefs.panelMode === "dev" ? "dev" : "user",
                 title: title + "（点击或长按打开抽屉）",
                 "aria-label": title + "（点击或长按打开抽屉）",
                 "aria-expanded": open ? "true" : "false",
