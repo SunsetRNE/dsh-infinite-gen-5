@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.8";
+        var VERSION = "v0.51.9";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -308,6 +308,9 @@
           ".dsh-armor5-drawer .dsh-armor5-head{font-size:9px;line-height:12px}",
           ".dsh-armor5-drawer .dsh-armor5-head .dsh-armor5-chip{font-size:9px;line-height:12px;padding:0 5px}",
           ".dsh-armor5-drawer .dsh-armor5-chip{font-size:10px;line-height:14px;padding:1px 6px}",
+          ".dsh-armor5-mem-reset{flex:0 0 auto;margin-right:6px;min-height:28px;padding:4px 10px;border-radius:999px;",
+          "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.3));background:transparent;color:inherit;",
+          "font:inherit;font-size:12px;cursor:pointer}",
           ".dsh-armor5-panel-toggle{flex:0 0 auto;margin-right:6px;min-height:28px;min-width:48px;padding:4px 10px;border-radius:999px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.3));background:transparent;color:inherit;font:inherit;font-size:12px}",
           ".dsh-armor5-tab-count{flex:0 0 auto;margin-left:4px;font-size:10px;font-variant-numeric:tabular-nums;opacity:.75}",
           ".dsh-armor5-root .dsh-armor5-dot{transition:transform .12s ease-out}",
@@ -1077,6 +1080,19 @@
                   react.createElement("div", { className: "dsh-armor5-drawer-pane" }, drawerPane)),
                 react.createElement("div", { className: "dsh-armor5-drawer-foot" },
                   react.createElement("span", null, L("位置") + " " + slotText),
+                react.createElement("button", {
+                  type: "button",
+                  className: "dsh-armor5-mem-reset",
+                  title: "清零本对话的累计计数（只清累计，判决留档不动）",
+                  onClick: function () {
+                    var br = liveState && liveState.link;
+                    if (!br || !br.tasksPath) return;
+                    // 与任务清单写通道同一个端点，只换 action（v0.51.9）。
+                    panelFetch(br, br.tasksPath, "POST", { action: "resetMemory" }).then(function () {
+                      if (typeof setOpen === "function") { setOpen(false); setTimeout(function () { setOpen(true); }, 60); }
+                    });
+                  }
+                }, "重置累计"),
                   gateButton())))
             : null;
 
@@ -1148,7 +1164,7 @@
           "事件速率": "动作频率",
           "最近事件": "最后动作",
           "最近工具": "用过的工具",
-          "识别领域": "我判断你在做",
+          "识别领域": "推测大概范围",
           "领域候选": "其它可能",
           "命中标记": "看到的关键词",
           "拒答/兜底词": "守边界时会说",

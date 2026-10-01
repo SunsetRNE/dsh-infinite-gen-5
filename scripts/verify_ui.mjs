@@ -14,7 +14,7 @@ import { dirname, join } from "node:path";
 import { findPackageDir } from "./lib/host-resolve.mjs";
 
 // v0.51.0：面板标签在用户/开发者两种模式下不同；这里放一份词表副本，供断言取「另一种写法」。
-const USER_LEX_UI = { "识别领域":"我判断你在做", "领域候选":"其它可能", "命中标记":"看到的关键词",
+const USER_LEX_UI = { "识别领域":"推测大概范围", "领域候选":"其它可能", "命中标记":"看到的关键词",
   "拒答/兜底词":"守边界时会说", "风险载荷":"需要小心的写法", "安全标记":"触到红线了吗",
   "扫描范围":"我读了多少", "位置":"面板位置" };
 // 自检不碰用户真实统计库（v0.13.9）：给统计库指一个 /tmp 落点，跑完即弃。
@@ -1691,7 +1691,7 @@ if (process.argv.includes("--emit-html")) {
   ok("面板模式常量与默认值在场（出厂 user）",
     CLIENT_SRC.includes('var PANEL_MODE = "user"') && CLIENT_SRC.includes("PANEL_MODES"));
   ok("词表覆盖九字段与实时行（15 条）",
-    (CLIENT_SRC.match(/"[^"]+": "[^"]+",\n/g) || []).length >= 15 && CLIENT_SRC.includes('"识别领域": "我判断你在做"'));
+    (CLIENT_SRC.match(/"[^"]+": "[^"]+",\n/g) || []).length >= 15 && CLIENT_SRC.includes('"识别领域": "推测大概范围"'));
   ok("偏好校验接纳 panelMode 且拒绝非法值",
     /panelMode: function \(v\) \{ return Object\.prototype\.hasOwnProperty\.call\(PANEL_MODES, v\); \}/.test(CLIENT_SRC));
   ok("设置页有面板模式两档（用户 / 开发者）",
@@ -1701,7 +1701,7 @@ if (process.argv.includes("--emit-html")) {
   // 真机/假渲染器对面板模式的读取路径依赖 localStorage 播种，容易受挂载顺序影响；
   // 这里钉源码级判据（上面已有两条行为断言覆盖 user 模式文案与 dev 模式保留）。
   ok("两种模式的标签都来自同一张词表（不各写一套）",
-    CLIENT_SRC.includes('"识别领域": "我判断你在做"') && CLIENT_SRC.includes('"扫描范围": "我读了多少"'));
+    CLIENT_SRC.includes('"识别领域": "推测大概范围"') && CLIENT_SRC.includes('"扫描范围": "我读了多少"'));
 }
 
 // ── v0.51.2：设置台（console）也走双模式 + 用户模式压缩 UI ────────────────

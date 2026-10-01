@@ -93,7 +93,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.51.8";
+const PLUGIN_VERSION = "0.51.9";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -2912,8 +2912,13 @@ export function apply(ctx, config) {
       const parsed = safeParseJson(raw, {});
       if (!parsed.ok) return sendJson(res, 400, { ok: false, error: `请求体不是合法 JSON（${parsed.reason}）` });
       const payload = parsed.value && typeof parsed.value === "object" ? parsed.value : {};
+      // v0.51.9：累计重置走**同一条**任务路由（加一个 action），不新增路由 —— 路由计数门禁不动。
+      if (payload.action === "resetMemory") {
+        resetSessionMemory(activeSessionId);
+        return sendJson(res, 200, { ok: true, action: "resetMemory", sessionId: activeSessionId ?? null });
+      }
       const action = payload.action === "restore" ? "restore" : payload.action === "set" ? "set" : null;
-      if (action === null) return sendJson(res, 400, { ok: false, error: "action 只认 restore（恢复上次清单）或 set（写入给定清单）" });
+      if (action === null) return sendJson(res, 400, { ok: false, error: "action 只认 restore（恢复上次清单）/ set（写入给定清单）/ resetMemory（清零本对话累计）" });
       const result = writeTaskList(action, payload.todos);
       return sendJson(res, result.ok ? 200 : 400, result);
     } catch (error) {

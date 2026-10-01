@@ -1,3 +1,16 @@
+## v0.51.9
+
+**累计「重置」入口落地（走既有写通道）+「识别领域」改名为「推测大概范围」。**
+
+- 重置实现：**不新增路由**，在面板那条任务 POST 路由里加第三个 action ——
+  `{ action: "resetMemory" }` → 服务端调现成的 `resetSessionMemory(activeSessionId)` → 返回 `{ ok, action, sessionId }`。
+  路由条数门禁（`verify:stats-panel` 的「路由 4 条 / 面板只读」）实测**未动**。
+- 客户端：抽屉页脚新增「重置累计」按钮（28px 触屏热区），复用既有的
+  `panelFetch(bridge, bridge.tasksPath, "POST", …)` —— 与任务清单写通道同一个端点，不另开一条；点完重开抽屉回读。
+- 字段改名（用户模式）：**识别领域 → 推测大概范围** —— 这个值本来就是「按线索猜的类别」，
+  叫「识别」会让人以为是确定结论，改成「推测」更诚实。
+- 判据：`node scripts/verify_ui.mjs` 285 通过 / 0 失败；`npm run verify:stats-panel` 119 通过 / 0 失败（路由 4 条未变）。
+
 ## v0.51.8
 
 **抽屉头部的状态收小一半。**
