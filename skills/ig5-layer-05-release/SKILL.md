@@ -1,7 +1,7 @@
 ---
 name: ig5-layer-05-release
 description: 无限五代 仓库自身的发版前自检 层：命中 whenToUse 触发词即装载
-whenToUse: 任务涉及「发版 · 打补丁 · 版本号提升 · CI 红了 · 自检同步 · tag · tag · tag · tag
+whenToUse: 任务涉及「发版 · 打补丁 · 版本号提升 · CI 红了 · 自检同步 · tag」时装载
 ---
 
 # ig5-layer-05-release · 发版前自检

@@ -14,7 +14,7 @@
  *   4. 既有层（01/05/06）默认不覆盖；清单与回滚脚本落在 ui-preview/ig5-install/。
  */
 import { readdirSync, statSync, mkdirSync, copyFileSync, writeFileSync, readFileSync, existsSync, rmSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import { createHash } from "node:crypto";
 
 const ROOT = process.cwd();
@@ -23,6 +23,15 @@ const TGT = join(ROOT, ".agents", "skills");
 const OUT = join(ROOT, "ui-preview", "ig5-install");
 const argv = process.argv.slice(2);
 const has = (f) => argv.includes(f);
+// --root <dir>：装到宿主技能根（例如 /root/.agents/skills）。
+// 修复点：0.52.0 的装载器只认仓库内目标（ROOT/.agents/skills），宿主一个文件也拿不到；
+// MCP 侧 infinite_gen5_skills 又只搬 ig5-layer-01 + ig5-chain.md 两件 —— 其余 15 层永远装不上。
+// 不传 --root 时行为不变（仍是仓库自己的 .agents/skills）。
+const rootAt = argv.indexOf("--root");
+const TGT_ROOT = rootAt >= 0 && argv[rootAt + 1] ? resolve(argv[rootAt + 1]) : TGT;
+// 常驻思维链的**产物**（源 + 追加的族级路由两条）在 .agents/skills/ig5-chain.md；
+// 宿主技能根只认「目录 + 顶层 SKILL.md」和根目录下的单文件，所以链要平铺到 <root>/ig5-chain.md。
+const CHAIN_ARTIFACT = join(TGT, "ig5-chain.md");
 const APPLY = has("--apply");
 const FORCE = has("--force");
 
@@ -204,42 +213,53 @@ function main() {
   }
 
   const ids = layerIds();
-  const existing = existsSync(TGT) ? readdirSync(TGT) : [];
+  const existing = existsSync(TGT_ROOT) ? readdirSync(TGT_ROOT) : [];
 
   if (has("--rollback")) {
     const manifestPath = join(OUT, "ig5-layers.json");
     if (!existsSync(manifestPath)) throw new Error(`没有清单可回滚：${manifestPath}`);
     const man = JSON.parse(readFileSyncSafe(manifestPath, "utf8"));
     const added = man.layers.filter((l) => !man.before.includes(l.targetId)).map((l) => l.targetId);
-    console.log(`回滚计划：删除 ${added.length} 个本次新增目录${APPLY ? "（真删）" : "（dry-run）"}：\n  ${added.join("\n  ")}`);
-    if (APPLY) for (const id of added) rmSync(join(TGT, id), { recursive: true, force: true });
+    const target = man.target || TGT_ROOT;
+    console.log(`回滚计划：删 ${added.length} 个本次新增目录${man.chain?.installed ? " + ig5-chain.md" : ""}${APPLY ? "（真删）" : "（dry-run）"}：\n  ${added.join("\n  ")}`);
+    if (APPLY) {
+      for (const id of added) rmSync(join(target, id), { recursive: true, force: true });
+      if (man.chain?.installed) rmSync(join(target, "ig5-chain.md"), { force: true });
+    }
     return;
   }
 
   const plans = ids.map(planOne);
   const news = plans.filter((p) => !existing.includes(p.targetId));
   const kept = plans.filter((p) => existing.includes(p.targetId));
+  // 常驻思维链：产物优先，缺产物时退回源文件（源少两条族级路由）。
+  const chainSrc = existsSync(CHAIN_ARTIFACT) ? CHAIN_ARTIFACT : join(SRC, "ig5-chain.md");
+  const chainExists = existsSync(chainSrc);
+  const chainBytes = chainExists ? statSync(chainSrc).size : 0;
+  const chainKept = existsSync(join(TGT_ROOT, "ig5-chain.md"));
+  const chainAct = chainKept ? (FORCE ? "覆盖" : "保留") : "新增";
 
-  console.log(`源：${SRC}\n目标：${TGT}\n既有层：${existing.filter((x) => x.startsWith("ig5-layer")).join(" ") || "（无）"}\n`);
+  console.log(`源：${SRC}\n目标：${TGT_ROOT}\n既有层：${existing.filter((x) => x.startsWith("ig5-layer")).join(" ") || "（无）"}\n`);
   console.log("| 层 | 装载名 | 文件 | 去重跳过 | 字节 | 动作 |");
   console.log("| --- | --- | --- | --- | --- | --- |");
   for (const p of plans) {
     const act = existing.includes(p.targetId) ? (FORCE ? "覆盖" : "保留") : "新增";
     console.log(`| ${p.id} | ${p.targetId} | ${p.files} | ${p.dropped} | ${p.bytes} | ${act} |`);
   }
-  const addBytes = news.reduce((a, p) => a + p.bytes, 0);
-  console.log(`\n新增 ${news.length} 层 / 保留 ${kept.length} 层 / 新增体积 ${addBytes} B`);
+  console.log(`| ig5-chain.md | ig5-chain.md（常驻思维链） | 1 | 0 | ${chainBytes} | ${chainAct} |`);
+  const addBytes = news.reduce((a, p) => a + p.bytes, 0) + (chainKept ? 0 : chainBytes);
+  console.log(`\n新增 ${news.length} 层 + 链 ${chainKept ? "0" : "1"} / 保留 ${kept.length} 层 / 新增体积 ${addBytes} B`);
 
   if (!APPLY) {
     console.log("\n（dry-run，未写盘；加 --apply 执行）");
     return;
   }
 
-  mkdirSync(TGT, { recursive: true });
+  mkdirSync(TGT_ROOT, { recursive: true });
   mkdirSync(OUT, { recursive: true });
   const before = [...existing];
   for (const p of news.concat(FORCE ? kept : [])) {
-    const dst = join(TGT, p.targetId);
+    const dst = join(TGT_ROOT, p.targetId);
     for (const rel of walk(join(SRC, p.id))) {
       const excl = EXCLUDE[p.id] || [];
       if (excl.some((x) => rel.startsWith(x))) continue;
@@ -247,15 +267,19 @@ function main() {
       copyFileSync(join(SRC, p.id, rel), join(dst, rel));
     }
   }
-  const manifest = { installedAt: new Date().toISOString(), src: SRC, target: TGT, before, layers: plans };
+  if (chainExists && !chainKept) copyFileSync(chainSrc, join(TGT_ROOT, "ig5-chain.md"));
+  const manifest = { installedAt: new Date().toISOString(), src: SRC, target: TGT_ROOT, before, layers: plans, chain: { installed: chainExists && !chainKept, src: chainSrc, bytes: chainBytes, sha256: chainExists ? sha256(readFileSync(chainSrc, "utf8")) : null } };
   writeFileSync(join(OUT, "ig5-layers.json"), JSON.stringify(manifest, null, 2) + "\n");
   const added = news.map((p) => p.targetId);
   writeFileSync(
     join(OUT, "ROLLBACK.sh"),
-    `#!/usr/bin/env bash\n# 由 scripts/ig5-install-layers.mjs 生成；只删本次新增层，不碰 ${before.join(" ") || "既有层"}\nset -euo pipefail\n${added.map((id) => `rm -rf "${join(TGT, id)}"`).join("\n")}\nrm -f "${join(OUT, "ig5-layers.json")}"\necho "rolled back: ${added.length} layers"\n`
+    `#!/usr/bin/env bash\n# 由 scripts/ig5-install-layers.mjs 生成；只删本次新增层，不碰 ${before.join(" ") || "既有层"}\nset -euo pipefail\n${added.map((id) => `rm -rf "${join(TGT_ROOT, id)}"`).join("\n")}\n${manifest.chain.installed ? `rm -f "${join(TGT_ROOT, "ig5-chain.md")}"` : ""}\nrm -f "${join(OUT, "ig5-layers.json")}"\necho "rolled back: ${added.length} layers"\n`
   );
-  writeFileSync(join(OUT, "VERIFICATION.txt"), `安装清单：${added.length} 层 / ${news.reduce((a, p) => a + p.files, 0)} 文件 / ${addBytes} B\n目标：${TGT}\n时间：${manifest.installedAt}\n`);
-  console.log(`\n已写盘：${added.length} 层 → ${TGT}\n清单：ui-preview/ig5-install/ig5-layers.json · 回滚：ROLLBACK.sh`);
+  writeFileSync(
+    join(OUT, "VERIFICATION.txt"),
+    `安装清单：${added.length} 层 / ${news.reduce((a, p) => a + p.files, 0)} 文件 / ${addBytes} B\n常驻链：${manifest.chain.installed ? `ig5-chain.md ${chainBytes} B` : "未新增"}\n目标：${TGT_ROOT}\n时间：${manifest.installedAt}\n`
+  );
+  console.log(`\n已写盘：${added.length} 层${manifest.chain.installed ? " + ig5-chain.md" : ""} → ${TGT_ROOT}\n清单：ui-preview/ig5-install/ig5-layers.json · 回滚：ROLLBACK.sh`);
 }
 
 main();

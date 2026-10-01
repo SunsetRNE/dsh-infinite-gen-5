@@ -1,7 +1,7 @@
 ---
 name: env-bootstrap
-description: 无限五代 在一台陌生/残缺的 Linux 主机上， 层：命中 whenToUse 触发词即装载
-whenToUse: 在一台陌生 · 残缺的 Linux 主机（含 Android 容器 · aarch64 · 无 CAP 的受限环境）上， · Linux · Android · aarch64 · CAP ·
+description: 无限五代 在一台陌生/残缺的 Linux 主机上 层：命中 whenToUse 触发词即装载
+whenToUse: 在一台陌生 / 残缺的 Linux 主机（含 Android 容器 / aarch64 / 无 CAP 的受限环境）上，
 ---
 
 # env-bootstrap · 环境探测与工具链重建

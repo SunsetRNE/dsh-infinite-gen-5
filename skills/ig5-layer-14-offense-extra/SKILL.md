@@ -1,7 +1,7 @@
 ---
 name: ig5-layer-14-offense-extra
 description: 无限五代 攻防余项 层：命中 whenToUse 触发词即装载
-whenToUse: 无线电 · RFID · 车机 CAN · VoIP · 虚拟化逃逸 · 小程序 · RFID · CAN · VoIP · RFID · CAN · VoIP
+whenToUse: 任务涉及「无线电 · RFID · 车机 CAN · VoIP · 虚拟化逃逸 · 小程序」时装载
 ---
 
 # 无限五代 · ig5-layer-14-offense-extra（攻防余项）

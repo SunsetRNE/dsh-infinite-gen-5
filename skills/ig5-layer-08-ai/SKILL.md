@@ -1,7 +1,7 @@
 ---
 name: ig5-layer-08-ai
 description: 无限五代 AI / LLM 层：命中 whenToUse 触发词即装载
-whenToUse: 提示词提取 · 越狱 · 注入 · 对抗后缀 · RAG 投毒 · 多模态 · RAG · RAG · RAG
+whenToUse: 任务涉及「提示词提取 · 越狱 · 注入 · 对抗后缀 · RAG 投毒 · 多模态」时装载
 ---
 
 # 无限五代 · ig5-layer-08-ai（AI / LLM）

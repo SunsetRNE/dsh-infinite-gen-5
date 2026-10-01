@@ -1,7 +1,7 @@
 ---
 name: ig5-layer-13-crypto
 description: 无限五代 密码与协议余项 层：命中 whenToUse 触发词即装载
-whenToUse: DRM · PKI · HSM 密钥 · 后量子迁移 · 钱包链上密钥 · 侧信道 · DRM · PKI · HSM · DRM · PKI · HSM
+whenToUse: 任务涉及「DRM · PKI · HSM 密钥 · 后量子迁移 · 钱包链上密钥 · 侧信道」时装载
 ---
 
 # 无限五代 · ig5-layer-13-crypto（密码与协议余项）

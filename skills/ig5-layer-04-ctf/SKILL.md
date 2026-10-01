@@ -1,7 +1,7 @@
 ---
 name: ig5-layer-04-ctf
 description: 无限五代 合集融合 层：命中 whenToUse 触发词即装载
-whenToUse: 任务涉及「CTF · 杂项 · 密码学 · 工控 · 区块链 · 云安全 · CTF · CTF · CTF
+whenToUse: 任务涉及「CTF · 杂项 · 密码学 · 工控 · 区块链 · 云安全」时装载
 ---
 # 无限五代 · 合集融合层 ig5-layer-04-ctf
 

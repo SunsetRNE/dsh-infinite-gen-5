@@ -1,7 +1,7 @@
 ---
 name: ig5-layer-07-dsha
 description: 无限五代 DSHA/Android 容器里的设备通 层：命中 whenToUse 触发词即装载
-whenToUse: 任务涉及「截图 · 读屏 · 点按 · 设备桥 3090 · MCP 工具超时 · OPERATION_UNAVAILA · MCP · OPERATION_UNAVAILA · MCP · 
+whenToUse: 任务涉及「截图 · 读屏 · 点按 · 设备桥 3090 · MCP 工具超时 · OPERATION_UNAVAILA」时装载
 ---
 
 # ig5-layer-07-dsha · 设备通道与替代路径

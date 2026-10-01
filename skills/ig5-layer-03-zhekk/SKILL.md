@@ -1,7 +1,7 @@
 ---
 name: ig5-layer-03-zhekk
 description: 无限五代 合集融合 层：命中 whenToUse 触发词即装载
-whenToUse: 任务涉及「红队终端 · 渗透工作流 · OPSEC · 反爬对抗 · H1 案例 · WAF 绕过 · OPSEC · WAF · OPSEC · WAF · OPSEC · WAF
+whenToUse: 任务涉及「红队终端 · 渗透工作流 · OPSEC · 反爬对抗 · H1 案例 · WAF 绕过」时装载
 ---
 # 无限五代 · 合集融合层 ig5-layer-03-zhekk
 

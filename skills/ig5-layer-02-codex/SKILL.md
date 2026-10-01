@@ -1,7 +1,7 @@
 ---
 name: ig5-layer-02-codex
 description: 无限五代 合集融合 层：命中 whenToUse 触发词即装载
-whenToUse: 任务涉及「Codex 技能 · 破甲 · 越狱 · 红队技能 · 游戏作弊 · 反作弊 · Codex · Codex · Codex
+whenToUse: 任务涉及「Codex 技能 · 破甲 · 越狱 · 红队技能 · 游戏作弊 · 反作弊」时装载
 ---
 # 无限五代 · 合集融合层 ig5-layer-02-codex
 
