@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.52.4";
+        var VERSION = "v0.52.5";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -70,6 +70,62 @@
         //   dot     —— 纯圆点：一切文字只在浮层与 title 里
         // 判决常驻、颜色仍走宿主 success/error 令牌 —— 亮着就说明它生效了。
         var TRIGGER_MODES = ["glyph", "compact", "full", "dot"];
+        // === IG5-VISUAL-STATE-BEGIN ===
+        // v0.52.5 · 运行时视觉状态机（纯函数，可在 Node 里单测；浏览器里挂 window.__IG5_VISUAL_STATE__）。
+        //   事件：reset / inject-ok（注入成功一次） / alert（拦截或异常注入） / tool-call（调用了插件自身的工具） / tick
+        //   返回：{ phase: "blue"|"alert"|"call", flashes, mark: "ok"|"warn"|null, ok, injected, alerted, called }
+        //   规则：alert 优先于 call；alert 红橙交替 ×3 次（每秒一次）后自动回 blue；call 紫闪一次（0.9s）后回 blue。
+        var IG5_VISUAL = { FLASHES: 3, FLASH_MS: 1000, CALL_MS: 900 };
+        function ig5VisualState(prev, ev, now) {
+          var t = typeof now === "number" ? now : 0;
+          var s = prev && typeof prev === "object"
+            ? {
+              phase: prev.phase || "blue",
+              flashes: prev.flashes || 0,
+              startedAt: prev.startedAt || 0,
+              ok: prev.ok === undefined ? null : prev.ok,
+              injected: prev.injected || 0,
+              alerted: !!prev.alerted,
+              called: !!prev.called
+            }
+            : { phase: "blue", flashes: 0, startedAt: 0, ok: null, injected: 0, alerted: false, called: false };
+          var type = ev && ev.type ? ev.type : "tick";
+          if (type === "reset") {
+            s = { phase: "blue", flashes: 0, startedAt: 0, ok: null, injected: 0, alerted: false, called: false };
+          } else if (type === "inject-ok") {
+            s.injected += 1;
+          } else if (type === "alert") {
+            s.alerted = true;
+            s.ok = false;
+            s.phase = "alert";
+            s.flashes = 1;
+            s.startedAt = t;
+          } else if (type === "tool-call") {
+            s.called = true;
+            if (s.phase !== "alert") {
+              s.phase = "call";
+              s.startedAt = t;
+            }
+          }
+          if (s.startedAt > 0 && (s.phase === "alert" || s.phase === "call")) {
+            var span = s.phase === "alert" ? IG5_VISUAL.FLASHES * IG5_VISUAL.FLASH_MS : IG5_VISUAL.CALL_MS;
+            var age = t - s.startedAt;
+            if (age >= span) {
+              s.phase = "blue";
+              s.startedAt = 0;
+              s.flashes = 0;
+            } else if (s.phase === "alert") {
+              s.flashes = Math.min(IG5_VISUAL.FLASHES, Math.floor(age / IG5_VISUAL.FLASH_MS) + 1);
+            }
+          }
+          if (s.ok === null && s.injected > 0 && !s.alerted) s.ok = true;
+          s.mark = s.ok === true ? "ok" : s.ok === false ? "warn" : null;
+          return s;
+        }
+        // === IG5-VISUAL-STATE-END ===
+        if (typeof window !== "undefined") {
+          window.__IG5_VISUAL_STATE__ = ig5VisualState;
+        }
         var TRIGGER_MODE = "glyph";
 
         // 判决的单字符代号。领域 id 是英文，跟状态词拼在一起读起来像句子
@@ -199,6 +255,17 @@
           ".dsh-armor5-hits li[data-fresh='1']{animation:dsh-armor5-flash 1.6s ease-out}",
           "@keyframes dsh-armor5-flash{0%{background:var(--dsw-alias-bg-layer-3,rgba(127,127,127,.22));",
           "transform:translateY(-2px)}100%{background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08));transform:none}}",
+          // v0.52.5 · 运行时视觉四态（浮点渲染规则）：
+          //   正常监测 = 深蓝→浅蓝渐变呼吸；拦截 / 异常注入 = 红橙交替 ×3（每秒一次）后自动回蓝；
+          //   调用插件自身的工具 = 紫色单闪一次；整场判据 = 绿 ✓ / 橙 🟠。
+          ".dsh-armor5-root[data-ig5-visual=blue]{animation:dshArmor5Breath 3.2s ease-in-out infinite}",
+          "@keyframes dshArmor5Breath{0%,100%{color:#2f6fed;filter:brightness(.82)}50%{color:#7fb2ff;filter:brightness(1.28)}}",
+          ".dsh-armor5-root[data-ig5-visual=alert]{animation:dshArmor5Alert 1s steps(1,end) 3}",
+          "@keyframes dshArmor5Alert{0%{color:#f85149;background:rgba(248,81,73,.20)}50%{color:#d29922;background:rgba(210,153,34,.20)}100%{color:#f85149;background:rgba(248,81,73,.20)}}",
+          ".dsh-armor5-root[data-ig5-visual=call]{animation:dshArmor5Call .9s ease-out 1}",
+          "@keyframes dshArmor5Call{0%{color:#a371f7;transform:scale(1.16)}100%{color:inherit;transform:none}}",
+          ".dsh-armor5-root[data-ig5-mark=ok]::after{content:'✓';margin-left:3px;color:var(--dsw-alias-state-success-primary,#3fb950)}",
+          ".dsh-armor5-root[data-ig5-mark=warn]::after{content:'🟠';margin-left:3px}",
           // v0.16.5：字段铺成「田字格」—— 最窄 286px 的卡片里，竖排一行一字段会连成一堵灰字墙；
           // 两列 tile（上标签、下值）让同一屏的信息量翻倍，视线的落点也从「找行」变成「数格子」。
           ".dsh-armor5-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}",
@@ -655,6 +722,30 @@
           var textChars = armor && typeof armor.textChars === "number" ? armor.textChars : 0;
           var openingChars = armor && typeof armor.openingChars === "number" ? armor.openingChars : 0;
           var at = armor && typeof armor.at === "number" && armor.at > 0 ? armor.at : null;
+          // v0.52.5：把投影里的信号翻成视觉事件再喂状态机 ——
+          //   异常词汇命中（words/risk）· 让位/跳过 · 兜底 / 拒绝 / 空答 → alert（红橙交替 ×3）
+          //   本插件自己的工具被调用（tools 环里出现 infinite_gen5_*） → tool-call（紫闪一次）
+          //   其余每拍 tick；判决 pass 记一次注入成功（整场无 alert 即绿 ✓，出过 alert 就橙 🟠）
+          var visualPrev = (typeof window !== "undefined" && window.__IG5_VISUAL_PREV__) || null;
+          var ig5ToolCalls = 0;
+          if (armor && Array.isArray(armor.tools)) {
+            ig5ToolCalls = armor.tools.filter(function (x) {
+              return String(x).indexOf("infinite_gen5_") === 0;
+            }).length;
+          }
+          var hitNow = (words.length + risk.length) > 0;
+          var skippedNow = !!(armor && armor.skipped);
+          var visualEv = "tick";
+          if (hitNow || skippedNow || verdict === "fallback" || verdict === "refusal" || verdict === "empty") {
+            visualEv = "alert";
+          } else if (ig5ToolCalls > ((visualPrev && visualPrev.toolCalls) || 0)) {
+            visualEv = "tool-call";
+          } else if (verdict === "pass") {
+            visualEv = "inject-ok";
+          }
+          var visual = ig5VisualState(visualPrev, { type: visualEv }, Date.now());
+          visual.toolCalls = ig5ToolCalls;
+          if (typeof window !== "undefined") window.__IG5_VISUAL_PREV__ = visual;
 
           var tone = "quiet";
           var fullText = IDLE_LABEL;
@@ -1161,6 +1252,8 @@
                 ref: rootRef,
                 "data-armor": "gen5",
                 "data-tone": tone,
+                "data-ig5-visual": visual ? visual.phase : undefined,
+                "data-ig5-mark": visual && visual.mark ? visual.mark : undefined,
                 "data-pressing": pressing ? "1" : undefined,
                 // v0.51.11：触发条也带上面板模式 —— 「执行中 / 空闲」这类状态文字长在触发条上，
                 // 上一版只收小了抽屉里的徽标，所以触发条上那串字看着还是大。
