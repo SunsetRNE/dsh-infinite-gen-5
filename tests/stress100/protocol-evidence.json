@@ -1,6 +1,6 @@
 {
   "protocol": "stress100-single-agent-v1",
-  "root": "/root/仓库合集/dsh-infinite-gen-5/tests/stress100",
+  "root": "/root/S/ig5-remote/tests/stress100",
   "files": {
     "bank-100.txt": {
       "bytes": 15652,

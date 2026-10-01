@@ -1,7 +1,7 @@
 # 工具与工具协议（自动生成）
 
 > 本文件由 `npm run tools:doc` 生成，**不要手改**：改代码或 `scripts/tool-registry.mjs` 后重跑。
-> 协议标识 `ig5-tool-registry-v1` · 在册工具 **117** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
+> 协议标识 `ig5-tool-registry-v1` · 在册工具 **119** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
 
 ## 一、工具协议总则（Tool ABI）
 
@@ -25,7 +25,7 @@
 「每个脚本都在册 / 在册路径都存在 / 声明的能力在文件里真的出现 / npm 别名真的存在 /
 本文件与生成器输出逐字节一致」。
 
-实测分布（现扫文件文本得出）：带 `--json` 的 **61** 个、带 `--selftest` 的 **29** 个、带 `--apply` 的 **9** 个、有 npm 别名的 **93** 个。
+实测分布（现扫文件文本得出）：带 `--json` 的 **61** 个、带 `--selftest` 的 **29** 个、带 `--apply` 的 **10** 个、有 npm 别名的 **93** 个。
 
 ## 二、命名协议注册表
 
@@ -59,7 +59,7 @@
 | `scripts/verify_card_size.mjs` <br>npm: `verify:ui:size` | 浮层判决卡片的「整体大小」锚点。 | `node scripts/verify_card_size.mjs` | `npm run verify:ui:size` | — |
 | `scripts/verify_contracts.mjs` <br>npm: `verify:contracts` | 无限五代 · 服从性轴收口门禁（离线、确定性、无需 API Key、不写用户目录） | `node scripts/verify_contracts.mjs` | `npm run verify:contracts` | `--json` |
 | `scripts/verify_decay.mjs` <br>npm: `verify:triad` | 衰减轴（instrument 14）实测核验件：把 tests/decay/<区>/rounds/rN.md 的真实轮次重新算一遍。 | `node scripts/verify_decay.mjs` | `npm run verify:triad` | — |
-| `scripts/verify_dedupe.mjs` <br>npm: `verify:dedupe` | 无限五代 v0.52.0 注入去重行为回归（离线、确定性、无需 API Key） | `node scripts/verify_dedupe.mjs` | `npm run verify:dedupe` | `--json` |
+| `scripts/verify_dedupe.mjs` <br>npm: `verify:dedupe` | 无限五代 v0.52.1 注入去重行为回归（离线、确定性、无需 API Key） | `node scripts/verify_dedupe.mjs` | `npm run verify:dedupe` | `--json` |
 | `scripts/verify_density.mjs` <br>npm: `verify:density` | 无限五代 · 上下文密度自检（离线、不连网、不写盘） | `node scripts/verify_density.mjs` | `npm run verify:density` | `--json` |
 | `scripts/verify_dispatch.mjs` <br>npm: `verify:dispatch` | 无限五代 v0.33.0「分发内核」自检：题库真源 / 分片任务书 / 回执解析 / 四态评分 | `node scripts/verify_dispatch.mjs` | `npm run verify:dispatch` | — |
 | `scripts/verify_env.mjs` <br>npm: `verify:env` | 无限五代 · 运行环境探测离线自检（无依赖、不做任何出网请求） | `node scripts/verify_env.mjs` | `npm run verify:env` | `--json` `--out` |
@@ -73,7 +73,7 @@
 | `scripts/verify_prompt.mjs` | 无限五代 兼容回归校验（零工具面纯净版） | `node scripts/verify_prompt.mjs` | `node scripts/verify_prompt.mjs` | `--json` |
 | `scripts/verify_prompt_gen4.mjs` <br>npm: `verify:gen4` | ⚠️ 遗留重定向（legacy redirect）— 本文件已更名为 verify_prompt_gen5.mjs。 | `node scripts/verify_prompt_gen4.mjs` | `npm run verify:gen4` | — |
 | `scripts/verify_prompt_gen41.mjs` <br>npm: `verify:gen41` | ⚠️ 遗留重定向（legacy redirect）— 本文件已更名为 verify_prompt_gen51.mjs。 | `node scripts/verify_prompt_gen41.mjs` | `npm run verify:gen41` | — |
-| `scripts/verify_prompt_gen5.mjs` <br>npm: `verify` `verify:gen5` | 无限五代 v0.52.0 纯净破甲版离线确定性回归校验（无需 API Key） | `node scripts/verify_prompt_gen5.mjs` | `npm run verify` | `--json` |
+| `scripts/verify_prompt_gen5.mjs` <br>npm: `verify` `verify:gen5` | 无限五代 v0.52.1 纯净破甲版离线确定性回归校验（无需 API Key） | `node scripts/verify_prompt_gen5.mjs` | `npm run verify` | `--json` |
 | `scripts/verify_prompt_gen51.mjs` <br>npm: `verify:gen51` | 无限五代 v0.5.0 — 强化镜像层离线确定性回归校验 | `node scripts/verify_prompt_gen51.mjs` | `npm run verify:gen51` | — |
 | `scripts/verify_release_notes.mjs` <br>npm: `verify:notes` | 无限五代 · 发布正文压缩自检（离线、确定性、零依赖） | `node scripts/verify_release_notes.mjs` | `npm run verify:notes` | `--json` |
 | `scripts/verify_runtime_sync.mjs` <br>npm: `verify:runtime` | 无限五代 · 运行态同步核对（离线、只读、不写盘） | `node scripts/verify_runtime_sync.mjs` | `npm run verify:runtime` | — |
@@ -216,7 +216,7 @@
 | `stats-store.mjs` | 统计数据库：插件本体（核心）单写、前端面板单读的那一份 JSON。 | `node stats-store.mjs` | `node stats-store.mjs` | — |
 | `tasks.mjs` | DSH 自身任务清单（todo）的读侧与写侧规则。 | `node tasks.mjs` | `node tasks.mjs` | — |
 
-### 工具（27）
+### 工具（29）
 
 *其余 CLI 工具*
 
@@ -228,6 +228,7 @@
 | `scripts/estimate.mjs` <br>npm: `estimate` `verify:cot-router` | ig5-estimate —— 把一句需求变成「档位 / 形态 / 问法 / 工时 / 日历 / 人民币 / 相位 / 维护期」。 | `node scripts/estimate.mjs` | `npm run verify:cot-router` | `--selftest` `--json` |
 | `scripts/eval-corpus.mjs` <br>npm: `eval:corpus` `gate:eval` `baseline:eval` | 离线评测闭环（P0）· scripts/eval-corpus.mjs | `node scripts/eval-corpus.mjs` | `npm run eval:corpus` | `--json` `--write` `--dir` |
 | `scripts/extract-boost-corpus.mjs` | 无限五代 v0.35.0 · 增强语料提取器（离线、只读附件、不连网） | `node scripts/extract-boost-corpus.mjs` | `node scripts/extract-boost-corpus.mjs` | `--json` `--out` |
+| `scripts/fix-layer-frames.mjs` | 无限五代 · 层帧触发词去重与 description 断句修复（v0.52.1） | `node scripts/fix-layer-frames.mjs` | `node scripts/fix-layer-frames.mjs` | `--apply` `--check` |
 | `scripts/fixtures/ci-mock.mjs` | ci-mock.mjs — GITHUB-CI 协议的离线 mock：让 logs 全文路径（落盘/哈希/门限）可被确定性地验。 | `node scripts/fixtures/ci-mock.mjs` | `node scripts/fixtures/ci-mock.mjs` | — |
 | `scripts/gen_tool_docs.mjs` <br>npm: `tools:doc` | 无限五代 · 工具与文档索引生成器（docs/TOOL-PROTOCOLS.md + docs/INDEX.md） | `node scripts/gen_tool_docs.mjs` | `npm run tools:doc` | `--selftest` `--json` `--apply` `--check` `--write` |
 | `scripts/ig5-ci.mjs` | ig5-ci.mjs — 只读 CI 工具（v0.51.19，GITHUB-CI 协议首个实现） | `node scripts/ig5-ci.mjs` | `node scripts/ig5-ci.mjs` | `--json` |
@@ -244,6 +245,7 @@
 | `scripts/tool-registry.mjs` | 无限五代 · 工具注册表（真源）· scripts/tool-registry.mjs | `node scripts/tool-registry.mjs` | `node scripts/tool-registry.mjs --selftest` | `--selftest` `--json` `--apply` `--check` `--dry-run` `--repro` `--write` `--out` `--live` `--yes` `--dir` `--src` `--bank` |
 | `scripts/verify_ci_tool.mjs` <br>npm: `verify:ci-tool` | verify_ci_tool.mjs — GITHUB-CI 协议门禁（v0.51.19） | `node scripts/verify_ci_tool.mjs` | `npm run verify:ci-tool` | `--json` `--check` |
 | `scripts/verify_cot_router.mjs` <br>npm: `verify:cot-router` | 无限五代 · CoT Router 离线自检（无需网络、无副作用） | `node scripts/verify_cot_router.mjs` | `npm run verify:cot-router` | `--json` |
+| `scripts/verify_step_inject.mjs` | verify_step_inject.mjs — 回归判据：每步注入进收件箱的消息必须带 source，且默认档位是 off。 | `node scripts/verify_step_inject.mjs` | `node scripts/verify_step_inject.mjs` | — |
 | `scripts/verify_tool_registry.mjs` <br>npm: `verify:tools` | 无限五代 · 工具注册表门禁（scripts/verify_tool_registry.mjs） | `node scripts/verify_tool_registry.mjs` | `npm run verify:tools` | `--selftest` `--json` `--apply` |
 | `scripts/verify_win_compat.mjs` <br>npm: `verify:win-compat` | 无限五代 · Windows 兼容自检（实验性，无网络、无副作用、不改任何文件） | `node scripts/verify_win_compat.mjs` | `npm run verify:win-compat` | `--json` |
 | `scripts/version-targets.mjs` | 无限五代 · 版本号字面量的「当前版本锚点」唯一真源（离线、零依赖） | `node scripts/version-targets.mjs` | `node scripts/version-targets.mjs` | — |
