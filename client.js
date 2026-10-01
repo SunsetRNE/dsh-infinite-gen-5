@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.14";
+        var VERSION = "v0.51.15";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -122,6 +122,15 @@
           // 头部：判决徽标 + 标题 + 版本/时刻（右对齐）。徽标按 tone 上色，一眼分辨通过/拒绝/执行中。
           ".dsh-armor5-head{display:flex;align-items:center;gap:4px}",
           ".dsh-armor5-head b{color:var(--dsw-alias-label-primary,#e6e6e6);font-weight:500}",
+          // v0.51.15：抽屉头部的「挤占」治理 —— 这一行以前没有任何收缩约束（无 min-width:0、无 nowrap，
+          // 右侧簇也没定宽），元素一多就互相顶。现在：页签区可收缩可横滚，右侧簇固定不缩，版本可截断。
+          ".dsh-armor5-drawer .dsh-armor5-tabs{flex:1 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none}",
+          ".dsh-armor5-drawer .dsh-armor5-tabs::-webkit-scrollbar{display:none}",
+          ".dsh-armor5-drawer .dsh-armor5-head-right{flex:0 0 auto;min-width:0;gap:3px;white-space:nowrap}",
+          ".dsh-armor5-drawer .dsh-armor5-ver{flex:0 1 auto;min-width:0;max-width:64px;overflow:hidden;",
+          "text-overflow:ellipsis;white-space:nowrap}",
+          // 用户模式不显示版本号：它是开发者信息，占着这一行的位置还挤别人。
+          ".dsh-armor5-drawer[data-panel='user'] .dsh-armor5-ver{display:none}",
           ".dsh-armor5-head-right{margin-left:auto;display:flex;align-items:center;gap:5px;",
           "color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;font-variant-numeric:tabular-nums}",
           ".dsh-armor5-badge{display:inline-flex;align-items:center;height:15px;padding:0 6px;border-radius:999px;",
@@ -1053,6 +1062,7 @@
                   "aria-modal": "true",
                   "data-tone": tone,
                   "data-tab": drawerTab,
+                  "data-panel": dockPrefs.panelMode === "dev" ? "dev" : "user",
                   style: drawerBox
                     ? {
                       left: 0,
@@ -1088,7 +1098,7 @@
                   react.createElement("span", { className: "dsh-armor5-head-right" },
                     react.createElement("span", { className: "dsh-armor5-badge", "data-tone": tone }, badgeText),
                     react.createElement("span", null, clock === "—" ? "本次会话" : clock),
-                    react.createElement("span", null, VERSION),
+                    react.createElement("span", { className: "dsh-armor5-ver" }, VERSION),
                     react.createElement("button", {
                       type: "button",
                       className: "dsh-armor5-panel-toggle",
