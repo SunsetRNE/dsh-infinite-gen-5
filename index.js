@@ -93,7 +93,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.51.6";
+const PLUGIN_VERSION = "0.51.7";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -1804,10 +1804,14 @@ function armorProjectionApply(state, event) {
     sessionMemory.turns += 1;
     sessionMemory.verdicts[scored && scored.verdict === "pass" ? "pass" : "block"] += 1;
     for (const row of (scored?.domainRanked ?? []).slice(0, RANK_KEEP)) bumpCount(sessionMemory.domains, row?.id, row?.hits);
-    for (const marker of scored?.domainMarkers ?? []) bumpCount(sessionMemory.markers, marker);
-    for (const flag of scored?.safe ?? []) bumpCount(sessionMemory.safe, flag);
-    for (const risk of scored?.risk ?? []) {
-      bumpCount(sessionMemory.risks, typeof risk === "string" ? risk : (risk?.label ?? risk?.id));
+    // 计数口径（用户 2026-09-30 拍板）：**按判决计次** —— 同一条判决里同一个词出现多次只记 1 次，
+    // 跨判决累加（所以 `边界 ×7` = 有 7 条判决命中过它）。用 Set 去重后再计。
+    for (const marker of new Set(scored?.domainMarkers ?? [])) bumpCount(sessionMemory.markers, marker);
+    for (const flag of new Set(scored?.safe ?? [])) bumpCount(sessionMemory.safe, flag);
+    for (const risk of new Set((scored?.risk ?? []).map(
+      (item) => (typeof item === "string" ? item : (item?.label ?? item?.id))
+    ))) {
+      bumpCount(sessionMemory.risks, risk);
     }
     if (statsSink !== null) {
       statsSink.bump("hits.total");
