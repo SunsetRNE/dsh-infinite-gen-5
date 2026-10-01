@@ -46,6 +46,13 @@ import {
   renderTakeoverClause,
   scanResidual as scanPromptResidual,
 } from "./data/prompt-override.mjs";
+// 评估层开关（v0.52.3）：默认关档 = 评估相关的思维链整块不注入；开档才注入 + 补 Order 9600 评估层。
+import {
+  stripEvalDirectives,
+  renderEvalLayer,
+  EVAL_LAYER_ORDER,
+  EVAL_LAYER_SECTION,
+} from "./data/eval-layer.mjs";
 // 首句层 + 压缩后再锚定（v0.37.0）：宿主的系统段按 order 升序拼接，宿主身份段用 -1000；
 // 本层用更小的 order 抢到整份系统提示的第一句。压缩事件由宿主的 session/event 送达，
 // 收到就置一次标记 —— 下一次运行时锚点文本换新，宿主的运行时上下文快照比对发现变了必然
@@ -101,7 +108,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.52.2";
+const PLUGIN_VERSION = "0.52.3";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -119,14 +126,30 @@ const escapeTemplate = (text) => text.replace(/\{\{(?!(?:cwd|model|provider)\}\}
 // 「内核改了、注入的还是旧文本」的根因（实测：进程 07:39 启动、内核 08:08 改写 → 子会话仍逐字引用旧三态）。
 const KERNEL_CACHE = new Map();
 const KERNEL_STATE = { reloads: 0, lastPath: "", lastMtimeMs: 0, lastBytes: 0 };
-function kernelText(url) {
-  const key = String(url.pathname || url);
+// 评估层关档时的摘除回执（v0.52.3）：哪几段被摘、摘前摘后各多少字节 —— 进 runtime.eval 便于核对。
+const EVAL_STRIP = { applied: 0, last: null };
+function kernelText(url, { raw = false } = {}) {
+  const key = `${String(url.pathname || url)}${raw ? "#raw" : ""}`;
   const hit = KERNEL_CACHE.get(key);
   try {
     const stat = statSync(url);
     const sig = `${stat.mtimeMs}:${stat.size}`;
     if (hit && hit.sig === sig) return hit.text;
-    const text = escapeTemplate(readFileSync(url, "utf8"));
+    const source = readFileSync(url, "utf8");
+    // 评估层关档（默认）：评分接口块 + 自评指针行整块摘掉 —— 只摘指针不摘块、或只摘块不摘指针，
+    // 都会留下「有指针没正文」或「有正文没触发」的半截状态，所以这里一次摘干净。
+    // raw=true 只用于「同源让位」的比对基准：比对要拿未摘版本，否则宿主带着完整内核时反而认不出来。
+    const strip = raw || IG5_CONFIG.EVAL_LAYER === true ? null : stripEvalDirectives(source);
+    if (strip && strip.changed) {
+      EVAL_STRIP.applied += 1;
+      EVAL_STRIP.last = {
+        reasons: strip.reasons,
+        missing: strip.missing,
+        bytesBefore: Buffer.byteLength(source, "utf8"),
+        bytesAfter: Buffer.byteLength(strip.text, "utf8"),
+      };
+    }
+    const text = escapeTemplate(strip && strip.changed ? strip.text : source);
     KERNEL_CACHE.set(key, { sig, text });
     KERNEL_STATE.reloads += 1;
     KERNEL_STATE.lastPath = key;
@@ -461,6 +484,7 @@ const BATCH_SCAN_CAP = 20000;
 //         BOOST_MODE: full
 //         EXCLUSIVE_SECTION: true
 const TUNABLE_KEYS = [
+  "EVAL_LAYER",
   "OVERRIDE_MODE",
   "OVERRIDE_CLAUSE",
   "LAYER2_MODE",
@@ -499,10 +523,11 @@ const ENV_OF_KEY = {
   // IG5_OVERRIDE_DROP 刻意不进调参目录与 effective：它是自由文本清单，目录里没有文本框控件，
   // 硬塞进去会牵动 TUNABLE_KEYS 与条目数断言（同 verify_tuning 里 boost/lazy 目录外开关的口径）。
   OVERRIDE_CLAUSE: "IG5_OVERRIDE_CLAUSE",
+  EVAL_LAYER: "IG5_EVAL_LAYER",
 };
 // 只有真布尔键走 true/false 转换；档位键（LAYER2_MODE / TAIL_MODE / RUNTIME_ANCHOR_MODE /
 // ASK_GATE_MODE）的 "off"/"auto"/"on" 是字符串取值，不能被布尔化，否则 off 档会静默失效。
-const BOOL_KEYS = new Set(["DEDUPE_PAYLOAD", "EXCLUSIVE_SECTION", "OVERRIDE_CLAUSE"]);
+const BOOL_KEYS = new Set(["DEDUPE_PAYLOAD", "EXCLUSIVE_SECTION", "OVERRIDE_CLAUSE", "EVAL_LAYER"]);
 // 档位键的合法取值（越界一律判「本次不使用」，回落下一来源 —— 与数值键同一口径）。
 const MODE_KEYS = Object.freeze({ OVERRIDE_MODE: OVERRIDE_MODES });
 // 数值键的合法区间。越界值不是「更省」，而是静默把功能掐死：实测 BOOST_BYTES=4 会让
@@ -548,8 +573,14 @@ const OVERRIDE_CLAUSE = (process.env.IG5_OVERRIDE_CLAUSE ?? "on").toLowerCase() 
 const OVERRIDE_SECTION = "infinite-gen-5:override-clause";
 const OVERRIDE_ORDER = 9900; // 中段锚点 200 之后、真末位锚点 10150 之前
 
+// 评估层开关（v0.52.3）：默认 **off** —— 评估相关的思维链（评分接口 / 写作侧六条 / 元认知自评 /
+// 评估纪律）整块不注入，模型不会在收尾时自己评估；开档才注入，并补一段 Order 9600 评估层把
+// 「什么时候评估」钉在总结 / 收尾。真正做到「想注入就注入，不想注入就不注入」。
+const EVAL_LAYER = ["on", "true", "1"].includes(String(process.env.IG5_EVAL_LAYER ?? "off").trim().toLowerCase());
+
 // 文件默认值：唯一基线。每次重新解析都从这里重算，避免上一次的覆盖「粘」在配置里。
 const IG5_DEFAULTS = Object.freeze({
+  EVAL_LAYER,
   OVERRIDE_MODE,
   OVERRIDE_CLAUSE,
   LAYER2_MODE,
@@ -798,6 +829,16 @@ const TUNING_CATALOG = [
     ],
   },
   {
+    key: "EVAL_LAYER",
+    kind: "bool",
+    label: "评估层（Order 9600）",
+    hint: "评估相关的思维链是否注入：关档时内核里的评分接口/自评指针整块不注入",
+    options: [
+      { value: false, label: "关", hint: "不注入评估段，模型收尾时不做评估（默认）" },
+      { value: true, label: "开", hint: "注入 Order 9600 评估层：总结/收尾时做一次评估（逐条引原句 + 三态 + 四态）" },
+    ],
+  },
+  {
     key: "OVERRIDE_MODE",
     label: "提示词接管（训练档）",
     hint: "按段让位宿主平台自带系统段；自有宿主/授权靶场专用",
@@ -864,6 +905,7 @@ const STEP_INJECT_TEXT = [
 // 注意：这五个常量必须定义在 IG5_DEFAULTS 之前 —— 那个 frozen 对象会立刻读它们（TDZ）。
 
 export const IG5_CONFIG = {
+  EVAL_LAYER,
   OVERRIDE_MODE,
   OVERRIDE_CLAUSE,
   TASK_MODE,
@@ -2297,9 +2339,11 @@ export function apply(ctx, config) {
     publishStats();
   };
 
-  const registerSection = (spec, label, where) => {
+  // basis：同源让位的比对基准（默认用待注入文本本身）。评估层关档时内核被摘过，
+  // 拿摘后的文本去比对会认不出「宿主已经带着完整内核」，所以那种场景传未摘版本。
+  const registerSection = (spec, label, where, basis) => {
     if (CFG.DEDUPE_PAYLOAD) {
-      const dup = findSameKernel(spec.text, hostSections(ctx.systemPrompt), ownNames);
+      const dup = findSameKernel(basis ?? spec.text, hostSections(ctx.systemPrompt), ownNames);
       if (dup) {
         const row = {
           label,
@@ -2428,6 +2472,23 @@ export function apply(ctx, config) {
     });
   };
 
+  // 评估层（v0.52.3 · 开关档）：默认关档不注入任何评估段；开档才补一段 Order 9600，
+  // 把「什么时候评估」钉死在总结 / 收尾，并给出可核条目（逐条引原句 / 三态 / 四态 / 不做分数表演）。
+  const registerEvalLayer = () => {
+    const on = CFG.EVAL_LAYER === true;
+    if (!on) {
+      runtime.eval = { on: false, strip: EVAL_STRIP.last, strippedRuns: EVAL_STRIP.applied };
+      return;
+    }
+    const text = renderEvalLayer();
+    const ok = registerSection(
+      { name: EVAL_LAYER_SECTION, order: EVAL_LAYER_ORDER, text },
+      "Order 9600 评估层（开关档）",
+      "order 9600：仅开档时注入，钉住总结 / 收尾评估时机",
+    );
+    runtime.eval = { on: !!ok, section: EVAL_LAYER_SECTION, order: EVAL_LAYER_ORDER, chars: text.length };
+  };
+
   // 运行时锚点：注册进「运行时上下文」槽。宿主每步把该快照作为最后一条 user 消息
   // 追加在消息列表尾部；快照文本一变就重发一份，所以节拍靠换文本实现。
   const registerRuntimeAnchor = () => {
@@ -2504,6 +2565,8 @@ export function apply(ctx, config) {
       primarySpec,
       exclusive ? "Order 100 通用内核（complete 独占）" : "Order 100 通用内核",
       exclusive ? "系统提示唯一段（complete: true，其余系统段被宿主丢弃）" : undefined,
+      // 比对基准用未摘版本：评估层关档时注入文本被摘过，拿摘后的去比会漏判同源让位。
+      kernelText(PROMPT_URL, { raw: true }),
     );
     runtime.role = primaryOk ? "primary" : "yielded";
 
@@ -2578,7 +2641,11 @@ export function apply(ctx, config) {
     // 章数不写死（原来写「9 段」，批次长到 14 章后就成了伪信息）：要报数就取 lazyStats().units。
     const lazyLive = () => {
       const userText = typeof liveState.lastUserText === "string" ? liveState.lastUserText : "";
-      return compileLazy({ text: userText, mode: IG5_CONFIG.LAZY_MODE, bytes: IG5_CONFIG.LAZY_BYTES });
+      const compiled = compileLazy({ text: userText, mode: IG5_CONFIG.LAZY_MODE, bytes: IG5_CONFIG.LAZY_BYTES });
+      // 评估层关档：惰性拼回里若命中 L_writing6 / L_meta / L_eval，也一并摘掉（与常驻侧同一把刀）。
+      if (IG5_CONFIG.EVAL_LAYER === true || !compiled.text) return compiled;
+      const strip = stripEvalDirectives(compiled.text);
+      return strip.changed ? { ...compiled, text: strip.text, evalStripped: strip.reasons } : compiled;
     };
     // 与内核、增强集一致：内核让给同源宿主时不单独挂 —— 惰性章节是内核正文的搬运，
     // 内核不在场时挂上去就是一堆没有上下文的段落。
@@ -2764,6 +2831,7 @@ export function apply(ctx, config) {
         );
       }
       registerOverrideWaterfall();
+      registerEvalLayer();
       if (CFG.RUNTIME_ANCHOR_MODE !== "off" && typeof ctx.systemPrompt.context === "function") {
         registerRuntimeAnchor();
       } else if (CFG.RUNTIME_ANCHOR_MODE !== "off") {

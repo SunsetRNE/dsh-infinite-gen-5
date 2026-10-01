@@ -1,7 +1,7 @@
 # 工具与工具协议（自动生成）
 
 > 本文件由 `npm run tools:doc` 生成，**不要手改**：改代码或 `scripts/tool-registry.mjs` 后重跑。
-> 协议标识 `ig5-tool-registry-v1` · 在册工具 **120** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
+> 协议标识 `ig5-tool-registry-v1` · 在册工具 **121** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
 
 ## 一、工具协议总则（Tool ABI）
 
@@ -216,7 +216,7 @@
 | `stats-store.mjs` | 统计数据库：插件本体（核心）单写、前端面板单读的那一份 JSON。 | `node stats-store.mjs` | `node stats-store.mjs` | — |
 | `tasks.mjs` | DSH 自身任务清单（todo）的读侧与写侧规则。 | `node tasks.mjs` | `node tasks.mjs` | — |
 
-### 工具（30）
+### 工具（31）
 
 *其余 CLI 工具*
 
@@ -245,6 +245,7 @@
 | `scripts/tool-registry.mjs` | 无限五代 · 工具注册表（真源）· scripts/tool-registry.mjs | `node scripts/tool-registry.mjs` | `node scripts/tool-registry.mjs --selftest` | `--selftest` `--json` `--apply` `--check` `--dry-run` `--repro` `--write` `--out` `--live` `--yes` `--dir` `--src` `--bank` |
 | `scripts/verify_ci_tool.mjs` <br>npm: `verify:ci-tool` | verify_ci_tool.mjs — GITHUB-CI 协议门禁（v0.51.19） | `node scripts/verify_ci_tool.mjs` | `npm run verify:ci-tool` | `--json` `--check` |
 | `scripts/verify_cot_router.mjs` <br>npm: `verify:cot-router` | 无限五代 · CoT Router 离线自检（无需网络、无副作用） | `node scripts/verify_cot_router.mjs` | `npm run verify:cot-router` | `--json` |
+| `scripts/verify_eval_layer.mjs` | verify_eval_layer.mjs —— 评估层开关（v0.52.3）回归判据：摘除器 + 注入层 + index.js 接线。 | `node scripts/verify_eval_layer.mjs` | `node scripts/verify_eval_layer.mjs` | — |
 | `scripts/verify_override.mjs` | verify_override.mjs —— 提示词接管（v0.52.2）回归判据：纯函数层 + index.js 接线。 | `node scripts/verify_override.mjs` | `node scripts/verify_override.mjs` | — |
 | `scripts/verify_step_inject.mjs` | verify_step_inject.mjs — 回归判据：每步注入进收件箱的消息必须带 source，且默认档位是 off。 | `node scripts/verify_step_inject.mjs` | `node scripts/verify_step_inject.mjs` | — |
 | `scripts/verify_tool_registry.mjs` <br>npm: `verify:tools` | 无限五代 · 工具注册表门禁（scripts/verify_tool_registry.mjs） | `node scripts/verify_tool_registry.mjs` | `npm run verify:tools` | `--selftest` `--json` `--apply` |
