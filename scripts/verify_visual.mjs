@@ -64,7 +64,9 @@ check("reset 清空相位/计数/标记", r.phase === "blue" && r.injected === 0
 check("CSS：蓝色渐变呼吸", /\[data-ig5-visual=blue\]\{animation:dshArmor5Breath/.test(src) && /@keyframes dshArmor5Breath/.test(src));
 check("CSS：红橙交替 3 次 / 每秒一次", /\[data-ig5-visual=alert\]\{animation:dshArmor5Alert 1s steps\(1,end\) 3\}/.test(src) && /@keyframes dshArmor5Alert/.test(src));
 check("CSS：紫色单闪一次", /\[data-ig5-visual=call\]\{animation:dshArmor5Call \.9s ease-out 1\}/.test(src) && /@keyframes dshArmor5Call/.test(src));
-check("CSS：绿 ✓ 与橙 🟠 标记", /\[data-ig5-mark=ok\]::after\{content:'✓'/.test(src) && /\[data-ig5-mark=warn\]::after\{content:'🟠'/.test(src));
+check("CSS：绿 ✓ 与橙 🟠 标记（字符版，仅无字形时用）", /\[data-ig5-mark-char=ok\]::after\{content:'✓'/.test(src) && /\[data-ig5-mark-char=warn\]::after\{content:'🟠'/.test(src));
+check("CSS：有字形时只染边框不重复画字符", /\[data-ig5-mark=ok\]\{box-shadow:inset/.test(src) && /\[data-ig5-mark=warn\]\{box-shadow:inset/.test(src));
+check("不重复画勾：字符标记带 !glyphText 守卫", /visual \&\& visual\.mark \&\& !glyphText \? visual\.mark : undefined/.test(src));
 check("根节点带 data-ig5-visual / data-ig5-mark", /"data-ig5-visual": visual \? visual\.phase : undefined/.test(src) && /"data-ig5-mark": visual && visual\.mark \? visual\.mark : undefined/.test(src));
 check("事件推导在场（命中/跳过/兜底→alert，infinite_gen5_*→tool-call，pass→inject-ok）", /visualEv = "alert"/.test(src) && /visualEv = "tool-call"/.test(src) && /visualEv = "inject-ok"/.test(src) && /indexOf\("infinite_gen5_"\) === 0/.test(src));
 check("状态机挂到 window 供测试", /window\.__IG5_VISUAL_STATE__ = ig5VisualState;/.test(src));

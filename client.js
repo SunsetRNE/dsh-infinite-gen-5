@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.52.5";
+        var VERSION = "v0.52.6";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -264,8 +264,12 @@
           "@keyframes dshArmor5Alert{0%{color:#f85149;background:rgba(248,81,73,.20)}50%{color:#d29922;background:rgba(210,153,34,.20)}100%{color:#f85149;background:rgba(248,81,73,.20)}}",
           ".dsh-armor5-root[data-ig5-visual=call]{animation:dshArmor5Call .9s ease-out 1}",
           "@keyframes dshArmor5Call{0%{color:#a371f7;transform:scale(1.16)}100%{color:inherit;transform:none}}",
-          ".dsh-armor5-root[data-ig5-mark=ok]::after{content:'✓';margin-left:3px;color:var(--dsw-alias-state-success-primary,#3fb950)}",
-          ".dsh-armor5-root[data-ig5-mark=warn]::after{content:'🟠';margin-left:3px}",
+          ".dsh-armor5-root[data-ig5-mark=ok]{box-shadow:inset 0 0 0 1px rgba(63,185,80,.55);color:var(--dsw-alias-state-success-primary,#3fb950)}",
+          ".dsh-armor5-root[data-ig5-mark=warn]{box-shadow:inset 0 0 0 1px rgba(210,153,34,.65);color:var(--dsw-alias-state-warning-primary,#d29922)}",
+          // v0.52.6：字符版标记只在**当前形态本来没有字形**时才补。glyph/compact 形态下判决已经画了 ✓，
+          // 再补一个就成了「两个勾」（用户实测截图里正是 `✓ ✓` 并排）。有字形时只染边框与颜色，不重复画。
+          ".dsh-armor5-root[data-ig5-mark-char=ok]::after{content:'✓';margin-left:3px;color:var(--dsw-alias-state-success-primary,#3fb950)}",
+          ".dsh-armor5-root[data-ig5-mark-char=warn]::after{content:'🟠';margin-left:3px}",
           // v0.16.5：字段铺成「田字格」—— 最窄 286px 的卡片里，竖排一行一字段会连成一堵灰字墙；
           // 两列 tile（上标签、下值）让同一屏的信息量翻倍，视线的落点也从「找行」变成「数格子」。
           ".dsh-armor5-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}",
@@ -1254,6 +1258,8 @@
                 "data-tone": tone,
                 "data-ig5-visual": visual ? visual.phase : undefined,
                 "data-ig5-mark": visual && visual.mark ? visual.mark : undefined,
+                // 只有本来没有字形（dot 形态 / 空闲）时才补字符标记，避免与判决字形重复画第二个勾
+                "data-ig5-mark-char": visual && visual.mark && !glyphText ? visual.mark : undefined,
                 "data-pressing": pressing ? "1" : undefined,
                 // v0.51.11：触发条也带上面板模式 —— 「执行中 / 空闲」这类状态文字长在触发条上，
                 // 上一版只收小了抽屉里的徽标，所以触发条上那串字看着还是大。
