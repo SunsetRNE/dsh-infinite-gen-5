@@ -108,7 +108,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.52.3";
+const PLUGIN_VERSION = "0.52.4";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -454,7 +454,10 @@ const LAZY_ORDER = 160;
 // 档位：warn（默认，只观测并把数字写进 stats，一个字节不改）/ apply（真降级）/ off。
 const SECTION_BUDGET_MODE = "warn";
 const SECTION_BUDGET_BYTES = BUDGET_DEFAULT_CEILING; // 窗口大小；shareCap 取 25% 作为系统提示份额
-const SECTION_BUDGET_SHARE = 0.25;
+// 单位是 **百分数**（与 NUMERIC_RANGES 的 [1,100] 和目录提示一致）：调用处是 `CFG.SECTION_BUDGET_SHARE / 100`。
+// v0.52.4 前这里写 0.25 —— 除以 100 后有效份额只剩 0.25%，target 被压到 655 B，
+// 受保护段 28872 B 于是恒判「超配额」（verdict 常年 hot），默认态本身就是坏的。
+const SECTION_BUDGET_SHARE = 25;
 const SECTION_BUDGET_SECTION = "infinite-gen-5:section-budget";
 // 批量交付臂（v0.42.0）：比赛口径是「装插件 + 只给文件 + 一个对话里零额外提示词跑 100 题」。
 // 输入里一旦出现批量信号（[qNNN] 清单 / 编号题面 / 题库文件名 / 「100 道」这类题量短语）
