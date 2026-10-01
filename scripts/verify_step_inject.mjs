@@ -19,7 +19,7 @@ const check = (name, ok, detail = "") => {
 //    inbox?.["next-step"].filter((message) => message.source.kind === "user")
 const clientFilter = (inbox) => inbox["next-step"].filter((message) => message.source.kind === "user");
 
-// 2) 0.52.0 的旧形状：没有 source → 渲染期抛 TypeError（就是聊天面板空白的那一下）
+// 2) 修复前的旧形状：没有 source → 渲染期抛 TypeError（就是聊天面板空白的那一下）
 let oldThrew = "";
 try {
   clientFilter({ "next-step": [{ role: "user", content: [{ type: "text", text: "阶段闸门" }] }] });

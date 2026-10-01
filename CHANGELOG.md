@@ -8,8 +8,9 @@
 
 ### 🐛 修复
 
-- 每步注入补合规 source 并默认关闭 —— 缺 source 的收件箱消息会让 web 聊天面板整块空白
+- 每步注入补合规 source 并默认关闭 —— 缺 source 的收件箱消息会让 web 聊天面板整块空白（`bc68292`）
 
 ### 🧹 杂务与维护
 
+- 刷新 CHANGELOG（changelog.mjs 产物）
 - 自检刷新压力测试证据（verify:all 产物）（`e5030df`）
