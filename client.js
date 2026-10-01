@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.9";
+        var VERSION = "v0.51.10";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -306,6 +306,10 @@
           // v0.51.8：状态徽标与行为状态「再小一半」—— 抽屉头部里的判决徽标（通过/拒答）与
           // 进行态文案（执行中/空闲）统一收小：字号 11→9、内边距砍半、行高 15→12。
           ".dsh-armor5-drawer .dsh-armor5-head{font-size:9px;line-height:12px}",
+          // v0.51.10：判决徽标（通过 / 拒答）用的是 .dsh-armor5-badge（不是 .chip）——
+          // v0.51.8 那条规则打偏了，所以「通过」看着没变小。这里直接压 badge 本身。
+          ".dsh-armor5-drawer .dsh-armor5-badge{height:12px;padding:0 4px;font-size:9px;line-height:11px}",
+          ".dsh-armor5-drawer .dsh-armor5-badge .dsh-armor5-dot{width:4px;height:4px}",
           ".dsh-armor5-drawer .dsh-armor5-head .dsh-armor5-chip{font-size:9px;line-height:12px;padding:0 5px}",
           ".dsh-armor5-drawer .dsh-armor5-chip{font-size:10px;line-height:14px;padding:1px 6px}",
           ".dsh-armor5-mem-reset{flex:0 0 auto;margin-right:6px;min-height:28px;padding:4px 10px;border-radius:999px;",
