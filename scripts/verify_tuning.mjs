@@ -55,11 +55,13 @@ const SystemPrompt = promptModule.default;
 const plugin = await import(new URL("../index.js", import.meta.url).href);
 const { IG5_CONFIG } = plugin;
 const DEFAULTS = { ...IG5_CONFIG };
-// v0.42.0：IG5_CONFIG 里多了两个 Batch Arm 档位键（BATCH_ARM_MODE / BATCH_ARM_MIN），
-// 它们刻意不进 TUNING_CATALOG（那会牵动 TUNABLE_KEYS 与条目数断言），设置页的生效值里
+// v0.42.0：IG5_CONFIG 里多了两个 Batch Arm 档位键（BATCH_ARM_MODE / BATCH_ARM_MIN）；
+// v0.52.0：又多了三个只读环境变量档位（TASK_MODE / STEP_INJECT_MODE / STEP_INJECT_MAX_CHARS）。
+// 它们都刻意不进 TUNING_CATALOG（那会牵动 TUNABLE_KEYS 与条目数断言），设置页的生效值里
 // 自然不会出现。所以「reset 后生效值 = 文件默认」只比可调集，不整表比。
+const READONLY_PREFIXES = ["BATCH_ARM_", "TASK_MODE", "STEP_INJECT_"];
 const TUNABLE_DEFAULTS = Object.fromEntries(
-  Object.entries(DEFAULTS).filter(([key]) => !key.startsWith("BATCH_ARM_")),
+  Object.entries(DEFAULTS).filter(([key]) => !READONLY_PREFIXES.some((p) => key.startsWith(p))),
 );
 const restore = () => Object.assign(IG5_CONFIG, DEFAULTS);
 
