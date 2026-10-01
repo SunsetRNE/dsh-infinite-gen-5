@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.21";
+        var VERSION = "v0.51.22";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -2285,16 +2285,24 @@
           var secretInput = secretInputPair[0];
           var setSecretInput = secretInputPair[1];
           var postSecret = function (body) {
-            var br = state && state.link;
-            if (!br || !br.tasksPath) { setSecret({ ok: false, error: "面板没拿到写通道（刷新页面重试）" }); return; }
-            panelFetch(br, br.tasksPath, "POST", body).then(function (r) {
-              setSecret(r && r.doc ? r.doc : { ok: false, error: "空回执" });
-              if (body.action === "setGithubToken") setSecretInput("");
+            // v0.51.22 修：bridge 来自 statsBridge()（同文件 writeTasks/save 都这么取），
+            // 回执是 { status, doc }，必须判 status —— 上一版用 state.link 且只读 r.doc，
+            // 调用时抛 ReferenceError，于是「保存凭据」毫无反馈。
+            var bridge = statsBridge();
+            if (!bridge || !bridge.tasksPath) { setSecret({ ok: false, error: "面板没拿到凭据入口（刷新页面重试）" }); return; }
+            setSecret({ ok: null, busy: true });
+            panelFetch(bridge, bridge.tasksPath, "POST", body).then(function (r) {
+              var doc = r && r.doc ? r.doc : null;
+              var ok = r && r.status === 200 && doc && doc.ok === true;
+              setSecret(ok ? doc : { ok: false, error: (doc && doc.error) || ("HTTP " + (r && r.status)) });
+              if (ok && body.action === "setGithubToken") setSecretInput("");
+            }).catch(function (error) {
+              setSecret({ ok: false, error: "写入异常：" + String((error && error.message) || error) });
             });
           };
-          var secretStatusText = !secret ? "未读取（保存或清除后显示）"
+          var secretStatusText = secret && secret.busy ? "写入中…" : !secret ? "未读取（保存或清除后显示）"
             : secret.ok === false ? ("失败：" + (secret.error || "未知"))
-              : secret.configured ? ("已配置 · 末四位 ****" + secret.last4 + " · " + (secret.path || "") + (secret.mode ? " (" + secret.mode + ")" : ""))
+              : secret.configured ? ("已保存 · 末四位 ****" + secret.last4 + " · " + (secret.path || "") + (secret.mode ? " (" + secret.mode + ")" : ""))
                 : "未配置";
 
           var panelChoices = [
@@ -2368,14 +2376,14 @@
                   onChange: function (e) { setSecretInput(e.target.value); }
                 }),
                 react.createElement("button", {
-                  type: "button", className: "armor5-secret-save",
+                  type: "button",
                   onClick: function () { postSecret({ action: "setGithubToken", token: secretInput }); }
                 }, "保存凭据"),
                 react.createElement("button", {
-                  type: "button", className: "armor5-secret-clear",
+                  type: "button",
                   onClick: function () { postSecret({ action: "clearGithubToken" }); }
                 }, "清除凭据"),
-                react.createElement("span", { className: "dsh-armor5-hit-sub" }, secretStatusText)
+                react.createElement("span", { className: "armor5-console-hint" }, secretStatusText)
               )
             )
             ),

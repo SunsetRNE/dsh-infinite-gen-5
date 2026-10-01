@@ -1,3 +1,15 @@
+## v0.51.22
+
+**修「保存凭据没有反馈」，并把凭据组的渲染对齐设置台。**
+
+- 根因（读源码定位）：凭据写函数用了 `state.link` —— 设置台里 bridge 来自 `statsBridge()`（同文件的调参与任务清单都这么取）；
+  且只读 `r.doc` 不判 `r.status`。结果点击时抛 ReferenceError，既不更新状态行也不报错，看上去「毫无反馈」。
+- 修法：按 `writeTasks` 的口径重写 —— `statsBridge()` 取通道、`r.status === 200 && doc.ok` 判成功、异常走 catch 出文案；
+  状态行给出四态文案：`写入中…` / `已保存 · 末四位 ****abcd · 路径 (0600)` / `已清除凭据（文件已删除）` / `写入失败：<原因或 HTTP 状态>`。
+- UI 一致：状态行从抽屉类 `dsh-armor5-hit-sub` 换成设置台的 `armor5-console-hint`；两个按钮去掉专用类，
+  直接继承 `armor5-console-choices > button` 的统一样式（与同页其它组一致）。
+- 判据：`node scripts/verify_ui.mjs` 316 通过 / 0 失败（新增 4 条断言）。
+
 ## v0.51.21
 
 **CI 工具：静默失败修掉、可指向 mock；`logs` 全文路径仍不可用（如实标注）。**
