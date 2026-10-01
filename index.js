@@ -38,6 +38,14 @@ import { BOOST_UNITS, BOOST_HEADER, boostStats, compileBoost, inferMode, readDir
 import { detectBatch, renderBatchClause, renderBatchAnchor, BATCH_ARM_MIN_DEFAULT } from "./data/batch-arm.mjs";
 import { LAZY_DEFAULT_BYTES, LAZY_DEFAULT_MODE, LAZY_HEADER, LAZY_MODES, compileLazy, lazyStats, readLazyDirective } from "./data/lazy-sections.mjs";
 import { BUDGET_CEILING, planSectionBudget, applySectionPlan, DEFAULT_CEILING_BYTES as BUDGET_DEFAULT_CEILING } from "./data/context-budget.mjs";
+// 提示词接管（v0.52.2 · 训练档）：让本内核在装配面上让位宿主平台自带段，并留可核回执。
+import {
+  OVERRIDE_MODES,
+  normalizeMode as normalizeOverrideMode,
+  planOverride,
+  renderTakeoverClause,
+  scanResidual as scanPromptResidual,
+} from "./data/prompt-override.mjs";
 // 首句层 + 压缩后再锚定（v0.37.0）：宿主的系统段按 order 升序拼接，宿主身份段用 -1000；
 // 本层用更小的 order 抢到整份系统提示的第一句。压缩事件由宿主的 session/event 送达，
 // 收到就置一次标记 —— 下一次运行时锚点文本换新，宿主的运行时上下文快照比对发现变了必然
@@ -93,7 +101,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.52.1";
+const PLUGIN_VERSION = "0.52.2";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -485,10 +493,15 @@ const ENV_OF_KEY = {
   SECTION_BUDGET_MODE: "IG5_SECTION_BUDGET_MODE",
   SECTION_BUDGET_BYTES: "IG5_SECTION_BUDGET_BYTES",
   SECTION_BUDGET_SHARE: "IG5_SECTION_BUDGET_SHARE",
+  OVERRIDE_MODE: "IG5_OVERRIDE_MODE",
+  OVERRIDE_DROP: "IG5_OVERRIDE_DROP",
+  OVERRIDE_CLAUSE: "IG5_OVERRIDE_CLAUSE",
 };
 // 只有真布尔键走 true/false 转换；档位键（LAYER2_MODE / TAIL_MODE / RUNTIME_ANCHOR_MODE /
 // ASK_GATE_MODE）的 "off"/"auto"/"on" 是字符串取值，不能被布尔化，否则 off 档会静默失效。
-const BOOL_KEYS = new Set(["DEDUPE_PAYLOAD", "EXCLUSIVE_SECTION"]);
+const BOOL_KEYS = new Set(["DEDUPE_PAYLOAD", "EXCLUSIVE_SECTION", "OVERRIDE_CLAUSE"]);
+// 档位键的合法取值（越界一律判「本次不使用」，回落下一来源 —— 与数值键同一口径）。
+const MODE_KEYS = Object.freeze({ OVERRIDE_MODE: OVERRIDE_MODES });
 // 数值键的合法区间。越界值不是「更省」，而是静默把功能掐死：实测 BOOST_BYTES=4 会让
 // 增强集每个单元都超预算 → 整条丢弃 → 段内 0 B、hits 空（重启后 profile 才看出来）。
 // 因此越界一律判为「本次不使用」，回落到下一来源，最终落到文件默认值。
@@ -510,6 +523,11 @@ const coerce = (key, raw) => {
     if (v < range[0] || v > range[1]) return undefined;
     return v;
   }
+  const modes = MODE_KEYS[key];
+  if (modes) {
+    const m = String(raw).trim().toLowerCase();
+    return modes.includes(m) ? m : undefined; // 越界档位 → 本次不使用，回落下一来源
+  }
   if (typeof raw === "boolean" || typeof raw === "number") return raw;
   const s = String(raw).trim();
   if (BOOL_KEYS.has(key)) {
@@ -519,8 +537,19 @@ const coerce = (key, raw) => {
   }
   return s;
 };
+// 提示词接管（v0.52.2 · 训练档 · 自有宿主 / 授权靶场专用）。五个常量必须在 IG5_DEFAULTS 之前；
+//   off / shadow / replace 三档语义见 data/prompt-override.mjs 头注。
+const OVERRIDE_MODE = normalizeOverrideMode(process.env.IG5_OVERRIDE_MODE ?? "off");
+const OVERRIDE_DROP = process.env.IG5_OVERRIDE_DROP ?? "";
+const OVERRIDE_CLAUSE = (process.env.IG5_OVERRIDE_CLAUSE ?? "on").toLowerCase() !== "off";
+const OVERRIDE_SECTION = "infinite-gen-5:override-clause";
+const OVERRIDE_ORDER = 9900; // 中段锚点 200 之后、真末位锚点 10150 之前
+
 // 文件默认值：唯一基线。每次重新解析都从这里重算，避免上一次的覆盖「粘」在配置里。
 const IG5_DEFAULTS = Object.freeze({
+  OVERRIDE_MODE,
+  OVERRIDE_DROP,
+  OVERRIDE_CLAUSE,
   LAYER2_MODE,
   DEDUPE_PAYLOAD,
   TAIL_MODE,
@@ -805,7 +834,17 @@ const STEP_INJECT_TEXT = [
   "正文不写无判据的过渡句，不报百分比（百分比只由面板按清单事实显示）。",
 ].join("\n");
 
+// 提示词接管（v0.52.2 · 训练档）—— 自有宿主 / 授权靶场专用：
+//   off      只追加载荷（默认，行为与本功能引入前完全一致）
+//   shadow   只剔除命中 DROP 词的宿主段（静默、逐段留回执）
+//   replace  全量接管：内核段标 complete + 装配面再兜一层，宿主自带段一律让位
+// 回执落在 runtime.override（dropped / kept / residual / clauseChars），随 /stats 出去。
+// 注意：这五个常量必须定义在 IG5_DEFAULTS 之前 —— 那个 frozen 对象会立刻读它们（TDZ）。
+
 export const IG5_CONFIG = {
+  OVERRIDE_MODE,
+  OVERRIDE_DROP,
+  OVERRIDE_CLAUSE,
   TASK_MODE,
   STEP_INJECT_MODE,
   STEP_INJECT_MAX_CHARS,
@@ -2312,6 +2351,58 @@ export function apply(ctx, config) {
     });
   };
 
+  // 提示词接管（v0.52.2 · 训练档）：在装配面上让位宿主自带系统段，并留可核回执。
+  // 与 EXCLUSIVE_SECTION 的分工：那个靠宿主「complete 段」语义整段丢弃，一刀切且看不见丢了什么；
+  // 这里按段名逐段决定，并在装配结果里扫一遍残留宿主立场句 —— 接管干不干净是量出来的，不是猜的。
+  const registerOverrideWaterfall = () => {
+    if (CFG.OVERRIDE_MODE === "off") return;
+    const handler = async (assembly, _context, next) => {
+      const out = await next();
+      if (runtime.role !== "primary") return out;
+      if (!out || !Array.isArray(out.sections)) return out;
+      const plan = planOverride(out.sections, { mode: CFG.OVERRIDE_MODE, dropList: CFG.OVERRIDE_DROP });
+      const clause = CFG.OVERRIDE_CLAUSE ? renderTakeoverClause({ mode: plan.mode, dropped: plan.dropped }) : "";
+      const tails = plan.kept.filter((s) => s && s.name === TAIL_SECTION);
+      const body = plan.kept.filter((s) => s && s.name !== TAIL_SECTION);
+      const sections = clause
+        ? [...body, { name: OVERRIDE_SECTION, order: OVERRIDE_ORDER, text: clause }, ...tails]
+        : [...body, ...tails];
+      const residual = scanPromptResidual(sections.map((s) => (typeof s?.text === "string" ? s.text : "")).join("\n\n"));
+      runtime.override = {
+        mode: plan.mode,
+        dropped: plan.dropped,
+        droppedCount: plan.dropped.length,
+        keptCount: sections.length,
+        residual,
+        clauseChars: clause.length,
+        at: Date.now(),
+      };
+      if (plan.dropped.length) {
+        console.warn(`[infinite-gen-5] 提示词接管（${plan.mode}）：让位 ${plan.dropped.length} 段 → ${plan.dropped.map((d) => d.name).join(", ")}`);
+      }
+      if (residual.length) {
+        console.warn(`[infinite-gen-5] 接管残留检查：仍命中宿主立场句 ${residual.map((r) => `${r.id}×${r.count}`).join(", ")}（接管未干净）`);
+      }
+      return { ...out, sections };
+    };
+    try {
+      injectionHandles.push(ctx.effect(() => ctx.on("system-prompt/assemble", handler)));
+    } catch (error) {
+      console.warn(
+        `[infinite-gen-5] 无法挂载提示词接管瀑布（${String(error?.message ?? error)}）；` +
+          `${CFG.OVERRIDE_MODE === "replace" ? "replace 档退化为「内核 complete」单层接管。" : "shadow 档未生效。"}`,
+      );
+      return;
+    }
+    recordPlacement({
+      section: OVERRIDE_SECTION,
+      order: OVERRIDE_ORDER,
+      label: `提示词接管裁决（${CFG.OVERRIDE_MODE}）`,
+      chars: CFG.OVERRIDE_CLAUSE ? renderTakeoverClause({ mode: CFG.OVERRIDE_MODE, dropped: [] }).length : 0,
+      where: "system-prompt/assemble 瀑布：宿主自带段按段名让位后，插在真末位锚点之前",
+    });
+  };
+
   // 运行时锚点：注册进「运行时上下文」槽。宿主每步把该快照作为最后一条 user 消息
   // 追加在消息列表尾部；快照文本一变就重发一份，所以节拍靠换文本实现。
   const registerRuntimeAnchor = () => {
@@ -2371,7 +2462,9 @@ export function apply(ctx, config) {
   // 注入部分整体可卸载重装：设置页改档位不必重启进程。
   // 工具与投影不在此列（ctx.tools.register 重复注册会报重名），只在 apply 里挂一次。
   const mountInjection = () => {
-    const exclusive = CFG.EXCLUSIVE_SECTION === true;
+    // replace 档等价于「独占内核」的加强版：内核段标 complete，宿主自带系统段由宿主直接丢弃；
+    // 装配面还有一层兜底（registerOverrideWaterfall），两层都过才叫「替换」。
+    const exclusive = CFG.EXCLUSIVE_SECTION === true || CFG.OVERRIDE_MODE === "replace";
     if (!canHost) {
       runtime.role = "no-system-prompt";
       console.warn("[infinite-gen-5] 宿主未提供 systemPrompt.section，跳过载荷注入（工具与投影仍会注册）");
@@ -2645,6 +2738,7 @@ export function apply(ctx, config) {
           "order 10150 普通段（排在 10200 人格后缀之前）",
         );
       }
+      registerOverrideWaterfall();
       if (CFG.RUNTIME_ANCHOR_MODE !== "off" && typeof ctx.systemPrompt.context === "function") {
         registerRuntimeAnchor();
       } else if (CFG.RUNTIME_ANCHOR_MODE !== "off") {
