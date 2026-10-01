@@ -1770,7 +1770,18 @@ if (process.argv.includes("--emit-html")) {
     CLIENT_SRC.includes("PANEL_LEX_STATE.dev && rawList && rawList.length"));
 }
 
-// ── 结果 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+// ── v0.51.8：抽屉头部状态徽标与行为状态收小 ─────────────────────────────────
+{
+  ok("抽屉头部的判决徽标与行为状态收小（字号 9 / 行高 12 / 内边距砍半）",
+    CLIENT_SRC.includes(".dsh-armor5-drawer .dsh-armor5-head{font-size:9px;line-height:12px}") &&
+    CLIENT_SRC.includes(".dsh-armor5-drawer .dsh-armor5-head .dsh-armor5-chip{font-size:9px;line-height:12px;padding:0 5px}"));
+  ok("抽屉内 chip 统一收到 10px（比正文小一档，不抢视线）",
+    CLIENT_SRC.includes(".dsh-armor5-drawer .dsh-armor5-chip{font-size:10px;line-height:14px;padding:1px 6px}"));
+  ok("收小只作用在抽屉内（不误伤设置台与任务页的可读字号）",
+    !CLIENT_SRC.includes(".armor5-console .dsh-armor5-chip{font-size:9px"));
+}
+
+// ── 结果 ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ok("槽位模式表列了三种可用位置", CLIENT_SRC.includes("conversation.session.header.utilities") && CLIENT_SRC.includes("conversation.input.dock"));
 
 if (failures.length === 0) {

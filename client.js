@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.7";
+        var VERSION = "v0.51.8";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -303,6 +303,11 @@
           "padding:4px 12px;border-radius:999px;display:inline-flex;align-items:center}",
           ".dsh-armor5-hits-empty{display:block;padding:4px 0;font-size:11px;line-height:15px;opacity:.6}",
           ".dsh-armor5-filter[data-on='1']{background:var(--dsw-alias-bg-layer-3,rgba(127,127,127,.22));border-color:transparent}",
+          // v0.51.8：状态徽标与行为状态「再小一半」—— 抽屉头部里的判决徽标（通过/拒答）与
+          // 进行态文案（执行中/空闲）统一收小：字号 11→9、内边距砍半、行高 15→12。
+          ".dsh-armor5-drawer .dsh-armor5-head{font-size:9px;line-height:12px}",
+          ".dsh-armor5-drawer .dsh-armor5-head .dsh-armor5-chip{font-size:9px;line-height:12px;padding:0 5px}",
+          ".dsh-armor5-drawer .dsh-armor5-chip{font-size:10px;line-height:14px;padding:1px 6px}",
           ".dsh-armor5-panel-toggle{flex:0 0 auto;margin-right:6px;min-height:28px;min-width:48px;padding:4px 10px;border-radius:999px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.3));background:transparent;color:inherit;font:inherit;font-size:12px}",
           ".dsh-armor5-tab-count{flex:0 0 auto;margin-left:4px;font-size:10px;font-variant-numeric:tabular-nums;opacity:.75}",
           ".dsh-armor5-root .dsh-armor5-dot{transition:transform .12s ease-out}",
