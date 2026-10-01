@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.51.15";
+        var VERSION = "v0.51.16";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -317,7 +317,14 @@
           ".armor5-console[data-panel='user'] .armor5-console-group{margin-top:6px}",
           ".armor5-console[data-panel='user'] .armor5-console-group-title{margin-bottom:4px;font-size:11px}",
           ".armor5-console[data-panel='user'] .armor5-console-choices{gap:4px}",
-          ".armor5-console[data-panel='user'] .armor5-console-choices>button{padding:4px 8px;border-radius:8px;min-height:28px;font-size:12px}",
+          ".armor5-console[data-panel='user'] .armor5-console-choices>button{padding:4px 8px;border-radius:8px;min-height:28px;font-size:12px;flex:1 1 0}",
+          // v0.51.16：用户模式隐藏内核调参组（注入面 / 载荷与预算 / 节拍与门 / 运行时锚点节拍 / 判定源 / 形态与去重），
+          // 只留用户能懂的：面板显示多少 / 放在哪 / 说哪套话 / 任务清单 / 实时状态 / 预览。dev 模式照旧全显示。
+          ".armor5-console[data-panel='user'] [data-dev-only='1']{display:none}",
+          ".armor5-console[data-panel='user'] .armor5-console-group{position:relative;padding:8px 0 6px;",
+          "border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18))}",
+          ".armor5-console[data-panel='user'] .armor5-console-group:first-of-type{border-top:0;padding-top:2px}",
+          ".armor5-console[data-panel='user'] .armor5-console-group-title{font-weight:600;opacity:.9}",
           ".dsh-armor5-chiprow{display:flex;flex-wrap:wrap;gap:4px}",
           // v0.50.6：触屏热区 —— 1px 内边距在手机上点不准，给到 28px 最小高度。
           ".dsh-armor5-filter{cursor:pointer;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.3));",
@@ -1884,7 +1891,13 @@
           }
 
           return groups.map(function (g) {
-            return react.createElement("div", { className: "armor5-console-group", key: "grp:" + g.title },
+            // v0.51.16：这一整块是内核调参（注入面 / 载荷预算 / 节拍与门 / 判定源…），
+            // 用户模式下整块隐藏，只留用户能懂的几组；dev 模式照旧全显示。
+            return react.createElement("div", {
+              className: "armor5-console-group",
+              key: "grp:" + g.title,
+              "data-dev-only": "1"
+            },
               react.createElement("div", { className: "armor5-console-group-title" }, g.title),
               react.createElement("div", { className: "armor5-knob-grid" }, g.items.map(knob))
             );
@@ -1964,7 +1977,7 @@
           var db = state.database;
           var cov = db && db.coverage ? db.coverage : null;
           if (!cov) {
-            return react.createElement("div", { className: "armor5-console-group" },
+            return react.createElement("div", { className: "armor5-console-group", "data-dev-only": "1" },
               react.createElement("div", { className: "armor5-console-group-title" }, C("领域覆盖 · 词表 · 注入健康")),
               react.createElement("span", { className: "armor5-console-hint" },
                 state.database
@@ -2322,7 +2335,7 @@
               react.createElement("div", { className: "armor5-console-group-title" }, C("面板用哪套词（PANEL_MODE）")),
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-2" }, panelChoices)
             ),
-            react.createElement("div", { className: "armor5-console-group" },
+            react.createElement("div", { className: "armor5-console-group", "data-dev-only": "1" },
               react.createElement("div", { className: "armor5-console-group-title" }, "注入档位（改完点保存，服务端当场重装，不必重启）"),
               react.createElement("span", { className: "armor5-console-hint" }, tuningStatusText(tuner.state)),
               tuner.state.phase === "ready"
@@ -2350,7 +2363,7 @@
             taskProgress(tuner.state, tuner),
             liveGroup(tuner.state),
             coverageGroup(tuner.state),
-            react.createElement("div", { className: "armor5-console-group" },
+            react.createElement("div", { className: "armor5-console-group", "data-dev-only": "1" },
               react.createElement("div", { className: "armor5-console-group-title" }, "只读"),
               react.createElement("ul", { className: "armor5-console-rows" },
                 rows.map(function (row) {
