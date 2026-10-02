@@ -110,6 +110,7 @@ export const CROSS_FAMILY_ALLOW = Object.freeze({
   "隐写": "stego 讲手法、deanon 讲从隐写内容里关联身份",
   "github actions": "supply_chain 关注 CI 投毒面、automation 关注 CI 怎么配，同一个对象",
   yara: "offense 与 data 都用特征码（样本家族 / 取证匹配）",
+  "授权绕过": "crack 破授权体系统称、drm 管数字版权授权体系，同一个动作在两边都出现（v0.52.11 补 crack markers 时登记）",
 });
 
 const CJK = /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/;
