@@ -20,6 +20,9 @@ import {
 // L2 域包的唯一真源（v0.18.0）：域包正文怎么渲染 —— 含「构建 / 分析」取向分向 ——
 // 运行时、离线评测与 A/B 脚本都 import 这一份，避免三处各抄一遍慢慢漂移。
 import { PACK_MAX_DOMAINS, renderPackCompact, packIntent, composePackText } from "./data/pack-intent.mjs";
+// 身份许可 → 域包路由（v0.55.0）：身份只决定「默认先点亮哪些域包」，不屏蔽其它域包，
+// 也不是凭据门（不命中身份词时行为与 v0.54.0 完全一致）。
+import { IDENTITY_ROUTES, matchIdentity, prioritiseByIdentity } from "./data/identity-routes.mjs";
 // 预算与扩展词表的真源：coverage 分区把「索引占了多少预算、词表有多少条」写进统计库，
 // 面板只读它、不自己算（v0.14.1）。三个预算值同时被 scripts/verify_vocab.mjs 校验。
 import { INDEX_BUDGET_BYTES, PLAYBOOK_MIN_BYTES, PLAYBOOK_MAX_BYTES, SHORT_MARKER_OK, TRAP_ALLOW, TRAP_WORDS } from "./data/vocabulary.mjs";
@@ -111,7 +114,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.54.0";
+const PLUGIN_VERSION = "0.55.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -396,7 +399,12 @@ function domainPackText() {
   try {
     if (text.trim().length >= 4) {
       const intent = packIntent(text);
-      const hits = rankDomains(text, DOMAIN_MARKERS, PACK_MAX_DOMAINS);
+      const hitsRaw = rankDomains(text, DOMAIN_MARKERS, PACK_MAX_DOMAINS);
+      // v0.55.0：身份命中时，把该身份的默认域包排到前面（稳定排序，不丢包、不屏蔽）。
+      const identity = matchIdentity(text);
+      const hits = prioritiseByIdentity(hitsRaw, identity);
+      runtime.identityHit = identity && identity.primary ? identity.primary.id : null;
+      runtime.identityPacks = identity && identity.primary ? identity.primary.packs.length : 0;
       // lookupScenario 返回的是「工具回执」壳（ok/scenario/playbook/alternatives），
       // 域包要的是 SCENARIOS[] 里的原始条目，所以按 id 精确取。
       const packs = hits
@@ -407,6 +415,12 @@ function domainPackText() {
       if (packs.length) {
         // 取向行只写一份，放在所有域包之前 —— 它是「这一步怎么干」，不是某个域的属性。
         out = composePackText(packs, intent);
+        if (identity && identity.primary) {
+          const line = `身份许可：按「${identity.primary.label}」口径（默认域包顺序 ${identity.primary.packs.join(" / ")}`
+            + (identity.alsoMatched.length ? `；同时命中 ${identity.alsoMatched.join(" / ")}` : "")
+            + "）。身份不设凭据门，角色可互换，交付物开头一句亮口径即可。";
+          out = line + "\n" + out;
+        }
       }
     }
   } catch (error) {
