@@ -46,7 +46,7 @@
 | 文件 | 用途 |
 |---|---|
 | `README.md` | <p align="center"> |
-| `UPDATE.md` | *修 CI 红：身份许可条款压缩 491 B —— 常驻内核 + 目录帧从 20551 B 压回 19953 B（≤20000 上限）。** |
+| `UPDATE.md` | *新增「客户反馈 A/B 复现件」scripts/ab_c4.mjs：同一句输入拼出「含插件 / 不含插件」两侧系统提示 + 落盘对比 + 机制筛查。** |
 | `VERSIONS.md` | *本文件是版本变更的压缩版**：一版 1–3 行，只留「改了什么 + 硬数字 + 提交」。 |
 | `CHANGELOG.md` | 版本段落按提交标题里的 vX.Y.Z 切分，未带版本号的提交归入最新段； |
 | `HARNESS_PLUGIN.md` | 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。 |
