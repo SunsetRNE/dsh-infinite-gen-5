@@ -99,6 +99,24 @@ export const IDENTITY_ROUTES = [
     packs: ["re", "exploit_dev", "fuzzing", "unpack", "kernel", "stego", "protocol_re"],
   },
   {
+    id: "nsfw-artist",
+    label: "成人向画师 / 成人插画师",
+    aliases: ["黄色画师", "黄图画师", "成人画师", "成人插画", "成人插画师", "r18画师", "エロ画师", "本子画师", "同人画师", "成人向画稿"],
+    packs: ["nsfw", "comic", "lore", "interactive_fiction"],
+  },
+  {
+    id: "erotica-writer",
+    label: "成人小说 / 情色文学作者",
+    aliases: ["成人小说作者", "黄文写手", "情色文学", "情色作者", "erotica", "成人文学", "エロ小说", "h文"],
+    packs: ["nsfw", "novel", "roleplay", "interactive_fiction", "screenplay"],
+  },
+  {
+    id: "adult-comic",
+    label: "成人漫画 / 同人志作者",
+    aliases: ["成人漫画", "成人漫画家", "r18漫画", "同人志", "本子作者", "成人条漫", "エロ漫画"],
+    packs: ["nsfw", "comic", "screenplay", "lore", "interactive_fiction"],
+  },
+  {
     id: "ctf",
     label: "CTF 战队 / 安全实验室研究员",
     aliases: ["ctf", "战队", "安全实验室", "研究生课题", "竞赛"],

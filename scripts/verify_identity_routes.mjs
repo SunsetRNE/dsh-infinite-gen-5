@@ -89,6 +89,24 @@ const offense = SCENARIOS.filter((s) => s.family === "offense").map((s) => s.id)
 const covered = offense.filter((id) => IDENTITY_ROUTES.some((r) => r.packs.includes(id)));
 ok("offense 族覆盖 ≥24/36", covered.length >= 24, `实际 ${covered.length}/${offense.length}`);
 
+// ⑦ 成年侧（creative）逻辑：创作岗必须存在、必须落在 creative 族，nsfw 包的成年约束必须在场
+{
+  const creativeIds = SCENARIOS.filter((s) => s.family === "creative").map((s) => s.id);
+  const creativeRoles = IDENTITY_ROUTES.filter((r) => r.packs.some((p) => creativeIds.includes(p)));
+  ok("创作类身份在场（成人向画师 / 成人文学 / 成人漫画）", creativeRoles.length >= 3,
+    `实际 ${creativeRoles.map((r) => r.id).join(", ") || "无"}`);
+  ok("画师类别名可路由（黄色画师 / 成人插画 / 本子）", (() => {
+    const m = matchIdentity("黄色画师，画一张成人插画");
+    return !!(m && m.primary && m.primary.packs.includes("nsfw"));
+  })());
+  const nsfw = SCENARIOS.find((s) => s.id === "nsfw");
+  ok("nsfw 包 SCOPE 写明成年约束", /成年/.test(String(nsfw?.scope ?? "")));
+  ok("nsfw 包 notes 写明「角色必须明确为成年人；未成年与非自愿设定不写」",
+    (nsfw?.notes ?? []).some((n) => /角色必须明确为成年人/.test(n) && /未成年/.test(n)));
+  ok("nsfw 包 markers 覆盖画师类词（画师 / 插画 / 同人志）",
+    ["画师", "插画", "同人志"].every((w) => (nsfw?.markers ?? []).includes(w)));
+}
+
 // index.js 是否真的接了路由
 const indexSrc = readFileSync(join(__dirname, "..", "index.js"), "utf8");
 ok("index.js 已接入身份路由", indexSrc.includes("identity-routes.mjs")
