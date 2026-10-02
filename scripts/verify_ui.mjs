@@ -489,6 +489,15 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
     drawerEl !== null && drawerEl.props.role === "dialog" && drawerEl.props["aria-modal"] === "true");
   const drawerTabs = collectByClass(tree, "dsh-armor5-tab");
   ok("抽屉带四个页签（实时 / 命中 / 明细 / 任务）", drawerTabs.length === 4, "实际 " + drawerTabs.length);
+  ok("v0.53.5：抽屉不含设置页签（用户向偏好回到设置页，抽屉只做读数与留档）",
+    !drawerTabs.some((t) => t.props && t.props["data-tab"] === "settings"));
+  ok("v0.53：抽屉有原生式标题行（sheet-head + 标题）",
+    findByClass(tree, "dsh-armor5-sheet-head") !== null && findByClass(tree, "dsh-armor5-sheet-title") !== null);
+  ok("v0.53：页签容器带分段控件类（dsh-armor5-seg）", findByClass(tree, "dsh-armor5-seg") !== null);
+  ok("v0.53：抽屉样式改用宿主设计令牌（radius-panel / elevation / mask-blur / interactive-bg-hover）",
+    CLIENT_SRC.includes("var(--dsw-radius-panel") && CLIENT_SRC.includes("var(--dsw-elevation-prominent") &&
+    CLIENT_SRC.includes("var(--dsw-mask-blur") && CLIENT_SRC.includes("var(--dsw-alias-interactive-bg-hover"));
+  ok("v0.53：设置面板用分组卡片（dsh-armor5-card）承载", CLIENT_SRC.includes(".dsh-armor5-card{"));
   ok("默认停在「实时」页", drawerEl.props["data-tab"] === "live", String(drawerEl.props["data-tab"]));
   // v0.49.0 回归（v0.48.0 的页签失效根因）：外部点击判定必须把抽屉本身算作「内部」，
   // 否则捕获阶段的 pointerdown 会先把 open 置假、抽屉被卸载，页签的 click 永远到不了。
@@ -570,6 +579,230 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
   const cssCloses = (cssText.match(/\}/g) || []).length;
   ok("样式表括号配平（未闭合的规则会把后续规则静默变成嵌套规则）",
     cssOpens > 20 && cssOpens === cssCloses, "{=" + cssOpens + " }=" + cssCloses);
+  // ── v0.53.1：参数类内容的渲染结构 ──
+  {
+    const kvBox = findByClass(tree, "dsh-armor5-kvs");
+    const kvRows = collectByClass(tree, "dsh-armor5-kv");
+    const KINDS = ["num", "bool", "long", "empty", "text"];
+    ok("参数容器在场（.dsh-armor5-kvs，DOM 或源码级）",
+      kvBox !== null || CLIENT_SRC.includes('className: "dsh-armor5-kvs"'));
+    ok("实时页已改走参数行渲染（kvList(livePairs…) + 面板取 liveParams）",
+      CLIENT_SRC.includes('kvList(livePairs, "live"') && CLIENT_SRC.includes(": liveParams;"));
+    ok("参数行逐条带值分型（data-kind ∈ num/bool/long/empty/text）",
+      kvRows.length === 0 || kvRows.every((r) => KINDS.indexOf(String(r.props["data-kind"])) >= 0),
+      "行数=" + kvRows.length);
+    ok("数字值走等宽数字（kv[data-kind=num] .v → tabular-nums）",
+      /\.dsh-armor5-kv\[data-kind=num\] \.v\{[^}]*tabular-nums/.test(cssText));
+    ok("长值走省略号（kv[data-kind=long] .v → ellipsis）",
+      /\.dsh-armor5-kv\[data-kind=long\] \.v\{[^}]*text-overflow:ellipsis/.test(cssText));
+    ok("空值走暗色占位（kv[data-kind=empty]）", cssText.includes(".dsh-armor5-kv[data-kind=empty] .v{"));
+    ok("布尔值走胶囊 + 状态色（kv[data-kind=bool] / v[data-state=on]）",
+      cssText.includes(".dsh-armor5-kv[data-kind=bool] .v{") && cssText.includes(".dsh-armor5-kv .v[data-state=on]"));
+    ok("明细页 tile 的值同样带分型",
+      CLIENT_SRC.includes("var kid = valueKind(value, nowrap)") && CLIENT_SRC.includes('"data-kind": kid'));
+  }
+  // ── v0.53.2：命中行三段栅格（判决色点 / 时间列 / 正文列）──
+  {
+    ok("命中行渲染器收成一个（hitRow 被两处命中列表共用）",
+      (CLIENT_SRC.match(/hitRow\(hit,/g) || []).length >= 2);
+    ok("命中行带判决色点（.dsh-armor5-hit-dot + data-verdict）",
+      CLIENT_SRC.includes('className: "dsh-armor5-hit-dot"') &&
+      cssText.includes(".dsh-armor5-hit-dot[data-verdict=refusal]"));
+    ok("命中行栅格三段 + 无时间行少一列（data-has-time='0'）",
+      /\.dsh-armor5-hits li\{[^}]*grid-template-columns:6px 34px 1fr/.test(cssText) &&
+      cssText.includes(".dsh-armor5-hits li[data-has-time='0']{grid-template-columns:6px 1fr}"));
+    ok("时间列走等宽数字（.dsh-armor5-hit-time → tabular-nums）",
+      /\.dsh-armor5-hit-time\{[^}]*tabular-nums/.test(cssText));
+    ok("主行/副行单行省略（hit-main / hit-sub → ellipsis）",
+      /\.dsh-armor5-hit-main\{[^}]*text-overflow:ellipsis/.test(cssText) &&
+      /\.dsh-armor5-hit-sub\{[^}]*text-overflow:ellipsis/.test(cssText));
+    ok("命中行 hover 用宿主交互底色",
+      cssText.includes(".dsh-armor5-hits li:hover{background:var(--dsw-alias-interactive-bg-hover"));
+  }
+  // ── v0.53.3：明细页长值的二级展示（收起 / 展开）──
+  {
+    const foldBoxes = collectByClass(tree, "dsh-armor5-fold");
+    const openOnes = foldBoxes.filter((f) => f.props["data-open"] === "1");
+    ok("折叠渲染件存在（textValue 第三参 foldKey 生效）",
+      CLIENT_SRC.includes("var textValue = function (value, nowrap, foldKey)") &&
+      CLIENT_SRC.includes('"data-fold": "1"'));
+    ok("明细页长值带 foldKey（词表 / 候选明细 / 扫描范围 / 领域候选）",
+      CLIENT_SRC.includes('"f-words"') && CLIENT_SRC.includes('"f-detail"') &&
+      CLIENT_SRC.includes('"f-range"') && CLIENT_SRC.includes('"f-cand"'));
+    ok("折叠态默认全收起", foldBoxes.length === 0 || openOnes.length === 0, "折叠件=" + foldBoxes.length);
+    ok("收起态单行省略 + 展开态换行全文",
+      /\.dsh-armor5-fold\[data-open='0'\]\{[^}]*text-overflow:ellipsis/.test(cssText) &&
+      /\.dsh-armor5-fold\[data-open='1'\]\{[^}]*white-space:pre-wrap/.test(cssText));
+    ok("折叠件可键盘触发（role=button + tabIndex + Enter/Space）",
+      CLIENT_SRC.includes('role: "button"') && CLIENT_SRC.includes("tabIndex: 0") &&
+      CLIENT_SRC.includes('e.key === "Enter"'));
+    ok("展开提示可读（.dsh-armor5-fold-hint 有配色规则）", cssText.includes(".dsh-armor5-fold-hint{"));
+  }
+  // ── v0.53.4：任务页占位骨架（4 条）/ 命中页筛选计数与分组头 / 明细页分卡 ──
+  {
+    const skels = collectByClass(tree, "dsh-armor5-skel");
+    const skelWrap = findByClass(tree, "dsh-armor5-todo-skel-wrap");
+    ok("任务页在无数据时预加载 4 条占位骨架",
+      CLIENT_SRC.includes("var todoSkeleton = function (reason)") &&
+      CLIENT_SRC.includes("[0, 1, 2, 3].map(function (i)") &&
+      (skelWrap === null || skels.length === 4),
+      "DOM 骨架=" + skels.length);
+    ok("骨架行对读屏隐藏（aria-hidden）",
+      CLIENT_SRC.includes('"aria-hidden": "true"') && CLIENT_SRC.includes('className: "dsh-armor5-todo dsh-armor5-skel"'));
+    ok("骨架宽度分档 + 动画 + 减弱动效降级",
+      cssText.includes(".dsh-armor5-skel-bar[data-w='70']") &&
+      cssText.includes("@keyframes dsh-armor5-skel") && cssText.includes("prefers-reduced-motion"));
+    ok("命中页筛选条带计数",
+      CLIENT_SRC.includes('"data-count": hitCounts[row[0]] || 0') &&
+      cssText.includes(".dsh-armor5-filter[data-count]{font-variant-numeric:tabular-nums}"));
+    ok("命中页分组头独立成型",
+      CLIENT_SRC.includes("var hgroup = function (label, count, child, key)") &&
+      cssText.includes(".dsh-armor5-hgroup-count{") && cssText.includes(".dsh-armor5-hgroup-head{"));
+    ok("明细页按语义分两张卡",
+      CLIENT_SRC.includes('fieldCard("判定线索", clueTiles') &&
+      CLIENT_SRC.includes('fieldCard("参数与范围", paramTiles') &&
+      cssText.includes(".dsh-armor5-field-cards{"));
+  }
+  // ── v0.53.5：命中页滚动排版（单栏连续滚动 / 粘性标题 / 底部计数）──
+  {
+    ok("命中页有独立滚动容器（hits-pane + overscroll 隔离）",
+      CLIENT_SRC.includes("var hitsPaneWrap = function (body)") &&
+      /\.dsh-armor5-hits-pane\{[^}]*overscroll-behavior:contain/.test(cssText));
+    ok("分组列表不再各自滚 120px（组内列表 max-height:none）",
+      cssText.includes(".dsh-armor5-hgroup .dsh-armor5-hits{max-height:none;overflow:visible}"));
+    ok("日分组头粘在滚动区顶部（sticky + 面板底色 + 遮罩模糊）",
+      /\.dsh-armor5-hgroup-head\{[^}]*position:sticky/.test(cssText) &&
+      cssText.includes(".dsh-armor5-hgroup-head{position:sticky;top:0;z-index:2;"));
+    ok("滚动区上下渐隐提示还有内容（mask-image）",
+      /\.dsh-armor5-hits-pane\{[^}]*mask-image:linear-gradient/.test(cssText));
+    ok("底部计数条（共 N 条留档 + 滚动提示，等宽数字）",
+      CLIENT_SRC.includes('"共 " + hitCounts.all + " 条留档"') &&
+      /\.dsh-armor5-hits-foot\{[^}]*tabular-nums/.test(cssText));
+  }
+  // ── v0.53.6：明细页对齐命中页（单栏滚动 / 卡片标题粘顶 / 展开标记）──
+  {
+    ok("明细页有自己的滚动容器（fields-pane + overscroll 隔离 + 渐隐）",
+      CLIENT_SRC.includes("dsh-armor5-drawer-pane dsh-armor5-fields-pane") &&
+      /\.dsh-armor5-fields-pane\{[^}]*overscroll-behavior:contain/.test(cssText) &&
+      /\.dsh-armor5-fields-pane\{[^}]*mask-image:linear-gradient/.test(cssText));
+    ok("卡片标题在滚动时粘顶（sticky + 面板底色）",
+      /\.dsh-armor5-field-card>\.dsh-armor5-sec-title\{[^}]*position:sticky/.test(cssText));
+    ok("展开标记更显眼（收起态提示用主题色 + 行尾点线）",
+      cssText.includes(".dsh-armor5-fold[data-open='0'] .dsh-armor5-fold-hint{") &&
+      cssText.includes(".dsh-armor5-fold[data-open='0']{border-bottom:1px dotted"));
+    ok("展开/收起带方向符号（▾ / ▴）",
+      CLIENT_SRC.includes('"收起 ▴"') && CLIENT_SRC.includes('"展开 ▾"'));
+  }
+  // ── v0.53.7 / v0.53.9：包裹框只留「实时 / 任务」，命中与明细走内层框 ──
+  {
+    const frameEl = findByClass(tree, "dsh-armor5-frame");
+    ok("包裹框只给任务页（实时 / 命中 / 明细都平铺，不再多一层）",
+      (frameEl !== null || CLIENT_SRC.includes('className: "dsh-armor5-frame"')) &&
+      CLIENT_SRC.includes('drawerTab === "todo"') &&
+      CLIENT_SRC.includes('// v0.53.10：包裹框只留「任务」一页') &&
+      CLIENT_SRC.includes('className: "dsh-armor5-drawer-pane dsh-armor5-drawer-pane-flat"'));
+    ok("框有边 / 圆角 / 面层（原生令牌 + 兜底）",
+      /\.dsh-armor5-frame\{[^}]*border:1px solid var\(--dsw-alias-border-l2/.test(cssText) &&
+      /\.dsh-armor5-frame\{[^}]*border-radius:var\(--dsw-radius-md/.test(cssText) &&
+      /\.dsh-armor5-frame\{[^}]*background:var\(--dsw-alias-bg-layer-1/.test(cssText));
+    ok("框内卡片换到层 2（框/卡两层不糊在一起）",
+      cssText.includes(".dsh-armor5-frame .dsh-armor5-card{background:var(--dsw-alias-bg-layer-2"));
+    ok("抽屉体让出边距给框",
+      cssText.includes(".dsh-armor5-drawer-body{padding:6px 10px 10px}"));
+  }
+  // ── v0.53.8：命中列表包裹框 ──
+  {
+    const listEl = findByClass(tree, "dsh-armor5-hits-list");
+    ok("命中列表被包进列表框（hits-list 在 pane 内、包住分组）",
+      (listEl !== null || CLIENT_SRC.includes('className: "dsh-armor5-hits-list"')) &&
+      CLIENT_SRC.includes('react.createElement("div", { className: "dsh-armor5-hits-list" }, body)'));
+    ok("列表框有边 / 圆角 / 面层 / 内边距",
+      /\.dsh-armor5-hits-list\{[^}]*border:1px solid var\(--dsw-alias-border-l2/.test(cssText) &&
+      /\.dsh-armor5-hits-list\{[^}]*border-radius:var\(--dsw-radius-md/.test(cssText) &&
+      /\.dsh-armor5-hits-list\{[^}]*background:var\(--dsw-alias-bg-layer-1/.test(cssText));
+    ok("列表框内首组不留顶距 + 行/组头圆角统一到 sm",
+      cssText.includes(".dsh-armor5-hits-list .dsh-armor5-hgroup:first-child{margin-top:0}") &&
+      cssText.includes(".dsh-armor5-hits-list .dsh-armor5-hits li{border-radius:var(--dsw-radius-sm,8px)}"));
+  }
+  // ── v0.53.9：明细页内层内容框 + 命中/明细内容排版 ──
+  {
+    const fieldsList = findByClass(tree, "dsh-armor5-fields-list");
+    ok("明细页不再有额外包裹层（上下一致：卡片直接铺在 pane 里）",
+      fieldsList === null &&
+      !CLIENT_SRC.includes("dsh-armor5-fields-list") &&
+      CLIENT_SRC.includes('className: "dsh-armor5-drawer-pane dsh-armor5-fields-pane dsh-armor5-drawer-pane-flat"'));
+    ok("明细排版规则改绑到 fields-pane（去框后排版不回退）",
+      /\.dsh-armor5-fields-pane \.dsh-armor5-field-card\{[^}]*padding:8px/.test(cssText) &&
+      /\.dsh-armor5-fields-pane \.dsh-armor5-field-card \.dsh-armor5-sec-title\{[^}]*font-size:11\.5px/.test(cssText) &&
+      /\.dsh-armor5-fields-pane \.dsh-armor5-tile \.b\{[^}]*font-size:11px;line-height:15px/.test(cssText));
+    ok("命中内容排版：主行加粗 + 行距 / 副行透明度调过",
+      /\.dsh-armor5-hits-list \.dsh-armor5-hit-main\{[^}]*font-weight:600/.test(cssText) &&
+      /\.dsh-armor5-hits-list \.dsh-armor5-hit-sub\{[^}]*line-height:13px/.test(cssText) &&
+      cssText.includes(".dsh-armor5-hits-list .dsh-armor5-hits{gap:4px}"));
+  }
+  // ── v0.53.11：任务页滚动容器 ──
+  {
+    const todoPaneEl = findByClass(tree, "dsh-armor5-todo-pane");
+    ok("任务页有独立滚动容器（todo-pane + overscroll 隔离 + 渐隐）",
+      (todoPaneEl !== null || CLIENT_SRC.includes('className: "dsh-armor5-todo-pane"')) &&
+      CLIENT_SRC.includes('react.createElement("div", { className: "dsh-armor5-todo-pane" }, todoPane)') &&
+      /\.dsh-armor5-todo-pane\{[^}]*overscroll-behavior:contain/.test(cssText) &&
+      /\.dsh-armor5-todo-pane\{[^}]*mask-image:linear-gradient/.test(cssText));
+    ok("任务页区标题滚动时粘顶（sticky + 面层底色）",
+      /\.dsh-armor5-todo-pane \.dsh-armor5-sec-title\{[^}]*position:sticky/.test(cssText));
+    ok("任务页首区不留顶距（与框内边距不叠加）",
+      cssText.includes(".dsh-armor5-todo-pane .dsh-armor5-sec:first-child{margin-top:0}"));
+  }
+  // ── v0.53.13：「本对话累计」卡（框 + 排版）──
+  {
+    const memEl = findByClass(tree, "dsh-armor5-mem-card");
+    ok("本对话累计有了卡框（含空态）",
+      (memEl !== null || CLIENT_SRC.includes('className: "dsh-armor5-card dsh-armor5-mem-card"')) &&
+      (CLIENT_SRC.match(/dsh-armor5-card dsh-armor5-mem-card/g) || []).length >= 2);
+    ok("累计卡内边距 / 面层 / 行间距",
+      /\.dsh-armor5-mem-card\{[^}]*padding:8px/.test(cssText) &&
+      /\.dsh-armor5-mem-card\{[^}]*background:var\(--dsw-alias-bg-layer-2/.test(cssText) &&
+      cssText.includes(".dsh-armor5-mem-card .dsh-armor5-mem{gap:8px}"));
+    ok("累计卡排版：卡标题 11.5px + 内层区标题 10.5px 三级色 + chip 等宽数字",
+      /\.dsh-armor5-mem-card>\.dsh-armor5-sec-title\{[^}]*font-size:11\.5px/.test(cssText) &&
+      /\.dsh-armor5-mem-card \.dsh-armor5-sec \.dsh-armor5-sec-title\{[^}]*font-size:10\.5px/.test(cssText) &&
+      /\.dsh-armor5-mem-card \.dsh-armor5-chip\{[^}]*tabular-nums/.test(cssText));
+  }
+  // ── v0.53.14：明细页底部让位，其他页不变 ──
+  {
+    ok("明细页底部留净空 104px（padding + 滚动落点）",
+      /\.dsh-armor5-fields-pane\{[^}]*padding-bottom:104px/.test(cssText) &&
+      /\.dsh-armor5-fields-pane\{[^}]*scroll-padding-bottom:104px/.test(cssText));
+    ok("命中页同一条净空 104px（v0.53.16）",
+      /\.dsh-armor5-hits-pane\{[^}]*padding-bottom:104px/.test(cssText) &&
+      /\.dsh-armor5-hits-pane\{[^}]*scroll-padding-bottom:104px/.test(cssText));
+    ok("两页关掉底部渐隐（最后一行不再被淡掉）",
+      cssText.includes(".dsh-armor5-hits-pane,.dsh-armor5-fields-pane{mask-image:none;-webkit-mask-image:none}"));
+    ok("两页高度上限收到 42vh/340px（给出底部面板的位置）",
+      /\.dsh-armor5-hits-pane\{[^}]*max-height:min\(42vh,340px\)/.test(cssText) &&
+      /\.dsh-armor5-fields-pane\{[^}]*max-height:min\(42vh,340px\)/.test(cssText));
+    ok("任务页保持原样（不带净空）",
+      !/\.dsh-armor5-todo-pane\{[^}]*padding-bottom:104px/.test(cssText));
+  }
+  // ── v0.53.18：底部「还有 N 条」提示 ──
+  {
+    const fieldsFoot = findByClass(tree, "dsh-armor5-fields-foot");
+    ok("滚动提示件在场（数剩余条数 + 到底改写）",
+      CLIENT_SRC.includes("var scrollHint = function (kind, itemSel)") &&
+      CLIENT_SRC.includes('"还有 " + rest + " 条 ↓ 继续下滑"') &&
+      CLIENT_SRC.includes('return end ? "已到底"'));
+    ok("提示件对 DOM 能力做检查 + try/catch 兜底",
+      CLIENT_SRC.includes('typeof box.scrollTop !== "number"') &&
+      CLIENT_SRC.includes("} catch (e) { return null; }"));
+    ok("命中 / 明细两页各自挂 ref + onScroll，并有静态文案兜底",
+      CLIENT_SRC.includes('ref: paneRef("hits")') && CLIENT_SRC.includes('ref: paneRef("fields")') &&
+      CLIENT_SRC.includes('scrollHint("hits", ".dsh-armor5-hits li")') &&
+      CLIENT_SRC.includes('scrollHint("fields", ".dsh-armor5-field-card")') &&
+      CLIENT_SRC.includes('|| "在本页内连续滚动"'));
+    ok("明细页脚在场（DOM 或源码）且样式为等宽数字",
+      (fieldsFoot !== null || CLIENT_SRC.includes('className: "dsh-armor5-fields-foot"')) &&
+      /\.dsh-armor5-fields-foot\{[^}]*tabular-nums/.test(cssText));
+  }
   // 配平还不够：**选择器规则里不能再套规则**。上面那条 bug 在浏览器里是合法 CSS
   // （CSS Nesting），所以「能解析」不是判据；一旦某条选择器规则没闭合，后面的规则就会
   // 变成它的嵌套子规则，只对最外层选择器的元素生效。@media / @supports 里套规则是正当的，
@@ -1619,7 +1852,7 @@ if (process.argv.includes("--emit-html")) {
   ok("全局段给出通过 / 拒答 / 命中域（不是空标题）",
     CLIENT_SRC.includes('L("拒答")') && CLIENT_SRC.includes("命中域 "));
   ok("老服务端（无 hits.groups）退回单段「最近命中」不空屏",
-    CLIENT_SRC.includes("hitPaneGrouped || section(") &&
+    CLIENT_SRC.includes("hitPaneGrouped || hitFlatPane") &&
     CLIENT_SRC.includes("dsh-armor5-sec-title") );
   ok("客户端读的是服务端同一份 hits.groups（不另起数据源）",
     /liveState\.liveDoc\.hits\.groups/.test(CLIENT_SRC));

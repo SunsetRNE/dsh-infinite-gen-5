@@ -8,9 +8,11 @@
 //              只保留其可执行的一半，冲突项整条丢弃。
 //   internal = 不注入：只留在本文件当工程记录（例如「无拒绝原则」这类元条款）。
 //
-// 为什么不整份塞进内核：内核载荷账本（prompts/infinite-gen-5.md）当前 15057 字符，
-// 预算是 20500 字节，余量约 5.4 KB；本层按字节预算在装配时择优拼装，默认不会
-// 把余量吃光，也不会与内核已有的 Rule 逐句重复。
+// 为什么不整份塞进内核：内核载荷账本（prompts/infinite-gen-5.md）在 v0.20.0 时 15057 字符、
+// 预算 20500 字节；截至本次审计（v0.52.13）实配是 Order 100 单段 9363 字符，段预算
+// SECTION_BUDGET_BYTES=262144 且 share 上限 25%，实占约 11.5% —— 余量约 240 KB，
+// 所以本层不靠「省余量」取舍，而是靠「同一 Rule 不逐句重复」。上面这行旧账留档不改口径：
+// 若以后重调预算，以 infinite_gen5_profile 的 sectionBudget 实况为准。
 
 import { readFileSync } from "node:fs";
 
@@ -140,7 +142,7 @@ export const DIRECTIVES = [
 
 // 增强集自报版本：本文件唯一的版本号字面量（version-targets.mjs 的锚点，
 // 发版时由 bump-version.mjs 改写；BOOST_HEADER 与 boostStats 都从这里派生）。
-export const BOOST_VERSION = "0.52.13";
+export const BOOST_VERSION = "0.53.0";
 
 // 段首标头：让模型知道这一段是「编译出来的增强集」，而不是内核重述。
 // 版本号在**编译时**现读 package.json：长驻进程里 ES 模块常量随进程寿命固定，

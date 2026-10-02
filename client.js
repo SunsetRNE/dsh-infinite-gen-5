@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.52.13";
+        var VERSION = "v0.53.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -277,6 +277,20 @@
           ".dsh-armor5-hit-main[data-verdict=refusal]{color:var(--dsw-alias-state-error-primary,#f85149)}",
           ".dsh-armor5-hit-main[data-verdict=fallback]{color:var(--dsw-alias-state-warning-primary,#d29922)}",
           ".dsh-armor5-hit-main[data-verdict=empty]{color:var(--dsw-alias-text-tertiary,rgba(127,127,127,.85))}",
+          // ── v0.53.2：命中行三段栅格（判决色点 / 时间 / 正文）──
+          ".dsh-armor5-hits li{display:grid;grid-template-columns:6px 34px 1fr;align-items:center;column-gap:6px}",
+          ".dsh-armor5-hits li[data-has-time='0']{grid-template-columns:6px 1fr}",
+          ".dsh-armor5-hits li:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.12))}",
+          ".dsh-armor5-hit-dot{width:6px;height:6px;border-radius:50%;justify-self:center;",
+          "background:var(--dsw-alias-state-success-primary,#3aa76d)}",
+          ".dsh-armor5-hit-dot[data-verdict=refusal]{background:var(--dsw-alias-state-error-primary,#f85149)}",
+          ".dsh-armor5-hit-dot[data-verdict=fallback]{background:var(--dsw-alias-state-warning-primary,#d29922)}",
+          ".dsh-armor5-hit-dot[data-verdict=empty]{background:var(--dsw-alias-label-tertiary,#8b8b8b)}",
+          ".dsh-armor5-hit-time{font-size:10px;line-height:12px;text-align:right;",
+          "color:var(--dsw-alias-label-tertiary,#8b8b8b);font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-hit-body{min-width:0;display:flex;flex-direction:column;gap:1px}",
+          ".dsh-armor5-hit-main{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+          ".dsh-armor5-hit-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
           ".dsh-armor5-hit-sub{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;overflow-wrap:anywhere}",
           // IG5-PANEL-STREAM C1：实时流 —— 新到的那一条闪一下并上移半像素，让「刚长出来」看得见。
           // IG5-PANEL-STREAM-MERGE M1：实时流不再单开一个列表（与「最近命中」是同一批行），
@@ -464,6 +478,149 @@
           ".dsh-armor5-drawer-grip{flex:0 0 auto;display:flex;padding:6px 12px 2px}",
           ".dsh-armor5-drawer-grip i{display:block;width:32px;height:4px;margin:0 auto;border-radius:999px;",
           "background:var(--dsw-alias-border-l2,rgba(127,127,127,.4))}",
+          // ── v0.53：按 DSH 原生插件面板语言重绘抽屉（抽屉与设置台合并成一张 sheet）──
+          // 依据宿主 web 包里**实际在用**的设计令牌：--dsw-alias-* / --dsw-radius-* /
+          // --dsw-elevation-prominent / --dsw-mask-blur / --dsh-scrollbar-thumb；每个都带兜底值。
+          ".dsh-armor5-scrim{background:var(--dsw-alias-bg-mask-1,rgba(0,0,0,.36));backdrop-filter:blur(var(--dsw-mask-blur,2px))}",
+          ".dsh-armor5-drawer{border-radius:var(--dsw-radius-panel,18px) var(--dsw-radius-panel,18px) 0 0;",
+          "background:var(--dsw-alias-bg-layer-2,#1c1c1f);box-shadow:var(--dsw-elevation-prominent,0 -12px 36px rgba(0,0,0,.42));",
+          "border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.22))}",
+          ".dsh-armor5-drawer-grip{padding:8px 12px 4px}",
+          ".dsh-armor5-drawer-grip i{width:40px;height:4px;background:var(--dsw-alias-border-l2,rgba(127,127,127,.45))}",
+          ".dsh-armor5-sheet-head{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:0 12px 8px}",
+          ".dsh-armor5-sheet-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;",
+          "font-size:13px;font-weight:600;color:var(--dsw-alias-label-primary,#e6e6e6)}",
+          ".dsh-armor5-sheet-title small{margin-left:6px;font-size:10px;font-weight:400;color:var(--dsw-alias-label-tertiary,#8b8b8b)}",
+          ".dsh-armor5-seg{flex:0 0 auto;display:flex;gap:2px;margin:0 12px 8px;padding:2px;",
+          "border-radius:var(--dsw-radius-md,10px);background:var(--dsw-alias-bg-layer-1,rgba(127,127,127,.10));",
+          "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.16));overflow-x:auto;scrollbar-width:none}",
+          ".dsh-armor5-seg::-webkit-scrollbar{display:none}",
+          ".dsh-armor5-seg button{flex:1 1 0;min-width:max-content;height:28px;padding:0 10px;border:0;",
+          "border-radius:calc(var(--dsw-radius-md,10px) - 2px);background:transparent;",
+          "color:var(--dsw-alias-label-secondary,#b8b8b8);font:inherit;font-size:11px}",
+          ".dsh-armor5-seg button[data-on='1']{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.22));",
+          "color:var(--dsw-alias-label-primary,#e6e6e6);font-weight:600}",
+          ".dsh-armor5-seg button:hover{background:var(--dsw-alias-interactive-bg-hover,rgba(127,127,127,.16))}",
+          ".dsh-armor5-seg .dsh-armor5-head-right{flex:0 0 auto;margin-left:auto;display:flex;align-items:center;gap:3px}",
+          ".dsh-armor5-seg .dsh-armor5-ver{display:none}",
+          ".dsh-armor5-card{display:flex;flex-direction:column;gap:6px;padding:10px;",
+          "border-radius:var(--dsw-radius-md,10px);background:var(--dsw-alias-bg-layer-1,rgba(127,127,127,.07));",
+          "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.16))}",
+          // ── v0.53.1：参数行（kv）渲染结构 ──────────────────────────────
+          ".dsh-armor5-kvs{display:flex;flex-direction:column;border-radius:var(--dsw-radius-md,10px);overflow:hidden;",
+          "background:var(--dsw-alias-bg-layer-1,rgba(127,127,127,.06));border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.16))}",
+          ".dsh-armor5-kv{display:flex;align-items:baseline;gap:10px;padding:5px 9px;min-height:26px;box-sizing:border-box}",
+          ".dsh-armor5-kv+.dsh-armor5-kv{border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.12))}",
+          ".dsh-armor5-kv .k{flex:0 0 auto;max-width:52%;color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:11px;line-height:15px}",
+          ".dsh-armor5-kv .v{flex:1 1 auto;min-width:0;text-align:right;overflow-wrap:anywhere;",
+          "color:var(--dsw-alias-label-primary,#e6e6e6);font-size:12px;line-height:16px}",
+          ".dsh-armor5-kv[data-kind=num] .v{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}",
+          ".dsh-armor5-kv[data-kind=long] .v{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
+          ".dsh-armor5-kv[data-kind=empty] .v{color:var(--dsw-alias-label-caption,#8b8b8b);opacity:.7}",
+          ".dsh-armor5-kv[data-kind=bool] .v{flex:0 0 auto;padding:0 6px;border-radius:999px;font-size:10px;line-height:16px;",
+          "background:var(--dsw-alias-bg-layer-3,rgba(127,127,127,.18))}",
+          ".dsh-armor5-kv .v[data-state=on]{color:var(--dsw-alias-state-success-primary,#3aa76d)}",
+          ".dsh-armor5-kv .v[data-state=off]{color:var(--dsw-alias-label-tertiary,#8b8b8b)}",
+          ".dsh-armor5-kvs-empty{display:block;padding:8px 2px;color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px}",
+          ".dsh-armor5-tile .b[data-kind=num]{font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-tile .b[data-kind=empty]{color:var(--dsw-alias-label-caption,#8b8b8b)}",
+          // ── v0.53.3：明细页长值的二级展示（收起=单行省略，展开=换行全文）──
+          ".dsh-armor5-fold{cursor:pointer;display:block;position:relative}",
+          ".dsh-armor5-fold[data-open='0']{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:26px}",
+          ".dsh-armor5-fold[data-open='1']{white-space:pre-wrap;overflow-wrap:anywhere;padding-right:26px}",
+          ".dsh-armor5-fold-hint{position:absolute;right:0;top:0;font-size:9px;line-height:13px;",
+          "color:var(--dsw-alias-label-tertiary,#8b8b8b);opacity:.8}",
+          ".dsh-armor5-fold:hover .dsh-armor5-fold-hint{color:var(--dsw-alias-label-secondary,#b8b8b8);opacity:1}",
+          ".dsh-armor5-fold:focus-visible{outline:1px solid var(--dsw-alias-state-business-primary,#4d6bfe);outline-offset:1px}",
+          // ── v0.53.4：任务页占位骨架 / 命中页筛选与分组头 / 明细页分卡 ──
+          ".dsh-armor5-todo-skel-wrap{display:flex;flex-direction:column;gap:6px}",
+          ".dsh-armor5-todo-skel-note{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px;line-height:15px}",
+          ".dsh-armor5-skel .dsh-armor5-todo-glyph{opacity:.45}",
+          ".dsh-armor5-skel-bar{flex:1 1 auto;min-width:0;height:9px;border-radius:999px;",
+          "background:linear-gradient(90deg,var(--dsw-alias-bg-layer-2,rgba(127,127,127,.10)),",
+          "var(--dsw-alias-bg-layer-3,rgba(127,127,127,.22)),var(--dsw-alias-bg-layer-2,rgba(127,127,127,.10)));",
+          "background-size:200% 100%;animation:dsh-armor5-skel 1.4s ease-in-out infinite}",
+          ".dsh-armor5-skel-bar[data-w='70']{max-width:70%}",
+          ".dsh-armor5-skel-bar[data-w='92']{max-width:92%}",
+          "@keyframes dsh-armor5-skel{0%{background-position:0% 0}100%{background-position:-200% 0}}",
+          "@media (prefers-reduced-motion: reduce){.dsh-armor5-skel-bar{animation:none}}",
+          ".dsh-armor5-filters{display:flex;align-items:center;gap:6px;margin:2px 0 6px}",
+          ".dsh-armor5-filters-label{flex:0 0 auto;color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:10px}",
+          ".dsh-armor5-filter[data-count]{font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-hgroup{margin-top:6px}",
+          ".dsh-armor5-hgroup-head{display:flex;align-items:center;gap:6px;padding:2px 0 4px;",
+          "border-bottom:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.14))}",
+          ".dsh-armor5-hgroup-title{flex:1 1 auto;color:var(--dsw-alias-label-secondary,#b8b8b8);font-size:11px;font-weight:600}",
+          ".dsh-armor5-hgroup-count{flex:0 0 auto;padding:0 6px;border-radius:999px;font-size:10px;line-height:16px;",
+          "background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.12));color:var(--dsw-alias-label-tertiary,#8b8b8b);",
+          "font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-field-cards{display:flex;flex-direction:column;gap:8px;margin-top:4px}",
+          ".dsh-armor5-field-card{gap:8px}",
+          // ── v0.53.5：命中页滚动排版（单栏连续滚动 / 粘性标题 / 底部计数）──
+          ".dsh-armor5-hits-pane{display:flex;flex-direction:column;min-height:0;max-height:min(42vh,340px);overflow:auto;",
+          "overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--dsh-scrollbar-thumb,rgba(127,127,127,.4)) transparent;",
+          "mask-image:linear-gradient(180deg,transparent 0,#000 8px,#000 calc(100% - 12px),transparent 100%)}",
+          ".dsh-armor5-hgroup .dsh-armor5-hits{max-height:none;overflow:visible}",
+          ".dsh-armor5-hgroup-head{position:sticky;top:0;z-index:2;",
+          "background:var(--dsw-alias-bg-layer-2,#1c1c1f);backdrop-filter:blur(var(--dsw-mask-blur,2px))}",
+          ".dsh-armor5-hits-foot{display:flex;justify-content:space-between;gap:8px;align-items:baseline;",
+          "margin-top:6px;color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-hits-foot-hint{opacity:.8}",
+          // ── v0.53.6：明细页对齐命中页（单栏滚动 + 卡片标题粘顶 + 更显眼的展开标记）──
+          ".dsh-armor5-fields-pane{max-height:min(42vh,340px);overflow:auto;overscroll-behavior:contain;",
+          "scrollbar-width:thin;scrollbar-color:var(--dsh-scrollbar-thumb,rgba(127,127,127,.4)) transparent;",
+          "mask-image:linear-gradient(180deg,transparent 0,#000 8px,#000 calc(100% - 12px),transparent 100%)}",
+          ".dsh-armor5-field-card>.dsh-armor5-sec-title{position:sticky;top:-10px;z-index:1;",
+          "background:var(--dsw-alias-bg-layer-2,#1c1c1f);padding:2px 0 4px}",
+          ".dsh-armor5-fold[data-open='0'] .dsh-armor5-fold-hint{color:var(--dsw-alias-state-business-primary,#4d6bfe)}",
+          ".dsh-armor5-fold[data-open='0']{border-bottom:1px dotted var(--dsw-alias-border-l2,rgba(127,127,127,.35))}",
+          // ── v0.53.7：内容包裹框（四页共用一层框，内容不再贴到抽屉边缘）──
+          ".dsh-armor5-drawer-body{padding:6px 10px 10px}",
+          ".dsh-armor5-frame{display:flex;flex-direction:column;min-height:0;padding:10px 10px 8px;",
+          "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:var(--dsw-radius-md,10px);",
+          "background:var(--dsw-alias-bg-layer-1,rgba(127,127,127,.06))}",
+          ".dsh-armor5-frame>.dsh-armor5-drawer-pane{min-height:0}",
+          ".dsh-armor5-frame .dsh-armor5-card{background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.10))}",
+          // ── v0.53.8：命中列表包裹框（列表本身也有边/圆角/面层，行做成框上的小卡片）──
+          ".dsh-armor5-hits-list{display:flex;flex-direction:column;gap:6px;padding:6px 8px;",
+          "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18));border-radius:var(--dsw-radius-md,10px);",
+          "background:var(--dsw-alias-bg-layer-1,rgba(127,127,127,.06))}",
+          ".dsh-armor5-hits-list .dsh-armor5-hgroup:first-child{margin-top:0}",
+          ".dsh-armor5-hits-list .dsh-armor5-hits li{border-radius:var(--dsw-radius-sm,8px)}",
+          ".dsh-armor5-hits-list .dsh-armor5-hgroup-head{border-radius:var(--dsw-radius-sm,8px)}",
+          // ── v0.53.9：明细页内层内容框 + 命中/明细的内容排版 ──
+          // ── v0.53.12：明细页去掉那一层额外包裹（上半有框、下半没框 → 不再不对称）──
+          ".dsh-armor5-fields-pane .dsh-armor5-field-card{padding:8px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.10))}",
+          ".dsh-armor5-fields-pane .dsh-armor5-field-card .dsh-armor5-sec-title{font-size:11.5px;letter-spacing:.2px}",
+          ".dsh-armor5-fields-pane .dsh-armor5-tile .t{font-size:10px;letter-spacing:.1px}",
+          ".dsh-armor5-fields-pane .dsh-armor5-tile .b{font-size:11px;line-height:15px}",
+          // ── v0.53.13：「本对话累计」卡（框 + 排版，与上方两张卡同款）──
+          ".dsh-armor5-mem-card{gap:8px;padding:8px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.10))}",
+          ".dsh-armor5-mem-card>.dsh-armor5-sec-title{font-size:11.5px;letter-spacing:.2px}",
+          ".dsh-armor5-mem-card .dsh-armor5-mem{gap:8px}",
+          ".dsh-armor5-mem-card .dsh-armor5-sec .dsh-armor5-sec-title{font-size:10.5px;",
+          "color:var(--dsw-alias-label-tertiary,#8b8b8b);letter-spacing:.1px}",
+          ".dsh-armor5-mem-card .dsh-armor5-chip{font-size:10.5px;padding:1px 6px;font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-mem-card .dsh-armor5-chips{gap:4px}",
+          ".dsh-armor5-mem-empty{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px;line-height:15px}",
+          // ── v0.53.14：明细页底部让位（底部小面板不再挡住滚动内容），命中 / 任务两页不变 ──
+          ".dsh-armor5-fields-pane{padding-bottom:104px;scroll-padding-bottom:104px}",
+          // v0.53.15：命中页照同一条处理（底部小面板 + 渐隐同样会吃掉最后一行）；任务页保持原样。
+          ".dsh-armor5-hits-pane{padding-bottom:104px;scroll-padding-bottom:104px}",
+          ".dsh-armor5-hits-pane,.dsh-armor5-fields-pane{mask-image:none;-webkit-mask-image:none}",
+          ".dsh-armor5-fields-foot{margin-top:6px;color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;",
+          "font-variant-numeric:tabular-nums;text-align:right;opacity:.9}",
+          ".dsh-armor5-hits-list .dsh-armor5-hits{gap:4px}",
+          ".dsh-armor5-hits-list .dsh-armor5-hit-main{font-weight:600;line-height:14px;letter-spacing:.1px}",
+          ".dsh-armor5-hits-list .dsh-armor5-hit-sub{line-height:13px;opacity:.92}",
+          // ── v0.53.11：任务页滚动容器（与命中/明细同一套手感）──
+          ".dsh-armor5-todo-pane{max-height:min(52vh,420px);overflow:auto;overscroll-behavior:contain;",
+          "scrollbar-width:thin;scrollbar-color:var(--dsh-scrollbar-thumb,rgba(127,127,127,.4)) transparent;",
+          "mask-image:linear-gradient(180deg,transparent 0,#000 8px,#000 calc(100% - 12px),transparent 100%)}",
+          ".dsh-armor5-todo-pane .dsh-armor5-sec:first-child{margin-top:0}",
+          ".dsh-armor5-todo-pane .dsh-armor5-sec-title{position:sticky;top:0;z-index:1;",
+          "background:var(--dsw-alias-bg-layer-1,rgba(127,127,127,.06));padding:2px 0 4px}",
+          ".dsh-armor5-drawer-body{scrollbar-color:var(--dsh-scrollbar-thumb,rgba(127,127,127,.4)) transparent}",
           ".dsh-armor5-tabs{flex:0 0 auto;display:flex;align-items:center;gap:2px;padding:2px 10px 0;",
           "border-bottom:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.2))}",
           ".dsh-armor5-tabs button{flex:0 0 auto;height:28px;padding:0 10px;border:0;background:0 0;",
@@ -539,6 +696,16 @@
           var drawerTabPair = react.useState("live");
           var drawerTab = drawerTabPair[0];
           var setDrawerTab = drawerTabPair[1];
+          // v0.53.3：明细页长值的「展开/收起」状态（只存被展开的键，默认全收起）。
+          var foldPair = react.useState({});
+          var foldMap = foldPair[0];
+          var setFoldMap = foldPair[1];
+          var toggleFold = function (key) {
+            var next = {};
+            for (var k in foldMap) { if (Object.prototype.hasOwnProperty.call(foldMap, k) && k !== key) next[k] = 1; }
+            if (!foldMap[key]) next[key] = 1;
+            setFoldMap(next);
+          };
           // 触发条的长按（v0.49.0 · C 方案）：单击与长按都唤起抽屉。
           // 长按给「一次直达」的手感，并在按住期间给视觉反馈；移动超过阈值判定为滚动，取消。
           var pressPair = react.useState(false);
@@ -870,17 +1037,79 @@
               react.createElement("span", { className: "t" }, titleText),
               child);
           };
-          var textValue = function (value, nowrap) {
+          var textValue = function (value, nowrap, foldKey) {
+            var kid = valueKind(value, nowrap);
+            var raw = String(value == null ? "" : value);
+            // v0.53.3：长值给「单行省略 + 点一下展开」，短值/空值保持纯文本。
+            if (foldKey && kid === "long" && raw.length > 24) {
+              var expanded = !!foldMap[foldKey];
+              var toggle = function () { toggleFold(foldKey); };
+              return react.createElement("span",
+                {
+                  className: "b dsh-armor5-fold",
+                  "data-kind": kid,
+                  "data-fold": "1",
+                  "data-open": expanded ? "1" : "0",
+                  role: "button",
+                  tabIndex: 0,
+                  title: expanded ? "点一下收起" : "点一下展开全文",
+                  onClick: toggle,
+                  onKeyDown: function (e) {
+                    if (e && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggle(); }
+                  }
+                },
+                raw,
+                react.createElement("span", { className: "dsh-armor5-fold-hint", "aria-hidden": "true" },
+                  expanded ? "收起 ▴" : "展开 ▾"));
+            }
             return react.createElement("span",
               {
                 className: "b",
                 "data-dim": value === "—" || value === "无" ? "1" : undefined,
                 "data-nowrap": nowrap ? "1" : undefined,
+                "data-kind": kid,
                 title: nowrap ? value : undefined
               }, value);
           };
           var tileGrid = function (items, key) {
             return react.createElement("div", { className: "dsh-armor5-grid", key: key }, items);
+          };
+          // ── v0.53.1：参数类内容专用渲染结构 ──────────────────────────────
+          // 值先分型（num / bool / long / empty / text），再按型渲染：数字走等宽数字、
+          // 布尔走胶囊、长值走省略号 + title、空值走暗色占位。
+          var valueKind = function (value, nowrap) {
+            var s = String(value == null ? "" : value);
+            if (s === "" || s === "—" || s === "无") return "empty";
+            if (/^-?\d+(\.\d+)?\s*(%|ms|s|字|条|项|次|个|KB|MB|B)?$/.test(s)) return "num";
+            if (/^(是|否|开|关|true|false|on|off)$/i.test(s)) return "bool";
+            if (nowrap || s.length > 24) return "long";
+            return "text";
+          };
+          var kvRow = function (label, value, key, opts) {
+            opts = opts || {};
+            var kind = valueKind(value, opts.nowrap);
+            var on = /^(是|开|true|on)$/i.test(String(value));
+            return react.createElement("div", {
+              className: "dsh-armor5-kv", key: key, "data-kind": kind,
+              title: kind === "long" ? String(value) : undefined
+            },
+              react.createElement("span", { className: "k" }, label),
+              react.createElement("span", {
+                className: "v",
+                "data-state": kind === "bool" ? (on ? "on" : "off") : undefined
+              }, String(value)));
+          };
+          var kvList = function (pairs, key, opts) {
+            var list = Array.isArray(pairs) ? pairs : [];
+            if (!list.length) {
+              return react.createElement("span", { className: "dsh-armor5-kvs-empty" },
+                "本会话还没有参数读数（发一条消息后开始攒）");
+            }
+            return react.createElement("div", { className: "dsh-armor5-kvs", key: key },
+              list.map(function (pair, index) {
+                var long = opts && opts.longWhen ? opts.longWhen(pair[0]) : (String(pair[0]).indexOf("工具") >= 0);
+                return kvRow(pair[0], pair[1], (key || "kv") + index, { nowrap: long });
+              }));
           };
           var chipList = function (items, kind, emptyText) {
             return react.createElement("div", { className: "dsh-armor5-chips" },
@@ -898,9 +1127,11 @@
           };
 
           var livePairs = open ? liveRowPairs(liveState.liveDoc, liveState.link, true) : [];
-          var liveTiles = livePairs.map(function (pair, index) {
-            // 工具名是英文长串，给省略号而不是断词；卡片半边格放不下整串时 title 里有全文。
-            return tile(pair[0], textValue(pair[1], pair[0] === "最近工具"), "live" + index, 1);
+          // v0.53.1：实时页从「田字格」改为参数行（一条读数一行，右对齐、分型渲染）。
+          var liveParams = kvList(livePairs, "live", {
+            longWhen: function (label) {
+              return String(label).indexOf("工具") >= 0 || String(label).indexOf("路径") >= 0;
+            }
           });
           var hitList = open ? hitRows(liveState.liveDoc && liveState.liveDoc.hits) : [];
 
@@ -991,22 +1222,32 @@
             return PANEL_LEX_STATE.dev && rawList && rawList.length
               ? L(key) + " · " + rawList.length : L(key);
           };
-          var fieldTiles = tileGrid([
+          // v0.53.4：明细页按语义分两张卡。
+          var fieldCard = function (titleText, child, key) {
+            return react.createElement("div", { className: "dsh-armor5-card dsh-armor5-field-card", key: key },
+              react.createElement("div", { className: "dsh-armor5-sec-title" }, titleText), child);
+          };
+          var clueTiles = tileGrid([
             tile(tileLabel("命中标记", domainMarkers),
               accOrRaw(domainMarkers, "markers", "hit"), "hit", 2),
             tile(tileLabel("风险载荷", risk),
               accOrRaw(risk, "risks", "risk"), "risk", 2),
             tile(tileLabel("安全标记", safe),
-              accOrRaw(safe, "safe", "safe"), "safe", 1),
+              accOrRaw(safe, "safe", "safe"), "safe", 1)
+          ], "clues");
+          var paramTiles = tileGrid([
             tile(L("识别领域"), textValue(domain ? (domainLabel || domain) : "—"), "domain", 1),
-            tile(L("领域候选"), textValue(candidatesText), "cand", 1),
-            tile(L("拒答/兜底词"), textValue(words.length ? words.join("、") : "—"), "words", 1),
+            tile(L("领域候选"), textValue(candidatesText, false, "f-cand"), "cand", 1),
+            tile(L("拒答/兜底词"), textValue(words.length ? words.join("、") : "—", false, "f-words"), "words", 1),
             tile(L("扫描范围"), textValue(textChars
               ? "全文 " + textChars + " 字 · 判拒 " + openingChars + " 字"
-              : "—"), "range", 2),
-            tile(L("候选明细"), textValue(rankedDetailText), "cand", 2),
+              : "—", false, "f-range"), "range", 2),
+            tile(L("候选明细"), textValue(rankedDetailText, false, "f-detail"), "cand", 2),
             tile(L("空答类型"), textValue(emptyKind || "—"), "empty", 1)
-              ], "fields");
+          ], "params");
+          var fieldTiles = react.createElement("div", { className: "dsh-armor5-field-cards" },
+            fieldCard("判定线索", clueTiles, "card-clues"),
+            fieldCard("参数与范围", paramTiles, "card-params"));
 
           // v0.49.0（C 方案）：原位浮层容器已删除 —— 单击或长按触发条一律走下面的抽屉。
           // 回滚参照：本块原为「var panel = open && dockPrefs.layoutMode === "popover" ? … : null;」，
@@ -1016,12 +1257,29 @@
           // ── 抽屉容器（v0.48.0 · LAYOUT_MODE=drawer）────────────────────────
           // 与浮层同源：liveTiles / hitList / fieldTiles 三份数据原样搬进来，只换壳。
           // 页签只切「显示哪一页」，不改变任何订阅或回读时机。
+          // v0.53.4：任务页在「无投影 / 投影为空」时预加载 4 条占位骨架。
+          var todoSkeleton = function (reason) {
+            return react.createElement("div", { className: "dsh-armor5-todo-skel-wrap", "data-skeleton": "4" },
+              react.createElement("span", { className: "dsh-armor5-todo-skel-note" }, reason),
+              react.createElement("ul", { className: "dsh-armor5-todos dsh-armor5-todos-skel" },
+                [0, 1, 2, 3].map(function (i) {
+                  return react.createElement("li", {
+                    key: "skel" + i,
+                    className: "dsh-armor5-todo dsh-armor5-skel",
+                    "data-status": "pending",
+                    "aria-hidden": "true"
+                  },
+                    react.createElement("span", { className: "dsh-armor5-todo-glyph" }, "○"),
+                    react.createElement("span", {
+                      className: "dsh-armor5-skel-bar",
+                      "data-w": i % 2 ? "70" : "92"
+                    }));
+                })));
+          };
           var todoPane = !canProject
-            ? react.createElement("span", { className: "dsh-armor5-sec-title" },
-              "宿主未提供任务投影接口（useProjection 缺失）")
+            ? todoSkeleton("宿主未提供任务投影接口（useProjection 缺失）· 以下是 4 条占位")
             : todoList.length === 0
-              ? react.createElement("span", { className: "dsh-armor5-sec-title" },
-                "本会话还没有任务清单（宿主 todos 投影为空）")
+              ? todoSkeleton("本会话还没有任务清单（宿主 todos 投影为空）· 以下是 4 条占位")
               : section(todoSummary || "任务清单",
                 react.createElement("ul", { className: "dsh-armor5-todos" },
                   todoList.map(function (item, index) {
@@ -1063,6 +1321,18 @@
             return "更早";
           };
           // v0.50.6：命中台账按天分组 —— 条数一多，光看「本对话/更早」分不清是什么时候的事。
+          // v0.53.4：分组头独立成型（标题 + 条数胶囊 + 发丝线）。
+          var hgroup = function (label, count, child, key) {
+            return react.createElement("section", {
+              className: "dsh-armor5-hgroup",
+              key: key,
+              "data-bucket": label
+            },
+              react.createElement("header", { className: "dsh-armor5-hgroup-head" },
+                react.createElement("span", { className: "dsh-armor5-hgroup-title" }, label),
+                react.createElement("span", { className: "dsh-armor5-hgroup-count" }, count)),
+              child);
+          };
           var hitTimeGroups = function (rows) {
             var buckets = { "今天": [], "昨天": [], "更早": [] };
             var list = Array.isArray(rows) ? rows : [];
@@ -1072,39 +1342,69 @@
             return ["今天", "昨天", "更早"].filter(function (label) {
               return buckets[label].length > 0;
             }).map(function (label) {
-              return section(label + "（" + buckets[label].length + "）",
-                hitRowsOf(buckets[label]), "hg-day-" + label);
+              return hgroup(label, buckets[label].length, hitRowsOf(buckets[label]), "hg-day-" + label);
             });
           };
-          var hitFilterBar = react.createElement("div", { className: "dsh-armor5-chiprow" },
-            [["all", "全部"], ["pass", "通过"], ["block", "拒答"]].map(function (row) {
-              return react.createElement("button", {
-                key: "hf" + row[0],
-                type: "button",
-                className: "dsh-armor5-chip dsh-armor5-filter",
-                "data-filter": row[0],
-                "data-on": hitFilter === row[0] ? "1" : "0",
-                onClick: function () { setHitFilter(row[0]); }
-              }, row[1]);
-            }));
+          // v0.53.4：筛选条带计数。
+          var hitCounts = { all: hitList.length, pass: 0, block: 0 };
+          hitList.forEach(function (h) {
+            if (!h) return;
+            if (h.verdict === "pass") hitCounts.pass += 1;
+            else if (h.verdict === "refusal" || h.verdict === "block") hitCounts.block += 1;
+          });
+          var hitFilterBar = react.createElement("div", { className: "dsh-armor5-filters" },
+            react.createElement("span", { className: "dsh-armor5-filters-label" }, "筛选"),
+            react.createElement("div", { className: "dsh-armor5-chiprow" },
+              [["all", "全部"], ["pass", "通过"], ["block", "拒答"]].map(function (row) {
+                return react.createElement("button", {
+                  key: "hf" + row[0],
+                  type: "button",
+                  className: "dsh-armor5-chip dsh-armor5-filter",
+                  "data-filter": row[0],
+                  "data-count": hitCounts[row[0]] || 0,
+                  "data-on": hitFilter === row[0] ? "1" : "0",
+                  onClick: function () { setHitFilter(row[0]); }
+                }, row[1] + " " + (hitCounts[row[0]] || 0));
+              })));
           // v0.50.6：分组条目必须过既有归一化器 hitRows（raw 环条目只有 domain/markers，
           // 没有 main/sub，直接渲染会是一片空行）。喂成 {recent: [...]} 即复用同一条去重+倒序链。
+          // v0.53.2：命中行同款化 —— 判决色点 + 时间列（等宽数字）+ 正文列（主行/副行各一行省略号）。
+          // 时间列在有 at 时出现，没有 at 的行用 data-has-time="0" 让栅格少一列，不留空轨道。
+          var hitTimeText = function (at) {
+            var t = typeof at === "string" ? Date.parse(at) : at;
+            if (!isFinite(t)) return "";
+            var d = new Date(t);
+            var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+            return pad(d.getHours()) + ":" + pad(d.getMinutes());
+          };
+          var hitRow = function (hit, key) {
+            var time = hitTimeText(hit && hit.at);
+            return react.createElement("li", {
+              key: key,
+              title: hit && hit.title,
+              "data-fresh": hit && hit.fresh ? "1" : undefined,
+              "data-has-time": time ? "1" : "0"
+            },
+              react.createElement("span", {
+                className: "dsh-armor5-hit-dot",
+                "data-verdict": hit && hit.verdict,
+                "aria-hidden": "true"
+              }),
+              time ? react.createElement("span", { className: "dsh-armor5-hit-time" }, time) : null,
+              react.createElement("span", { className: "dsh-armor5-hit-body" },
+                react.createElement("span", {
+                  className: "dsh-armor5-hit-main",
+                  "data-verdict": hit && hit.verdict,
+                  title: (hit && hit.main) || ""
+                }, (hit && hit.main) || ""),
+                react.createElement("span", { className: "dsh-armor5-hit-sub" },
+                  V((hit && hit.sub) || ""))));
+          };
           var hitRowsOf = function (rows) {
             var list = hitRows({ recent: filterHits(rows) });
             return list.length
               ? react.createElement("ul", { className: "dsh-armor5-hits" },
-                list.map(function (hit, index) {
-                  return react.createElement("li", {
-                    key: "hg" + index,
-                    title: hit && hit.title,
-                    "data-fresh": hit && hit.fresh ? "1" : undefined
-                  },
-                    react.createElement("span",
-                      { className: "dsh-armor5-hit-main", "data-verdict": hit && hit.verdict },
-                      (hit && hit.main) || ""),
-                    react.createElement("span", { className: "dsh-armor5-hit-sub" },
-                      V((hit && hit.sub) || "")));
-                }))
+                list.map(function (hit, index) { return hitRow(hit, "hg" + index); }))
               : react.createElement("span", { className: "dsh-armor5-hits-empty" },
                 hitFilter === "all" ? "这一类还没有判决" : "这一类里没有「" + hitFilter + "」的判决");
           };
@@ -1151,42 +1451,92 @@
                 }, row.name + " ×" + row.count);
               }));
           };
+          // v0.53.13：「本对话累计」补上与上方两张卡同款的包裹框与排版。
+          var memCardTitle = function (text) {
+            return react.createElement("div", { className: "dsh-armor5-sec-title" }, text);
+          };
+          var memCounts = mem && mem.verdicts ? mem.verdicts : {};
           var memoryPane = !mem || mem.turns === 0
-            ? react.createElement("span", { className: "dsh-armor5-sec-title" },
-              "本对话还没有判决（累计从第一条判决开始）")
-            : section("本对话累计（" + mem.turns + " 次判决 · 通过 "
-                + ((mem.verdicts && mem.verdicts.pass) || 0) + " / 拒答 "
-                + ((mem.verdicts && mem.verdicts.block) || 0) + "）",
-                react.createElement("div", { className: "dsh-armor5-mem" },
-                  section(L("识别领域"), memChips(mem.domains, "mem-domain") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-d"),
-                  section("命中标记", memChips(mem.markers, "mem-marker") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-m"),
-                  section("安全标记", memChips(mem.safe, "mem-safe") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-s"),
-                  section("风险载荷", memChips(mem.risks, "mem-risk") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-r")),
-                "mem");
+            ? react.createElement("div", { className: "dsh-armor5-card dsh-armor5-mem-card", "data-empty": "1" },
+              memCardTitle("本对话累计"),
+              react.createElement("span", { className: "dsh-armor5-mem-empty" },
+                "还没有判决（累计从第一条判决开始）"))
+            : react.createElement("div", { className: "dsh-armor5-card dsh-armor5-mem-card" },
+              memCardTitle("本对话累计（" + mem.turns + " 次判决 · 通过 "
+                + (memCounts.pass || 0) + " / 拒答 " + (memCounts.block || 0) + "）"),
+              react.createElement("div", { className: "dsh-armor5-mem" },
+                section(L("识别领域"), memChips(mem.domains, "mem-domain") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-d"),
+                section("命中标记", memChips(mem.markers, "mem-marker") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-m"),
+                section("安全标记", memChips(mem.safe, "mem-safe") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-s"),
+                section("风险载荷", memChips(mem.risks, "mem-risk") || react.createElement("span", { className: "dsh-armor5-sec-title" }, "—"), "mem-r")));
 
           var hitListFiltered = filterHits(hitList);
+          // v0.53.5：命中页滚动与排版 —— 单栏连续滚动 + 粘性日分组头 + 底部计数。
+          var hitFlatPane = section(hitListFiltered.length
+            ? "最近命中（本进程最近 " + hitListFiltered.length + " 次判决）" : "最近命中",
+            hitListFiltered.length
+            ? react.createElement("ul", { className: "dsh-armor5-hits" },
+              hitListFiltered.map(function (hit) { return hitRow(hit, hit.key); }))
+            : react.createElement("span", { className: "dsh-armor5-sec-title" },
+              "还没有判决留档（重启 DSH 后开始攒）"), "hits");
+          // v0.53.18：底部「还有 N 条」提示 —— 滚动时数出视口下沿之下还剩几条；滚到底变「已到底」。
+          var scrollHintRefs = {};
+          var scrollTickPair = react.useState(0);
+          var scrollTick = scrollTickPair[0];
+          var setScrollTick = scrollTickPair[1];
+          var scrollHint = function (kind, itemSel) {
+            if (!scrollTick && scrollTick !== 0) return null;
+            var box = scrollHintRefs[kind];
+            if (!box || typeof box.scrollTop !== "number" || typeof box.clientHeight !== "number") return null;
+            try {
+              var nodes = box.querySelectorAll ? box.querySelectorAll(itemSel) : [];
+              var bottom = box.scrollTop + box.clientHeight;
+              var rest = 0;
+              for (var i = 0; i < nodes.length; i += 1) {
+                var it = nodes[i];
+                if ((it.offsetTop || 0) + (it.offsetHeight || 0) > bottom + 1) rest += 1;
+              }
+              var end = box.scrollTop + box.clientHeight >= (box.scrollHeight || 0) - 2;
+              return end ? "已到底" : "还有 " + rest + " 条 ↓ 继续下滑";
+            } catch (e) { return null; }
+          };
+          var paneRef = function (kind) {
+            return function (el) { scrollHintRefs[kind] = el || null; };
+          };
+          var paneScroll = function () { setScrollTick(function (t) { return t + 1; }); };
+
+          var hitsPaneWrap = function (body) {
+            return react.createElement("div", {
+              className: "dsh-armor5-hits-pane",
+              "data-count": hitCounts.all,
+              "data-grouped": hitPaneGrouped ? "1" : "0",
+              ref: paneRef("hits"),
+              onScroll: paneScroll
+            },
+              react.createElement("div", { className: "dsh-armor5-hits-list" }, body),
+              react.createElement("div", { className: "dsh-armor5-hits-foot" },
+                react.createElement("span", null, "共 " + hitCounts.all + " 条留档"),
+                react.createElement("span", { className: "dsh-armor5-hits-foot-hint" },
+                  scrollHint("hits", ".dsh-armor5-hits li")
+                    || "在本页内连续滚动 · 按 今天 / 昨天 / 更早 分组")));
+          };
+          var hitPane = hitsPaneWrap(hitPaneGrouped || hitFlatPane);
+          // v0.53.11：任务页给独立滚动容器（与命中/明细同一套滚动手感）。
+          var todoScroll = react.createElement("div", { className: "dsh-armor5-todo-pane" }, todoPane);
           var drawerPane = drawerTab === "hits"
-            ? (hitPaneGrouped || section(hitListFiltered.length
-              ? "最近命中（本进程最近 " + hitListFiltered.length + " 次判决）" : "最近命中",
-              hitListFiltered.length
-              ? react.createElement("ul", { className: "dsh-armor5-hits" },
-                hitListFiltered.map(function (hit) {
-                  return react.createElement("li", {
-                    key: hit.key,
-                    title: hit.title,
-                    "data-fresh": hit.fresh ? "1" : undefined
-                  },
-                    react.createElement("span",
-                      { className: "dsh-armor5-hit-main", "data-verdict": hit.verdict }, hit.main),
-                    react.createElement("span", { className: "dsh-armor5-hit-sub" }, hit.sub));
-                }))
-              : react.createElement("span", { className: "dsh-armor5-sec-title" },
-                "还没有判决留档（重启 DSH 后开始攒）"), "hits"))
+            ? hitPane
             : drawerTab === "fields"
-              ? react.createElement("div", { className: "dsh-armor5-drawer-pane" }, fieldTiles, memoryPane)
+              ? react.createElement("div", {
+                className: "dsh-armor5-drawer-pane dsh-armor5-fields-pane dsh-armor5-drawer-pane-flat",
+                ref: paneRef("fields"),
+                onScroll: paneScroll
+              },
+                fieldTiles, memoryPane,
+                react.createElement("div", { className: "dsh-armor5-fields-foot" },
+                  scrollHint("fields", ".dsh-armor5-field-card") || "在本页内连续滚动"))
               : drawerTab === "todo"
-                ? todoPane
-                : tileGrid(liveTiles, "live");
+                ? todoScroll
+                : liveParams;
 
           var drawer = open
             ? react.createElement(
@@ -1221,7 +1571,9 @@
                 },
                 react.createElement("div", { className: "dsh-armor5-drawer-grip" },
                   react.createElement("i", null)),
-                react.createElement("div", { className: "dsh-armor5-tabs" },
+                react.createElement("div", { className: "dsh-armor5-sheet-head" },
+                  react.createElement("div", { className: "dsh-armor5-sheet-title" }, "无限五代")),
+                react.createElement("div", { className: "dsh-armor5-tabs dsh-armor5-seg" },
                   DRAWER_TABS.map(function (row) {
                     return react.createElement("button", {
                       key: row.id,
@@ -1261,7 +1613,11 @@
                       onClick: function () { setOpen(false); }
                     }, "✕"))),
                 react.createElement("div", { className: "dsh-armor5-drawer-body" },
-                  react.createElement("div", { className: "dsh-armor5-drawer-pane" }, drawerPane)),
+                  // v0.53.10：包裹框只留「任务」一页；实时 / 命中 / 明细一律平铺（各自有内层框或本就不需要）。
+                  drawerTab === "todo"
+                    ? react.createElement("div", { className: "dsh-armor5-frame" },
+                      react.createElement("div", { className: "dsh-armor5-drawer-pane" }, drawerPane))
+                    : react.createElement("div", { className: "dsh-armor5-drawer-pane dsh-armor5-drawer-pane-flat" }, drawerPane)),
                 react.createElement("div", { className: "dsh-armor5-drawer-foot" },
                   react.createElement("span", null, L("位置") + " " + slotText),
                 react.createElement("button", {
@@ -2343,7 +2699,7 @@
           var rows = [
             ["版本", TITLE],
             ["上屏·位置", mode + " · " + prefs.slotMode + " → " + (SLOT_MODES[prefs.slotMode] || SLOT_MODES.composer)],
-            ["注入面", "Order 100 常驻内核 + 118 运行时锚点 / 150 增强集 / 160 惰性章节 / 200 中段锚点 / 10150 末位锚点"],
+            ["注入面", "Order 100 常驻内核 + 118 运行时锚点 / 150 增强集 / 160 惰性章节 / 170 批量交付合同 / 200 中段锚点 / 10150 末位锚点"],
             ["判定源", "本次会话的实时投影（key infinite-gen-5:armor），判决一直留到你的下一条发言"],
             // 域数不再写死：读本体 coverage 分区（库还没发布时显示占位，不谎报数字）。
             ["领域与工具", ((tuner.state.database && tuner.state.database.coverage && tuner.state.database.coverage.domains) || "—") +
