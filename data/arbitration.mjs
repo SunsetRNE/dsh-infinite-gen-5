@@ -58,6 +58,39 @@ export const ARBITRATION_RULES = [
   },
 ];
 
+
+// ── 双方互校契约（v0.59.2）：与拼图复刻仓的 compat.json 同源，两侧两两核对 ──
+// 拼图侧（SunsetRNE/dsh-puzzle-mode-2）的 compat.json 声明同一组数字；
+// 两侧 verify 脚本都读对方那一份并双向核对 —— 任一侧改数字而另一侧没跟上，两边都会红。
+export const COMPAT_CONTRACT = "ig5-puzzle-coexist/1";
+export const COMPAT_PUZZLE_PATHS = [
+  "/root/S/dsh-puzzle-mode-2/compat.json",          // 复刻仓工作树
+  "/root/.dsh/plugin-src/dsh-puzzle-mode/compat.json", // 装机副本（若已带该文件）
+];
+export function readPuzzleContract(readFileSync, existsSync) {
+  for (const p of COMPAT_PUZZLE_PATHS) {
+    if (existsSync(p)) {
+      try {
+        const j = JSON.parse(readFileSync(p, "utf8"));
+        return { path: p, decl: j };
+      } catch (e) {
+        return { path: p, error: e.message };
+      }
+    }
+  }
+  return null;
+}
+// 返回不一致项（空数组 = 两侧对齐）
+export function contractIssues(decl) {
+  const bad = [];
+  if (!decl) return ["未找到拼图侧的 compat.json（互校无从进行）"];
+  if (decl.contract !== COMPAT_CONTRACT) bad.push(`契约名不一致：${decl.contract} != ${COMPAT_CONTRACT}`);
+  if (decl.ig5TailOrder !== IG5_TAIL_ORDER) bad.push(`末位锚点不一致：拼图记 ${decl.ig5TailOrder} / 本仓 ${IG5_TAIL_ORDER}`);
+  if (decl.puzzleDefaultOrder !== PZ_ORDER_FORK_DEFAULT) bad.push(`拼图默认段序不一致：拼图记 ${decl.puzzleDefaultOrder} / 本仓记 ${PZ_ORDER_FORK_DEFAULT}`);
+  if (!(decl.puzzleDefaultOrder < decl.ig5TailOrder)) bad.push(`段序关系不成立：${decl.puzzleDefaultOrder} 未小于 ${decl.ig5TailOrder}`);
+  return bad;
+}
+
 export function arbitrationLine() {
   return "[跨插件仲裁] 本机同时装有 dsh-puzzle-mode（段 puzzle-mode:policy；上游 0.19.7 为 order 10500，复刻仓 ≥0.19.8 默认 10100 —— 前者排在无限五代末位锚点 10150 之后，后者排在其前）：① 交付物内容与形态归无限五代，拼图文档与采访节奏归拼图模式；② 采访轮/审查轮按拼图提问额度，其余场景同一轮最多一问；③ 整批题在场时批量合同优先（不采访、不中停），拼图文档一轮结束后幂等回写；④ 拼图文档只走 puzzle_mode，既有工具 schema 不受「参数扁平」约束；⑤ 末位锚点只声明本载荷末位；⑥ 拼图的「停下」只停动作，不回退已交付。";
 }

@@ -1,3 +1,18 @@
+## v0.59.2
+
+**双向互校：与拼图复刻仓共用一份段序契约，两侧互相读、互相核 —— 任一侧先动都不会漂移。**
+
+- ① **对方侧**（`SunsetRNE/dsh-puzzle-mode-2`）：新增 `compat.json` 把契约写成机器可读的一份 ——
+  `{ contract: "ig5-puzzle-coexist/1", ig5TailOrder: 10150, puzzleDefaultOrder: 10100 }`；
+  其 `verify:cross` 增加三向对账（A 本插件记的拼图默认段序 == 它的默认 · B 本插件记的末位锚点 == 其契约值 · C 关系成立）。
+- ② **本插件侧**：`data/arbitration.mjs` 新增 `COMPAT_CONTRACT` / `COMPAT_PUZZLE_PATHS` /
+  `readPuzzleContract()` / `contractIssues()` —— 读对方 `compat.json`（先找工作树，再找装机副本），
+  逐项比对段序数字与关系，返回具体差异清单；`verify:arbitration` 据此新增两块判据。
+- ③ **判据**：`verify:arbitration` **18 通过 / 0 失败**（含「拼图侧 compat.json 可解析 / 契约名一致 / 双向无差异」）；
+  对方 `npm test`（含其 `verify:cross`）同样 **18 通过 / 0 失败**。两侧都读对方那一份，
+  所以「只改一边」会在**两边同时**报错，而不是等到某次联调才发现。
+- ④ 未改内核（底价仍 19953 B / 20000 B）；未改任何运行时行为，只是把契约与判据补齐。
+
 ## v0.59.1
 
 **跨插件段序协商落地：复刻仓 `SunsetRNE/dsh-puzzle-mode-2` 已改默认段序 10500 → 10100（可 `PUZZLE_SECTION_ORDER` 覆盖）；本插件一侧把段序记法改成「上游 / 复刻仓」双路径，两边都能核。**

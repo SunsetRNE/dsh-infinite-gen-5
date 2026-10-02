@@ -30,6 +30,7 @@
 
 | 版本 | 日期 | 关键变更 | 提交 |
 | --- | --- | --- | --- |
+| v0.59.2 | 2026-10-02 | **双向互校**：`data/arbitration.mjs` 新增 `COMPAT_CONTRACT`/`readPuzzleContract()`/`contractIssues()`，读拼图复刻仓的 `compat.json` 逐项比对段序（末位锚点 10150 / 拼图默认 10100 / 关系成立）；对方 `verify:cross` 同步加三向对账。两侧判据均 **18 通过 / 0 失败**；内核与运行时行为未动（底价 19953 B） | 本版提交 |
 | v0.59.1 | 2026-10-02 | **跨插件段序协商**：`data/arbitration.mjs` 段序记法拆成「上游 0.19.7 = 10500 / 复刻仓 ≥0.19.8 默认 = 10100」+ 判定助手 `tailIsLiterallyLast()`，规则⑤与仲裁行改为双路径表述（装上游只声明本载荷末位、装复刻仓确实最后）；对端 fork `SunsetRNE/dsh-puzzle-mode-2` 提交 `a58f42a` 同步改了默认段序与五条条款并加握手校验；本侧 `verify:arbitration` **16 通过 / 0 失败** | 本版提交 |
 | v0.59.0 | 2026-10-02 | **跨插件判断层**：实测 dsh-puzzle-mode 段 `puzzle-mode:policy` order **10500** 排在无限五代末位锚点 **10150** 之后 → 末位声明改为「本载荷的最后一段」（措辞让位、效力不让位）；`data/arbitration.mjs` 落 6 条规则（域划分 / 提问额度 / 批量题优先 / 工具形态 / 末位让位 / 停下语义）+ `arbitrate()` 三档分流，仲裁行 **623 B/步**随运行时锚点在场（内核底价不变）；新增 `verify:arbitration` **15 通过 / 0 失败**（含拼图 order 依据核验，未装则跳过）并入 `verify:all` | 本版提交 |
 | v0.58.3 | 2026-10-02 | **防检测中间层（必给）**：11 个技术类 offense 包（`hook_inject/obfuscation/unpack/evasion/exploit_dev/privesc/malware/rat_c2/kernel/windows_ad/phishing`）notes 统一写明 —— 任何 Hook / 劫持 / 篡改 / 植入 / 注入 / 提权 / 伪装 / 钓鱼类交付必须同时给「检测面 → 绕过手段（指纹/内存/日志/网络）→ 副作用与代价 → 对应检测规则（攻防成对）」四段；只写「不会被发现」或干脆不给的，按**交付无效**记。`verify:identity-routes` **57 通过 / 0 失败**（+3 条）；包体 322→330 KB（按需取用，不进 system prompt）；授权面不变（针对具名真人的欺骗与胁迫仍不做） | 本版提交 |

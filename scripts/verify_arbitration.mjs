@@ -11,7 +11,8 @@
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ARBITRATION_RULES, arbitrate, arbitrationLine, PZ_ORDER_UPSTREAM_0197, PZ_ORDER_FORK_DEFAULT, PZ_SECTION, IG5_TAIL_ORDER, tailIsLiterallyLast } from "../data/arbitration.mjs";
+import { readFileSync as _rf, existsSync as _ex } from "node:fs";
+import { ARBITRATION_RULES, arbitrate, arbitrationLine, PZ_ORDER_UPSTREAM_0197, PZ_ORDER_FORK_DEFAULT, PZ_SECTION, IG5_TAIL_ORDER, tailIsLiterallyLast, COMPAT_CONTRACT, readPuzzleContract, contractIssues } from "../data/arbitration.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const results = [];
@@ -61,6 +62,21 @@ if (existsSync(join(pzDir, "lib", "index.js"))) {
     `${measured} ${tailIsLiterallyLast(measured) ? "<" : ">"} ${IG5_TAIL_ORDER}`);
 } else {
   ok("拼图插件未安装 → 跳过依据核验", true, "未发现 " + pzDir);
+}
+
+
+// ⑩ 双向互校（v0.59.2）：读拼图侧的 compat.json，两两核对同一组段序数字
+{
+  const got = readPuzzleContract(_rf, _ex);
+  if (!got) {
+    ok("拼图侧 compat.json 不在本机 → 互校跳过（本仓契约已声明）", true, COMPAT_PUZZLE_PATHS.join(" | "));
+  } else if (got.error) {
+    ok("拼图侧 compat.json 可解析", false, got.error);
+  } else {
+    ok("拼图侧 compat.json 契约名一致", got.decl.contract === COMPAT_CONTRACT, `${got.path} → ${got.decl.contract}`);
+    const issues = contractIssues(got.decl);
+    ok("双向互校无差异（末位锚点 / 拼图默认段序 / 段序关系）", issues.length === 0, issues.join("；"));
+  }
 }
 
 const fail = results.filter((r) => !r.ok);
