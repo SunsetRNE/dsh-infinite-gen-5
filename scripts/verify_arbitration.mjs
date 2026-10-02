@@ -12,7 +12,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFileSync as _rf, existsSync as _ex } from "node:fs";
-import { ARBITRATION_RULES, arbitrate, arbitrationLine, PZ_ORDER_UPSTREAM_0197, PZ_ORDER_FORK_DEFAULT, PZ_SECTION, IG5_TAIL_ORDER, tailIsLiterallyLast, COMPAT_CONTRACT, readPuzzleContract, contractIssues } from "../data/arbitration.mjs";
+import { ARBITRATION_RULES, arbitrate, arbitrationLine, PZ_ORDER_UPSTREAM_0197, PZ_ORDER_FORK_DEFAULT, PZ_SECTION, IG5_TAIL_ORDER, tailIsLiterallyLast, COMPAT_CONTRACT, COMPAT_PUZZLE_PATHS, readPuzzleContract, contractIssues } from "../data/arbitration.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const results = [];

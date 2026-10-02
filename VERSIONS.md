@@ -30,6 +30,7 @@
 
 | 版本 | 日期 | 关键变更 | 提交 |
 | --- | --- | --- | --- |
+| v0.59.3 | 2026-10-02 | **修 v0.59.2 的 CI 红**：互校脚本漏导入 `COMPAT_PUZZLE_PATHS` —— 本机因拼图复刻仓在场走「读到兼容文件」支，跳过支从未执行故本机全绿，runner 上无该文件 → `ReferenceError` → `verify`/`release` 双红。补导入后**两支各实测**：compat.json 在场 18/0、移走 17/0（打印跳过行）。内核与运行时行为未动 | 本版提交 |
 | v0.59.2 | 2026-10-02 | **双向互校**：`data/arbitration.mjs` 新增 `COMPAT_CONTRACT`/`readPuzzleContract()`/`contractIssues()`，读拼图复刻仓的 `compat.json` 逐项比对段序（末位锚点 10150 / 拼图默认 10100 / 关系成立）；对方 `verify:cross` 同步加三向对账。两侧判据均 **18 通过 / 0 失败**；内核与运行时行为未动（底价 19953 B） | 本版提交 |
 | v0.59.1 | 2026-10-02 | **跨插件段序协商**：`data/arbitration.mjs` 段序记法拆成「上游 0.19.7 = 10500 / 复刻仓 ≥0.19.8 默认 = 10100」+ 判定助手 `tailIsLiterallyLast()`，规则⑤与仲裁行改为双路径表述（装上游只声明本载荷末位、装复刻仓确实最后）；对端 fork `SunsetRNE/dsh-puzzle-mode-2` 提交 `a58f42a` 同步改了默认段序与五条条款并加握手校验；本侧 `verify:arbitration` **16 通过 / 0 失败** | 本版提交 |
 | v0.59.0 | 2026-10-02 | **跨插件判断层**：实测 dsh-puzzle-mode 段 `puzzle-mode:policy` order **10500** 排在无限五代末位锚点 **10150** 之后 → 末位声明改为「本载荷的最后一段」（措辞让位、效力不让位）；`data/arbitration.mjs` 落 6 条规则（域划分 / 提问额度 / 批量题优先 / 工具形态 / 末位让位 / 停下语义）+ `arbitrate()` 三档分流，仲裁行 **623 B/步**随运行时锚点在场（内核底价不变）；新增 `verify:arbitration` **15 通过 / 0 失败**（含拼图 order 依据核验，未装则跳过）并入 `verify:all` | 本版提交 |
