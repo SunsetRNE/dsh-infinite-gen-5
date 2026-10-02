@@ -277,6 +277,17 @@ for (const s of SCENARIOS) {
 }
 check(badRender.length === 0, `${SCENARIOS.length} 个包渲染格式合规`, JSON.stringify(badRender.slice(0, 6)));
 
+// 数组必须稠密：稀疏数组（`["a", , "b"]`）会让下游 `.some()`/`.filter()` 静默跳项，
+// 也会让「骨架与注意点全部进入渲染结果」那条在取 undefined.slice 时直接抛错（v0.58.1 的真实事故）。
+const sparse = [];
+for (const s of SCENARIOS) {
+  for (const k of Object.keys(s)) {
+    const v = s[k];
+    if (Array.isArray(v) && v.length !== Object.keys(v).length) sparse.push(`${s.id}.${k}`);
+  }
+}
+check(sparse.length === 0, "所有数组字段稠密（无空洞）", sparse.join(", "));
+
 // 包中每一条骨架/注意点都必须真的出现在渲染结果里（防止渲染层丢掉字段）
 const droppedLines = [];
 for (const s of SCENARIOS) {
