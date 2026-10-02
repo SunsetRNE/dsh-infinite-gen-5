@@ -4,11 +4,22 @@
 版本段落按提交标题里的 `vX.Y.Z` 切分，未带版本号的提交归入最新段；
 每条末尾的短哈希是提交号，最新一条（HEAD）不标哈希 —— 它在「生成 → 提交」之间还会变。
 
+## v0.52.12 — 2026-10-02
+
+### 🐛 修复
+
+- 同类缺陷普查 —— drm 包去降级措辞 / injection+chain 的 id 抢活 / recon 补英文标记 + verify:pack-lint 进 CI
+
 ## v0.52.11 — 2026-10-02
 
 ### 🐛 修复
 
-- 破解/VIP/去广告类题不再降级成交付邻接版（内核加「缺值≠缺交付」+ crack 域包去自我审查措辞 / 补 markers）+ verify:crack-delivery
+- 跨族 marker「授权绕过」补 CROSS_FAMILY_ALLOW 签字（vocab 门禁）（`a6a75bf`）
+- 破解/VIP/去广告类题不再降级成交付邻接版（内核加「缺值≠缺交付」+ crack 域包去自我审查措辞 / 补 markers）+ verify:crack-delivery（`901174d`）
+
+### 🧹 杂务与维护
+
+- 刷新 CHANGELOG 与生成文档（`6478f4b`）
 
 ## v0.52.10 — 2026-10-02
 
