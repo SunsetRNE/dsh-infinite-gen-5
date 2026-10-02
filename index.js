@@ -2453,11 +2453,21 @@ export function apply(ctx, config) {
         dropList: CFG.OVERRIDE_DROP ?? OVERRIDE_DROP,
       });
       const clause = CFG.OVERRIDE_CLAUSE ? renderTakeoverClause({ mode: plan.mode, dropped: plan.dropped }) : "";
-      const tails = plan.kept.filter((s) => s && s.name === TAIL_SECTION);
-      const body = plan.kept.filter((s) => s && s.name !== TAIL_SECTION);
-      const sections = clause
-        ? [...body, { name: OVERRIDE_SECTION, order: OVERRIDE_ORDER, text: clause }, ...tails]
-        : [...body, ...tails];
+      // v0.52.9：接管档默认常驻后，这段瀑布每轮都会跑 —— 于是它顺手把末位锚点提到最后，
+      // 把 `TAIL_MODE="order"`（锚点当 10150 普通段、故意让宿主人格后缀压住它）的语义覆盖掉了。
+      // 这里尊重显式 order 档：那一档不搬锚点，只插裁决条款。
+      const hoistTail = CFG.TAIL_MODE !== "order";
+      const tails = hoistTail ? plan.kept.filter((s) => s && s.name === TAIL_SECTION) : [];
+      const body = (hoistTail ? plan.kept.filter((s) => s && s.name !== TAIL_SECTION) : plan.kept).slice();
+      // 裁决条款按自己的 order（9900）插进 body，而不是一律追加到末尾 ——
+      // 一律追加会在 `TAIL_MODE="order"` 下把条款顶到宿主人格后缀之后，把「9900 在末位锚点之前」的语义打乱。
+      if (clause) {
+        const row = { name: OVERRIDE_SECTION, order: OVERRIDE_ORDER, text: clause };
+        const at = body.findIndex((s) => Number(s?.order ?? 0) > OVERRIDE_ORDER);
+        if (at < 0) body.push(row);
+        else body.splice(at, 0, row);
+      }
+      const sections = [...body, ...tails];
       const residual = scanPromptResidual(sections.map((s) => (typeof s?.text === "string" ? s.text : "")).join("\n\n"));
       runtime.override = {
         mode: plan.mode,

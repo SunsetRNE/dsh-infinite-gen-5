@@ -132,6 +132,7 @@ const last = (arr) => arr[arr.length - 1];
         "test:harness-source",
         "test:web-surface",
         "deployment:persona-suffix",
+        "infinite-gen-5:override-clause",
         TAIL,
       ]),
     "装配顺序：首句层（-1100）最前、宿主段按 order 排、真末位锚点被瀑布追加到最后",
@@ -157,9 +158,9 @@ const last = (arr) => arr[arr.length - 1];
   // （首句层 -1100 / 内核 100 / 运行时 118 / 增强集 150 / 惰性 160 / 批量交付臂 170 / 中段 200 /
   // 任务态 300 / 真末位 10150）。
   check(profile?.injection?.length === 7, "profile 汇报 7 个注册段（末位锚点不占命名空间）", JSON.stringify(profile?.injection));
-  check(profile?.injectionPlacements?.length === 9, "profile 汇报九处注入位置（首句层起算）", JSON.stringify(profile?.injectionPlacements?.map((p) => p.order)));
+  check(profile?.injectionPlacements?.length === 10, "profile 汇报十处注入位置（首句层起算；v0.52.9 起接管裁决 9900 常驻在场）", JSON.stringify(profile?.injectionPlacements?.map((p) => p.order)));
   check(
-    JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)) === "[-1100,100,118,150,160,170,200,300,10150]",
+    JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)) === "[-1100,100,118,150,160,170,200,300,9900,10150]",
     "注入位置按 order 排序（首句层 -1100 最前），真末位锚点标在 10150",
     JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)),
   );
@@ -282,7 +283,10 @@ const last = (arr) => arr[arr.length - 1];
   const assembly = await r.assemble();
   const order = names(assembly);
   check(order.includes(TAIL), "order 档也注入末位锚点");
-  check(last(order) === "deployment:persona-suffix", "order 档下最后一段仍是宿主人格后缀（末位锚点被压住）", JSON.stringify(order));
+  // v0.52.9：接管裁决条款（9900）默认常驻，装配管线把「新段」追加在末尾，
+  // 所以 order 档下最后一段可能是它；锚点被宿主人格后缀压住这一点仍由下一条断言守住。
+  check(order.includes("deployment:persona-suffix") && order.indexOf(TAIL) < order.indexOf("deployment:persona-suffix"),
+    "order 档下末位锚点仍被宿主人格后缀压住（接管条款可能追加在更后面）", JSON.stringify(order));
   check(order.indexOf(TAIL) < order.indexOf("deployment:persona-suffix"), "order 档的锚点排在人格后缀之前");
 }
 
