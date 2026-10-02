@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.52.6";
+        var VERSION = "v0.52.7";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -317,7 +317,7 @@
           ".armor5-console-meter{color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:11px;font-variant-numeric:tabular-nums}",
           ".armor5-console-badge{display:inline-flex;align-items:center;gap:4px;color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:11px}",
           ".armor5-console-badge[data-kind=pass]{color:var(--dsw-alias-state-success-primary,#3fb950)}",
-          ".armor5-console-rows,.armor5-task-list,.armor5-live-rows{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}",
+          ".armor5-console-rows,.armor5-live-rows{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}",
           // v0.36.3：旋钮分三组后每组两栏 —— 12 个键一列到底会把设置页拉成长卷。
           // v0.36.4：两栏只在宽屏成立；手机（<560px）改单栏，否则来源标记与档位按钮会被挤到换行。
           ".armor5-knob-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}",
@@ -331,15 +331,10 @@
           ".armor5-knob .armor5-console-choice{min-height:26px;padding:2px 6px}",
           ".armor5-knob .armor5-console-choice-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
           ".armor5-knob .armor5-console-choice-hint{display:none}",
-          ".armor5-console-rows li,.armor5-task-list li,.armor5-live-rows li{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:baseline}",
-          ".armor5-console-rows .k,.armor5-task-list .k,.armor5-live-rows .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px}",
-          ".armor5-console-rows .v,.armor5-task-list .v,.armor5-live-rows .v{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:11px;overflow-wrap:anywhere}",
-          // 任务清单进度：一条进度条 + 状态字形 + 内容。字形列窄，内容可折行。
-          ".armor5-task-bar{height:5px;border-radius:999px;background:var(--dsw-alias-fill-l2,rgba(127,127,127,.22));overflow:hidden}",
-          ".armor5-task-bar-fill{height:100%;border-radius:999px;background:var(--dsw-alias-state-success-primary,#3fb950);transition:width .25s ease}",
-          ".armor5-task-list li{grid-template-columns:16px minmax(0,1fr)}",
-          ".armor5-task-list li[data-status=inProgress] .k{color:var(--dsw-alias-state-warning-primary,#d29922)}",
-          ".armor5-task-list li[data-status=completed] .v{color:var(--dsw-alias-label-caption,#8b8b8b);text-decoration:line-through}",
+          ".armor5-console-rows li,.armor5-live-rows li{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px;align-items:baseline}",
+          ".armor5-console-rows .k,.armor5-live-rows .k{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px}",
+          ".armor5-console-rows .v,.armor5-live-rows .v{color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:11px;overflow-wrap:anywhere}",
+          // v0.52.7：设置台的任务清单块与它的进度条样式一并删除 —— 任务显示只有一个归属：浮层抽屉。
           // 领域覆盖 · 词表 · 预算（v0.14.1）：族条形 + 预算进度条。条形颜色按占比分档，
           // 75% 起转黄、90% 起转红 —— 预算见底是「该加预算或减词」的信号，得让人一眼看见。
           ".armor5-cov-rows{display:flex;flex-direction:column;gap:4px}",
@@ -390,12 +385,19 @@
           ".armor5-console[data-panel='user'] .armor5-console-choices{gap:4px}",
           ".armor5-console[data-panel='user'] .armor5-console-choices>button{padding:4px 8px;border-radius:8px;min-height:28px;font-size:12px;flex:1 1 0}",
           // v0.51.16：用户模式隐藏内核调参组（注入面 / 载荷与预算 / 节拍与门 / 运行时锚点节拍 / 判定源 / 形态与去重），
-          // 只留用户能懂的：面板显示多少 / 放在哪 / 说哪套话 / 任务清单 / 实时状态 / 预览。dev 模式照旧全显示。
+          // v0.51.16 / v0.52.7：用户模式隐藏内核调参组（注入面 / 载荷与预算 / 节拍与门 / 只读字段…），
+          // 只留用户能懂的：面板显示多少 / 放在哪 / 说哪套话 / 预览；任务清单已完全交给浮层抽屉，设置页不再重复画。
           ".armor5-console[data-panel='user'] [data-dev-only='1']{display:none}",
           ".armor5-console[data-panel='user'] .armor5-console-group{position:relative;padding:8px 0 6px;",
           "border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18))}",
           ".armor5-console[data-panel='user'] .armor5-console-group:first-of-type{border-top:0;padding-top:2px}",
           ".armor5-console[data-panel='user'] .armor5-console-group-title{font-weight:600;opacity:.9}",
+          // v0.52.7：用户模式再精简一层 —— 每个选项下面那行 10.5px 小字（含英文取值名）整块隐藏，
+          // 只留组标题 + 选项名；分组卡片化，把「一堵灰字墙」拆成可数的几块；面板收窄到 520px。
+          ".armor5-console[data-panel='user'] .armor5-console-choice-hint{display:none}",
+          ".armor5-console[data-panel='user'] .armor5-console-group{padding:8px 10px;border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.16))}",
+          ".armor5-console[data-panel='user'] .armor5-console-group:first-of-type{border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.16))}",
+          ".armor5-console[data-panel='user']{gap:8px;max-width:520px}",
           ".armor5-console-secret-input{flex:1 1 auto;min-width:0;min-height:28px;padding:4px 8px;border-radius:8px;",
           "border:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.3));background:transparent;color:inherit;font:inherit;font-size:12px}",
           ".dsh-armor5-chiprow{display:flex;flex-wrap:wrap;gap:4px}",
@@ -2009,56 +2011,6 @@
         // 任务清单：读的是统计库里那份「本次会话 todos 投影的镜像」，写回宿主自己的清单。
         // 用户在这里看到的就是模型下一步会看到的进度，不必翻聊天记录数到第几步。
         var TASK_GLYPH = { completed: "✓", inProgress: "▶", pending: "○" };
-        function taskProgress(state, tuner) {
-          var db = state.database;
-          var tasks = (db && db.tasks) || null;
-          var counts = (tasks && tasks.counts) || { pending: 0, inProgress: 0, completed: 0 };
-          var items = (tasks && tasks.items) || [];
-          var total = counts.pending + counts.inProgress + counts.completed;
-          var percent = total > 0 ? Math.round((counts.completed / total) * 100) : 0;
-          var bars = tasks && tasks.available
-            ? [
-              react.createElement("div", { className: "armor5-task-bar", key: "bar" },
-                react.createElement("div", { className: "armor5-task-bar-fill", style: { width: percent + "%" } })),
-              react.createElement("span", { className: "armor5-console-hint", key: "num" },
-                counts.completed + "/" + total + " 完成 · 进行中 " + counts.inProgress + " · 待办 " + counts.pending + "（" + percent + "%）")
-            ]
-            : react.createElement("span", { className: "armor5-console-hint" },
-              "本次会话还没有清单镜像" + (tasks && tasks.reason ? "（" + tasks.reason + "）" : "（让模型建一份，或点下面恢复上次）"));
-          var list = items.length > 0
-            ? react.createElement("ul", { className: "armor5-task-list" },
-              items.slice(0, 12).map(function (item, index) {
-                return react.createElement("li", { key: "task:" + index, "data-status": item.status },
-                  react.createElement("span", { className: "k" }, TASK_GLYPH[item.status] || "○"),
-                  react.createElement("span", { className: "v" }, item.content));
-              }))
-            : null;
-          return react.createElement("div", { className: "armor5-console-group" },
-            react.createElement("div", { className: "armor5-console-group-title" }, C("任务清单进度（宿主 todos 投影）")),
-            bars,
-            list,
-            tuner.state.taskNote ? react.createElement("span", { className: "armor5-console-hint" }, tuner.state.taskNote) : null,
-            react.createElement("div", { className: "armor5-console-foot" },
-              react.createElement("button", {
-                type: "button",
-                className: "armor5-console-btn armor5-tune-btn",
-                disabled: tuner.state.taskBusy === true || !state.database,
-                onClick: function () { tuner.writeTasks("restore"); }
-              }, tuner.state.taskBusy ? "正在写…" : "恢复上次清单"),
-              react.createElement("button", {
-                type: "button",
-                className: "armor5-console-btn armor5-tune-btn",
-                onClick: function () { tuner.read(true); }
-              }, "刷新统计库")
-            ),
-            react.createElement("span", { className: "armor5-console-hint" },
-              "面板只读插件本体落盘的统计库（推送驱动，断线自动回落轮询）；写清单是唯一的上行动作，由本体按宿主策略写进会话。")
-          );
-        }
-
-        // ── 领域覆盖 · 词表 · 预算 · 注入健康（v0.14.1） ─────────────────────────
-        // 数据全部来自本体的 coverage / runtime / boot 分区：面板一个数字都不算，
-        // 只把库里的东西画出来。库还没发布 coverage（老服务端）时给出可读原因。
         function covBar(percent, level) {
           var width = Math.max(0, Math.min(100, Number(percent) || 0));
           return react.createElement("div", { className: "armor5-cov-bar", "data-level": level || "ok" },
@@ -2445,7 +2397,7 @@
                 react.createElement("b", null, IDLE_LABEL),
                 react.createElement("span", { className: "armor5-console-ver" }, VERSION)
               ),
-              react.createElement("span", { className: "armor5-console-hint" }, "面板形态与挂载位置，改完立即生效并保存在本机")
+              react.createElement("span", { className: "armor5-console-hint" }, "改完立即生效，偏好存在本机")
             ),
             react.createElement("div", { className: "armor5-console-group" },
               react.createElement("div", { className: "armor5-console-group-title" }, C("上屏多少信息（TRIGGER_MODE）")),
@@ -2511,7 +2463,6 @@
                 }, "重新读取")
               )
             ),
-            taskProgress(tuner.state, tuner),
             liveGroup(tuner.state),
             coverageGroup(tuner.state),
             react.createElement("div", { className: "armor5-console-group", "data-dev-only": "1" },

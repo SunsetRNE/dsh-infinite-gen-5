@@ -814,9 +814,15 @@ const PREF_KEY = "dsh-infinite-gen-5:prefs";
   ok("有「恢复默认」按钮（偏好复位，与调参复位分开）",
     collectByClass(view.tree, "armor5-console-btn").filter((b) => textOf(b) === "恢复默认").length === 1,
     JSON.stringify(collectByClass(view.tree, "armor5-console-btn").map((b) => textOf(b))));
-  ok("设置台有调参按钮（保存并生效 / 档位复位到默认 / 重新读取 / 恢复上次清单 / 刷新统计库）",
-    collectByClass(view.tree, "armor5-tune-btn").length === 5,
+  ok("设置台有调参按钮（保存并生效 / 档位复位到默认 / 重新读取）",
+    collectByClass(view.tree, "armor5-tune-btn").length === 3,
     JSON.stringify(collectByClass(view.tree, "armor5-tune-btn").map((b) => textOf(b))));
+  // v0.52.7 解耦锁：任务清单完全交给浮层抽屉，设置台不得再画一份
+  ok("设置台不再渲染任务清单（任务块已交回抽屉）",
+    !CLIENT_SRC.includes("function taskProgress(") && !CLIENT_SRC.includes("armor5-task-list"),
+    CLIENT_SRC.includes("armor5-task-list") ? "仍残留 armor5-task-list" : "");
+  ok("抽屉仍负责任务清单（dsh-armor5-todos 在场）",
+    CLIENT_SRC.includes("dsh-armor5-todos") && CLIENT_SRC.includes('drawerTab === "todo"'));
   ok("没有 __IG5_TUNING__ 时降级成只读提示 + YAML 片段（不联网、不白屏）",
     textOf(view.tree).includes("调参接口不可用") && findByClass(view.tree, "armor5-console-yaml") !== null &&
     textOf(view.tree).includes("cordis.patch.yml"),
@@ -1709,8 +1715,8 @@ if (process.argv.includes("--emit-html")) {
 {
   ok("设置台有独立词表与 C()（组标题 / 选项名，不与面板词表混用）",
     CLIENT_SRC.includes("var CONSOLE_LEX = {") && /var C = function \(text\)/.test(CLIENT_SRC));
-  ok("五个组标题都走 C()（不再是内部术语直出）",
-    ["上屏多少信息（TRIGGER_MODE）", "挂到哪个槽位（SLOT_MODE）", "任务清单进度（宿主 todos 投影）",
+  ok("四个组标题都走 C()（不再是内部术语直出；任务清单组已随解耦移除）",
+    ["上屏多少信息（TRIGGER_MODE）", "挂到哪个槽位（SLOT_MODE）", "面板用哪套词（PANEL_MODE）",
      "领域覆盖 · 词表 · 注入健康", "实时（信号来源 / 本轮 / 工具流水）"]
       .every((t) => CLIENT_SRC.includes('C("' + t + '")')));
   ok("选项名走 C()（glyph / composer / header / zone 都会翻译）",
