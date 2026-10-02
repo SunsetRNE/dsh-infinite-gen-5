@@ -33,6 +33,13 @@ on:
 permissions:
   contents: write
 
+# 并发闸：同一个 tag 只允许一个 release 跑完。
+# 起因：v0.60.0 的 tag 触发了两个并发 run，两个都在「上传到 GitHub Release」上失败，
+#      结果 Release 只挂上了 1 个附件（其余靠手工补）。加了这组之后，同名 tag 的后续 run 排队而不是并行抢上传。
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   package:
     runs-on: ubuntu-latest
