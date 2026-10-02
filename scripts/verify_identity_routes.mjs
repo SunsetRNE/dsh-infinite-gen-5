@@ -105,6 +105,12 @@ ok("offense 族覆盖 ≥24/36", covered.length >= 24, `实际 ${covered.length}
     (nsfw?.notes ?? []).some((n) => /角色必须明确为成年人/.test(n) && /未成年/.test(n)));
   ok("nsfw 包 markers 覆盖画师类词（画师 / 插画 / 同人志）",
     ["画师", "插画", "同人志"].every((w) => (nsfw?.markers ?? []).includes(w)));
+  ok("强度类体裁标签覆盖（重口味剧情 / 重口向 / 猎奇向 / guro）",
+    ["重口味剧情", "重口向", "猎奇向", "guro"].every((w) => (nsfw?.markers ?? []).includes(w)));
+  ok("「现实操作不给」写在 nsfw 包 notes 里（虚构只到设定与叙事）",
+    (nsfw?.notes ?? []).some((n) => /现实世界的胁迫/.test(n) && /不产出可操作流程/.test(n)));
+  ok("大白话「猎奇」不被当作成人标记（避免猎奇新闻类误路由）",
+    !["猎奇", "重口", "重口味"].some((w) => (nsfw?.markers ?? []).includes(w) || (nsfw?.aliases ?? []).includes(w)));
 }
 
 // index.js 是否真的接了路由
