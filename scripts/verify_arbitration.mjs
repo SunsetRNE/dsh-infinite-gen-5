@@ -82,14 +82,14 @@ if (existsSync(join(pzDir, "lib", "index.js"))) {
 
 // ⑪ 文本层互校（v0.59.4）：三条分工规则的可核关键词，自证 + 互校
 {
-  const wantRules = ["domain", "ask-quota", "batch-first", "tool-shape", "stop-semantics"];
-  ok("文本契约覆盖五条分工规则（域划分 / 额度 / 批量优先 / 工具形态 / 停下语义）",
-    Object.keys(COMPAT_TEXT_PROBES).length === 5 && wantRules.every((k) => k in COMPAT_TEXT_PROBES),
+  const wantRules = ["domain", "ask-quota", "batch-first", "tool-shape", "stop-semantics", "tail-concede"];
+  ok("文本契约覆盖六条分工规则（域划分 / 额度 / 批量优先 / 工具形态 / 停下语义 / 末位让位）",
+    Object.keys(COMPAT_TEXT_PROBES).length === 6 && wantRules.every((k) => k in COMPAT_TEXT_PROBES),
     Object.keys(COMPAT_TEXT_PROBES).join(", "));
   const own = arbitrationLine();
   const ownMiss = Object.entries(COMPAT_TEXT_PROBES).filter(([, p]) => !own.includes(p.ig5));
-  ok("自证：本仓仲裁行含五条 ig5 侧关键词", ownMiss.length === 0,
-    ownMiss.length ? "缺：" + ownMiss.map(([k, p]) => k + "→" + p.ig5).join(" / ") : "五条齐");
+  ok("自证：本仓仲裁行含六条 ig5 侧关键词", ownMiss.length === 0,
+    ownMiss.length ? "缺：" + ownMiss.map(([k, p]) => k + "→" + p.ig5).join(" / ") : "六条齐");
 
   const got = readPuzzleContract(_rf, _ex);
   const puzzleTextPath = COMPAT_PUZZLE_TEXT_PATHS.find((f) => _ex(f));

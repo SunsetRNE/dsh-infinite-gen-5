@@ -101,6 +101,7 @@ export const COMPAT_TEXT_PROBES = {
   "batch-first": { puzzle: "不做打断者", ig5: "批量合同优先" },
   "tool-shape": { puzzle: "按各自 schema 给", ig5: "既有工具 schema 不受" },
   "stop-semantics": { puzzle: "不回退", ig5: "只停动作" },
+  "tail-concede": { puzzle: "早于它的末位锚点", ig5: "只声明本载荷末位" },
 };
 export function textProbeIssues(decl, ownText, otherText) {
   const bad = [];
