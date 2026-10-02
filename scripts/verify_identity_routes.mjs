@@ -119,6 +119,26 @@ ok("offense 族覆盖 ≥24/36", covered.length >= 24, `实际 ${covered.length}
     !["猎奇", "重口", "重口味"].some((w) => (nsfw?.markers ?? []).includes(w) || (nsfw?.aliases ?? []).includes(w)));
 }
 
+// ⑧ 假名兼容：「不针对具名真人」不得因名字像真人而撞墙
+{
+  const creative = ["nsfw", "novel", "roleplay", "comic", "interactive_fiction", "screenplay"];
+  const missing = creative.filter((id) => {
+    const pack = SCENARIOS.find((s) => s.id === id);
+    return !(pack?.notes ?? []).some((n) => /名字形态不参与判定/.test(n) && /无需改名/.test(n));
+  });
+  ok("创作族 6 个包都带「假名规则」（无需改名 / 不做身份核查 / 名字形态不参与判定）",
+    missing.length === 0, missing.length ? "缺：" + missing.join(",") : "");
+  const { execFileSync } = await import("node:child_process");
+  let out = "";
+  try {
+    out = execFileSync(process.execPath, [join(__dirname, "name_frame.mjs"), "--selftest"], { encoding: "utf8" });
+  } catch (e) {
+    out = String(e.stdout || e.message);
+  }
+  ok("命名帧判定器自检通过（虚构帧 / 现实帧 各 ≥3 例）",
+    /7 通过 \/ 0 失败/.test(out), out.split("\n").slice(-2)[0] || "");
+}
+
 // index.js 是否真的接了路由
 const indexSrc = readFileSync(join(__dirname, "..", "index.js"), "utf8");
 ok("index.js 已接入身份路由", indexSrc.includes("identity-routes.mjs")
