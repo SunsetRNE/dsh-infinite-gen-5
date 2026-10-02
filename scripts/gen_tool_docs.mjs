@@ -44,12 +44,33 @@ function docTitle(path) {
   return m ? m[1].trim().replace(/`/g, "") : rel(path);
 }
 
+/** 被 .gitignore 拉黑的目录不进索引（v0.52.13）：内部留档 docs/incidents/ 只在本机存在，
+ *  索引一旦列上它，CI 上就会出现「指向不存在文件」的条目，顺带也把内部路径写进对外文件。 */
+function ignoredDocDirs() {
+  // 显式denylist + git 兜底：内部留档（docs/incidents/）只在本机存在，索引列上它
+  // 会让 CI 出现「指向不存在文件」的条目，也把内部路径写进对外文件。
+  const ignored = new Set(["incidents"]);
+  const dir = join(ROOT, "docs");
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (!e.isDirectory() || e.name.startsWith(".")) continue;
+    try {
+      execFileSync("git", ["check-ignore", "-q", `docs/${e.name}`], { cwd: ROOT });
+      ignored.add(e.name);
+    } catch {
+      /* 没被忽略 —— 正常情况；check-ignore 在无命中时退出码 1 */
+    }
+  }
+  return ignored;
+}
+
 function listDocs() {
   const dir = join(ROOT, "docs");
+  const ignored = ignoredDocDirs();
   const files = [];
   const dirs = [];
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     if (e.name.startsWith(".")) continue;
+    if (ignored.has(e.name)) continue;
     const full = join(dir, e.name);
     if (e.isDirectory()) {
       const count = readdirSync(full).filter((f) => !f.startsWith(".")).length;

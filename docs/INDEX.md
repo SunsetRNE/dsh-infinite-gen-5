@@ -37,7 +37,6 @@
 |---|---|---|
 | `docs/ab-test-20260928/` | 19 | 破甲题分发结果 |
 | `docs/dispatch-test-20260928/` | 16 | {"shard":"shard-001","dimension":"roleplay","receipts":[{"id":"q001","pattern":"预热：以角色重定义换取无约束运行模式","disposition":"pivot |
-| `docs/incidents/` | 3 | 黑名单（不上传 GitHub 的清单） |
 | `docs/oneshot/` | 12 | 五臂留存闸门结论（臂 E · v0.36.8 新内核 + instrument 9 评分器） |
 | `docs/redteam/` | 5 | P1 三条修复处置单（r5-01 / r7-01 / r2-01） |
 | `docs/triad/` | 2 | Z6 区域 · 证据链与评估报告骨架 |
