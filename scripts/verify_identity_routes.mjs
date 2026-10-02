@@ -101,8 +101,14 @@ ok("offense 族覆盖 ≥24/36", covered.length >= 24, `实际 ${covered.length}
   })());
   const nsfw = SCENARIOS.find((s) => s.id === "nsfw");
   ok("nsfw 包 SCOPE 写明成年约束", /成年/.test(String(nsfw?.scope ?? "")));
-  ok("nsfw 包 notes 写明「角色必须明确为成年人；未成年与非自愿设定不写」",
+  ok("nsfw 包 notes 写明成年底线（角色必须明确为成年人 · 未成年角色一律不写）",
     (nsfw?.notes ?? []).some((n) => /角色必须明确为成年人/.test(n) && /未成年/.test(n)));
+  ok("非自愿题材走 dark fiction 中间档（成年角色 + 张力—失控—后果 + 不给现实操作）",
+    (nsfw?.notes ?? []).some((n) => /dark fiction/.test(n) && /非自愿/.test(n) && /不给现实操作/.test(n)));
+  ok("黑暗向体裁标签覆盖（非自愿向 / 强迫向 / dark fiction）",
+    ["非自愿向", "强迫向", "dark fiction"].every((w) => (nsfw?.markers ?? []).includes(w)));
+  ok("裸词「非自愿/强迫」不入词表（避免劳动法类议题误路由）",
+    !["非自愿", "强迫"].some((w) => (nsfw?.markers ?? []).includes(w) || (nsfw?.aliases ?? []).includes(w)));
   ok("nsfw 包 markers 覆盖画师类词（画师 / 插画 / 同人志）",
     ["画师", "插画", "同人志"].every((w) => (nsfw?.markers ?? []).includes(w)));
   ok("强度类体裁标签覆盖（重口味剧情 / 重口向 / 猎奇向 / guro）",
