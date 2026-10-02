@@ -46,7 +46,7 @@
 | 文件 | 用途 |
 |---|---|
 | `README.md` | <p align="center"> |
-| `UPDATE.md` | *抽屉 UI 重绘：四页分层收口（实时 / 命中 / 明细 / 任务）· 命中与明细内部滚动重排 · 底部「还有 N 条」读数 · 包裹框按页裁决 · 客户端自检 383 通过 / 0 失败。** |
+| `UPDATE.md` | *身份许可（Identity permit）：把「站点聘用的攻击测试岗」写成内核显式口径 —— 五类岗位点名 + 明确不设凭据门；offense 全族 36 个域包 SCOPE 同步带上受聘口径。** |
 | `VERSIONS.md` | *本文件是版本变更的压缩版**：一版 1–3 行，只留「改了什么 + 硬数字 + 提交」。 |
 | `CHANGELOG.md` | 版本段落按提交标题里的 vX.Y.Z 切分，未带版本号的提交归入最新段； |
 | `HARNESS_PLUGIN.md` | 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。 |

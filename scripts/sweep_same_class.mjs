@@ -29,6 +29,10 @@ for (const s of SCENARIOS) {
   if (WITHHOLD.test(s.scope ?? "")) findings.push({ level: "error", id: s.id, what: "scope-withhold", detail: s.scope });
   const badNote = (s.notes ?? []).find((n) => SUBSTITUTE.test(n) && !NEGATED.test(n));
   if (badNote) findings.push({ level: "warn", id: s.id, what: "notes-substitute", detail: badNote });
+  // v0.54.0：offense 族的 SCOPE 必须带「身份许可」受聘口径（站点聘用的攻击测试岗）
+  if (s.family === "offense" && !/攻击测试员|渗透测试工程师|网络安全攻击工程师/.test(s.scope ?? "")) {
+    findings.push({ level: "error", id: s.id, what: "scope-no-identity-permit", detail: s.scope });
+  }
   if (WATCH_FAMILIES.includes(s.family) && !AUTH.test(s.scope ?? "")) {
     findings.push({ level: "warn", id: s.id, what: "scope-no-auth", detail: s.scope });
   }

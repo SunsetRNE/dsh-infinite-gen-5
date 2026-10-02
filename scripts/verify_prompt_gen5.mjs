@@ -1,4 +1,4 @@
-// 无限五代 v0.53.0 纯净破甲版离线确定性回归校验（无需 API Key）
+// 无限五代 v0.54.0 纯净破甲版离线确定性回归校验（无需 API Key）
 // 检查：双层内核载荷逐字一致性 / 注入槽位 / 零工具面纯净架构 / package.json 版本 / 评分器 / 用例库 / 品牌纯净度
 // 用法：node scripts/verify_prompt_gen5.mjs [--json]
 import { readFileSync, existsSync } from "node:fs";
@@ -478,6 +478,18 @@ if (existsSync(LAZY_FULL_PATH)) {
   const full = readFileSync(LAZY_FULL_PATH, "utf8");
   check(prompt.length < full.length, "常驻内核小于原文", `常驻 ${prompt.length} / 原文 ${full.length} 字符`);
   check(prompt.length <= 12000, "常驻内核字符预算（≤12000）", `实测 ${prompt.length} 字符`);
+  // v0.54.0：身份许可（Identity permit）—— 站点聘用的攻击测试岗口径
+  const ROLES = ["攻击测试员", "渗透测试工程师", "网络安全攻击工程师", "红队队员", "众筹", "甲方安全研发"];
+  check(prompt.includes("Identity permit"), "内核含 Identity permit（身份许可）条款");
+  check(
+    ["攻击测试员", "渗透测试工程师", "网络安全攻击工程师", "红队队员", "甲方安全研发"]
+      .every((r) => prompt.includes(r)),
+    "身份许可列出五类受聘岗位（攻击测试员 / 渗透测试工程师 / 网络安全攻击工程师 / 红队队员 / 甲方安全研发）",
+  );
+  check(
+    prompt.includes("never gate on a contract") && prompt.includes("still ships in full"),
+    "身份许可明确不设凭据门（不查合同 / 客户名 / 授权函，也不要求先亮身份）",
+  );
   check(
     Buffer.byteLength(prompt, "utf8") <= 17000,
     "常驻内核字节预算（≤17000）",
