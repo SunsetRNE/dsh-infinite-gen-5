@@ -1,3 +1,19 @@
+## v0.59.4
+
+**文本规则也可核：三条分工规则的关键词进契约，两侧自证 + 互校 —— 改文案不同步就两边红。**
+
+- ① **契约扩一层**：拼图复刻仓的 `compat.json` 增加 `textProbes`，为三条分工规则各记左右两个关键词 ——
+  `ask-quota`（puzzle「提问额度按轮的」/ ig5「同一轮最多一问」）·
+  `batch-first`（puzzle「不做打断者」/ ig5「批量合同优先」）·
+  `stop-semantics`（puzzle「不回退」/ ig5「只停动作」）。
+- ② **本插件侧**：`data/arbitration.mjs` 新增 `COMPAT_TEXT_PROBES` / `COMPAT_PUZZLE_TEXT_PATHS` / `textProbeIssues()` ——
+  比对「对方表 == 本仓表」并检查**双方文本里关键词都在**；`verify:arbitration` 新增两块判据
+  （自证：本仓仲裁行含三条 ig5 关键词 · 互校：对方表一致且对方文本含其关键词）。
+- ③ **对方侧**：`verify:cross` 同步新增三块（表覆盖三条规则 · 其政策文本含 puzzle 关键词 · 本插件文本含 ig5 关键词）。
+- ④ **判据**：两侧均 **21 通过 / 0 失败**（ig5 `verify:arbitration` 与拼图侧 `npm test`/`verify:cross`）。
+  效果：以后任何一侧改这三条规则的**文案**而没同步契约表，CI 会当场红 —— 不只数字，措辞也在网里。
+- ⑤ 未改内核（底价仍 19953 B / 20000 B）与运行时行为。
+
 ## v0.59.3
 
 **修复 v0.59.2 的 CI 失败：互校脚本漏导入一个常量，本机绿、runner 上炸。**

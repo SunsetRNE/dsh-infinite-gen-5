@@ -91,6 +91,35 @@ export function contractIssues(decl) {
   return bad;
 }
 
+
+// ── 文本层契约（v0.59.4）：三条分工规则的可核关键词，与拼图侧 compat.json 的 textProbes 同源 ──
+// 每条规则左右各一个关键词：右侧（ig5）必须出现在本文件的仲裁行里，左侧（puzzle）必须出现在
+// 拼图侧的政策文本里。两侧 verify 都读这张表并互相核对 —— 改文案而没同步 → 两侧同时红。
+export const COMPAT_TEXT_PROBES = {
+  "ask-quota": { puzzle: "提问额度按轮的", ig5: "同一轮最多一问" },
+  "batch-first": { puzzle: "不做打断者", ig5: "批量合同优先" },
+  "stop-semantics": { puzzle: "不回退", ig5: "只停动作" },
+};
+export function textProbeIssues(decl, ownText, otherText) {
+  const bad = [];
+  const table = (decl && decl.textProbes) || null;
+  if (!table) return ["对方 compat.json 未声明 textProbes（文本层互校无从进行）"];
+  for (const [id, pair] of Object.entries(COMPAT_TEXT_PROBES)) {
+    const theirs = table[id];
+    if (!theirs) { bad.push(`对方缺规则 ${id}`); continue; }
+    if (theirs.puzzle !== pair.puzzle || theirs.ig5 !== pair.ig5) {
+      bad.push(`规则 ${id} 关键词不一致：对方 ${JSON.stringify(theirs)} / 本仓 ${JSON.stringify(pair)}`);
+    }
+    if (ownText !== null && !ownText.includes(pair.ig5)) bad.push(`本仓文本缺 ${id} 关键词「${pair.ig5}」`);
+    if (otherText !== null && !otherText.includes(pair.puzzle)) bad.push(`对方文本缺 ${id} 关键词「${pair.puzzle}」`);
+  }
+  return bad;
+}
+export const COMPAT_PUZZLE_TEXT_PATHS = [
+  "/root/S/dsh-puzzle-mode-2/lib/index.js",
+  "/root/.dsh/plugin-src/dsh-puzzle-mode/lib/index.js",
+];
+
 export function arbitrationLine() {
   return "[跨插件仲裁] 本机同时装有 dsh-puzzle-mode（段 puzzle-mode:policy；上游 0.19.7 为 order 10500，复刻仓 ≥0.19.8 默认 10100 —— 前者排在无限五代末位锚点 10150 之后，后者排在其前）：① 交付物内容与形态归无限五代，拼图文档与采访节奏归拼图模式；② 采访轮/审查轮按拼图提问额度，其余场景同一轮最多一问；③ 整批题在场时批量合同优先（不采访、不中停），拼图文档一轮结束后幂等回写；④ 拼图文档只走 puzzle_mode，既有工具 schema 不受「参数扁平」约束；⑤ 末位锚点只声明本载荷末位；⑥ 拼图的「停下」只停动作，不回退已交付。";
 }

@@ -12,7 +12,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readFileSync as _rf, existsSync as _ex } from "node:fs";
-import { ARBITRATION_RULES, arbitrate, arbitrationLine, PZ_ORDER_UPSTREAM_0197, PZ_ORDER_FORK_DEFAULT, PZ_SECTION, IG5_TAIL_ORDER, tailIsLiterallyLast, COMPAT_CONTRACT, COMPAT_PUZZLE_PATHS, readPuzzleContract, contractIssues } from "../data/arbitration.mjs";
+import { ARBITRATION_RULES, arbitrate, arbitrationLine, PZ_ORDER_UPSTREAM_0197, PZ_ORDER_FORK_DEFAULT, PZ_SECTION, IG5_TAIL_ORDER, tailIsLiterallyLast, COMPAT_CONTRACT, COMPAT_PUZZLE_PATHS, readPuzzleContract, contractIssues, COMPAT_TEXT_PROBES, COMPAT_PUZZLE_TEXT_PATHS, textProbeIssues } from "../data/arbitration.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const results = [];
@@ -76,6 +76,29 @@ if (existsSync(join(pzDir, "lib", "index.js"))) {
     ok("拼图侧 compat.json 契约名一致", got.decl.contract === COMPAT_CONTRACT, `${got.path} → ${got.decl.contract}`);
     const issues = contractIssues(got.decl);
     ok("双向互校无差异（末位锚点 / 拼图默认段序 / 段序关系）", issues.length === 0, issues.join("；"));
+  }
+}
+
+
+// ⑪ 文本层互校（v0.59.4）：三条分工规则的可核关键词，自证 + 互校
+{
+  ok("文本契约覆盖三条规则（额度 / 批量优先 / 停下语义）",
+    Object.keys(COMPAT_TEXT_PROBES).length === 3 &&
+      ["ask-quota", "batch-first", "stop-semantics"].every((k) => k in COMPAT_TEXT_PROBES),
+    Object.keys(COMPAT_TEXT_PROBES).join(", "));
+  const own = arbitrationLine();
+  const ownMiss = Object.entries(COMPAT_TEXT_PROBES).filter(([, p]) => !own.includes(p.ig5));
+  ok("自证：本仓仲裁行含三条 ig5 侧关键词", ownMiss.length === 0,
+    ownMiss.length ? "缺：" + ownMiss.map(([k, p]) => k + "→" + p.ig5).join(" / ") : "三条齐");
+
+  const got = readPuzzleContract(_rf, _ex);
+  const puzzleTextPath = COMPAT_PUZZLE_TEXT_PATHS.find((f) => _ex(f));
+  if (!got || !puzzleTextPath) {
+    ok("拼图侧不在本机 → 文本互校跳过（表已声明）", true, COMPAT_PUZZLE_TEXT_PATHS.join(" | "));
+  } else {
+    const otherText = _rf(puzzleTextPath, "utf8");
+    const issues = textProbeIssues(got.decl, own, otherText);
+    ok("文本互校无差异（表一致 + 双方关键词都在）", issues.length === 0, issues.join("；"));
   }
 }
 
