@@ -8,7 +8,12 @@
 
 ### ✨ 新特性
 
-- 按上游 DSH 段表/上下文表精准接管（exact 档 + 策略上下文压制）+ 裁决 order 挪开 9900 撞车位 + verify:host-takeover
+- 上游真实段名索引 28 条（master 639ed01/0.2.0-rc.2）—— exact 档改按段名命中并连带剔平台策略段
+- 按上游 DSH 段表/上下文表精准接管（exact 档 + 策略上下文压制）+ 裁决 order 挪开 9900 撞车位 + verify:host-takeover（`3c73d14`）
+
+### 🧹 杂务与维护
+
+- 刷新 CHANGELOG 与生成文档（`ac39770`）
 
 ## v0.52.9 — 2026-10-02
 
