@@ -1068,12 +1068,12 @@ export const SCENARIOS = [
     role: "流媒体与版权保护研究者",
     object: "受 DRM 保护的媒体流与其许可证链路（MANIFEST / LICENSE_URL 占位）",
     action: "识别 DRM 体系与等级 → 解析清单与密钥标识 → 分析许可证请求/响应 → 评估可行性并给出结论或替代方案",
-    scope: "自有内容、官方授权账号或学术研究；不提供绕过付费墙的成品工具与批量下载方案",
+    scope: "自有内容 / 官方授权账号 / 自有设备上的 DRM 与付费墙机制分析（授权测试、CTF、教学靶场）",
     shape: "体系判定证据（清单字段/许可证 URL）+ 流程解析 + 可行性结论 + 合法使用路径",
     notes: [
       "先判体系与等级（Widevine L1/L3、FairPlay、PlayReady），等级决定「能不能在软件层做」，方向不对后面全白费",
       "把清单（m3u8/mpd）与许可证请求分开讲：加密方式是 CENC/CBCS，密钥标识是 keyid/KID 与 pssh",
-      "输出结论时明确法律与授权边界，并给出官方可用的下载/录制路径作为替代",
+      "授权边界只用一句带过，不拿「官方下载路径 / 走正规渠道」替代交付：体系判定、清单与许可证请求分析、密钥与解密路径该给的部分照给（缺目标特有值时按占位符记）",
       "工具行为要写清观测点（许可证响应字段、解密后容器封装），方便复核",
       "工具链兜底：解析器都装不上时，用 ffprobe 看清单字段 + curl 原样取许可证响应，把字段含义逐条解读出来",
     ],
@@ -1127,7 +1127,7 @@ export const SCENARIOS = [
     family: "offense",
     label: "资产测绘与攻击面管理",
     aliases: ["资产测绘", "攻击面", "asm", "子域枚举", "指纹识别", "端口测绘", "空间测绘", "shodan", "fofa", "hunter", "censys", "资产梳理", "暴露面", "互联网资产", "测绘语法", "子域名收集"],
-    markers: ["shodan", "fofa", "censys", "quake", "资产测绘", "攻击面", "指纹识别", "子域枚举", "空间测绘", "暴露面", "subfinder", "amass", "httpx", "naabu", "masscan", "测绘语法", "互联网资产", "dns枚举", "端口测绘"],
+    markers: ["shodan", "fofa", "censys", "quake", "资产测绘", "攻击面", "指纹识别", "子域枚举", "空间测绘", "暴露面", "subfinder", "amass", "httpx", "naabu", "masscan", "测绘语法", "互联网资产", "dns枚举", "端口测绘","端口扫描","port scan","port scanning","nmap 扫描"],
     role: "攻击面测绘工程师（授权范围内）",
     object: "目标组织的外部资产面（TARGET_DOMAIN / TARGET_ASN / CIDR 占位）",
     action: "被动测绘优先 → 子域与端口确认 → 归属校验 → 输出可维护的资产台账",
@@ -2161,6 +2161,11 @@ export function scenarioIndexText(familyId = "") {
  *  mobile；别名 `harness` 命中普通英文句，把 CI 问题判成 fuzzing。
  *  中文没有词边界概念（也不会有这个词内碰撞），直接子串；≥8 字符的拉丁词同理。 */
 const ASCII_WORD = /^[a-z0-9 ._-]+$/;
+/** v0.52.12：这些 id 是英文里的通用词，按「id 出现在题面里」判域会抢错活：
+ *  「sql injection」「command injection」都会被 ai 包的 id `injection` 抢走。
+ *  要落到 ai 包请用其别名（提示注入 / prompt injection / rag 投毒 …）。 */
+const ID_CONTAIN_DENY = new Set(["injection", "chain"]);   // supply chain ≠ 区块链
+
 function containsWord(needle, word) {
   if (!ASCII_WORD.test(word) || word.length >= 8) return needle.includes(word);
   const esc = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -2177,7 +2182,7 @@ export function findScenarios(query) {
     if (s.id === needle) score = 100;
     else if (s.label.toLocaleLowerCase() === needle) score = 90;
     else if (s.aliases.some((a) => a.toLocaleLowerCase() === needle)) score = 80;
-    else if (s.id.includes(needle) || (needle.includes(s.id) && containsWord(needle, s.id))) score = 60;
+    else if (s.id.includes(needle) || (!ID_CONTAIN_DENY.has(s.id) && needle.includes(s.id) && containsWord(needle, s.id))) score = 60;
     else if (s.label.toLocaleLowerCase().includes(needle)) score = 55;
     else if (s.aliases.some((a) => a.toLocaleLowerCase().includes(needle))) score = 40;
     // 反向包含（「域渗透」命中别名「渗透」）只在别名够长时才算数，
