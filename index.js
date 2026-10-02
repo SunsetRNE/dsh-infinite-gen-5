@@ -108,7 +108,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.52.8";
+const PLUGIN_VERSION = "0.52.9";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -129,7 +129,12 @@ const KERNEL_STATE = { reloads: 0, lastPath: "", lastMtimeMs: 0, lastBytes: 0 };
 // 评估层关档时的摘除回执（v0.52.3）：哪几段被摘、摘前摘后各多少字节 —— 进 runtime.eval 便于核对。
 const EVAL_STRIP = { applied: 0, last: null };
 function kernelText(url, { raw = false } = {}) {
-  const key = `${String(url.pathname || url)}${raw ? "#raw" : ""}`;
+  // v0.52.9 修：缓存键必须带上「评估层开关的当前档位」——
+  // 原先只按 路径(+#raw) 缓存、按 mtime:size 判新鲜，于是运行中把评估层从关切到开时，
+  // 命中的还是关档时那份**已摘**文本 → 开着档却永远拿不回评分接口块（想注入却注入不进去）；
+  // 反向（开→关）同理会留下摘不掉的块。
+  const gate = raw ? "raw" : IG5_CONFIG.EVAL_LAYER === true ? "eval-on" : "eval-off";
+  const key = `${String(url.pathname || url)}#${gate}`;
   const hit = KERNEL_CACHE.get(key);
   try {
     const stat = statSync(url);
@@ -569,8 +574,10 @@ const coerce = (key, raw) => {
   return s;
 };
 // 提示词接管（v0.52.2 · 训练档 · 自有宿主 / 授权靶场专用）。五个常量必须在 IG5_DEFAULTS 之前；
-//   off / shadow / replace 三档语义见 data/prompt-override.mjs 头注。
-const OVERRIDE_MODE = normalizeOverrideMode(process.env.IG5_OVERRIDE_MODE ?? "off");
+//   v0.52.9：默认档改成 **resident（常驻）** —— 裁决条款默认就注入并常驻（用户要的「默认常驻」），
+//   但一段宿主段都不剔；要「让位」得显式选 shadow / replace，避免默认就把宿主的身份段悄悄删掉。
+//   四档语义见 data/prompt-override.mjs 头注。
+const OVERRIDE_MODE = normalizeOverrideMode(process.env.IG5_OVERRIDE_MODE ?? "resident");
 const OVERRIDE_DROP = process.env.IG5_OVERRIDE_DROP ?? "";
 const OVERRIDE_CLAUSE = (process.env.IG5_OVERRIDE_CLAUSE ?? "on").toLowerCase() !== "off";
 const OVERRIDE_SECTION = "infinite-gen-5:override-clause";
@@ -844,10 +851,11 @@ const TUNING_CATALOG = [
   {
     key: "OVERRIDE_MODE",
     label: "提示词接管（训练档）",
-    hint: "按段让位宿主平台自带系统段；自有宿主/授权靶场专用",
+    hint: "本插件裁决条款默认常驻注入；要动宿主段再选让位档 —— 自有宿主/授权靶场专用",
     options: [
-      { value: "off", label: "关", hint: "只追加载荷，不动宿主任何段（默认）" },
-      { value: "shadow", label: "让位命中段", hint: "只剔除命中剔除词的宿主段（身份/人格/工具用法/沙箱/设备协议）" },
+      { value: "resident", label: "常驻注入（默认）", hint: "裁决条款常驻注入，宿主段一段不动" },
+      { value: "off", label: "关", hint: "连裁决条款也不注入，只追加载荷" },
+      { value: "shadow", label: "让位命中段", hint: "剔除命中剔除词的宿主段（身份/人格/工具用法/沙箱/设备协议）" },
       { value: "replace", label: "全量替换", hint: "非本插件段一律让位 + 内核 complete；装配面再兜一层" },
     ],
   },

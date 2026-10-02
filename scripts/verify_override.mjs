@@ -32,7 +32,7 @@ const assembly = [
   { name: "infinite-gen-5:tail-anchor", order: 10150, text: "末位锚点" },
 ];
 
-check("档位枚举", OVERRIDE_MODES.join(",") === "off,shadow,replace");
+check("档位枚举（resident 常驻档位于最前）", OVERRIDE_MODES.join(",") === "off,resident,shadow,replace");
 check("档位归一：非法值回落 off", normalizeMode("nonsense") === "off" && normalizeMode("REPLACE") === "replace");
 check("剔除词解析：中英文逗号都认", parseDropList("a, b，c").join("|") === "a|b|c");
 
@@ -83,7 +83,7 @@ check("接线：目录里两枚新控件（select + bool）", /key: "OVERRIDE_MO
 check("接线：replace 档触发独占内核", /CFG\.EXCLUSIVE_SECTION === true \|\| CFG\.OVERRIDE_MODE === "replace"/.test(src));
 check("接线：装配瀑布已挂", /registerOverrideWaterfall\(\);/.test(src) && /const registerOverrideWaterfall = \(\) => \{/.test(src));
 check("接线：回执落 runtime.override", /runtime\.override = \{/.test(src));
-check("接线：默认档是 off", /IG5_OVERRIDE_MODE \?\? "off"/.test(src));
+check("接线：默认档是 resident（常驻注入，不剔宿主段）", /IG5_OVERRIDE_MODE \?\? "resident"/.test(src));
 
 console.log(`\n提示词接管回归：${pass} 通过 / ${fail} 失败`);
 process.exit(fail === 0 ? 0 : 1);

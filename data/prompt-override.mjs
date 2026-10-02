@@ -7,11 +7,13 @@
 //   3. 扫描装配结果里是否还残留宿主立场句（残留 = 接管没干净，进回执）。
 //
 // 档位：
-//   off      —— 默认。只追加载荷，不动宿主任何段。
+//   resident —— **默认（常驻）**：裁决条款照常注入并常驻，但不剔除宿主任何段。
+//                这一档落实「默认常驻」：想注入就常驻注入，同时零副作用 —— 不悄悄删掉宿主的身份/工具用法段。
+//   off      —— 完全关闭：连裁决条款都不注入（瀑布不挂）。
 //   shadow   —— 只剔除命中 DROP 词的宿主段（静默、可控、逐段留回执）。
 //   replace  —— 全量接管：凡不是本插件（infinite-gen-5:）的段一律让位，内核段标记 complete。
 
-export const OVERRIDE_MODES = ["off", "shadow", "replace"];
+export const OVERRIDE_MODES = ["off", "resident", "shadow", "replace"];
 
 /** 默认剔除词（小写子串匹配段名）：宿主身份 / 人格 / 工具用法 / 沙箱策略 / 设备协议 / DSH 自述。 */
 export const DEFAULT_DROP_HINTS = [
@@ -70,6 +72,8 @@ export function planOverride(sections, { mode = "off", dropList = [], hints = DE
   const list = Array.isArray(sections) ? sections.filter(Boolean) : [];
   const m = normalizeMode(mode);
   if (m === "off") return { kept: list, dropped: [], mode: m };
+  // resident：裁决条款常驻注入，但一段都不剔 —— 「让位」这件事必须由用户显式选 shadow/replace。
+  if (m === "resident") return { kept: list, dropped: [], mode: m };
   const hintsAll = [...parseDropList(dropList), ...hints];
   const kept = [];
   const dropped = [];
