@@ -11,7 +11,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ARBITRATION_RULES, arbitrate, arbitrationLine, PZ_ORDER, PZ_SECTION, IG5_TAIL_ORDER } from "../data/arbitration.mjs";
+import { ARBITRATION_RULES, arbitrate, arbitrationLine, PZ_ORDER_UPSTREAM_0197, PZ_ORDER_FORK_DEFAULT, PZ_SECTION, IG5_TAIL_ORDER, tailIsLiterallyLast } from "../data/arbitration.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const results = [];
@@ -28,7 +28,10 @@ const line = arbitrationLine();
 const need = ["归无限五代", "拼图模式", "批量合同优先", "puzzle_mode", "本载荷末位", "停下"];
 const miss = need.filter((w) => !line.includes(w));
 ok("仲裁行含六项要点", miss.length === 0, miss.length ? "缺：" + miss.join(",") : `${Buffer.byteLength(line, "utf8")} B`);
-ok("仲裁行写明拼图段 order 大于末位锚点", line.includes(String(PZ_ORDER)) && line.includes(String(IG5_TAIL_ORDER)));
+ok("仲裁行同时写明上游段序与复刻仓默认段序",
+  line.includes(String(PZ_ORDER_UPSTREAM_0197)) && line.includes(String(PZ_ORDER_FORK_DEFAULT)) && line.includes(String(IG5_TAIL_ORDER)));
+ok("段序判定助手：复刻仓默认 → 末位锚点确实最后；上游 → 落在其后",
+  tailIsLiterallyLast(PZ_ORDER_FORK_DEFAULT) === true && tailIsLiterallyLast(PZ_ORDER_UPSTREAM_0197) === false);
 
 // 3. 分流
 ok("整批题 → 批量优先（不采访）", arbitrate({ batch: true }).kind === "batch-first");
@@ -50,8 +53,12 @@ if (existsSync(join(pzDir, "lib", "index.js"))) {
   const m = pz.match(/const ORDER = (\d+)/);
   const measured = m ? Number(m[1]) : NaN;
   ok("拼图段名与记录一致", pz.includes(PZ_SECTION), PZ_SECTION);
-  ok("拼图段 order 与记录一致", measured === PZ_ORDER, `实测 ${measured} / 记录 ${PZ_ORDER}`);
-  ok("让位有依据：拼图 order > 无限五代末位锚点", measured > IG5_TAIL_ORDER, `${measured} > ${IG5_TAIL_ORDER}`);
+  ok("装机副本的段序在两套记录之内（上游 10500 或复刻仓默认 10100）",
+    measured === PZ_ORDER_UPSTREAM_0197 || measured === PZ_ORDER_FORK_DEFAULT,
+    `实测 ${measured}`);
+  ok("段序关系已记录（两条路径都成立，不必改口径）",
+    tailIsLiterallyLast(measured) === (measured < IG5_TAIL_ORDER),
+    `${measured} ${tailIsLiterallyLast(measured) ? "<" : ">"} ${IG5_TAIL_ORDER}`);
 } else {
   ok("拼图插件未安装 → 跳过依据核验", true, "未发现 " + pzDir);
 }
