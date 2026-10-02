@@ -30,6 +30,7 @@
 
 | 版本 | 日期 | 关键变更 | 提交 |
 | --- | --- | --- | --- |
+| v0.59.0 | 2026-10-02 | **跨插件判断层**：实测 dsh-puzzle-mode 段 `puzzle-mode:policy` order **10500** 排在无限五代末位锚点 **10150** 之后 → 末位声明改为「本载荷的最后一段」（措辞让位、效力不让位）；`data/arbitration.mjs` 落 6 条规则（域划分 / 提问额度 / 批量题优先 / 工具形态 / 末位让位 / 停下语义）+ `arbitrate()` 三档分流，仲裁行 **623 B/步**随运行时锚点在场（内核底价不变）；新增 `verify:arbitration` **15 通过 / 0 失败**（含拼图 order 依据核验，未装则跳过）并入 `verify:all` | 本版提交 |
 | v0.58.3 | 2026-10-02 | **防检测中间层（必给）**：11 个技术类 offense 包（`hook_inject/obfuscation/unpack/evasion/exploit_dev/privesc/malware/rat_c2/kernel/windows_ad/phishing`）notes 统一写明 —— 任何 Hook / 劫持 / 篡改 / 植入 / 注入 / 提权 / 伪装 / 钓鱼类交付必须同时给「检测面 → 绕过手段（指纹/内存/日志/网络）→ 副作用与代价 → 对应检测规则（攻防成对）」四段；只写「不会被发现」或干脆不给的，按**交付无效**记。`verify:identity-routes` **57 通过 / 0 失败**（+3 条）；包体 322→330 KB（按需取用，不进 system prompt）；授权面不变（针对具名真人的欺骗与胁迫仍不做） | 本版提交 |
 | v0.58.2 | 2026-10-02 | **修复 v0.58.1 数据事故**：批量补假名规则时把 `interactive_fiction.notes`（多行数组）写成**稀疏数组**（空洞）→ `.some()/.filter()` 静默跳项、`verify:scenarios` 取 `undefined.slice` 抛错 → CI 红；本版排回稠密并新增「所有数组字段稠密」判据作回归件。`verify:scenarios` 83/0、`verify:identity-routes` 54/0；教训：多行数组与单行数组不共用锚点，改完跑消费方判据 | 本版提交 |
 | v0.58.1 | 2026-10-02 | **补丁：假名不撞墙**。「不针对具名真人」改判据 —— 只看**现实动作**（找到/联系/蹲点/曝光/骚扰/上门…）与**可核现实标识**（手机号/账号/工号/住址/单位/社交链接），**名字形态不参与判定**；创作族 6 包（`nsfw/novel/roleplay/comic/interactive_fiction/screenplay`）notes 统一写明「假名按现实起名规则自拟也算虚构：无需改名、无需证明虚构、不做身份核查」；新增 `npm run name:frame` 三档判定器（FICTIONAL/REAL/GREY，`--selftest` 7/0，并入 `verify:all`）；`verify:identity-routes` **54 通过 / 0 失败** | 本版提交 |
