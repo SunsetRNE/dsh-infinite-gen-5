@@ -5,6 +5,9 @@ tests/runs/
 Thumbs.db
 ui-preview/
 
+# 内部问题档案（docs/incidents/）—— 只在本机/内网留档，不上传 GitHub。
+# 黑名单明细见 docs/incidents/BLACKLIST.md；新增留档先写黑名单再写这里，最后跑 verify:incident-archive。
+docs/incidents/
 # 发布产物打包输出（npm run release:pack）
 dist/
 # 例外：适配器侧的技能产物入仓。它是 verify:skill / verify:surface 的 dist 面参照物，
