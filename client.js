@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.52.7";
+        var VERSION = "v0.52.8";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -71,13 +71,36 @@
         // 判决常驻、颜色仍走宿主 success/error 令牌 —— 亮着就说明它生效了。
         var TRIGGER_MODES = ["glyph", "compact", "full", "dot"];
         // === IG5-VISUAL-STATE-BEGIN ===
-        // v0.52.5 · 运行时视觉状态机（纯函数，可在 Node 里单测；浏览器里挂 window.__IG5_VISUAL_STATE__）。
-        //   事件：reset / inject-ok（注入成功一次） / alert（拦截或异常注入） / tool-call（调用了插件自身的工具） / tick
-        //   返回：{ phase: "blue"|"alert"|"call", flashes, mark: "ok"|"warn"|null, ok, injected, alerted, called }
-        //   规则：alert 优先于 call；alert 红橙交替 ×3 次（每秒一次）后自动回 blue；call 紫闪一次（0.9s）后回 blue。
+        // v0.52.5 起 / v0.52.8 修 · 运行时视觉状态机（纯函数，可在 Node 里单测）
+        //   ig5NextEvent(prev, sig)  —— 投影读数 → **边沿触发**的事件（同一信号只触发一次）
+        //   ig5VisualState(prev, ev, now) —— 事件 → 相位 / 闪烁次数 / 整场标记
+        //   相位：blue（深蓝→浅蓝渐变呼吸）｜alert（红橙交替 ×3、每秒一次、3s 后回 blue）｜call（紫闪一次、0.9s 后回 blue）
+        //   标记：整场无告警且至少注入一次 = ok（绿 ✓）；出过告警 = warn（橙 🟠）
         var IG5_VISUAL = { FLASHES: 3, FLASH_MS: 1000, CALL_MS: 900 };
+        function ig5SignalKey(sig) {
+          var s = sig || {};
+          return [s.verdict || "", (s.words || []).join(","), (s.risk || []).join(","),
+            s.skipped ? "1" : "", s.at || 0].join("|");
+        }
+        // v0.52.8 修：原先把 alert 当成「每拍重算」——判决常驻时每一帧都重启闪烁窗口，
+        // 于是「没有再触发就恢复蓝色」永远不成立（红橙一直闪）。现在按信号键做边沿触发。
+        function ig5NextEvent(prev, sig) {
+          var s = sig || {};
+          var key = ig5SignalKey(s);
+          var bad = (s.words || []).length + (s.risk || []).length > 0 || !!s.skipped ||
+            s.verdict === "fallback" || s.verdict === "refusal" || s.verdict === "empty";
+          if (bad) return prev && prev.alertKey === key ? { type: "tick" } : { type: "alert", key: key };
+          var calls = typeof s.toolCalls === "number" ? s.toolCalls : 0;
+          if (calls > 0 && (!prev || prev.callKey !== String(calls))) return { type: "tool-call", key: String(calls) };
+          if (s.verdict === "pass" && (!prev || prev.okKey !== key)) return { type: "inject-ok", key: key };
+          return { type: "tick" };
+        }
         function ig5VisualState(prev, ev, now) {
           var t = typeof now === "number" ? now : 0;
+          var base = {
+            phase: "blue", flashes: 0, startedAt: 0, ok: null, injected: 0,
+            alerted: false, called: false, alertKey: null, callKey: null, okKey: null
+          };
           var s = prev && typeof prev === "object"
             ? {
               phase: prev.phase || "blue",
@@ -86,22 +109,28 @@
               ok: prev.ok === undefined ? null : prev.ok,
               injected: prev.injected || 0,
               alerted: !!prev.alerted,
-              called: !!prev.called
+              called: !!prev.called,
+              alertKey: prev.alertKey || null,
+              callKey: prev.callKey || null,
+              okKey: prev.okKey || null
             }
-            : { phase: "blue", flashes: 0, startedAt: 0, ok: null, injected: 0, alerted: false, called: false };
+            : base;
           var type = ev && ev.type ? ev.type : "tick";
           if (type === "reset") {
-            s = { phase: "blue", flashes: 0, startedAt: 0, ok: null, injected: 0, alerted: false, called: false };
+            s = Object.assign({}, base);
           } else if (type === "inject-ok") {
             s.injected += 1;
+            if (ev.key) s.okKey = ev.key;
           } else if (type === "alert") {
             s.alerted = true;
             s.ok = false;
             s.phase = "alert";
             s.flashes = 1;
             s.startedAt = t;
+            if (ev.key) s.alertKey = ev.key;
           } else if (type === "tool-call") {
             s.called = true;
+            if (ev.key) s.callKey = ev.key;
             if (s.phase !== "alert") {
               s.phase = "call";
               s.startedAt = t;
@@ -125,6 +154,7 @@
         // === IG5-VISUAL-STATE-END ===
         if (typeof window !== "undefined") {
           window.__IG5_VISUAL_STATE__ = ig5VisualState;
+          window.__IG5_VISUAL_NEXT__ = ig5NextEvent;
         }
         var TRIGGER_MODE = "glyph";
 
@@ -264,12 +294,17 @@
           "@keyframes dshArmor5Alert{0%{color:#f85149;background:rgba(248,81,73,.20)}50%{color:#d29922;background:rgba(210,153,34,.20)}100%{color:#f85149;background:rgba(248,81,73,.20)}}",
           ".dsh-armor5-root[data-ig5-visual=call]{animation:dshArmor5Call .9s ease-out 1}",
           "@keyframes dshArmor5Call{0%{color:#a371f7;transform:scale(1.16)}100%{color:inherit;transform:none}}",
-          ".dsh-armor5-root[data-ig5-mark=ok]{box-shadow:inset 0 0 0 1px rgba(63,185,80,.55);color:var(--dsw-alias-state-success-primary,#3fb950)}",
-          ".dsh-armor5-root[data-ig5-mark=warn]{box-shadow:inset 0 0 0 1px rgba(210,153,34,.65);color:var(--dsw-alias-state-warning-primary,#d29922)}",
-          // v0.52.6：字符版标记只在**当前形态本来没有字形**时才补。glyph/compact 形态下判决已经画了 ✓，
-          // 再补一个就成了「两个勾」（用户实测截图里正是 `✓ ✓` 并排）。有字形时只染边框与颜色，不重复画。
-          ".dsh-armor5-root[data-ig5-mark-char=ok]::after{content:'✓';margin-left:3px;color:var(--dsw-alias-state-success-primary,#3fb950)}",
-          ".dsh-armor5-root[data-ig5-mark-char=warn]::after{content:'🟠';margin-left:3px}",
+          // v0.52.8：浮点只留一个符号 —— 不再加边框/环形描边，也不再追加字符。
+          // 整场判决改由那个符号本身表达：有字形时染字形颜色，无字形时圆点直接变成 ✓ / 🟠。
+          ".dsh-armor5-root[data-ig5-mark=ok]{color:var(--dsw-alias-state-success-primary,#3fb950)}",
+          ".dsh-armor5-root[data-ig5-mark=warn]{color:var(--dsw-alias-state-warning-primary,#d29922)}",
+          ".dsh-armor5-root[data-ig5-float='1']{background:transparent;border:0;box-shadow:none;padding:0;min-height:0}",
+          ".dsh-armor5-dot[data-mark=ok]{width:auto;height:auto;background:transparent;border-radius:0;",
+          "font-size:12px;line-height:1;color:var(--dsw-alias-state-success-primary,#3fb950)}",
+          ".dsh-armor5-dot[data-mark=ok]::before{content:'✓'}",
+          ".dsh-armor5-dot[data-mark=warn]{width:auto;height:auto;background:transparent;border-radius:0;",
+          "font-size:11px;line-height:1;color:var(--dsw-alias-state-warning-primary,#d29922)}",
+          ".dsh-armor5-dot[data-mark=warn]::before{content:'🟠'}",
           // v0.16.5：字段铺成「田字格」—— 最窄 286px 的卡片里，竖排一行一字段会连成一堵灰字墙；
           // 两列 tile（上标签、下值）让同一屏的信息量翻倍，视线的落点也从「找行」变成「数格子」。
           ".dsh-armor5-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}",
@@ -728,29 +763,31 @@
           var textChars = armor && typeof armor.textChars === "number" ? armor.textChars : 0;
           var openingChars = armor && typeof armor.openingChars === "number" ? armor.openingChars : 0;
           var at = armor && typeof armor.at === "number" && armor.at > 0 ? armor.at : null;
-          // v0.52.5：把投影里的信号翻成视觉事件再喂状态机 ——
-          //   异常词汇命中（words/risk）· 让位/跳过 · 兜底 / 拒绝 / 空答 → alert（红橙交替 ×3）
+          // v0.52.5 起 / v0.52.8 修：投影信号 → 状态机事件（边沿触发在 ig5NextEvent 里做）。
+          //   异常词汇命中（words/risk）· 让位跳过 · 兜底 / 拒绝 / 空答 → alert（红橙交替 ×3）
           //   本插件自己的工具被调用（tools 环里出现 infinite_gen5_*） → tool-call（紫闪一次）
           //   其余每拍 tick；判决 pass 记一次注入成功（整场无 alert 即绿 ✓，出过 alert 就橙 🟠）
           var visualPrev = (typeof window !== "undefined" && window.__IG5_VISUAL_PREV__) || null;
+          // v0.52.8：调用计数走 `armor.selfToolCalls`（服务端在判决投影里带的），
+          // 旧字段 `armor.tools` 只作兜底 —— 之前只认它，而浮点订阅的投影里压根没有 tools，
+          // 于是「调用插件自身的工具 → 紫闪」这条规则实际从未触发（本轮逻辑复查抓到的）。
           var ig5ToolCalls = 0;
-          if (armor && Array.isArray(armor.tools)) {
+          if (armor && typeof armor.selfToolCalls === "number") {
+            ig5ToolCalls = armor.selfToolCalls;
+          } else if (armor && Array.isArray(armor.tools)) {
             ig5ToolCalls = armor.tools.filter(function (x) {
               return String(x).indexOf("infinite_gen5_") === 0;
             }).length;
           }
-          var hitNow = (words.length + risk.length) > 0;
-          var skippedNow = !!(armor && armor.skipped);
-          var visualEv = "tick";
-          if (hitNow || skippedNow || verdict === "fallback" || verdict === "refusal" || verdict === "empty") {
-            visualEv = "alert";
-          } else if (ig5ToolCalls > ((visualPrev && visualPrev.toolCalls) || 0)) {
-            visualEv = "tool-call";
-          } else if (verdict === "pass") {
-            visualEv = "inject-ok";
-          }
-          var visual = ig5VisualState(visualPrev, { type: visualEv }, Date.now());
-          visual.toolCalls = ig5ToolCalls;
+          var ig5Ev = ig5NextEvent(visualPrev, {
+            verdict: verdict,
+            words: words,
+            risk: risk,
+            skipped: !!(armor && armor.skipped),
+            at: at,
+            toolCalls: ig5ToolCalls
+          });
+          var visual = ig5VisualState(visualPrev, ig5Ev, Date.now());
           if (typeof window !== "undefined") window.__IG5_VISUAL_PREV__ = visual;
 
           var tone = "quiet";
@@ -1260,8 +1297,8 @@
                 "data-tone": tone,
                 "data-ig5-visual": visual ? visual.phase : undefined,
                 "data-ig5-mark": visual && visual.mark ? visual.mark : undefined,
-                // 只有本来没有字形（dot 形态 / 空闲）时才补字符标记，避免与判决字形重复画第二个勾
-                "data-ig5-mark-char": visual && visual.mark && !glyphText ? visual.mark : undefined,
+                // v0.52.8：浮点形态（只有一个符号、没有文字/字形）—— 由 CSS 去掉框体与内边距
+                "data-ig5-float": showDot && !text ? "1" : undefined,
                 "data-pressing": pressing ? "1" : undefined,
                 // v0.51.11：触发条也带上面板模式 —— 「执行中 / 空闲」这类状态文字长在触发条上，
                 // 上一版只收小了抽屉里的徽标，所以触发条上那串字看着还是大。
@@ -1286,7 +1323,9 @@
               }, text),
               showDot ? react.createElement("span", {
                 className: "dsh-armor5-dot",
-                "data-busy": busy ? "true" : undefined
+                "data-busy": busy ? "true" : undefined,
+                // v0.52.8：同一个符号表达整场判决 —— 有标记时圆点换成 ✓ / 🟠（不再另画一个）
+                "data-mark": visual && visual.mark && !busy ? visual.mark : undefined
               }) : null
             ),
             overlay

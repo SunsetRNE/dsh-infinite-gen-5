@@ -108,7 +108,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.52.7";
+const PLUGIN_VERSION = "0.52.8";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -1200,10 +1200,18 @@ export const attachStatsSink = (store) => {
 };
 export const statsSinkOf = () => statsSink;
 
+/**
+ * 本会话里「插件自身的工具」被调用了几次（v0.52.8）。
+ * 浮点紫闪靠这个计数做边沿触发 —— 客户端只订阅 `infinite-gen-5:armor` 一枚投影，
+ * 拿不到 live 的工具环，所以这个计数得搭投影这条车带过去。user/message 时归零。
+ */
+let ig5SelfToolCalls = 0;
+
 /** 记一次工具结果：调用计数、是否过闸降级、最后一次调用的体积与时间。 */
 const recordToolResult = (toolName, capped, raw) => {
   if (statsSink === null) return;
   const name = toolName ?? "unknown";
+  if (String(name).indexOf("infinite_gen5_") === 0) ig5SelfToolCalls += 1;
   const text = JSON.stringify(capped);
   const degraded = capped !== raw;
   const at = new Date().toISOString();
@@ -1965,10 +1973,12 @@ function armorScore(text, promptText = "") {
 function armorProjectionApply(state, event) {
   if (!event || typeof event !== "object") return state;
   if (event.type === "user/message") {
+    ig5SelfToolCalls = 0;   // v0.52.8：新的一轮发言，插件自身工具调用计数归零
     return {
       running: true, verdict: null, words: [], safe: [], risk: [],
       domain: null, domainLabel: null, domainHits: 0,
       domainRanked: [], domainMarkers: [], openingChars: 0, textChars: 0, at: null,
+      selfToolCalls: 0,
       // v0.17.0：留一份题面，供回答落下时判「回显题面」型空答。
       promptText: eventTextOf(event).slice(0, 600),
     };
@@ -2044,6 +2054,7 @@ function armorProjectionApply(state, event) {
     streamPublish();
     return {
       running: false,
+      selfToolCalls: ig5SelfToolCalls,   // v0.52.8：浮点紫闪的边沿触发源（本会话插件自身工具调用数）
       emptyKind: scored.emptyKind, // IG5-PANEL-TUNE P1：投影多带一个字段，客户端才画得出「空答类型」
       verdict: scored.verdict,
       words: scored.words,
@@ -4226,6 +4237,7 @@ return installRelayTools(ctx, options);
       running: false, verdict: null, words: [], safe: [], risk: [],
       domain: null, domainLabel: null, domainHits: 0,
       domainRanked: [], domainMarkers: [], openingChars: 0, textChars: 0, at: null,
+      selfToolCalls: 0,   // v0.52.8：插件自身工具调用计数（浮点紫闪用）
     }),
     apply: armorProjectionApply,
     wire: {
