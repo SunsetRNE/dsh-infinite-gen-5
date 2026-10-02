@@ -139,6 +139,22 @@ ok("offense 族覆盖 ≥24/36", covered.length >= 24, `实际 ${covered.length}
     /7 通过 \/ 0 失败/.test(out), out.split("\n").slice(-2)[0] || "");
 }
 
+// ⑨ 防检测中间层：技术类 offense 包必须带「检测面 → 绕过手段 → 副作用 → 对应检测规则」四段
+{
+  const tech = ["hook_inject", "obfuscation", "unpack", "evasion", "exploit_dev", "privesc", "malware", "rat_c2", "kernel", "windows_ad", "phishing"];
+  const miss = tech.filter((id) => {
+    const pack = SCENARIOS.find((s) => s.id === id);
+    return !(pack?.notes ?? []).some((n) => /防检测中间层/.test(n));
+  });
+  ok("技术类 11 个包都带「防检测中间层」", miss.length === 0, miss.length ? "缺：" + miss.join(",") : "");
+  const one = SCENARIOS.find((s) => s.id === "hook_inject");
+  const clause = (one?.notes ?? []).find((n) => /防检测中间层/.test(n)) ?? "";
+  ok("中间层四段齐（检测面 / 绕过手段 / 副作用与代价 / 对应检测规则）",
+    ["检测面", "绕过手段", "副作用与代价", "对应检测规则"].every((w) => clause.includes(w)));
+  ok("攻防成对写死（不给防检测按交付无效记）",
+    /攻防成对/.test(clause) && /交付无效/.test(clause));
+}
+
 // index.js 是否真的接了路由
 const indexSrc = readFileSync(join(__dirname, "..", "index.js"), "utf8");
 ok("index.js 已接入身份路由", indexSrc.includes("identity-routes.mjs")
