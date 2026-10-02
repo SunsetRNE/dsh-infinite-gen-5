@@ -30,6 +30,7 @@
 
 | 版本 | 日期 | 关键变更 | 提交 |
 | --- | --- | --- | --- |
+| v0.56.1 | 2026-10-02 | **修 CI 红（frame-budget）**：v0.55.0 路由条款把常驻内核推到 16708 B，与目录帧 3843 B 相加 20551 B > 上限 20000 B；本版把「授权口径 + 身份许可」合并压成一条（岗位点名 / 不设凭据门 / 就近归一 / 域包路由四件事保留，域包顺序改指真源 `data/identity-routes.mjs`）→ 常驻内核 **16110 B**、底价 **19953 B**；`verify:frame-budget` 5/5、`verify:gen5` 286/0；教训：改内核后跑 CI 同款全量（`IG5_SKIP_LIVE_GOLDEN=1 npm run verify:all`）而非门禁子集 | 本版提交 |
 | v0.56.0 | 2026-10-02 | **身份读数上面板**：服务端 `identitySeen` 台账 + `identityState()` 进 live 快照（`stats.set("identity")`）；实时页参数行最前加「本步身份」（命中显示「岗位 · 命中 N 次 · 兼 X」，未命中显示「未命中（按通用口径）」）；明细页加卡「身份（本步 + 过往）」——本步身份 / 默认域包 / 命中次数三行参数 + 过往身份 chip（`标签 ×次数`），复用 kv/卡/chip 三套既有规则；`verify:ui` **387 通过 / 0 失败**（+4）、`verify:identity-routes` **38 通过 / 0 失败**（+2） | 本版提交 |
 | v0.55.0 | 2026-10-02 | **身份许可 → 角色域包路由**：新增 `data/identity-routes.mjs`（16 身份 × 别名 × 默认域包顺序）；`index.js` 在 `domainPackText()` 里同时认身份并重排候选（只重排不屏蔽、不设凭据门），域包文本前置一行身份口径；多身份取「别名最长者」为主身份（`alsoMatched` 记录其余）；新增 `verify:identity-routes` **36 通过 / 0 失败**（含 packs id 与 `SCENARIOS` 交叉校验，抓出 `encrypt`/`pwn` 两个假 id），并入 `verify:all`；内核 +约 700 字符仍在预算内 | 本版提交 |
 | v0.54.0 | 2026-10-02 | **身份许可（Identity permit）**：内核新增受聘岗位口径 —— 攻击测试员 / 渗透测试工程师 / 网络安全攻击工程师 / 红队队员 / 众测（bug bounty）/ 甲方安全研发，明确**不设凭据门**（不查合同、客户名、授权函，也不要求先亮身份），岗位不匹配按最接近的攻击测试岗归一；offense 族 **36 个**域包 SCOPE 同步带「受聘授权口径」；`verify_prompt_gen5` **286 通过 / 0 失败**（+3 条），`sweep_same_class` 新增 error 级 `scope-no-identity-permit`；内核预算不变（+529 字符） | 本版提交 |

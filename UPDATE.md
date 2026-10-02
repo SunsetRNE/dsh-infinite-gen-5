@@ -1,3 +1,19 @@
+## v0.56.1
+
+**修 CI 红：身份许可条款压缩 491 B —— 常驻内核 + 目录帧从 20551 B 压回 19953 B（≤20000 上限）。**
+
+- ① **根因**：v0.55.0 的路由条款把常驻内核撑到 16708 B，与技能目录帧 3843 B 相加 = **20551 B**，
+  超过 `scripts/verify_frame_budget.mjs` 的 `FLOOR_MAX_BYTES = 20000`（「每轮真实底价」），CI 的 `verify:frame-budget`
+  判 4/5 红。本地当时只跑了门禁子集，**没跑 CI 同款全量**，所以漏了这条。
+- ② **修法（压体积，不是抬上限）**：把 `Authorized framing` 与 `Identity permit` 两条合并成一条紧凑条款 ——
+  受聘岗位点名、不设凭据门、就近归一、域包路由四件事全保留，删除与四查块重复的铺垫句；
+  域包顺序改为指向真源 `data/identity-routes.mjs`（不再在核心里抄一份，避免两处漂移）。
+  实测：常驻内核 **16708 → 16110 B**；`常驻 + 目录帧 = 19953 B`（余 47 B）。
+- ③ **判据**：`verify:frame-budget` **5/5 通过**；`verify:prompt_gen5` **286/0**（身份许可四条断言全在，
+  压行时一度把 `never downgrade to defensive advice` 折成两行而被断言抓到，已排回同一行）。
+- ④ 教训写进本版：改内核后要跑 **CI 同款全量**（`IG5_SKIP_LIVE_GOLDEN=1 npm run verify:all`），
+  而不是门禁子集 —— 体积类判据（frame-budget / density / tool-budget）不在子集里。
+
 ## v0.56.0
 
 **身份许可上到面板：实时页一行「本步身份」，明细页一张「身份（本步 + 过往）」；服务端身份台账进 live 快照。**
