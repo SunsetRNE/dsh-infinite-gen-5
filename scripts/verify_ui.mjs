@@ -803,6 +803,23 @@ ok("源码里空答的文案是「空答」（状态条与命中流水两处走�
       (fieldsFoot !== null || CLIENT_SRC.includes('className: "dsh-armor5-fields-foot"')) &&
       /\.dsh-armor5-fields-foot\{[^}]*tabular-nums/.test(cssText));
   }
+  // ── v0.56.0：身份许可读数（实时页一行 + 明细页一张卡）──
+  {
+    ok("实时页加了一行「本步身份」（复用 kv 参数行规则）",
+      CLIENT_SRC.includes('livePairs = [["本步身份", identityText(identityDoc)]].concat(livePairs)') &&
+      CLIENT_SRC.includes('var identityText = function (doc)'));
+    ok("身份文案覆盖命中态与空态（未命中也有口径）",
+      CLIENT_SRC.includes('"未命中（按通用口径）"') && CLIENT_SRC.includes('" · 命中 " + doc.current.count'));
+    ok("明细页有「身份（本步 + 过往）」卡，且挂进明细 pane",
+      CLIENT_SRC.includes('className: "dsh-armor5-card dsh-armor5-ident-card"') &&
+      CLIENT_SRC.includes('"身份（本步 + 过往）"') &&
+      CLIENT_SRC.includes('fieldTiles, identityCard, memoryPane'));
+    ok("过往身份走 chip 列表并带次数（复用 chip 规则）",
+      CLIENT_SRC.includes('"持久身份"') === false &&
+      CLIENT_SRC.includes('chipList(identityPastRows, "ident"') &&
+      CLIENT_SRC.includes('"过往身份"') &&
+      /\.dsh-armor5-ident-past\{/.test(cssText));
+  }
   // 配平还不够：**选择器规则里不能再套规则**。上面那条 bug 在浏览器里是合法 CSS
   // （CSS Nesting），所以「能解析」不是判据；一旦某条选择器规则没闭合，后面的规则就会
   // 变成它的嵌套子规则，只对最外层选择器的元素生效。@media / @supports 里套规则是正当的，

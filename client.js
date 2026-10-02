@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.55.0";
+        var VERSION = "v0.56.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -603,6 +603,11 @@
           ".dsh-armor5-mem-card .dsh-armor5-chip{font-size:10.5px;padding:1px 6px;font-variant-numeric:tabular-nums}",
           ".dsh-armor5-mem-card .dsh-armor5-chips{gap:4px}",
           ".dsh-armor5-mem-empty{color:var(--dsw-alias-label-caption,#8b8b8b);font-size:11px;line-height:15px}",
+          // ── v0.56.0：身份卡（复用卡/chip/参数行规则，只补两处间距）──
+          ".dsh-armor5-ident-card{gap:8px;padding:8px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.10))}",
+          ".dsh-armor5-ident-card>.dsh-armor5-sec-title{font-size:11.5px;letter-spacing:.2px}",
+          ".dsh-armor5-ident-past{display:flex;align-items:flex-start;gap:6px;flex-wrap:wrap}",
+          ".dsh-armor5-ident-past-label{flex:0 0 auto;color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:10px;line-height:18px}",
           // ── v0.53.14：明细页底部让位（底部小面板不再挡住滚动内容），命中 / 任务两页不变 ──
           ".dsh-armor5-fields-pane{padding-bottom:104px;scroll-padding-bottom:104px}",
           // v0.53.15：命中页照同一条处理（底部小面板 + 渐隐同样会吃掉最后一行）；任务页保持原样。
@@ -1126,7 +1131,16 @@
               child);
           };
 
+          // v0.56.0：身份许可读数 —— 实时页一行「本步身份」，明细页一张「身份（本步 + 过往）」。
+          // 数据来自 liveDoc.identity（服务端 identityState()），空态与命中态都有文案。
+          var identityDoc = liveState.liveDoc && liveState.liveDoc.identity ? liveState.liveDoc.identity : null;
+          var identityText = function (doc) {
+            if (!doc || !doc.current) return "未命中（按通用口径）";
+            return doc.current.label + " · 命中 " + doc.current.count + " 次"
+              + (doc.alsoMatched && doc.alsoMatched.length ? " · 兼 " + doc.alsoMatched.join(" / ") : "");
+          };
           var livePairs = open ? liveRowPairs(liveState.liveDoc, liveState.link, true) : [];
+          if (open) livePairs = [["本步身份", identityText(identityDoc)]].concat(livePairs);
           // v0.53.1：实时页从「田字格」改为参数行（一条读数一行，右对齐、分型渲染）。
           var liveParams = kvList(livePairs, "live", {
             longWhen: function (label) {
@@ -1134,6 +1148,23 @@
             }
           });
           var hitList = open ? hitRows(liveState.liveDoc && liveState.liveDoc.hits) : [];
+          // 明细页的「身份」卡：本步身份（参数行）+ 过往身份（chip 列表 + 次数），复用卡片与 chip 规则。
+          var identityPastRows = (identityDoc && Array.isArray(identityDoc.seen) ? identityDoc.seen : [])
+            .map(function (row) { return row.label + " ×" + row.count; });
+          var identityCard = !open ? null : react.createElement("div",
+            { className: "dsh-armor5-card dsh-armor5-ident-card" },
+            react.createElement("div", { className: "dsh-armor5-sec-title" },
+              "身份（本步 + 过往）"),
+            kvList([
+              ["本步身份", identityText(identityDoc)],
+              ["默认域包", identityDoc && identityDoc.current && identityDoc.current.packs
+                ? identityDoc.current.packs.join(" / ") : "—"],
+              ["本会话身份命中", identityDoc && identityDoc.total
+                ? String(identityDoc.total) + " 次 · " + identityPastRows.length + " 个口径" : "0 次"]
+            ], "ident"),
+            react.createElement("div", { className: "dsh-armor5-ident-past" },
+              react.createElement("span", { className: "dsh-armor5-ident-past-label" }, "过往身份"),
+              chipList(identityPastRows, "ident", "本会话还没有身份命中")));
 
           // v0.22.0：浮层卡片里直接切「用户向选择」档。复用同一个统计库订阅（卡片关着不连流、不回读），
           // 写入走 statsStore.stage + save —— 与设置页那条 POST 通道完全同源，不存在第二套写路径。
@@ -1531,7 +1562,7 @@
                 ref: paneRef("fields"),
                 onScroll: paneScroll
               },
-                fieldTiles, memoryPane,
+                fieldTiles, identityCard, memoryPane,
                 react.createElement("div", { className: "dsh-armor5-fields-foot" },
                   scrollHint("fields", ".dsh-armor5-field-card") || "在本页内连续滚动"))
               : drawerTab === "todo"

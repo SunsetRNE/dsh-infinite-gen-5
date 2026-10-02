@@ -114,7 +114,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.55.0";
+const PLUGIN_VERSION = "0.56.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -388,6 +388,34 @@ const gateClauseText = (rev) => {
 // 不能拿它当「用户输入」去认域，否则域包会自己喂自己。
 const PACK_SKIP = ["[无限五代 · 运行时锚点", "[无限五代 · 域包", "Current runtime context"];
 
+// v0.56.0：身份许可台账（本步身份 + 过往命中过的身份）。本进程内累计，重启归零 ——
+// 与 hits 留档同一生命周期，不做跨会话持久化（面板上「过往」= 本会话用过的口径）。
+const identitySeen = new Map();
+function noteIdentity(identity, text) {
+  if (!identity || !identity.primary) return;
+  const route = identity.primary;
+  const prev = identitySeen.get(route.id) || { id: route.id, label: route.label, count: 0 };
+  prev.count += 1;
+  prev.lastAt = new Date().toISOString();
+  prev.packs = route.packs.slice(0, 6);
+  prev.lastText = String(text ?? "").slice(0, 60);
+  identitySeen.set(route.id, prev);
+  runtime.identityHit = route.id;
+  runtime.identityPacks = route.packs.length;
+  runtime.identityAlsoMatched = identity.alsoMatched ?? [];
+}
+function identityState() {
+  const seen = Array.from(identitySeen.values()).sort((a, b) => b.count - a.count || String(a.id).localeCompare(String(b.id)));
+  const current = runtime.identityHit ? (seen.find((s) => s.id === runtime.identityHit) ?? null) : null;
+  return {
+    current,
+    currentId: runtime.identityHit ?? null,
+    alsoMatched: runtime.identityAlsoMatched ?? [],
+    seen,
+    total: seen.reduce((n, s) => n + s.count, 0),
+  };
+}
+
 const packCache = { key: null, text: "", domains: [] };
 /** 按「最近一条真正的用户输入」认域，返回域包文本（没命中就是空串）。
  *  同一段输入只算一次 —— 运行时锚点每逢节拍都会再问一遍。 */
@@ -403,8 +431,7 @@ function domainPackText() {
       // v0.55.0：身份命中时，把该身份的默认域包排到前面（稳定排序，不丢包、不屏蔽）。
       const identity = matchIdentity(text);
       const hits = prioritiseByIdentity(hitsRaw, identity);
-      runtime.identityHit = identity && identity.primary ? identity.primary.id : null;
-      runtime.identityPacks = identity && identity.primary ? identity.primary.packs.length : 0;
+      noteIdentity(identity, text);
       // lookupScenario 返回的是「工具回执」壳（ok/scenario/playbook/alternatives），
       // 域包要的是 SCENARIOS[] 里的原始条目，所以按 id 精确取。
       const packs = hits
@@ -2979,6 +3006,8 @@ export function apply(ctx, config) {
       placements: runtime.placements.map((p) => `${p.label} @ order ${p.order} · ${p.chars} 字符`),
     });
     stats.set("tuning", tuningState());
+    // v0.56.0：身份台账进 live 快照 —— 实时页一行「本步身份」，明细页一张「身份（本步 + 过往）」。
+    stats.set("identity", identityState());
     return stats;
   };
 
