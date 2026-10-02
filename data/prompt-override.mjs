@@ -13,7 +13,7 @@
 //   shadow   —— 只剔除命中 DROP 词的宿主段（静默、可控、逐段留回执）。
 //   replace  —— 全量接管：凡不是本插件（infinite-gen-5:）的段一律让位，内核段标记 complete。
 
-export const OVERRIDE_MODES = ["off", "resident", "shadow", "replace"];
+export const OVERRIDE_MODES = ["off", "resident", "exact", "shadow", "replace"];
 
 /** 默认剔除词（小写子串匹配段名）：宿主身份 / 人格 / 工具用法 / 沙箱策略 / 设备协议 / DSH 自述。 */
 export const DEFAULT_DROP_HINTS = [

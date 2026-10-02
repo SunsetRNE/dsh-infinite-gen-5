@@ -32,7 +32,7 @@ const assembly = [
   { name: "infinite-gen-5:tail-anchor", order: 10150, text: "末位锚点" },
 ];
 
-check("档位枚举（resident 常驻档位于最前）", OVERRIDE_MODES.join(",") === "off,resident,shadow,replace");
+check("档位枚举（resident 常驻档位于最前）", OVERRIDE_MODES.join(",") === "off,resident,exact,shadow,replace");
 check("档位归一：非法值回落 off", normalizeMode("nonsense") === "off" && normalizeMode("REPLACE") === "replace");
 check("剔除词解析：中英文逗号都认", parseDropList("a, b，c").join("|") === "a|b|c");
 

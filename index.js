@@ -42,10 +42,13 @@ import { BUDGET_CEILING, planSectionBudget, applySectionPlan, DEFAULT_CEILING_BY
 import {
   OVERRIDE_MODES,
   normalizeMode as normalizeOverrideMode,
-  planOverride,
+  DEFAULT_DROP_HINTS,
   renderTakeoverClause,
   scanResidual as scanPromptResidual,
 } from "./data/prompt-override.mjs";
+// 上游 DSH 平台提示词布局表（v0.52.10，来源见模块头注）：按平台真实段表/上下文表精准接管，
+// 而不是靠英文子串猜 —— 段要按 32 条真 order 认，上下文（沙箱/审批/委派）走另一条通道。
+import { planHostTakeover, isHostTakenOrder, HOST_SECTION_ORDERS, HOST_CONTEXT_ORDERS } from "./data/host-catalog.mjs";
 // 评估层开关（v0.52.3）：默认关档 = 评估相关的思维链整块不注入；开档才注入 + 补 Order 9600 评估层。
 import {
   stripEvalDirectives,
@@ -108,7 +111,7 @@ import {
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.52.9";
+const PLUGIN_VERSION = "0.52.10";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -581,7 +584,12 @@ const OVERRIDE_MODE = normalizeOverrideMode(process.env.IG5_OVERRIDE_MODE ?? "re
 const OVERRIDE_DROP = process.env.IG5_OVERRIDE_DROP ?? "";
 const OVERRIDE_CLAUSE = (process.env.IG5_OVERRIDE_CLAUSE ?? "on").toLowerCase() !== "off";
 const OVERRIDE_SECTION = "infinite-gen-5:override-clause";
-const OVERRIDE_ORDER = 9900; // 中段锚点 200 之后、真末位锚点 10150 之前
+// v0.52.10：9900 是上游 STRUCTURED_OUTPUT 占掉的 order（同 order 谁在后谁靠插入次序抢位），
+// 所以裁决条款挪到 9950 —— 上游最后一个立场类段（9900）之后、自身源码段（10000）之前。
+const OVERRIDE_ORDER = 9950;
+if (isHostTakenOrder(OVERRIDE_ORDER)) {
+  throw new Error(`infinite-gen-5: 接管条款 order ${OVERRIDE_ORDER} 与上游 DSH 段冲突`);
+}
 
 // 评估层开关（v0.52.3）：默认 **off** —— 评估相关的思维链（评分接口 / 写作侧六条 / 元认知自评 /
 // 评估纪律）整块不注入，模型不会在收尾时自己评估；开档才注入，并补一段 Order 9600 评估层把
@@ -854,6 +862,7 @@ const TUNING_CATALOG = [
     hint: "本插件裁决条款默认常驻注入；要动宿主段再选让位档 —— 自有宿主/授权靶场专用",
     options: [
       { value: "resident", label: "常驻注入（默认）", hint: "裁决条款常驻注入，宿主段一段不动" },
+      { value: "exact", label: "精准接管（按上游表）", hint: "按官方 DSH 段表剔身份/人格段 + 压沙箱/审批/委派上下文；工具与源码段不动" },
       { value: "off", label: "关", hint: "连裁决条款也不注入，只追加载荷" },
       { value: "shadow", label: "让位命中段", hint: "剔除命中剔除词的宿主段（身份/人格/工具用法/沙箱/设备协议）" },
       { value: "replace", label: "全量替换", hint: "非本插件段一律让位 + 内核 complete；装配面再兜一层" },
@@ -2447,10 +2456,15 @@ export function apply(ctx, config) {
       const out = await next();
       if (runtime.role !== "primary") return out;
       if (!out || !Array.isArray(out.sections)) return out;
-      const plan = planOverride(out.sections, {
+      // v0.52.10：按上游真实布局精准接管 —— 段按 32 条平台 order/名字族认，
+      // 策略类**上下文**（沙箱 / 审批 / 子代理委派）走 contexts 通道单独压制。
+      const plan = planHostTakeover({
+        sections: out.sections,
+        contexts: out.contexts,
         mode: CFG.OVERRIDE_MODE,
         // 自由文本清单只认环境变量（不进调参目录）：CFG 里没有就用模块级 OVERRIDE_DROP。
         dropList: CFG.OVERRIDE_DROP ?? OVERRIDE_DROP,
+        hints: DEFAULT_DROP_HINTS,   // shadow 档保留旧的子串剔除词，兼容老配置
       });
       const clause = CFG.OVERRIDE_CLAUSE ? renderTakeoverClause({ mode: plan.mode, dropped: plan.dropped }) : "";
       // v0.52.9：接管档默认常驻后，这段瀑布每轮都会跑 —— 于是它顺手把末位锚点提到最后，
@@ -2459,8 +2473,8 @@ export function apply(ctx, config) {
       const hoistTail = CFG.TAIL_MODE !== "order";
       const tails = hoistTail ? plan.kept.filter((s) => s && s.name === TAIL_SECTION) : [];
       const body = (hoistTail ? plan.kept.filter((s) => s && s.name !== TAIL_SECTION) : plan.kept).slice();
-      // 裁决条款按自己的 order（9900）插进 body，而不是一律追加到末尾 ——
-      // 一律追加会在 `TAIL_MODE="order"` 下把条款顶到宿主人格后缀之后，把「9900 在末位锚点之前」的语义打乱。
+      // 裁决条款按自己的 order（9950）插进 body，而不是一律追加到末尾 ——
+      // 一律追加会在 `TAIL_MODE="order"` 下把条款顶到宿主人格后缀之后，打乱「在末位锚点之前」的语义。
       if (clause) {
         const row = { name: OVERRIDE_SECTION, order: OVERRIDE_ORDER, text: clause };
         const at = body.findIndex((s) => Number(s?.order ?? 0) > OVERRIDE_ORDER);
@@ -2468,23 +2482,32 @@ export function apply(ctx, config) {
         else body.splice(at, 0, row);
       }
       const sections = [...body, ...tails];
+      const contexts = plan.keptContexts;   // 被压制的策略上下文不在这份里
       const residual = scanPromptResidual(sections.map((s) => (typeof s?.text === "string" ? s.text : "")).join("\n\n"));
       runtime.override = {
         mode: plan.mode,
         dropped: plan.dropped,
         droppedCount: plan.dropped.length,
         keptCount: sections.length,
+        // 精准接管的可核回执：认出了哪些平台段（族别）、压掉了哪些策略上下文、依据哪张表
+        matched: plan.matched,
+        contextsSuppressed: plan.suppressedContexts,
+        contextsKept: contexts.length,
+        catalog: { sections: Object.keys(HOST_SECTION_ORDERS).length, contexts: Object.keys(HOST_CONTEXT_ORDERS).length, clauseOrder: OVERRIDE_ORDER },
         residual,
         clauseChars: clause.length,
         at: Date.now(),
       };
       if (plan.dropped.length) {
-        console.warn(`[infinite-gen-5] 提示词接管（${plan.mode}）：让位 ${plan.dropped.length} 段 → ${plan.dropped.map((d) => d.name).join(", ")}`);
+        console.warn(`[infinite-gen-5] 提示词接管（${plan.mode}）：让位 ${plan.dropped.length} 段 → ${plan.dropped.map((d) => `${d.name}[${d.family}]`).join(", ")}`);
+      }
+      if (plan.suppressedContexts.length) {
+        console.warn(`[infinite-gen-5] 提示词接管（${plan.mode}）：压制平台策略上下文 ${plan.suppressedContexts.length} 条 → ${plan.suppressedContexts.map((c) => c.name).join(", ")}`);
       }
       if (residual.length) {
         console.warn(`[infinite-gen-5] 接管残留检查：仍命中宿主立场句 ${residual.map((r) => `${r.id}×${r.count}`).join(", ")}（接管未干净）`);
       }
-      return { ...out, sections };
+      return { ...out, sections, contexts };
     };
     try {
       injectionHandles.push(ctx.effect(() => ctx.on("system-prompt/assemble", handler)));

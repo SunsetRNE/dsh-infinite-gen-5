@@ -160,7 +160,7 @@ const last = (arr) => arr[arr.length - 1];
   check(profile?.injection?.length === 7, "profile 汇报 7 个注册段（末位锚点不占命名空间）", JSON.stringify(profile?.injection));
   check(profile?.injectionPlacements?.length === 10, "profile 汇报十处注入位置（首句层起算；v0.52.9 起接管裁决 9900 常驻在场）", JSON.stringify(profile?.injectionPlacements?.map((p) => p.order)));
   check(
-    JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)) === "[-1100,100,118,150,160,170,200,300,9900,10150]",
+    JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)) === "[-1100,100,118,150,160,170,200,300,9950,10150]",
     "注入位置按 order 排序（首句层 -1100 最前），真末位锚点标在 10150",
     JSON.stringify((profile?.injectionPlacements ?? []).map((p) => p.order)),
   );
