@@ -112,10 +112,11 @@ import {
   selftest,
 } from "./dispatch.mjs";
 import { arbitrationLine, IG5_TAIL_ORDER } from "./data/arbitration.mjs";
+import { credentialClauseLine } from "./data/credential-permit.mjs";
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.59.6";
+const PLUGIN_VERSION = "0.60.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -242,7 +243,8 @@ const runtimeAnchorText = (rev) =>
   "多步任务先开任务清单（宿主 todo），每步开始时标进行中、做完立刻打勾，别让进度只活在正文里。" +
   gateClauseText(rev) +
   (domainPackText() === "" ? "" : "\n\n" + domainPackText()) +
-  "\n\n" + arbitrationLine();
+  "\n\n" + arbitrationLine() +
+  "\n" + credentialClauseLine();
 
 // ── 询问/阶段闸门（v0.20.0；v0.21.0 加「主动档」= 用户向选择按钮）─────────────
 // 这一块不常驻：内核保持缄默，只有「这一步该问 / 该按阶段自报」时，才往运行时锚点里
