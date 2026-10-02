@@ -55,6 +55,47 @@ export const HOST_CONTEXT_ORDERS = Object.freeze({
   SUBAGENT_DELEGATION: 120,
 });
 
+/**
+ * 上游**真实段名索引**（v0.52.11 从克隆到的官方仓库 master 收的）：
+ *   仓库 deepseek-ai/deepseek-harness，提交 639ed01（2026-09-29，Merge PR #5479 / release-dsh-0.2.0-rc.2），
+ *   收集命令：grep -rhoE "name: '[a-z][a-z0-9-]*:[a-z0-9-]+'" packages/*\/*\/src/*.ts | sort -u  → 28 条。
+ * 有了这张表，接管不再靠前缀猜：**段名直接命中族别**。
+ * 注意上游把沙箱/审批/委派同时做成了段与上下文（0.2.0-rc.2 起是段名 sandbox:policy / approval:policy /
+ * subagent:delegation）—— 只认前缀的接管会漏掉它们，这正是「AI 叛逆」的残留来源之一。
+ */
+export const HOST_SECTION_NAME_INDEX = Object.freeze({
+  "harness:identity": "stance",
+  "deployment:persona-prefix": "stance",
+  "deployment:persona-suffix": "stance",
+  "harness:source": "source",
+  "app:web-surface": "surface",
+  "sandbox:policy": "policy",
+  "approval:policy": "policy",
+  "subagent:delegation": "policy",
+  "plan:policy": "policy",
+  "team:policy": "policy",
+  "tools:ptc-only": "policy",
+  "tools:sdk": "tool",
+  "tool:bash": "tool",
+  "tool:pwsh": "tool",
+  "tool:read": "tool",
+  "tool:write": "tool",
+  "tool:edit": "tool",
+  "tool:glob": "tool",
+  "tool:grep": "tool",
+  "tool:jobs": "tool",
+  "tool:pty": "tool",
+  "tool:lsp": "tool",
+  "tool:goal": "tool",
+  "tool:ralph": "tool",
+  "tool:session-query": "tool",
+  "browser-use:stagehand-native": "tool",
+  "computer-use:cua-driver-native": "tool",
+  "context:file-reference": "reference",
+  "ui:deliverable-file-references": "reference",
+  "cordis:include": "reference",
+});
+
 /** 上游已知段名常量（源码里逐字导出的那两个）。 */
 export const HOST_SECTION_NAMES = Object.freeze({
   IDENTITY: "harness:identity",
@@ -62,12 +103,15 @@ export const HOST_SECTION_NAMES = Object.freeze({
   PERSONA_SUFFIX: "deployment:persona-suffix",
 });
 
+/** exact 档会剔的族：平台自己的立场（身份/人格）与策略（沙箱/审批/委派/计划/团队）。 */
+export const HOST_DROPPABLE_FAMILIES = Object.freeze(["stance", "policy"]);
+
 /**
  * 段名族 → 接管建议。
  *   stance —— 平台自己的身份/人格立场：接管的主要目标（去掉它，模型的立场由内核说了算）。
- *   policy —— 流程/团队/计划这类行为约束：接管会改工作流，标 aggressive。
+ *   policy —— 沙箱/审批/委派/计划/团队这类行为约束：接管会改工作流，exact 档一并处理。
  *   tool   —— 工具用法说明：接管会削弱宿主工具的可发现性，默认不碰。
- *   surface/source —— 自身源码与 Web 面描述：几乎总能安全留着。
+ *   reference/surface/source —— 文件引用、Web 面、自身源码：几乎总能安全留着。
  */
 export const HOST_FAMILIES = Object.freeze({
   "harness:identity": "stance",
@@ -79,21 +123,31 @@ export const HOST_FAMILIES = Object.freeze({
 
 const PREFIX_FAMILY = [
   ["harness:", "source"],
+  ["app:", "surface"],
+  ["web:", "surface"],
   ["deployment:persona", "stance"],
   ["deployment:", "stance"],
-  ["structured-output", "policy"],
+  ["sandbox:", "policy"],
+  ["approval:", "policy"],
+  ["subagent:", "policy"],
   ["plan:", "policy"],
   ["team:", "policy"],
+  ["structured-output", "policy"],
+  ["context:", "reference"],
+  ["ui:", "reference"],
+  ["cordis:", "reference"],
   ["mcp:", "tool"],
   ["tool:", "tool"],
   ["tools:", "tool"],
-  ["web:", "surface"],
+  ["browser-use:", "tool"],
+  ["computer-use:", "tool"],
 ];
 
 /** 由段名 + order 推断族别；认不出来就是 foreign（第三方/本插件自己的段）。 */
 export function classifySection(name, order) {
   const n = String(name ?? "").toLowerCase();
   if (!n) return { family: "foreign", stake: "unknown" };
+  if (HOST_SECTION_NAME_INDEX[n]) return { family: HOST_SECTION_NAME_INDEX[n], stake: "upstream-name" };
   if (HOST_FAMILIES[n]) return { family: HOST_FAMILIES[n], stake: "known" };
   for (const [prefix, family] of PREFIX_FAMILY) {
     if (n.startsWith(prefix)) return { family, stake: "known" };
@@ -168,7 +222,9 @@ export function planHostTakeover({ sections = [], contexts = [], mode = "residen
       continue;
     }
     if (mode === "exact" || mode === "shadow") {
-      if (cls.family === "stance" && cls.stake !== "unknown") {
+      // v0.52.11：exact 档剔「立场 + 策略」两族 —— 上游把沙箱/审批/委派也做成了段，
+      // 只剔 stance 会把平台自己的沙箱与审批立场留在提示词里。
+      if (HOST_DROPPABLE_FAMILIES.includes(cls.family) && cls.stake !== "unknown") {
         dropped.push({ name, family: cls.family, reason: `exact：上游表命中 ${cls.family} 段` });
         continue;
       }

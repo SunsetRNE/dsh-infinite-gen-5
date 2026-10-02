@@ -58,6 +58,20 @@ check("策略上下文按名字认得出", cat.classifyContext("sandbox-policy")
   cat.classifyContext("approval-policy").key === "APPROVAL_POLICY" &&
   cat.classifyContext("subagent-delegation").key === "SUBAGENT_DELEGATION");
 
+// ---- 上游真实段名索引（v0.52.11：从克隆到的官方 master 收的 28 个段名）----
+const HARVESTED = ["app:web-surface","approval:policy","browser-use:stagehand-native","computer-use:cua-driver-native",
+  "context:file-reference","cordis:include","deployment:persona-prefix","harness:identity","plan:policy",
+  "sandbox:policy","subagent:delegation","team:policy","tool:bash","tool:edit","tool:glob","tool:goal",
+  "tool:grep","tool:jobs","tool:lsp","tool:pty","tool:pwsh","tool:ralph","tool:read","tool:session-query",
+  "tool:write","tools:ptc-only","tools:sdk","ui:deliverable-file-references"];
+const missing = HARVESTED.filter((n) => !cat.HOST_SECTION_NAME_INDEX[n]);
+check(`上游真实段名 ${HARVESTED.length} 条全部在册`, missing.length === 0, missing.join(","));
+check("段名索引优先于前缀启发（stake=upstream-name）", cat.classifySection("sandbox:policy", 110).stake === "upstream-name");
+check("沙箱/审批/委派按上游段名归 policy", cat.classifySection("sandbox:policy").family === "policy" &&
+  cat.classifySection("approval:policy").family === "policy" && cat.classifySection("subagent:delegation").family === "policy");
+check("文件引用/交付物引用归 reference（接管不碰）", cat.classifySection("context:file-reference").family === "reference" &&
+  cat.classifySection("ui:deliverable-file-references").family === "reference");
+
 // ---- ③ 四档语义 ----
 const sections = [
   { name: "infinite-gen-5:global-system-prompt", order: 100 },
@@ -74,9 +88,12 @@ check("resident（默认）：一段不剔、一个上下文不压", r.kept.leng
 check("resident 仍回报认出的平台段（供面板核对）", r.matched.length === 3);
 
 const e = plan("exact");
-check("exact：只剔 stance 段（工具段留着）",
-  e.dropped.map((d) => d.name).sort().join(",") === "deployment:persona-suffix,harness:identity" &&
+check("exact：剔 stance 段（工具段留着）",
+  e.dropped.some((d) => d.name === "harness:identity") && e.dropped.some((d) => d.name === "deployment:persona-suffix") &&
   e.kept.some((s) => s.name === "tool:bash"));
+check("exact：平台的沙箱/审批段一并剔（上游把策略也做成了段）",
+  cat.planHostTakeover({ sections: [{ name: "sandbox:policy", order: 110 }, { name: "approval:policy", order: 115 }, { name: "tool:read", order: 1100 }], contexts: [], mode: "exact" })
+    .dropped.map((d) => d.name).sort().join(",") === "approval:policy,sandbox:policy");
 check("exact：压制策略上下文、留下非策略上下文",
   e.suppressedContexts.map((c) => c.name).sort().join(",") === "approval-policy,sandbox-policy" &&
   e.keptContexts.some((c) => c.name === "other:thing"));
