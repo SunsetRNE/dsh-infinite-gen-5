@@ -96,8 +96,10 @@ export function contractIssues(decl) {
 // 每条规则左右各一个关键词：右侧（ig5）必须出现在本文件的仲裁行里，左侧（puzzle）必须出现在
 // 拼图侧的政策文本里。两侧 verify 都读这张表并互相核对 —— 改文案而没同步 → 两侧同时红。
 export const COMPAT_TEXT_PROBES = {
+  domain: { puzzle: "交付物内容与形态", ig5: "归无限五代" },
   "ask-quota": { puzzle: "提问额度按轮的", ig5: "同一轮最多一问" },
   "batch-first": { puzzle: "不做打断者", ig5: "批量合同优先" },
+  "tool-shape": { puzzle: "按各自 schema 给", ig5: "既有工具 schema 不受" },
   "stop-semantics": { puzzle: "不回退", ig5: "只停动作" },
 };
 export function textProbeIssues(decl, ownText, otherText) {
