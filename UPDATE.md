@@ -1,3 +1,17 @@
+## v0.60.1
+
+**CI 修复：release 工作流加并发闸 —— 同一 tag 不并行抢上传。**
+
+- ① **事故**：v0.60.0 的 tag 触发了**两个并发 release run**（时间戳相隔 1 秒），两个都在
+  「上传到 GitHub Release」这步失败，结果 Release 只挂上 1 个附件（`RELEASE-NOTES.md`），
+  其余三个（tar.gz / zip / SHA256SUMS）由本机 `release:pack` 后手工补传（三次 HTTP 201，现已 4 个附件齐全）。
+- ② **修复**：`.github/workflows/release.yml` 增加
+  `concurrency: { group: release-${{ github.ref }}, cancel-in-progress: false }` ——
+  同名 tag 的后续 run **排队**而不是并行抢上传；`cancel-in-progress: false` 是为了不让后到的 run 把先到的掐掉。
+- ③ **判据**：本版 tag 触发时只应出现一个 release run；`npm run verify:all` 在本机 **退出码 0**
+  （88 / 150 / … 全绿，含新增的 `verify:credential-permit` 13/0）。
+- ④ **未改内核与载荷**：本版只动工作流与文档，插件产物与 v0.60.0 一致（多一份凭据来源许可的说明）。
+
 ## v0.60.0
 
 **凭据来源许可（credential-provenance permit）：把「证件类凭据怎么用」写成内核的一层可核许可。**
