@@ -53,7 +53,7 @@ expectFile("scripts/verify_grant_store.mjs", [32], "授权凭据档（32 条）"
 expectFile("scripts/verify_frame_budget.mjs", [5], "内核 frame 预算（5 条）");
 // 仲裁判据的条数**随对方在场与否变化**（在场 21 / 不在场 18）——
 // 这里两条都验：① 默认环境允许 18 或 21；② 用 IG5_PEER_OFF=1 明确验「不在场」形状（CI 上也成立）。
-expectFile("scripts/verify_arbitration.mjs", [18, 21], "跨插件仲裁（在场21/不在场18）");
+expectFile("scripts/verify_arbitration.mjs", [18, 21, 22], "跨插件仲裁（在场21或22/不在场18）");
 expectFile("scripts/verify_arbitration.mjs", [18], "跨插件仲裁·对方不在场", { IG5_PEER_OFF: "1" });
 
 // 本仓侧：判据产物在位（这些是「许可与凭据档」这条线的落地件）

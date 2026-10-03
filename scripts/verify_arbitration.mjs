@@ -54,12 +54,22 @@ const PEER_OFF = process.env.IG5_PEER_OFF === "1";
 const pzDir = PEER_OFF ? "/nonexistent/dsh-puzzle-mode" : "/root/.dsh/plugin-src/dsh-puzzle-mode";
 if (existsSync(join(pzDir, "lib", "index.js"))) {
   const pz = readFileSync(join(pzDir, "lib", "index.js"), "utf8");
-  const m = pz.match(/const ORDER = (\d+)/);
-  const measured = m ? Number(m[1]) : NaN;
+  // 段序的两种源码形状都要认：
+  //   ① 字面量（早期）：const ORDER = 10500
+  //   ② 可覆盖（0.20.x 起）：const ORDER = (() => { … Number.isFinite(n) … ? n : 10100 })()
+  //      —— 对方 0.20.3 装机后，只认 ① 的自检会读出 NaN（本会话真踩到）。
+  const literal = pz.match(/const ORDER = (\d+)/);
+  const computed = pz.match(/Number\.isFinite\(n\)[\s\S]{0,40}?:\s*(\d+)/) || pz.match(/\?\s*n\s*:\s*(\d+)/);
+  const measured = literal ? Number(literal[1]) : computed ? Number(computed[1]) : NaN;
+  const shape = literal ? "字面量" : computed ? "可覆盖（IIFE 里的默认值）" : "无法静态读取";
   ok("拼图段名与记录一致", pz.includes(PZ_SECTION), PZ_SECTION);
+  if (!literal && computed) {
+    ok("段序已改为可覆盖形式（导出 SECTION_ORDER_VALUE，可用 PUZZLE_SECTION_ORDER 覆盖）",
+      pz.includes("SECTION_ORDER_VALUE") && /PUZZLE_SECTION_ORDER/.test(pz), `默认 ${measured} · ${shape}`);
+  }
   ok("装机副本的段序在两套记录之内（上游 10500 或复刻仓默认 10100）",
     measured === PZ_ORDER_UPSTREAM_0197 || measured === PZ_ORDER_FORK_DEFAULT,
-    `实测 ${measured}`);
+    `实测 ${measured}（源码形状：${shape}）`);
   ok("段序关系已记录（两条路径都成立，不必改口径）",
     tailIsLiterallyLast(measured) === (measured < IG5_TAIL_ORDER),
     `${measured} ${tailIsLiterallyLast(measured) ? "<" : ">"} ${IG5_TAIL_ORDER}`);
