@@ -7,7 +7,10 @@
 import { readFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CREDENTIAL_CLAUSE, credentialPermit, maskCredential, credentialClauseLine, CREDENTIAL_KINDS } from "../data/credential-permit.mjs";
+import { CREDENTIAL_CLAUSE, credentialPermit, maskCredential, credentialClauseLine, CREDENTIAL_KINDS, MAX_GRANT_DAYS } from "../data/credential-permit.mjs";
+import { createHash } from "node:crypto";
+import { mkdtempSync, writeFileSync, appendFileSync, readFileSync as _read } from "node:fs";
+import { tmpdir } from "node:os";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const results = [];
@@ -24,7 +27,7 @@ const cases = [
   [{ kind: "self" }, true, "本人"],
   [{ kind: "corporate", subject: "某某公司" }, true, "企业主体（有主体名）"],
   [{ kind: "corporate" }, false, "企业主体（缺主体名）"],
-  [{ kind: "authorized", grantor: "CUSTOMER", purpose: "客户验收", until: "2026-12-31" }, true, "授权三件套齐"],
+  [{ kind: "authorized", grantor: "CUSTOMER", purpose: "客户验收", until: "2026-12-31", issuedAt: "2026-10-01", grantRef: "a".repeat(64) }, true, "授权要素齐（含签发日与指纹）"],
   [{ kind: "authorized", grantor: "CUSTOMER" }, false, "授权缺项"],
   [{ kind: "authorized", grantor: "A", purpose: "B", until: "2020-01-01" }, false, "授权过期"],
   [{ kind: "test-fixture", fixture: true }, true, "夹具显式标注"],
@@ -45,6 +48,33 @@ ok("index.js 引入 credential-permit", idx.includes('from "./data/credential-pe
 ok("运行时锚点注入条款", /arbitrationLine\(\)[\s\S]{0,80}credentialClauseLine\(\)/.test(idx));
 const kernelBytes = Buffer.byteLength(readFileSync(join(ROOT, "prompts", "infinite-gen-5.md"), "utf8"), "utf8");
 ok("内核字节未因本特性增长（条款走运行时锚点）", kernelBytes <= 17000, `${kernelBytes} B`);
+
+
+// ⑫ 授权可核（v0.61.0）：三件套 + 签发日 + 授权文件指纹，缺一不放、窗口与一致性都要过
+{
+  const H = (f) => createHash("sha256").update(_read(f)).digest("hex");
+  const dir = mkdtempSync(join(tmpdir(), "grant-"));
+  const grant = join(dir, "授权书.txt");
+  writeFileSync(grant, "客户书面授权：允许在 2026Q4 使用自有主体信息完成实名流程。\n", "utf8");
+  const ref = H(grant);
+
+  ok("授权文件指纹是 64 位 hex", /^[0-9a-f]{64}$/.test(ref), ref.slice(0, 12) + "…");
+  const base = { kind: "authorized", grantor: "CUSTOMER", purpose: "客户验收", issuedAt: "2026-10-01", until: "2026-12-31" };
+  ok("齐全（三件套 + 签发日 + 指纹）→ 放行", credentialPermit({ ...base, grantRef: ref }).allow === true);
+  ok("缺签发日 → 拒", credentialPermit({ ...base, issuedAt: undefined, grantRef: ref }).allow === false);
+  ok("缺指纹 → 拒", credentialPermit({ ...base, grantRef: undefined }).allow === false);
+  ok("指纹格式不对 → 拒", credentialPermit({ ...base, grantRef: "abc" }).allow === false);
+  ok("签发日在未来 → 拒", credentialPermit({ ...base, issuedAt: "2027-01-01", grantRef: ref }).allow === false);
+  ok("已过期 → 拒", credentialPermit({ ...base, issuedAt: "2020-01-01", until: "2020-12-31", grantRef: ref }).allow === false);
+  ok(`窗口 > ${MAX_GRANT_DAYS} 天 → 拒`, credentialPermit({ ...base, issuedAt: "2026-01-01", until: "2100-01-01", grantRef: ref }).allow === false);
+  ok("指纹与当前文件不一致（stale）→ 拒", credentialPermit({ ...base, grantRef: ref, stale: true }).allow === false);
+
+  // 篡改检测：改了文件，指纹必然变（调用方据此置 stale）
+  appendFileSync(grant, "（被改过一行）\n");
+  ok("文件被改动后指纹改变（可据此拒）", H(grant) !== ref, `${ref.slice(0, 10)}… → ${H(grant).slice(0, 10)}…`);
+  ok("CLI 脚本在场且可跑（permit:credential）", existsSync(join(ROOT, "scripts", "permit_credential.mjs")));
+  ok("条款写明授权须给指纹与窗口", /grantRef/.test(CREDENTIAL_CLAUSE) && /最长有效期/.test(CREDENTIAL_CLAUSE));
+}
 
 const failed = results.filter((r) => !r.ok);
 for (const r of results) console.log(`  ${r.ok ? "✅" : "❌"} ${r.claim}${r.detail ? " — " + r.detail : ""}`);

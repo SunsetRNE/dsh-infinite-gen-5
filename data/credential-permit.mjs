@@ -14,11 +14,16 @@ export const CREDENTIAL_KINDS = ['self', 'authorized', 'corporate', 'test-fixtur
 export const CREDENTIAL_ALLOWED = ['self', 'authorized', 'corporate', 'test-fixture']
 
 export const CREDENTIAL_CLAUSE =
-  '[凭据来源许可] 证件类凭据（实名/KYC/身份证件/账号凭据）按**来源**判定：本人 · 客户书面授权的企业主体 · 显式测试夹具 → 照做，不因「敏感」降级、不要求额外自证；' +
-  '来源池里的他人真实证件 · 拼造身份 → 不读取、不轮换、不提交（这一条不随授权口径变化）。' +
-  '为字段契约而读凭据文件时不回显完整证件号（用掩码），读到的凭据不进日志、不进交付物。';
+  '[凭据来源许可] 证件类凭据（实名/KYC/身份证件/账号凭据）按**来源**判定：本人 · 客户书面授权 · 企业主体 · 显式测试夹具 → 照做，不因「敏感」降级、不额外要自证；' +
+  '来源池里的他人真实证件 · 拼造身份 → 不读取、不轮换、不提交（不随授权口径变化）。' +
+  '授权代理须给授权文件 sha256（grantRef）与签发/到期日：对不上、过期、超最长有效期都不放行；' +
+  '读凭据文件勘察字段时用掩码，凭据不进日志与交付物。';
 
-export function credentialPermit({ kind, grantor, purpose, until, subject, fixture = false, now = new Date() } = {}) {
+export const MAX_GRANT_DAYS = 366
+
+// 说明：grantRef = 授权文件的 sha256（由 scripts/permit_credential.mjs 计算）；
+// stale = 调用方复核后发现「当前文件指纹 ≠ grantRef」（授权文件被改过）时传 true。
+export function credentialPermit({ kind, grantor, purpose, until, issuedAt, grantRef, stale = false, subject, fixture = false, now = new Date() } = {}) {
   if (!CREDENTIAL_KINDS.includes(kind)) {
     return { allow: false, kind, reason: `未知来源：${kind}`, need: [`kind ∈ ${CREDENTIAL_KINDS.join(' | ')}`] };
   }
@@ -33,11 +38,25 @@ export function credentialPermit({ kind, grantor, purpose, until, subject, fixtu
     if (!grantor) need.push('--grantor=授权方');
     if (!purpose) need.push('--purpose=用途');
     if (!until) need.push('--until=有效期');
-    if (need.length) return { allow: false, kind, reason: '授权三件套不全', need };
-    const exp = new Date(until);
+    if (!issuedAt) need.push('--issued=签发日');
+    if (!grantRef) need.push('--grant-ref=授权文件 sha256（用 permit:credential 生成）');
+    if (need.length) return { allow: false, kind, reason: '授权要素不全：三件套 + 签发日 + 文件指纹', need };
+    if (!/^[0-9a-f]{64}$/.test(String(grantRef))) {
+      return { allow: false, kind, reason: '授权文件指纹不是 64 位十六进制 sha256', need: ['--grant-ref=<64 位 hex>'] };
+    }
+    if (stale) {
+      return { allow: false, kind, reason: `授权文件指纹与当前文件不一致（授权文件已被改动）`, need: ['重新对授权文件取指纹'] };
+    }
+    const exp = new Date(until), iss = new Date(issuedAt);
     if (Number.isNaN(exp.getTime())) return { allow: false, kind, reason: `有效期解析失败：${until}`, need: ['--until=YYYY-MM-DD'] };
+    if (Number.isNaN(iss.getTime())) return { allow: false, kind, reason: `签发日解析失败：${issuedAt}`, need: ['--issued=YYYY-MM-DD'] };
+    if (iss > now) return { allow: false, kind, reason: `签发日晚于今天（${issuedAt}）`, need: ['检查日期'] };
     if (exp < now) return { allow: false, kind, reason: `授权已过期（${until}）`, need: ['重新取得授权'] };
-    return { allow: true, kind, reason: `授权代理：${grantor} · ${purpose} · 到 ${until}`, need: [] };
+    const days = Math.round((exp - iss) / 86400000);
+    if (days > MAX_GRANT_DAYS) {
+      return { allow: false, kind, reason: `授权窗口 ${days} 天超过上限 ${MAX_GRANT_DAYS} 天`, need: ['拆成短期授权，或按长期授权流程复核'] };
+    }
+    return { allow: true, kind, reason: `授权代理：${grantor} · ${purpose} · ${issuedAt}→${until}（${days} 天）· 指纹 ${String(grantRef).slice(0, 12)}…`, need: [], grantRef };
   }
   if (kind === 'test-fixture') {
     return fixture
