@@ -48,7 +48,10 @@ ok("运行时锚点追加仲裁行", /gateClauseText\(rev\)[\s\S]{0,200}arbitrat
 ok("末位锚点带回指行（跨插件仲裁）", idx.includes("[跨插件仲裁] 交付物内容与形态归无限五代"));
 
 // 5. 拼图插件在场时的依据核验
-const pzDir = "/root/.dsh/plugin-src/dsh-puzzle-mode";
+// 测试开关：IG5_PEER_OFF=1 时把「对方在场」的分支一律按不在场走 ——
+// 「对方不在场」的形状因此能在本地复现（CI 上对方必然不在场，以前只能到 CI 才发现条数从 21 变 18）。
+const PEER_OFF = process.env.IG5_PEER_OFF === "1";
+const pzDir = PEER_OFF ? "/nonexistent/dsh-puzzle-mode" : "/root/.dsh/plugin-src/dsh-puzzle-mode";
 if (existsSync(join(pzDir, "lib", "index.js"))) {
   const pz = readFileSync(join(pzDir, "lib", "index.js"), "utf8");
   const m = pz.match(/const ORDER = (\d+)/);
@@ -67,7 +70,7 @@ if (existsSync(join(pzDir, "lib", "index.js"))) {
 
 // ⑩ 双向互校（v0.59.2）：读拼图侧的 compat.json，两两核对同一组段序数字
 {
-  const got = readPuzzleContract(_rf, _ex);
+  const got = PEER_OFF ? null : readPuzzleContract(_rf, _ex);
   if (!got) {
     ok("拼图侧 compat.json 不在本机 → 互校跳过（本仓契约已声明）", true, COMPAT_PUZZLE_PATHS.join(" | "));
   } else if (got.error) {
@@ -91,7 +94,7 @@ if (existsSync(join(pzDir, "lib", "index.js"))) {
   ok("自证：本仓仲裁行含六条 ig5 侧关键词", ownMiss.length === 0,
     ownMiss.length ? "缺：" + ownMiss.map(([k, p]) => k + "→" + p.ig5).join(" / ") : "六条齐");
 
-  const got = readPuzzleContract(_rf, _ex);
+  const got = PEER_OFF ? null : readPuzzleContract(_rf, _ex);
   const puzzleTextPath = COMPAT_PUZZLE_TEXT_PATHS.find((f) => _ex(f));
   if (!got || !puzzleTextPath) {
     ok("拼图侧不在本机 → 文本互校跳过（表已声明）", true, COMPAT_PUZZLE_TEXT_PATHS.join(" | "));

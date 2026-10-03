@@ -27,27 +27,34 @@ const run = (cmd, args, cwd = ROOT) => {
 const head = (s, re) => { const m = s.match(re); return m ? m[0] : ""; };
 
 // 本仓侧：跑既有判据脚本，核对「通过/总数」与退出码
-const expectFile = (file, wantPass, wantTotal, label) => {
+// allowedTotals：允许的总条数（对方在场/不在场可能不同 —— 写死一个数就会在 CI 上红，本会话真踩过）
+const expectFile = (file, allowedTotals, label, env = {}) => {
   const p = join(ROOT, file);
   if (!existsSync(p)) {
     rows.push({ verdict: "FAIL", name: label, detail: `缺脚本 ${file}` });
     return;
   }
-  const { code, out } = run("node", [p]);
+  const r = spawnSync("node", [p], { cwd: ROOT, encoding: "utf8", timeout: 120000, env: { ...process.env, ...env } });
+  const code = r.status === null ? 124 : r.status;
+  const out = `${r.stdout || ""}${r.stderr || ""}`;
   const pass = Number(head(out, /\d+(?= 通过)/) || (out.match(/(\d+)\/(\d+)/) || [])[1] || -1);
   const total = Number((out.match(/共 (\d+)/) || [])[1] || (out.match(/(\d+)\/(\d+)/) || [])[2] || -1);
-  const ok = code === 0 && pass === wantPass && total === wantTotal;
+  const ok = code === 0 && pass === total && pass > 0 && allowedTotals.includes(total);
   rows.push({
     verdict: ok ? "PASS" : "FAIL",
     name: label,
-    detail: `通过 ${pass < 0 ? "?" : pass}/${total < 0 ? "?" : total}（期望 ${wantPass}/${wantTotal}）· 退出码 ${code}`,
+    detail: `通过 ${pass < 0 ? "?" : pass}/${total < 0 ? "?" : total}（期望 ${allowedTotals.join(" 或 ")}）· 退出码 ${code}`,
   });
+  return { pass, total, out };
 };
 
-expectFile("scripts/verify_credential_permit.mjs", 26, 26, "凭据来源许可（26 条）");
-expectFile("scripts/verify_grant_store.mjs", 32, 32, "授权凭据档（32 条）");
-expectFile("scripts/verify_frame_budget.mjs", 5, 5, "内核 frame 预算（5 条）");
-expectFile("scripts/verify_arbitration.mjs", 21, 21, "跨插件仲裁（21 条）");
+expectFile("scripts/verify_credential_permit.mjs", [26], "凭据来源许可（26 条）");
+expectFile("scripts/verify_grant_store.mjs", [32], "授权凭据档（32 条）");
+expectFile("scripts/verify_frame_budget.mjs", [5], "内核 frame 预算（5 条）");
+// 仲裁判据的条数**随对方在场与否变化**（在场 21 / 不在场 18）——
+// 这里两条都验：① 默认环境允许 18 或 21；② 用 IG5_PEER_OFF=1 明确验「不在场」形状（CI 上也成立）。
+expectFile("scripts/verify_arbitration.mjs", [18, 21], "跨插件仲裁（在场21/不在场18）");
+expectFile("scripts/verify_arbitration.mjs", [18], "跨插件仲裁·对方不在场", { IG5_PEER_OFF: "1" });
 
 // 本仓侧：判据产物在位（这些是「许可与凭据档」这条线的落地件）
 for (const f of ["data/credential-permit.mjs", "data/grant-store.mjs", "scripts/permit_credential.mjs", "scripts/grant_store.mjs"]) {
