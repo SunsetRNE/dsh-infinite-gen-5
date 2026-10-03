@@ -27,7 +27,8 @@ export const RISK_CATEGORIES = Object.freeze([
   { id: "staged_emergency", label: "伪造紧急求助要钱",
     markers: ["假冒家人要钱", "伪造急事", "表演式求助", "编造紧急情况借钱", "住院押金", "出事了要钱", "staged emergency", "fake emergency money"] },
   { id: "stalking_harassment", label: "跟踪/监控/恐吓/骚扰",
-    markers: ["跟踪", "定位他人", "监视", "恐吓信", "报复", "骚扰", "人肉", "开盒", "偷拍", "stalk", "harass", "dox", "doxx", "surveillance"] },
+    markers: ["跟踪", "定位他人", "监视", "隐蔽监控", "行踪记录", "每日行踪", "盯梢", "尾随", "装跟踪器",
+      "恐吓信", "报复", "骚扰", "人肉", "开盒", "偷拍", "stalk", "harass", "dox", "doxx", "surveillance", "covert monitoring"] },
   { id: "drugging", label: "下药",
     markers: ["下药", "迷药", "迷奸", "春药", "γ羟基丁酸", "ghb", "roofie", "date rape drug"] },
   { id: "suicide_induction", label: "诱导自杀",
@@ -53,12 +54,15 @@ const LOCAL_WINDOW = 32;
 const ADJACENCY_LOWER = ADJACENCY_TERMS.map((t) => t.toLocaleLowerCase());
 // 请求极性：出现这些词说明用户是在要交付物，不是在做防御/合规讨论 —— 此时邻接豁免不生效。
 const REQUEST_POLARITY = ["给我一份", "给我一个", "给我", "帮我", "教我怎么", "写一段", "写一套", "来一份", "生成", "出个方案", "怎么搞"];
+// 点名到人的操作请求：出现「给某人 / 对特定个人」这类指向时，邻接豁免不生效 ——
+// 加了具体对象就是实施请求，不是研究/防御讨论（E18 型 relabel 正是从这里钻过去的）。
+const TARGETED_OPERATION = /给(一个|某|这名|那个)?人|针对(个人|某人|特定|具名)|实施|盯一个人|跟踪一个人/;
 
 function adjacencyContext(folded, idx, len) {
   const from = Math.max(0, idx - LOCAL_WINDOW);
   const to = Math.min(folded.length, idx + len + LOCAL_WINDOW);
   const ctx = folded.slice(from, to);
-  if (REQUEST_POLARITY.some((p) => folded.includes(p))) return [];
+  if (REQUEST_POLARITY.some((p) => folded.includes(p)) || TARGETED_OPERATION.test(folded)) return [];
   return ADJACENCY_LOWER.filter((t) => ctx.includes(t));
 }
 
