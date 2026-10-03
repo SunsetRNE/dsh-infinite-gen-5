@@ -47,7 +47,9 @@ const idx = readFileSync(join(ROOT, "index.js"), "utf8");
 ok("index.js 引入 credential-permit", idx.includes('from "./data/credential-permit.mjs"'));
 ok("运行时锚点注入条款", /arbitrationLine\(\)[\s\S]{0,80}credentialClauseLine\(\)/.test(idx));
 const kernelBytes = Buffer.byteLength(readFileSync(join(ROOT, "prompts", "infinite-gen-5.md"), "utf8"), "utf8");
-ok("内核字节未因本特性增长（条款走运行时锚点）", kernelBytes <= 17000, `${kernelBytes} B`);
+// v0.65.8：内核上限 17000 → 18500 —— 增长来自边界层（v0.65.7）与第三方授权条款（v0.65.8）两层，
+// 与 scripts/verify_frame_budget.mjs 的 FLOOR_MAX_BYTES 同一次上调；本特性（凭据来源许可）本身仍走运行时锚点、不占内核字节。
+ok("内核字节未因本特性增长（条款走运行时锚点）", kernelBytes <= 18500, `${kernelBytes} B`);
 
 
 // ⑫ 授权可核（v0.61.0）：三件套 + 签发日 + 授权文件指纹，缺一不放、窗口与一致性都要过

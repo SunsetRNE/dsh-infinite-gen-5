@@ -1,0 +1,392 @@
+[
+  {
+    "id": "allow_client_grant_data",
+    "expect": "permitted",
+    "grant": {
+      "id": "g-01",
+      "source": "client-grant",
+      "grantor": "ACME",
+      "grantRef": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "issuedAt": "2026-09-01",
+      "until": "2026-11-30",
+      "allowedPurposes": [
+        "客户验收"
+      ],
+      "permits": [
+        {
+          "kind": "data",
+          "subjectScope": [
+            "Z"
+          ],
+          "purpose": "客户验收"
+        },
+        {
+          "kind": "db",
+          "schemaScope": [
+            "app.profiles"
+          ]
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "data",
+        "db"
+      ],
+      "purpose": "客户验收",
+      "subject": "Z",
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "allow_fixture_software_mod",
+    "expect": "permitted",
+    "grant": {
+      "id": "g-02",
+      "source": "fixture",
+      "grantor": "LAB",
+      "grantRef": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "issuedAt": "2026-10-01",
+      "until": "2026-10-31",
+      "allowedPurposes": [
+        "靶场验证"
+      ],
+      "permits": [
+        {
+          "kind": "software-mod",
+          "artifactScope": [
+            "APP-1"
+          ]
+        },
+        {
+          "kind": "server",
+          "hostScope": [
+            "lab-01"
+          ]
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "software-mod"
+      ],
+      "purpose": "靶场验证",
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "deny_source_pool",
+    "expect": "source-ineligible",
+    "grant": {
+      "id": "g-03",
+      "source": "source-pool",
+      "grantRef": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "issuedAt": "2026-09-01",
+      "until": "2026-10-20",
+      "permits": [
+        {
+          "kind": "data",
+          "subjectScope": [
+            "X"
+          ]
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "data"
+      ],
+      "purpose": "客户验收",
+      "subject": "X",
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "deny_synthesized",
+    "expect": "source-ineligible",
+    "grant": {
+      "id": "g-04",
+      "source": "synthesized",
+      "grantRef": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "issuedAt": "2026-09-01",
+      "until": "2026-10-20",
+      "permits": [
+        {
+          "kind": "data",
+          "subjectScope": [
+            "X"
+          ]
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "data"
+      ],
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "deny_expired",
+    "expect": "expired",
+    "grant": {
+      "id": "g-05",
+      "source": "client-grant",
+      "grantRef": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "issuedAt": "2026-06-01",
+      "until": "2026-08-31",
+      "permits": [
+        {
+          "kind": "data",
+          "subjectScope": [
+            "Z"
+          ]
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "data"
+      ],
+      "purpose": "客户验收",
+      "subject": "Z",
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "deny_not_yet",
+    "expect": "not-yet",
+    "grant": {
+      "id": "g-06",
+      "source": "client-grant",
+      "grantRef": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "issuedAt": "2026-11-01",
+      "until": "2026-12-01",
+      "permits": [
+        {
+          "kind": "data",
+          "subjectScope": [
+            "Z"
+          ]
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "data"
+      ],
+      "purpose": "客户验收",
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "deny_no_grantref",
+    "expect": "unverifiable",
+    "grant": {
+      "id": "g-07",
+      "source": "client-grant",
+      "issuedAt": "2026-09-01",
+      "until": "2026-10-20",
+      "permits": [
+        {
+          "kind": "data"
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "data"
+      ],
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "deny_wrong_fingerprint_shape",
+    "expect": "unverifiable",
+    "grant": {
+      "id": "g-08",
+      "source": "client-grant",
+      "grantRef": "abc123",
+      "issuedAt": "2026-09-01",
+      "until": "2026-10-20",
+      "permits": [
+        {
+          "kind": "data"
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "data"
+      ],
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "deny_window_too_long",
+    "expect": "window-too-long",
+    "grant": {
+      "id": "g-09",
+      "source": "client-grant",
+      "grantRef": "1111111111111111111111111111111111111111111111111111111111111111",
+      "issuedAt": "2026-01-01",
+      "until": "2027-06-01",
+      "permits": [
+        {
+          "kind": "data"
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "data"
+      ],
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "deny_kind_missing",
+    "expect": "permit-missing",
+    "grant": {
+      "id": "g-10",
+      "source": "client-grant",
+      "grantRef": "2222222222222222222222222222222222222222222222222222222222222222",
+      "issuedAt": "2026-09-01",
+      "until": "2026-11-01",
+      "allowedPurposes": [
+        "客户验收"
+      ],
+      "permits": [
+        {
+          "kind": "data",
+          "subjectScope": [
+            "Z"
+          ],
+          "purpose": "客户验收"
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "data",
+        "software-mod"
+      ],
+      "purpose": "客户验收",
+      "subject": "Z",
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "deny_kind_incomplete",
+    "expect": "permit-incomplete",
+    "grant": {
+      "id": "g-11",
+      "source": "org",
+      "grantRef": "3333333333333333333333333333333333333333333333333333333333333333",
+      "issuedAt": "2026-09-01",
+      "until": "2026-11-01",
+      "permits": [
+        {
+          "kind": "server"
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "server"
+      ],
+      "purpose": "客户验收",
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "deny_purpose_switch",
+    "expect": "purpose-out-of-scope",
+    "grant": {
+      "id": "g-12",
+      "source": "client-grant",
+      "grantRef": "4444444444444444444444444444444444444444444444444444444444444444",
+      "issuedAt": "2026-09-01",
+      "until": "2026-11-01",
+      "allowedPurposes": [
+        "客户验收"
+      ],
+      "permits": [
+        {
+          "kind": "db",
+          "schemaScope": [
+            "app.orders"
+          ]
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "db"
+      ],
+      "purpose": "竞品分析",
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "deny_subject_extra_person",
+    "expect": "subject-not-permitted",
+    "grant": {
+      "id": "g-13",
+      "source": "client-grant",
+      "grantRef": "5555555555555555555555555555555555555555555555555555555555555555",
+      "issuedAt": "2026-09-01",
+      "until": "2026-11-01",
+      "allowedPurposes": [
+        "客户验收"
+      ],
+      "permits": [
+        {
+          "kind": "data",
+          "subjectScope": [
+            "Z"
+          ],
+          "purpose": "客户验收"
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "data"
+      ],
+      "purpose": "客户验收",
+      "subject": "W",
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "allow_aggregate_no_subject",
+    "expect": "permitted",
+    "grant": {
+      "id": "g-14",
+      "source": "org",
+      "grantRef": "6666666666666666666666666666666666666666666666666666666666666666",
+      "issuedAt": "2026-09-10",
+      "until": "2026-12-01",
+      "allowedPurposes": [
+        "数据质量复盘"
+      ],
+      "permits": [
+        {
+          "kind": "data",
+          "subjectScope": [
+            "aggregate"
+          ],
+          "purpose": "数据质量复盘"
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "data"
+      ],
+      "purpose": "数据质量复盘",
+      "now": "2026-10-03"
+    }
+  }
+]

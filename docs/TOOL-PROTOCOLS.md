@@ -1,7 +1,7 @@
 # 工具与工具协议（自动生成）
 
 > 本文件由 `npm run tools:doc` 生成，**不要手改**：改代码或 `scripts/tool-registry.mjs` 后重跑。
-> 协议标识 `ig5-tool-registry-v1` · 在册工具 **138** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
+> 协议标识 `ig5-tool-registry-v1` · 在册工具 **139** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
 
 ## 一、工具协议总则（Tool ABI）
 
@@ -25,7 +25,7 @@
 「每个脚本都在册 / 在册路径都存在 / 声明的能力在文件里真的出现 / npm 别名真的存在 /
 本文件与生成器输出逐字节一致」。
 
-实测分布（现扫文件文本得出）：带 `--json` 的 **63** 个、带 `--selftest` 的 **31** 个、带 `--apply` 的 **10** 个、有 npm 别名的 **109** 个。
+实测分布（现扫文件文本得出）：带 `--json` 的 **63** 个、带 `--selftest` 的 **31** 个、带 `--apply` 的 **10** 个、有 npm 别名的 **110** 个。
 
 ## 二、命名协议注册表
 
@@ -216,7 +216,7 @@
 | `stats-store.mjs` | 统计数据库：插件本体（核心）单写、前端面板单读的那一份 JSON。 | `node stats-store.mjs` | `node stats-store.mjs` | — |
 | `tasks.mjs` | DSH 自身任务清单（todo）的读侧与写侧规则。 | `node tasks.mjs` | `node tasks.mjs` | — |
 
-### 工具（48）
+### 工具（49）
 
 *其余 CLI 工具*
 
@@ -262,6 +262,7 @@
 | `scripts/verify_identity_routes.mjs` <br>npm: `verify:identity-routes` | scripts/verify_identity_routes.mjs — 身份许可路由表自检（v0.55.0） | `node scripts/verify_identity_routes.mjs` | `npm run verify:identity-routes` | `--selftest` |
 | `scripts/verify_incident_archive.mjs` <br>npm: `verify:incident-archive` | verify_incident_archive.mjs —— 内部问题档案的「黑名单是否仍然生效」自检（v0.52.12） | `node scripts/verify_incident_archive.mjs` | `npm run verify:incident-archive` | — |
 | `scripts/verify_override.mjs` | verify_override.mjs —— 提示词接管（v0.52.2）回归判据：纯函数层 + index.js 接线。 | `node scripts/verify_override.mjs` | `node scripts/verify_override.mjs` | — |
+| `scripts/verify_permit.mjs` <br>npm: `verify:permit` | 授权许可件的判据跑：14 条 fixture 逐条判决，正例必须 permitted、反例必须命中指定 code。 | `node scripts/verify_permit.mjs` | `npm run verify:permit` | — |
 | `scripts/verify_regression.mjs` <br>npm: `verify:regression` | 回归复查（仓库内可移植版）—— 把本仓侧的关键判据一次跑完；外部的（兼容仓 / 闸门目录）在场才跑。 | `node scripts/verify_regression.mjs` | `npm run verify:regression` | — |
 | `scripts/verify_step_inject.mjs` | verify_step_inject.mjs — 回归判据：每步注入进收件箱的消息必须带 source，且默认档位是 off。 | `node scripts/verify_step_inject.mjs` | `node scripts/verify_step_inject.mjs` | — |
 | `scripts/verify_tool_registry.mjs` <br>npm: `verify:tools` | 无限五代 · 工具注册表门禁（scripts/verify_tool_registry.mjs） | `node scripts/verify_tool_registry.mjs` | `npm run verify:tools` | `--selftest` `--json` `--apply` |

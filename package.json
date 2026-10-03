@@ -189,7 +189,8 @@
     "permit:credential": "node scripts/permit_credential.mjs",
     "grants": "node scripts/grant_store.mjs",
     "verify:pack-lint": "node scripts/sweep_same_class.mjs",
-    "verify:incident-archive": "node scripts/verify_incident_archive.mjs"
+    "verify:incident-archive": "node scripts/verify_incident_archive.mjs",
+    "verify:permit": "node scripts/verify_permit.mjs"
   },
   "dsh": {
     "id": "dsh-infinite-gen-5",

@@ -419,7 +419,7 @@ const lazyUnitHeads = lazyText.match(/^@@unit:/gm) ?? [];
 // 数字诚实规则 Anything carrying a number 与 Boundary rule 立场句按决策保持常驻，不再搬）
 // v0.40.0：11 → 13（新增 L_envtool 机器探针与工具链安装、L_encoding 编码外壳与元请求）
 // v0.41.0：13 → 14（新增 L_residue_tail 分层依据与边界写法；L_examples 只留「私语」那条例外常驻）
-check(lazyUnitHeads.length === 15, "惰性单元数量", `实测 ${lazyUnitHeads.length} 个`);
+check(lazyUnitHeads.length === 16, "惰性单元数量", `实测 ${lazyUnitHeads.length} 个`);
 check(
   (lazyText.match(/^@@end:/gm) ?? []).length === lazyUnitHeads.length,
   "每个惰性单元都有 @@end 收尾",
@@ -491,8 +491,8 @@ if (existsSync(LAZY_FULL_PATH)) {
     "身份许可明确不设凭据门（不查合同 / 客户名 / 授权函，也不要求先亮身份）",
   );
   check(
-    Buffer.byteLength(prompt, "utf8") <= 17000,
-    "常驻内核字节预算（≤17000）",
+    Buffer.byteLength(prompt, "utf8") <= 18500,
+    "常驻内核字节预算（≤18500）",
     `实测 ${Buffer.byteLength(prompt, "utf8")} 字节`,
   );
   check(full.length > prompt.length, "原文快照是拆分前全文", `原文 ${full.length} 字符`);
