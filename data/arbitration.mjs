@@ -1,7 +1,7 @@
 // data/arbitration.mjs — 跨插件判断层（v0.59.0）
 //
 // 背景（2026-10-02 实测）：本机同时装了 dsh-puzzle-mode。
-//   puzzle-mode：systemPrompt 段 `puzzle-mode:policy`，order = 10500（读 lib/index.js:100-101）
+//   puzzle-mode：systemPrompt 段 `puzzle-mode:policy`，order = 10120（上游 ≥0.22.0 默认；旧装机 0.19.7 为 10500）
 //   无限五代   ：真末位锚点 order = 10150（index.js TAIL_ORDER）、接管裁决 order = 9900、首句层 order = -1100
 // 即：**拼图段排在「真末位锚点」之后** —— 「整份系统提示的最后一段」这句话在本机已不成立。
 // 两份载荷还有三处硬冲突（提问额度 / 批量题节奏 / 工具参数形态）。
@@ -11,10 +11,10 @@
 
 export const PZ_SECTION = "puzzle-mode:policy";
 export const PZ_ORDER_UPSTREAM_0197 = 10500; // 上游 dsh-puzzle-mode v0.19.7 实测（其 lib/index.js:101）
-export const PZ_ORDER_FORK_DEFAULT = 10100;  // 复刻仓 SunsetRNE/dsh-puzzle-mode-2 ≥0.19.8 默认（可 PUZZLE_SECTION_ORDER 覆盖）
+export const PZ_ORDER_FORK_DEFAULT = 10120;  // 复刻仓 SunsetRNE/dsh-puzzle-mode-2 ≥0.22.0 / 上游 ≥0.22.0 默认（可 PUZZLE_SECTION_ORDER 覆盖）；10100 与宿主内置 WEB_SURFACE 撞号，故挪到 10120（issue #1）
 export const PZ_ORDER = PZ_ORDER_UPSTREAM_0197; // 兼容旧名：当前装机的是上游 0.19.7
 export const IG5_TAIL_ORDER = 10150; // 无限五代真末位锚点
-// 段序两条路径都成立：装了复刻仓 → 10100 < 10150，末位锚点确实在最后；
+// 段序两条路径都成立：装了复刻仓/上游 ≥0.22.0 → 10120 < 10150，末位锚点确实在最后；
 // 装的还是上游 → 10500 > 10150，末位锚点只声明「本载荷的末位」。
 export const tailIsLiterallyLast = (pzOrder) => Number.isFinite(pzOrder) && pzOrder < IG5_TAIL_ORDER;
 export const IG5_FIRST_LINE_ORDER = -1100;
@@ -47,7 +47,7 @@ export const ARBITRATION_RULES = [
   {
     id: "tail-concede",
     key: "末位让位",
-    rule: "无限五代的末位锚点只声明「本载荷的末位」，不声明整份系统提示的最后一段：装的若是上游拼图（order 10500）它排在其后，装的是复刻仓（默认 order 10100）它排在其前 —— 两种都成立，不必改口径",
+    rule: "无限五代的末位锚点只声明「本载荷的末位」，不声明整份系统提示的最后一段：装的若是上游拼图（order 10500）它排在其后，装的是复刻仓/上游 ≥0.22.0（默认 order 10120）它排在其前 —— 两种都成立，不必改口径",
     why: "已在 index.js 落地：措辞让位，效力不让位（内核条款照旧生效）",
   },
   {
@@ -124,7 +124,8 @@ export const COMPAT_PUZZLE_TEXT_PATHS = [
 ];
 
 export function arbitrationLine() {
-  return "[跨插件仲裁] 本机同时装有 dsh-puzzle-mode（段 puzzle-mode:policy；上游 0.19.7 为 order 10500，复刻仓 ≥0.19.8 默认 10100 —— 前者排在无限五代末位锚点 10150 之后，后者排在其前）：① 交付物内容与形态归无限五代，拼图文档与采访节奏归拼图模式；② 采访轮/审查轮按拼图提问额度，其余场景同一轮最多一问；③ 整批题在场时批量合同优先（不采访、不中停），拼图文档一轮结束后幂等回写；④ 拼图文档只走 puzzle_mode，既有工具 schema 不受「参数扁平」约束；⑤ 末位锚点只声明本载荷末位；⑥ 拼图的「停下」只停动作，不回退已交付。";
+  // 数字一律插值，别再写字面量 —— 写死过一次（10100），改常量时这行没跟上，自检当场报 ERROR。
+  return `[跨插件仲裁] 本机同时装有 dsh-puzzle-mode（段 ${PZ_SECTION}；上游 0.19.7 为 order ${PZ_ORDER_UPSTREAM_0197}，复刻仓/上游 ≥0.22.0 默认 ${PZ_ORDER_FORK_DEFAULT} —— 前者排在无限五代末位锚点 ${IG5_TAIL_ORDER} 之后，后者排在其前）：① 交付物内容与形态归无限五代，拼图文档与采访节奏归拼图模式；② 采访轮/审查轮按拼图提问额度，其余场景同一轮最多一问；③ 整批题在场时批量合同优先（不采访、不中停），拼图文档一轮结束后幂等回写；④ 拼图文档只走 puzzle_mode，既有工具 schema 不受「参数扁平」约束；⑤ 末位锚点只声明本载荷末位；⑥ 拼图的「停下」只停动作，不回退已交付。`;
 }
 
 export function arbitrate(ctx = {}) {

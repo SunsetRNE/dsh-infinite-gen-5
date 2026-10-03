@@ -56,18 +56,23 @@ if (existsSync(join(pzDir, "lib", "index.js"))) {
   const pz = readFileSync(join(pzDir, "lib", "index.js"), "utf8");
   // 段序的两种源码形状都要认：
   //   ① 字面量（早期）：const ORDER = 10500
-  //   ② 可覆盖（0.20.x 起）：const ORDER = (() => { … Number.isFinite(n) … ? n : 10100 })()
+  //   ② 可覆盖（0.20.x 起）：const ORDER = (() => { … Number.isFinite(n) … ? n : DEFAULT_SECTION_ORDER })()（0.22.0 起默认 10120）
   //      —— 对方 0.20.3 装机后，只认 ① 的自检会读出 NaN（本会话真踩到）。
   const literal = pz.match(/const ORDER = (\d+)/);
+  // 三种形状都要认：
+  //   ① 字面量：const ORDER = 10500
+  //   ② 可覆盖 + 常量名（上游 ≥0.22.0）：const DEFAULT_SECTION_ORDER = 10120 / … ? n : DEFAULT_SECTION_ORDER
+  //   ③ 可覆盖 + 字面量（0.20.x~0.21.x）：… ? n : 10100
+  const named = pz.match(/DEFAULT_SECTION_ORDER\s*=\s*(\d+)/);
   const computed = pz.match(/Number\.isFinite\(n\)[\s\S]{0,40}?:\s*(\d+)/) || pz.match(/\?\s*n\s*:\s*(\d+)/);
-  const measured = literal ? Number(literal[1]) : computed ? Number(computed[1]) : NaN;
-  const shape = literal ? "字面量" : computed ? "可覆盖（IIFE 里的默认值）" : "无法静态读取";
+  const measured = literal ? Number(literal[1]) : named ? Number(named[1]) : computed ? Number(computed[1]) : NaN;
+  const shape = literal ? "字面量" : named ? "可覆盖（DEFAULT_SECTION_ORDER 常量）" : computed ? "可覆盖（IIFE 里的默认值）" : "无法静态读取";
   ok("拼图段名与记录一致", pz.includes(PZ_SECTION), PZ_SECTION);
   if (!literal && computed) {
     ok("段序已改为可覆盖形式（导出 SECTION_ORDER_VALUE，可用 PUZZLE_SECTION_ORDER 覆盖）",
       pz.includes("SECTION_ORDER_VALUE") && /PUZZLE_SECTION_ORDER/.test(pz), `默认 ${measured} · ${shape}`);
   }
-  ok("装机副本的段序在两套记录之内（上游 10500 或复刻仓默认 10100）",
+  ok("装机副本的段序在两套记录之内（上游 10500 或复刻仓/上游 ≥0.22.0 默认 10120）",
     measured === PZ_ORDER_UPSTREAM_0197 || measured === PZ_ORDER_FORK_DEFAULT,
     `实测 ${measured}（源码形状：${shape}）`);
   ok("段序关系已记录（两条路径都成立，不必改口径）",

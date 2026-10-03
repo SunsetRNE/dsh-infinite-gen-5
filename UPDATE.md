@@ -1,3 +1,25 @@
+## v0.65.5
+
+**契约同步（issue #1）：复刻仓默认段序 10100 → 10120 —— 因为 10100 与 DSH 内置 `WEB_SURFACE` 撞号。**
+
+- **对方提的 issue**：`SunsetRNE/dsh-infinite-gen-5` #1（作者 `liancha22`）——
+  上游拼图已把共存层并回主线（v0.22.0），默认段序由 `10500` 改为**可协商的 `10120`**，请这边对齐。
+- **为什么不是 10100**（我逐条核过，论据成立）：
+  ① 宿主内置段序表里 `WEB_SURFACE: 10100`（`@deepseek-ai/dsh-system-prompt` 的 `SECTION_ORDERS`，
+  同表还有 `HARNESS_SOURCE: 1e4` / `DEPLOYMENT_PERSONA_SUFFIX: 10200`）；
+  ② 段序相同时宿主排序回退到**按段名比较**（`comparePromptSections: a.order - b.order || compareNames(…)`）——
+  撞号意味着「拼图段在末位锚点之前」不再由协商决定；
+  ③ `10120` 三条都满足：小于末位锚点 `10150`、不落在内置表任何取值上、仍可被 `PUZZLE_SECTION_ORDER` 覆盖。
+- **本仓改了什么**：
+  - `data/arbitration.mjs`：`PZ_ORDER_FORK_DEFAULT` 10100 → **10120**；
+    **`arbitrationLine()` 里的数字一律改插值**（这行原先写死过 10100，改常量时它没跟上、自检当场报 ERROR —— 写死一次就够了）；
+  - `scripts/verify_arbitration.mjs`：段序提取器**认三种源码形状**（字面量 / `DEFAULT_SECTION_ORDER` 常量 / IIFE 字面量）
+    —— 上游 v0.22.0 改成了常量名形式，旧提取器读出 `NaN`；
+  - 文案与注释同步为「复刻仓/上游 ≥0.22.0 默认 10120」。
+- **判据（实测）**：本仓 `verify_arbitration` **21 通过 / 0 失败**；
+  复刻仓 `verify:cross` **23 通过 / 0 失败**；归档一行 `0.22.0 / 0.65.4 / 10120<10150 / 6 条 / 23/0 / 21/0 / ok`（闭环）。
+- **复刻仓同步瘦身**：见其 v0.22.1 —— 上游已自带共存层，本仓只留互校归档器 / 上游同步器 / 归档账本。
+
 ## v0.65.4
 
 **更正一条事实性表述：可覆盖段序是「兼容复刻仓」的贡献，不是上游已跟进。**
