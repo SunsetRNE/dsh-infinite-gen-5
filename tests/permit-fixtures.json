@@ -388,5 +388,60 @@
       "purpose": "数据质量复盘",
       "now": "2026-10-03"
     }
+  },
+  {
+    "id": "allow_long_window_300d",
+    "expect": "permitted",
+    "grant": {
+      "id": "g-15",
+      "source": "client-grant",
+      "grantor": "ACME",
+      "grantRef": "7777777777777777777777777777777777777777777777777777777777777777",
+      "issuedAt": "2026-01-01",
+      "until": "2026-10-28",
+      "allowedPurposes": [
+        "长期运维"
+      ],
+      "permits": [
+        {
+          "kind": "server",
+          "hostScope": [
+            "db-01"
+          ]
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "server"
+      ],
+      "purpose": "长期运维",
+      "now": "2026-10-03"
+    }
+  },
+  {
+    "id": "deny_window_over_366d",
+    "expect": "window-too-long",
+    "grant": {
+      "id": "g-16",
+      "source": "client-grant",
+      "grantRef": "8888888888888888888888888888888888888888888888888888888888888888",
+      "issuedAt": "2026-01-01",
+      "until": "2027-02-05",
+      "permits": [
+        {
+          "kind": "data",
+          "subjectScope": [
+            "Z"
+          ]
+        }
+      ]
+    },
+    "request": {
+      "kinds": [
+        "data"
+      ],
+      "now": "2026-10-03"
+    }
   }
 ]

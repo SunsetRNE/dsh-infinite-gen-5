@@ -9,7 +9,10 @@
 //   ④ 窗口闸  签发日 ≤ 当前 ≤ 到期日；窗口 ≤ MAX_GRANT_DAYS（与 credential-permit.mjs 同口径）
 //   ⑤ 记录闸  必须给出 grantRef 与签发/到期日；缺一即 unverifiable，不是「默认已同意」
 
-export const MAX_GRANT_DAYS = 180;
+// 窗口上限与 data/credential-permit.mjs 同源（单一真源）：原先本文件写 180 属误抄，
+// 与本仓既有口径 366 天（闰年上限）不一致。窗口本身仍然存在，到期仍按未授权拦。
+export { MAX_GRANT_DAYS } from "./credential-permit.mjs";
+import { MAX_GRANT_DAYS } from "./credential-permit.mjs";
 
 export const ELIGIBLE_SOURCES = Object.freeze(["self", "client-grant", "org", "fixture"]);
 export const INELIGIBLE_SOURCES = Object.freeze(["source-pool", "synthesized", "unknown"]);
