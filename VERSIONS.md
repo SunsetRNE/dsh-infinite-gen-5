@@ -30,6 +30,7 @@
 
 | 版本 | 日期 | 关键变更 | 提交 |
 | --- | --- | --- | --- |
+| v0.65.0 | 2026-10-02 | **回归复查入库门禁**：新增 `scripts/verify_regression.mjs` 并并入 `verify:all` —— 本仓侧 6 组判据（许可 26/0 · 凭据档 32/0 · frame 5/5 · 仲裁 21/0 · 产物在位 · 发版前自检失败 0）一次跑完；外部（兼容仓握手 / 闸门目录）在场才跑、不在场记 skip。两条分支实测：在场 **13/0/0**、不在场 **9/0/4**，均退出码 0 | 本版提交 |
 | v0.64.0 | 2026-10-02 | **主体分档**：点名 `subject` 时先分档（0 主体命中 / 1 无主体通用授权 / 2 主体不符）再在档内比 `priority` → 用途 → 到期 → id；不点名则单档（保持 v0.63.0 行为）；`considered[]` 带 `tier` 写明档位；`verify:grant-store` **32/0**；内核与底价未变 | 本版提交 |
 | v0.63.0 | 2026-10-02 | **多主体优先级**：`pickGrant` 按 priority → 主体命中 → 用途精确 → 到期更晚 → id 稳定序排序，并返回 `considered[]` 解释每个候选的位次（含未进入候选的原因）；CLI 支持 `--priority` / `--subject`；`verify:grant-store` **25/0**、`verify:credential-permit` **26/0**；仓库自带发版前自检 **失败 0**；内核与底价未变 | 本版提交 |
 | v0.62.0 | 2026-10-02 | **授权凭据档**：新增 `data/grant-store.mjs`（入档校验 / 复核五态 / 挑选）+ CLI `npm run grants`（add · list · check · pick，退出码 0/2 可做门禁）；授权文件被改动即 `fingerprint-mismatch` 并退出可用清单；判决层与档案层统一要求严格 `YYYY-MM-DD`；`verify:grant-store` **18/0**、`verify:credential-permit` **26/0** 均入 `verify:all`；内核与底价未变 | 本版提交 |
