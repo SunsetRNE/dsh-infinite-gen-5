@@ -6,6 +6,7 @@
 |---|---|---|
 | [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) | 🧠 架构与注入机制 | 旧版的 Order 200 只放了约 200 字节的「末位锚点」，但宿主官方段位表 |
 | [`docs/ARMOR.md`](ARMOR.md) | 服从性注入落地回执（v0.37.1） | 针对三条要求（长对话压缩后「用户指令最高优先级」这条容易随摘要一起被稀释）： |
+| [`docs/AUTHOR-CHECKLIST.md`](AUTHOR-CHECKLIST.md) | 作者自检清单（改动前 / 改动中 / 发版前 / 装机后） | npm run verify:all                 # 聚合自检（CI 等价） |
 | [`docs/batch-arm.md`](batch-arm.md) | Batch Arm：零额外提示词下的「一次做完一整批」 | 识别是**黏的**：一旦武装，后面闲聊不解除（只有换批次才更新）。apply() 是重置点 —— 新一次装载不带上一轮的武装状态（rebuildInjection() 换档不重置，所以点设置页不会掉武装）。 |
 | [`docs/BOOST_CORPUS.md`](BOOST_CORPUS.md) | 无限五代 · 增强训练集（boost-corpus） | *一句话**：把一份 20602 B 的注入提示词附件，编译成一套**按本轮需求挑选、受字节预算约束**的增强条款，挂成内核之外的 Order 150 段随 system prompt 一起进上下文。 |
 | [`docs/boot-attest.md`](boot-attest.md) | 启动自证（boot attest）—— DSHA 环境下「加载确认状态」的落盘面 | DSHA（Android 容器）里的引擎每次启动都会换一个 DSHA_WEB_GENERATION，而**插件管理器的「确认 / 审阅 / 装卸」事务在原生闸门后面**： |
@@ -46,7 +47,7 @@
 | 文件 | 用途 |
 |---|---|
 | `README.md` | <p align="center"> |
-| `UPDATE.md` | *契约同步（issue #1）：复刻仓默认段序 10100 → 10120 —— 因为 10100 与 DSH 内置 WEB_SURFACE 撞号。** |
+| `UPDATE.md` | *作者自检清单入库：改动前五问 / 改动中三不 / 发版前四查 / 装机后三验。** |
 | `VERSIONS.md` | *本文件是版本变更的压缩版**：一版 1–3 行，只留「改了什么 + 硬数字 + 提交」。 |
 | `CHANGELOG.md` | 版本段落按提交标题里的 vX.Y.Z 切分，未带版本号的提交归入最新段； |
 | `HARNESS_PLUGIN.md` | 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。 |
