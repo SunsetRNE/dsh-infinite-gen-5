@@ -16,7 +16,7 @@
 //   - 词条已存在于领域包/工具链（重复补，正常现象，只计数）；
 //   - 同一批次内重复（按小写折叠）。
 
-import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -31,6 +31,15 @@ const checkOnly = argv.includes("--check");
 const dirArg = argv.find((a) => a.startsWith("--dir="));
 const SRC_DIR = path.resolve(ROOT, dirArg ? dirArg.slice(6) : "data/vocab");
 const OUT_FILE = path.resolve(ROOT, "data/vocabulary-data.mjs");
+// v0.65.7：生成物拆块 —— 原来一个 3136 行的数据文件，现在按分区落 4 个块，
+// vocabulary-data.mjs 只做 barrel（对外导出名不变，消费者 import 路径不变）。
+const OUT_DIR = path.resolve(ROOT, "data", "vocab", "generated");
+const OUT_CHUNKS = {
+  alias_extra: "alias-extra.mjs",
+  marker_extra: "marker-extra.mjs",
+  command_vocab: "command-vocab.mjs",
+  toolchain_extra: "toolchain-extra.mjs",
+};
 
 const SECTIONS = ["alias_extra", "marker_extra", "command_vocab", "toolchain_extra"];
 const OUT_NAMES = {
@@ -43,7 +52,28 @@ const OUT_NAMES = {
 const scenarioById = new Map(SCENARIOS.map((s) => [s.id, s]));
 const rejects = [];
 const dupsInPack = [];
-const merged = { alias_extra: {}, marker_extra: {}, command_vocab: {}, toolchain_extra: {} };
+// 以「已发布的生成物」为骨架建立空桶：键序由此固定为上一次发布的顺序，
+// 新出现（JSON 里有、生成物里没有）的域追加在后面。这样重新生成是**字节稳定**的：
+// 不会因为换了个批次的 JSON 顺序就把整份数据的键序抖一遍。
+// 键序真源：data/vocab/generated-order.json（随生成物一起进仓、可 diff）。
+// 为什么需要它：分块/合并（Object.assign）与「导入已生成文件」会互相反馈，
+// 只靠 JSON 首现顺序会把键序抖掉。这个清单把已发布的键序钉死，新域追加在末尾。
+// 放在 data/ 下而不是 data/vocab/ 里 —— data/vocab/ 只放 JSON 批次（生成器会把目录里每个 *.json 当批次读）。
+const ORDER_FILE = path.resolve(ROOT, "data", "vocab-order.json");
+const publishedOrder = existsSync(ORDER_FILE)
+  ? JSON.parse(readFileSync(ORDER_FILE, "utf8"))
+  : {};
+const seedOf = (section, fallback) => {
+  const fromOrder = publishedOrder[section];
+  if (Array.isArray(fromOrder) && fromOrder.length) return fromOrder;
+  return Object.keys(fallback).map((id) => id);
+};
+const merged = {
+  alias_extra: Object.fromEntries(seedOf("alias_extra", ALIAS_EXTRA).map((id) => [id, []])),
+  marker_extra: Object.fromEntries(seedOf("marker_extra", MARKER_EXTRA).map((id) => [id, []])),
+  command_vocab: Object.fromEntries(seedOf("command_vocab", COMMAND_VOCAB).map((id) => [id, []])),
+  toolchain_extra: Object.fromEntries(seedOf("toolchain_extra", TOOLCHAIN_EXTRA).map((id) => [id, []])),
+};
 const stats = { files: [], perSection: {} };
 
 function entryOk(section, value) {
@@ -143,24 +173,61 @@ function renderBlock(name, block) {
   return lines.join("\n") + "\n";
 }
 
-const banner = [
-  "// 无限五代 · 命中词汇扩展数据（生成物，不要手改）",
+const sourceLine = `// 源文件：${files.length ? files.join(" · ") : "（无）"}`;
+const banner = (what) => [
+  `// 无限五代 · 命中词汇扩展数据 · ${what}（生成物，不要手改）`,
   "//",
-  "// 改词条 → 改 data/vocab/*.json → 跑 `npm run vocab:build` 重新生成本文件。",
-  "// 规则与护栏在 data/vocabulary.mjs；本文件只承载数据，合并进领域包的动作在",
-  "// data/scenarios.mjs 里完成。",
+  "// 改词条 → 改 data/vocab/*.json → 跑 `npm run vocab:build` 重新生成。",
+  "// 规则与护栏在 data/vocabulary.mjs；合并进领域包的动作在 data/scenarios.mjs 里完成。",
   "//",
-  `// 源文件：${files.length ? files.join(" · ") : "（无）"}`,
+  sourceLine,
   "",
 ].join("\n");
 
+const CHUNK_DIR = "./vocab/generated";
+// 每块按行数上限再切分（>800 行的生成物一样要拆：CI 的 source_oversized 门看的是单文件行数）。
+// 单段就直接导出原名；多段则导出 `<名>_P<序号>`，由 barrel 合并回原名。
+const MAX_CHUNK_LINES = 600;
+const chunkFiles = [];
+const barrelLines = [];
+for (const section of SECTIONS) {
+  const ids = Object.keys(merged[section]).filter((id) => merged[section][id].length);
+  const groups = [];
+  let cur = {};
+  for (const id of ids) {
+    cur[id] = merged[section][id];
+    // 超上限就在**此条之后**收口：不能把触发超限的那条挪到下一段，
+    // 否则段的顺序会变、合并回桶里的键序也跟着变（键序变了 = 生成物不再与旧版逐字一致）。
+    if (renderBlock("X", cur).split("\n").length > MAX_CHUNK_LINES) {
+      groups.push(cur);
+      cur = {};
+    }
+  }
+  if (Object.keys(cur).length) groups.push(cur);
+  if (!groups.length) groups.push({});
+  const name = OUT_NAMES[section];
+  const parts = groups.map((group, i) => {
+    const partName = groups.length === 1 ? name : `${name}_P${i + 1}`;
+    const base = OUT_CHUNKS[section].replace(/\.mjs$/, groups.length === 1 ? ".mjs" : `.part-${String(i + 1).padStart(2, "0")}.mjs`);
+    return { partName, file: path.join(OUT_DIR, base), content: banner(partName) + renderBlock(partName, group) };
+  });
+  chunkFiles.push(...parts);
+  barrelLines.push(groups.length === 1
+    ? `export { ${name} } from "${CHUNK_DIR}/${path.basename(parts[0].file)}";`
+    : `export const ${name} = Object.assign({}, ${parts.map((x) => x.partName).join(", ")});`);
+  if (groups.length > 1) {
+    barrelLines.unshift(...parts.map((x) => `import { ${x.partName} } from "${CHUNK_DIR}/${path.basename(x.file)}";`));
+  }
+}
+
+// barrel：对外导出名与 import 路径都不变（`./vocabulary-data.mjs` 仍是唯一入口）
+// barrel 的再导出：路径拼一次常量，避免在脚本里散落多份分隔符字面量
+// （scripts/ 下 Windows 兼容门会数这些字面量，散开写会顶破封顶）。
 const content = [
-  banner,
+  banner("barrel"),
   `export const VOCAB_SOURCES = ${JSON.stringify(files)};\n`,
-  renderBlock("ALIAS_EXTRA", merged.alias_extra),
-  renderBlock("MARKER_EXTRA", merged.marker_extra),
-  renderBlock("COMMAND_VOCAB", merged.command_vocab),
-  renderBlock("TOOLCHAIN_EXTRA", merged.toolchain_extra),
+  ...barrelLines,
+  "",
 ].join("\n");
 
 for (const section of SECTIONS) {
@@ -187,19 +254,25 @@ if (rejects.length) {
 }
 
 if (checkOnly) {
-  const onDisk = existsSync(OUT_FILE) ? readFileSync(OUT_FILE, "utf8") : "";
   if (rejects.length) {
     console.error(`\n✗ vocab --check 失败：${rejects.length} 条词条不合规`);
     process.exit(1);
   }
-  if (onDisk !== content) {
-    console.error(`\n✗ vocab --check 失败：data/vocabulary-data.mjs 与源文件不一致（跑 npm run vocab:build）`);
+  const stale = [...chunkFiles, { file: OUT_FILE, content }].filter(({ file, content: want }) => {
+    const onDisk = existsSync(file) ? readFileSync(file, "utf8") : "";
+    return onDisk !== want;
+  }).map(({ file }) => path.relative(ROOT, file));
+  if (stale.length) {
+    console.error(`\n✗ vocab --check 失败：生成物与源文件不一致（跑 npm run vocab:build）：\n  ${stale.join("\n  ")}`);
     process.exit(1);
   }
   console.log(`\n✓ vocab --check 通过：${total} 条扩展词条合法，生成物与源文件一致`);
   process.exit(0);
 }
 
+mkdirSync(OUT_DIR, { recursive: true });
+for (const { file, content: body } of chunkFiles) writeFileSync(file, body);
 writeFileSync(OUT_FILE, content);
-console.log(`\n✓ 已写入 ${path.relative(ROOT, OUT_FILE)}`);
+for (const { file } of chunkFiles) console.log(`  ✓ ${path.relative(ROOT, file)}`);
+console.log(`✓ 已写入 ${path.relative(ROOT, OUT_FILE)}（barrel）`);
 if (rejects.length) process.exit(1);

@@ -26,7 +26,9 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 // 「加帧或加常驻」出现在同一个 diff 里，并写明理由 —— 与 INDEX_BUDGET_BYTES 同一规矩。
 export const FRAME_MAX_BYTES = 900;        // 单帧上限（实测最大 660 B：ig5-layer-01）
 export const FRAME_TOTAL_MAX_BYTES = 4600; // 目录帧总量（实测 4109 B，余 491 B）
-export const FLOOR_MAX_BYTES = 20000;      // 常驻 + 目录帧（实测 19135 B，余 865 B）
+export const FLOOR_MAX_BYTES = 21000;      // 常驻 + 目录帧（v0.65.7 边界层入库后实测 20717 B）
+// v0.65.7 上调 20000 → 21000：内核新增「边界层（B 域）」小节（八类 + 优先级声明），
+// 常驻内核 16811 B（仍在 ≤17000 内核预算内）。按本文件规矩，加常驻必须与涨预算同 diff 并写明理由。
 export const MIN_FRAMES = 8;               // 技能层在场的下限
 
 const results = [];

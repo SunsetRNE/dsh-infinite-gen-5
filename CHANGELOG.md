@@ -6,9 +6,13 @@
 
 ## v0.65.6 — 2026-10-03
 
+### 🧹 杂务与维护
+
+- 刷新 CHANGELOG 与生成文档
+
 ### 📝 文档
 
-- 作者自检清单入库（docs/AUTHOR-CHECKLIST.md + 索引）
+- 作者自检清单入库（docs/AUTHOR-CHECKLIST.md + 索引）（`06cd9cd`）
 
 ## v0.65.5 — 2026-10-03
 

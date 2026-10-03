@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.65.6";
+        var VERSION = "v0.65.7";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -643,6 +643,25 @@
           "color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;font-variant-numeric:tabular-nums}",
         ].join("");
 
+        // ── 样式表保活（v0.65.7） ──
+        // 这份 <style> 原来只由状态条那一次 useEffect 注入、卸载时 remove()。后端设置面板
+        // （settings.section 的 ArmorConsolePage）是**独立挂载周期**：状态条没挂上（位置偏好
+        // 指向未声明槽位）、或先于面板卸载（换槽位 / 宿主回收对话区）时，面板里的
+        // .armor5-console-* 全部失配，整页退回浏览器默认样式 —— 这就是「面板丢 UI 包裹框」。
+        // 现在谁用谁 ensure：**幂等注入、永不摘除**（惰性 CSS，留着无副作用），
+        // 既不给面板绑上状态条的生命周期，也不在卸载路径上做任何可能抛错的全局变更。
+        function ensureArmor5Style() {
+          if (typeof document === "undefined" || !document || !document.head) return;
+          try {
+            if (!document.getElementById(STYLE_ID)) {
+              var styleEl = document.createElement("style");
+              styleEl.id = STYLE_ID;
+              styleEl.textContent = STYLE_TEXT;
+              document.head.appendChild(styleEl);
+            }
+          } catch (err) { /* 注入失败不该拖垮调用方的组件树 */ }
+        }
+
         function sameNode(a, b) {
           return a === b;
         }
@@ -797,17 +816,8 @@
           // retain 统计库 —— 关着就不为它多开一条 SSE、多回读一次。
           var liveState = useStatsView(open);
 
-          // 1) 样式表：全局只注入一次，卸载时回收。
-          react.useEffect(function () {
-            var styleEl = null;
-            if (!document.getElementById(STYLE_ID)) {
-              styleEl = document.createElement("style");
-              styleEl.id = STYLE_ID;
-              styleEl.textContent = STYLE_TEXT;
-              document.head.appendChild(styleEl);
-            }
-            return function () { if (styleEl) styleEl.remove(); };
-          }, []);
+          // 1) 样式表：确保在场（幂等；不随组件卸载摘除，见 ensureArmor5Style 上方说明）。
+          react.useEffect(function () { ensureArmor5Style(); }, []);
 
           // 2) 折叠上一代徽标：先扫一次，只有真的扫到才挂 observer（常见情况零开销）。
           var foldable = armor !== undefined;
@@ -2717,6 +2727,8 @@
           var mode = prefs.triggerMode;
           var onClose = props && typeof props.close === "function" ? props.close : null;
           var store = safeStorage();
+          // 后端设置面板自己保活样式：状态条没挂 / 已卸载时，这一页的包裹框与网格不塌。
+          react.useEffect(function () { ensureArmor5Style(); }, []);
 
           function pick(field, value) {
             var patch = {};
@@ -2841,7 +2853,8 @@
               react.createElement("div", { className: "armor5-console-group-title" }, C("挂到哪个槽位（SLOT_MODE）")),
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-3" }, slotChoices),
               react.createElement("div", { className: "armor5-console-group-title" }, C("面板用哪套词（PANEL_MODE）")),
-              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-2" }, panelChoices),
+              react.createElement("div", { className: "armor5-console-choices armor5-console-choices-2" }, panelChoices)
+            ),
             react.createElement("div", { className: "armor5-console-group", "data-dev-only": "1" },
               react.createElement("div", { className: "armor5-console-group-title" }, C("远端凭据（GitHub · 只写不回显）")),
               react.createElement("div", { className: "armor5-console-choices armor5-console-choices-1" },
@@ -2862,7 +2875,6 @@
                 }, "清除凭据"),
                 react.createElement("span", { className: "armor5-console-hint" }, secretStatusText)
               )
-            )
             ),
             react.createElement("div", { className: "armor5-console-group", "data-dev-only": "1" },
               react.createElement("div", { className: "armor5-console-group-title" }, "注入档位（改完点保存，服务端当场重装，不必重启）"),
