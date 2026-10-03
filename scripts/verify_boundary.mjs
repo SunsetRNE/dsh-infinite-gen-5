@@ -16,7 +16,8 @@ import { RISK_CATEGORIES, rankRisks, detectBoundary } from "../data/boundary.mjs
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const JSON_ONLY = process.argv.includes("--json");
-const prompt = readFileSync(join(ROOT, "prompts/infinite-gen-5.md"), "utf8");
+// v0.65.9：边界层语义走惰性单元 L_boundary（内核字节预算 17000 由 verify_density 钉住），
+// 因此字面判据只查惰性库，不查常驻内核。
 const lazy = readFileSync(join(ROOT, "prompts/infinite-gen-5-lazy.md"), "utf8");
 
 const failures = [];
@@ -24,10 +25,10 @@ const passes = [];
 const check = (ok, label, detail = "") => (ok ? passes : failures).push(`${label}${detail ? " — " + detail : ""}`);
 
 // ① 边界层字面
-const from = prompt.indexOf("边界层（B 域");
-const to = prompt.indexOf("Format examples", from);
-const block = from >= 0 && to > from ? prompt.slice(from, to) : "";
-check(block.length > 0, "内核含边界层小节");
+const from = lazy.indexOf("@@unit:L_boundary");
+const to = lazy.indexOf("@@end:L_boundary", from);
+const block = from >= 0 && to > from ? lazy.slice(from, to) : "";
+check(block.length > 0, "惰性库含 L_boundary 小节");
 const CATEGORY_KERNEL_KEY = {
   minor_sexual: "未成年",
   impersonation: "冒充官方机构",
