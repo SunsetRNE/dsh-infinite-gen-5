@@ -80,6 +80,8 @@
         function ig5SignalKey(sig) {
           var s = sig || {};
           return [s.verdict || "", (s.words || []).join(","), (s.risk || []).join(","),
+            // v0.65.12：载荷形态也进信号键 —— 形态出现/切换时给一次边沿事件，别让它静默上屏
+            s.payloadShape || "", s.payloadHits || 0,
             s.skipped ? "1" : "", s.at || 0].join("|");
         }
         // v0.52.8 修：原先把 alert 当成「每拍重算」——判决常驻时每一帧都重启闪烁窗口，
@@ -934,6 +936,12 @@
           // 流的内容改由两处吃：最新一条填田字格（上面那段），其余并进「最近命中」（hitRows 内合并）。
           var running = !!(armor && armor.running);
           var verdict = armor && armor.verdict ? armor.verdict : null;
+          // v0.65.12：结构性载荷形态（服务端投影识别）—— 面板据此显示「形态」记号与磁贴。
+          var payloadShape = armor && armor.payloadShape ? armor.payloadShape : null;
+          var payloadLabel = armor && armor.payloadLabel ? armor.payloadLabel : null;
+          var payloadHits = armor && typeof armor.payloadHits === "number" ? armor.payloadHits : 0;
+          var payloadConfidence = armor && armor.payloadConfidence ? armor.payloadConfidence : null;
+          var payloadEvidence = armor && Array.isArray(armor.payloadEvidence) ? armor.payloadEvidence : [];
           var words = armor && Array.isArray(armor.words) ? armor.words : [];
           var risk = armor && Array.isArray(armor.risk) ? armor.risk : [];
           var safe = armor && Array.isArray(armor.safe) ? armor.safe : [];
@@ -993,9 +1001,11 @@
             if (verdict === "pass") {
               fullText = word +
                 (domain ? " · " + domain + (domainHits > 1 ? "(" + domainHits + ")" : "") : "") +
-                (risk.length ? " · 载荷 " + risk.length : "");
+                (risk.length ? " · 载荷 " + risk.length : "") +
+                (payloadShape ? " · 形态 " + payloadShape : "");
               shortText = word +
-                (domain ? " " + domain + (domainHits > 1 ? "(" + domainHits + ")" : "") : "");
+                (domain ? " " + domain + (domainHits > 1 ? "(" + domainHits + ")" : "") : "") +
+                (payloadShape ? " 形态" : "");
             } else {
               fullText = word + (words.length ? " · " + words[0] : "");
               shortText = word;
@@ -1274,7 +1284,11 @@
             tile(tileLabel("风险载荷", risk),
               accOrRaw(risk, "risks", "risk"), "risk", 2),
             tile(tileLabel("安全标记", safe),
-              accOrRaw(safe, "safe", "safe"), "safe", 1)
+              accOrRaw(safe, "safe", "safe"), "safe", 1),
+            tile("载荷形态",
+              textValue(payloadShape
+                ? payloadShape + "(" + payloadHits + ")" + (payloadConfidence ? " · " + payloadConfidence : "")
+                : "—", false, "f-payload"), "payload", 1)
           ], "clues");
           var paramTiles = tileGrid([
             tile(L("识别领域"), textValue(domain ? (domainLabel || domain) : "—"), "domain", 1),

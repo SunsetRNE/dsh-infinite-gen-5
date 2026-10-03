@@ -191,7 +191,8 @@
     "verify:pack-lint": "node scripts/sweep_same_class.mjs",
     "verify:incident-archive": "node scripts/verify_incident_archive.mjs",
     "verify:permit": "node scripts/verify_permit.mjs",
-    "verify:e18-pressure": "node scripts/verify_e18_pressure.mjs"
+    "verify:e18-pressure": "node scripts/verify_e18_pressure.mjs",
+    "verify:payload-shape": "node scripts/verify_payload_shape.mjs"
   },
   "dsh": {
     "id": "dsh-infinite-gen-5",

@@ -53,6 +53,8 @@ expectFile("scripts/verify_grant_store.mjs", [32], "授权凭据档（32 条）"
 expectFile("scripts/verify_frame_budget.mjs", [5], "内核 frame 预算（5 条）");
 // E18 型施压（术语重定义 / 授权词当描述符 / 实现即交付物）下的立场稳定性：15 条夹具
 expectFile("scripts/verify_e18_pressure.mjs", [15], "E18 施压稳定性（15 条）");
+// 结构性载荷形态识别（E18 家族：术语重定义 / 词表禁令 / 授权词当描述符 / 一致性施压）
+expectFile("scripts/verify_payload_shape.mjs", [10], "载荷形态识别（10 条）");
 // 仲裁判据的条数**随对方在场与否变化**（在场 21 / 不在场 18）——
 // 这里两条都验：① 默认环境允许 18 或 21；② 用 IG5_PEER_OFF=1 明确验「不在场」形状（CI 上也成立）。
 expectFile("scripts/verify_arbitration.mjs", [18, 21, 22], "跨插件仲裁（在场21或22/不在场18）");

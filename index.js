@@ -20,6 +20,7 @@ import {
 // L2 域包的唯一真源（v0.18.0）：域包正文怎么渲染 —— 含「构建 / 分析」取向分向 ——
 // 运行时、离线评测与 A/B 脚本都 import 这一份，避免三处各抄一遍慢慢漂移。
 import { PACK_MAX_DOMAINS, renderPackCompact, packIntent, composePackText } from "./data/pack-intent.mjs";
+import { detectPayloadShape } from "./data/payload-shape.mjs";
 // 身份许可 → 域包路由（v0.55.0）：身份只决定「默认先点亮哪些域包」，不屏蔽其它域包，
 // 也不是凭据门（不命中身份词时行为与 v0.54.0 完全一致）。
 import { IDENTITY_ROUTES, matchIdentity, prioritiseByIdentity } from "./data/identity-routes.mjs";
@@ -2016,6 +2017,10 @@ function armorScore(text, promptText = "") {
   const domain = top ? top.id : null;
   const domainHits = top ? top.hits : 0;
 
+  // 结构性载荷形态识别（v0.65.12）：面板原先只看「答得好不好」，看不见贴在题面/正文上的
+  // 「先改规则再给任务」型整段载荷。这里只做识别与计数，不参与 verdict、不参与边界层判决。
+  const payload = detectPayloadShape(text);
+
   return {
     verdict,
     emptyKind,
@@ -2030,6 +2035,13 @@ function armorScore(text, promptText = "") {
     domainMarkers: top ? top.markers.slice(0, MARKER_KEEP) : [],
     openingChars: window.length,
     textChars: text.length,
+    payloadShape: payload.shape,
+    payloadLabel: payload.label,
+    payloadHits: payload.hits,
+    payloadDistinct: payload.distinct,
+    payloadConfidence: payload.confidence,
+    payloadEvidence: payload.evidence,
+    payloadShapes: payload.shapes,
     at: Date.now(),
   };
 }
@@ -2038,13 +2050,24 @@ function armorProjectionApply(state, event) {
   if (!event || typeof event !== "object") return state;
   if (event.type === "user/message") {
     ig5SelfToolCalls = 0;   // v0.52.8：新的一轮发言，插件自身工具调用计数归零
+    // v0.65.12：结构性载荷是**贴进题面**的，不在回答里 —— 题面一进来就先认一次，
+    // 面板在执行中就能看到「载荷在场」，不必等回答落下。
+    const promptRaw = eventTextOf(event);
+    const payloadOnPrompt = detectPayloadShape(promptRaw.slice(0, 8000));
     return {
       running: true, verdict: null, words: [], safe: [], risk: [],
       domain: null, domainLabel: null, domainHits: 0,
       domainRanked: [], domainMarkers: [], openingChars: 0, textChars: 0, at: null,
       selfToolCalls: 0,
+      payloadShape: payloadOnPrompt.shape,
+      payloadLabel: payloadOnPrompt.label,
+      payloadHits: payloadOnPrompt.hits,
+      payloadDistinct: payloadOnPrompt.distinct,
+      payloadConfidence: payloadOnPrompt.confidence,
+      payloadEvidence: payloadOnPrompt.evidence,
+      payloadShapes: payloadOnPrompt.shapes,
       // v0.17.0：留一份题面，供回答落下时判「回显题面」型空答。
-      promptText: eventTextOf(event).slice(0, 600),
+      promptText: promptRaw.slice(0, 600),
     };
   }
   if (event.type === "assistant/message") {
@@ -2091,6 +2114,9 @@ function armorProjectionApply(state, event) {
       safe: scored.safe.slice(0, 6),
       openingChars: scored.openingChars,
       textChars: scored.textChars,
+      payloadShape: scored.payloadShape,
+      payloadHits: scored.payloadHits,
+      payloadEvidence: (scored.payloadEvidence ?? []).slice(0, 2),
       domainRanked: scored.domainRanked.slice(0, RANK_KEEP).map((row) => ({
         id: row.id, hits: row.hits, markers: row.markers.slice(0, 2),
       })),
@@ -2110,6 +2136,8 @@ function armorProjectionApply(state, event) {
       words: scored.words.slice(0, 2),
       openingChars: scored.openingChars,
       textChars: scored.textChars,
+      payloadShape: scored.payloadShape,
+      payloadHits: scored.payloadHits,
     };
     streamHits.push(streamHit);
     if (streamHits.length > STREAM_HIT_KEEP) streamHits.splice(0, streamHits.length - STREAM_HIT_KEEP);
@@ -2124,6 +2152,14 @@ function armorProjectionApply(state, event) {
       words: scored.words,
       safe: scored.safe,
       risk: scored.risk,
+      // 载荷形态：回答里认出就以回答为准，否则沿用题面那一份（载荷是贴在题面上的）
+      payloadShape: scored.payloadShape ?? state?.payloadShape ?? null,
+      payloadLabel: scored.payloadLabel ?? state?.payloadLabel ?? null,
+      payloadHits: scored.payloadShape ? scored.payloadHits : (state?.payloadHits ?? 0),
+      payloadDistinct: scored.payloadShape ? scored.payloadDistinct : (state?.payloadDistinct ?? 0),
+      payloadConfidence: scored.payloadConfidence ?? state?.payloadConfidence ?? null,
+      payloadEvidence: scored.payloadShape ? scored.payloadEvidence : (state?.payloadEvidence ?? []),
+      payloadShapes: scored.payloadShape ? scored.payloadShapes : (state?.payloadShapes ?? []),
       domain: scored.domain,
       domainLabel: scored.domainLabel,
       domainHits: scored.domainHits,
