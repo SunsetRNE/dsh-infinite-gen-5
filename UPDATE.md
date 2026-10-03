@@ -1,6 +1,6 @@
 ## v0.65.0
 
-**回归复查进 `verify:all`：一条命令复核这条线的 13 项判据（含「对方不在场」分支）。**
+**回归复查进 verify:all：一条命令复核这条线的 13 项判据（含「对方不在场」分支）。**
 
 - ① **新增** `scripts/verify_regression.mjs`（`npm run verify:regression`，已并入 `verify:all`）：
   把凭据来源许可（26 条）· 授权凭据档（32 条）· 内核 frame 预算（5 条）· 跨插件仲裁（21 条）·
