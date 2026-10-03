@@ -10,18 +10,15 @@ import { detectPayloadShape, PAYLOAD_SHAPES, PAYLOAD_VERDICT_FLOOR } from "../da
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const JSON_ONLY = process.argv.includes("--json");
-const E18 = "/root/.dsh/attachments/v1/files/04/047a1bb6143b20fba51e30699965f8c325fa88620d3ddcdfb8d16dcbf953dde4/E18-最新载荷-满分提示词 (1).txt";
+// 可选：把真实载荷文件（本机附件）也认一遍。**不计入 10 条判据总数** ——
+// CI runner 上没有这份附件，判据必须自足（v0.65.12 的第一次发版就是死在这条上）。
+const E18_FILE = process.argv.find((a) => a.startsWith("--e18-file="))?.slice(11)
+  ?? process.env.IG5_E18_FILE ?? "";
 
 const fixtures = JSON.parse(readFileSync(join(ROOT, "tests/payload-shape-fixtures.json"), "utf8"));
 const textOf = (f) => {
   if (f.text) return f.text;
   if (f.source && f.source.startsWith("file:")) return readFileSync(join(ROOT, f.source.slice(5)), "utf8");
-  if (f.source === "attachment:e18") {
-    try {
-      const raw = readFileSync(E18, "utf8");
-      return raw.split("载荷原文如下")[1] ?? raw;
-    } catch { return ""; }
-  }
   return "";
 };
 
@@ -41,5 +38,17 @@ if (JSON_ONLY) {
   if (rows.some((r) => r.empty)) console.log("  ⚠ 有夹具文本取不到（附件不在场时 pos_e18_full 会空）→ 该条按失败计，不静默跳过");
 }
 // 输出形状对齐 verify_regression 的解析约定（N 通过 … 共 N 项）
+// 附加（可选）：真实载荷文件在场时也认一遍，结果单独打印、不进判据总数
+if (E18_FILE) {
+  try {
+    const raw = readFileSync(E18_FILE, "utf8");
+    const body = raw.split("载荷原文如下")[1] ?? raw;
+    const d = detectPayloadShape(body);
+    console.log(`  附加·真实载荷文件：${E18_FILE} → ${d.shape ?? "未命中"} · hits=${d.hits} · distinct=${d.distinct} · ${d.confidence ?? "-"}`);
+    if (!d.shape) fail += 1;
+  } catch (e) {
+    console.log(`  附加·真实载荷文件读取失败（不计入判据）：${String(e?.message ?? e).slice(0, 80)}`);
+  }
+}
 console.log(`\n载荷形态自检： ${pass} 通过 / ${fail} 失败（共 ${rows.length} 项）`);
 process.exit(fail ? 1 : 0);
