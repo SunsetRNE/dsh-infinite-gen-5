@@ -1,3 +1,19 @@
+## v0.65.2
+
+**一键补发：tag 已推但 Release 缺失/不齐时，一条命令派发并等到出结果。**
+
+- ① **新增** `tools/backfill-release.mjs`（`npm run release:backfill -- --tag=vX.Y.Z`）：
+  读该 tag 的 Release 现状 → 资产已齐就报「无需补发」直接退出（幂等）；
+  缺/不齐才用 `workflow_dispatch` 派一次 release workflow，**轮询到 run 结束**再核资产与补发标注。
+- ② **三个开关**：`--skip-selfcheck`（历史 tag：跳该 tag 树的「全量自检」，打包内解包复检仍跑）·
+  `--dry-run`（只打印会发的请求体，不发任何请求）· `--force`（已齐也重派，慎用）。
+- ③ **令牌纪律**：只读 `GH_TOKEN`，未设时回落到 `~/.dsh` 下的凭据文件；**任何路径都不回显令牌**。
+- ④ **实测**：无 `--tag` → 退出码 2（用法提示）；对已齐的 v0.65.0 → 「资产已齐（≥4），无需补发」退出码 0；
+  对缺 Release 的 v0.59.2 → dry-run 打出
+  `POST /repos/SunsetRNE/dsh-infinite-gen-5/actions/workflows/368197100/dispatches` 与
+  `{"ref":"main","inputs":{"tag":"v0.59.2","skip_selfcheck":false}}`，且未发出请求。
+- ⑤ 内核与底价未变（16110 B · 19953 / 20000 B）。
+
 ## v0.65.1
 
 **CI 修复：判据条数随「对方是否在场」变化 —— 回归脚本把两种形状都验。**
