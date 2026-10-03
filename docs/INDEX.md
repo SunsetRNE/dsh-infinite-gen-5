@@ -46,7 +46,7 @@
 | 文件 | 用途 |
 |---|---|
 | `README.md` | <p align="center"> |
-| `UPDATE.md` | *多主体优先级：同一用途有多份授权时，按可解释的次序挑 —— 并且把「为什么挑它」写出来。** |
+| `UPDATE.md` | *主体分档：先按主体分档，再在档内比 priority —— 点名哪个主体就一定用那份。** |
 | `VERSIONS.md` | *本文件是版本变更的压缩版**：一版 1–3 行，只留「改了什么 + 硬数字 + 提交」。 |
 | `CHANGELOG.md` | 版本段落按提交标题里的 vX.Y.Z 切分，未带版本号的提交归入最新段； |
 | `HARNESS_PLUGIN.md` | 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。 |

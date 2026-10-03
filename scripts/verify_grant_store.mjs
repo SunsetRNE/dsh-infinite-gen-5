@@ -91,6 +91,32 @@ ok("sha256File 与入档时一致", sha256File(fb) === addB.grant.sha256);
   ok("空档：明确失败并给出 considered", none.ok === false && Array.isArray(none.considered));
 }
 
+
+// ㉖ 主体分档（v0.64.0）：点名主体时**先分档再比 priority**；不点名则单档按 priority
+{
+  const dir3 = mkdtempSync(join(tmpdir(), "grants-tier-"));
+  const mk3 = (id, body) => { const f = join(dir3, id + ".txt"); writeFileSync(f, body, "utf8"); return f };
+  let st3 = { version: 1, grants: [] };
+  const add3 = (g) => { const r = addGrant(st3, g); if (!r.ok) throw new Error(r.error); st3 = r.store; };
+  const n1 = new Date("2026-10-15T00:00:00Z");
+  add3({ id: "subj-a", grantor: "G_A", subject: "SUBJ_A", purpose: "客户验收", issuedAt: "2026-10-01", until: "2026-12-31", file: mk3("subj-a", "A\n"), priority: 1 });
+  add3({ id: "subj-b", grantor: "G_B", subject: "SUBJ_B", purpose: "客户验收", issuedAt: "2026-10-01", until: "2026-11-15", file: mk3("subj-b", "B\n"), priority: 5 });
+  add3({ id: "generic", grantor: "G_C", purpose: "客户验收", issuedAt: "2026-10-01", until: "2026-12-31", file: mk3("generic", "通用\n"), priority: 9 });
+
+  const named = pickGrant(st3, { purpose: "客户验收", subject: "SUBJ_A", now: n1 });
+  ok("点名主体：tier0（主体命中）压过更高 priority", named.grant.id === "subj-a", `选中 ${named.grant.id}（tier ${named.considered[0].tier}）`);
+  ok("considered 带 tier 字段且解释档位", named.considered[0].tier === 0 && /主体命中/.test(named.considered[0].why), named.considered[0].why);
+  ok("非同主体落 tier 2（主体不符）", named.considered.find((c) => c.id === "subj-b").tier === 2);
+  ok("无主体的通用授权落 tier 1", named.considered.find((c) => c.id === "generic").tier === 1);
+
+  const byGeneric = pickGrant(st3, { purpose: "客户验收", subject: "SUBJ_X", now: n1 });
+  ok("点名一个谁都不匹配的主体：通用授权 tier1 胜出", byGeneric.grant.id === "generic", `选中 ${byGeneric.grant.id}（tier ${byGeneric.considered[0].tier}）`);
+
+  const unnamed = pickGrant(st3, { purpose: "客户验收", now: n1 });
+  ok("不点名主体：单档（不分档），priority 最高者胜", unnamed.grant.id === "generic" && unnamed.considered.every((c) => c.tier === 0 || c.status !== "active"), `选中 ${unnamed.grant.id}`);
+  ok("不点名时 why 写明「不分档」", /未点名主体：不分档/.test(unnamed.considered[0].why), unnamed.considered[0].why);
+}
+
 const failed = results.filter((r) => !r.ok);
 for (const r of results) console.log(`  ${r.ok ? "✅" : "❌"} ${r.claim}${r.detail ? " — " + r.detail : ""}`);
 console.log(`\n授权凭据档自检： ${results.length - failed.length} 通过 / ${failed.length} 失败（共 ${results.length} 项）`);

@@ -72,9 +72,12 @@ export function verifyStore(store, { now = new Date(), sha256Of = sha256File } =
   return { rows, active: rows.filter((r) => r.status === 'ok'), broken: rows.filter((r) => r.status !== 'ok') }
 }
 
-// 挑一份最合适的（v0.63.0 起带**多主体优先级**与**可解释轨迹**）：
-//   打分顺序：① 显式 priority（越大越优先）→ ② subject 与请求一致 → ③ purpose 精确命中 → ④ 到期更晚 → ⑤ id 稳定序
-//   返回里的 considered 会把每个候选「为什么排在这个位置」写出来，便于对账与复盘。
+// 挑一份最合适的（v0.64.0 起：**先按主体分档，再在档内比 priority**）：
+//   档位（仅在点名了 subject 时生效）：
+//     0 = 主体与请求一致 · 1 = 无主体的通用授权 · 2 = 主体不符
+//   档内次序：priority（越大越优先）→ purpose 精确命中 → 到期更晚 → id 字典序
+//   没点名主体时不分档（单档），次序 = priority → purpose → 到期 → id —— 与 v0.63.0 行为一致。
+//   返回里的 considered 会写明每个候选落在哪一档、为什么排在那个位置。
 export function pickGrant(store, { purpose, subject, now = new Date(), sha256Of = sha256File, kind } = {}) {
   const { active, rows } = verifyStore(store, { now, sha256Of });
   const pool = active.filter((g) => (kind ? g.kind === kind : true));
@@ -85,21 +88,31 @@ export function pickGrant(store, { purpose, subject, now = new Date(), sha256Of 
       considered: rows.map((r) => ({ id: r.id, status: r.status, why: `未进入候选：${r.status}` })),
     };
   }
+  const tierOf = (g) => {
+    if (!subject) return 0;                       // 没点名主体：不分档
+    if (g.subject === subject) return 0;          // 点名且一致
+    if (!g.subject) return 1;                     // 通用授权
+    return 2;                                     // 主体不符
+  };
+  const TIER_NAME = ['', '通用授权（无主体）', '主体不符'];
   const scored = pool.map((g) => {
+    const tier = tierOf(g);
     const why = [];
-    let score = 0;
+    if (subject) why.push(tier === 0 ? `主体命中（${subject}）` : `档位 ${tier}：${TIER_NAME[tier] || '主体命中'}`);
+    else why.push('未点名主体：不分档');
     const pr = Number(g.priority || 0);
-    score += pr * 1e12;
     if (pr) why.push(`priority=${pr}`);
-    if (subject && g.subject === subject) { score += 1e9; why.push('主体命中'); }
-    else if (subject && g.subject && g.subject !== subject) why.push(`主体不符（${g.subject}）`);
-    if (purpose && g.purpose === purpose) { score += 1e6; why.push('用途精确命中'); }
-    else if (purpose && g.purpose !== purpose) why.push(`用途不同（${g.purpose}）`);
-    score += Math.max(0, new Date(g.until) - now) / 1e6; // 到期更晚更优（量级远小于上一档）
+    const purposeHit = purpose ? g.purpose === purpose : true;
+    if (purpose && !purposeHit) why.push(`用途不同（${g.purpose}）`);
     why.push(`到期 ${g.until}`);
-    return { grant: g, score, why: why.join(' · ') };
+    return { grant: g, tier, priority: pr, purposeHit, why: why.join(' · ') };
   });
-  scored.sort((a, b) => (b.score - a.score) || String(a.grant.id).localeCompare(String(b.grant.id)));
+  scored.sort((a, b) =>
+    (a.tier - b.tier) ||
+    (b.priority - a.priority) ||
+    (Number(b.purposeHit) - Number(a.purposeHit)) ||
+    (new Date(b.grant.until) - new Date(a.grant.until)) ||
+    String(a.grant.id).localeCompare(String(b.grant.id)));
   const winner = scored[0].grant;
   const verdict = credentialPermit({
     kind: winner.kind || 'authorized', grantor: winner.grantor, purpose: winner.purpose,
@@ -110,7 +123,7 @@ export function pickGrant(store, { purpose, subject, now = new Date(), sha256Of 
     grant: winner,
     verdict,
     considered: [
-      ...scored.map((x, i) => ({ id: x.grant.id, status: 'active', rank: i + 1, why: x.why })),
+      ...scored.map((x, i) => ({ id: x.grant.id, status: 'active', rank: i + 1, tier: x.tier, why: x.why })),
       ...rows.filter((r) => r.status !== 'ok').map((r) => ({ id: r.id, status: r.status, why: `未进入候选：${r.status}` })),
     ],
   };
