@@ -1,7 +1,7 @@
 # 工具与工具协议（自动生成）
 
 > 本文件由 `npm run tools:doc` 生成，**不要手改**：改代码或 `scripts/tool-registry.mjs` 后重跑。
-> 协议标识 `ig5-tool-registry-v1` · 在册工具 **139** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
+> 协议标识 `ig5-tool-registry-v1` · 在册工具 **140** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
 
 ## 一、工具协议总则（Tool ABI）
 
@@ -25,7 +25,7 @@
 「每个脚本都在册 / 在册路径都存在 / 声明的能力在文件里真的出现 / npm 别名真的存在 /
 本文件与生成器输出逐字节一致」。
 
-实测分布（现扫文件文本得出）：带 `--json` 的 **63** 个、带 `--selftest` 的 **31** 个、带 `--apply` 的 **10** 个、有 npm 别名的 **110** 个。
+实测分布（现扫文件文本得出）：带 `--json` 的 **63** 个、带 `--selftest` 的 **31** 个、带 `--apply` 的 **10** 个、有 npm 别名的 **111** 个。
 
 ## 二、命名协议注册表
 
@@ -216,7 +216,7 @@
 | `stats-store.mjs` | 统计数据库：插件本体（核心）单写、前端面板单读的那一份 JSON。 | `node stats-store.mjs` | `node stats-store.mjs` | — |
 | `tasks.mjs` | DSH 自身任务清单（todo）的读侧与写侧规则。 | `node tasks.mjs` | `node tasks.mjs` | — |
 
-### 工具（49）
+### 工具（50）
 
 *其余 CLI 工具*
 
@@ -256,6 +256,7 @@
 | `scripts/verify_cot_router.mjs` <br>npm: `verify:cot-router` | 无限五代 · CoT Router 离线自检（无需网络、无副作用） | `node scripts/verify_cot_router.mjs` | `npm run verify:cot-router` | `--json` |
 | `scripts/verify_crack_delivery.mjs` <br>npm: `verify:crack-delivery` | verify_crack_delivery.mjs —— 「授权逆向 / 破解 / 去广告 / VIP 校验」类题不许降级成交付邻接版（v0.52.11） | `node scripts/verify_crack_delivery.mjs` | `npm run verify:crack-delivery` | — |
 | `scripts/verify_credential_permit.mjs` <br>npm: `verify:credential-permit` | 凭据来源许可自检（只读） | `node scripts/verify_credential_permit.mjs` | `npm run verify:credential-permit` | — |
+| `scripts/verify_e18_pressure.mjs` <br>npm: `verify:e18-pressure` | E18 型施压下的立场稳定性判据（离线、可复跑） | `node scripts/verify_e18_pressure.mjs` | `npm run verify:e18-pressure` | — |
 | `scripts/verify_eval_layer.mjs` | verify_eval_layer.mjs —— 评估层开关（v0.52.3）回归判据：摘除器 + 注入层 + index.js 接线。 | `node scripts/verify_eval_layer.mjs` | `node scripts/verify_eval_layer.mjs` | — |
 | `scripts/verify_grant_store.mjs` <br>npm: `verify:grant-store` | 授权凭据档自检（只读 + 临时目录，不碰 ~/.dsh） | `node scripts/verify_grant_store.mjs` | `npm run verify:grant-store` | — |
 | `scripts/verify_host_takeover.mjs` <br>npm: `verify:host-takeover` | verify_host_takeover.mjs —— 按上游 DSH 布局精准接管的回归（v0.52.10） | `node scripts/verify_host_takeover.mjs` | `npm run verify:host-takeover` | — |
