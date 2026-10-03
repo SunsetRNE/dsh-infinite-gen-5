@@ -30,6 +30,7 @@
 
 | 版本 | 日期 | 关键变更 | 提交 |
 | --- | --- | --- | --- |
+| v0.62.0 | 2026-10-02 | **授权凭据档**：新增 `data/grant-store.mjs`（入档校验 / 复核五态 / 挑选）+ CLI `npm run grants`（add · list · check · pick，退出码 0/2 可做门禁）；授权文件被改动即 `fingerprint-mismatch` 并退出可用清单；判决层与档案层统一要求严格 `YYYY-MM-DD`；`verify:grant-store` **18/0**、`verify:credential-permit` **26/0** 均入 `verify:all`；内核与底价未变 | 本版提交 |
 | v0.61.0 | 2026-10-02 | **授权代理可核**：`authorized` 增加签发日 + 授权文件 sha256 指纹（64 位 hex）+ 窗口上限 366 天；未来签发日 / 过期 / 超窗口 / 指纹不一致（授权书被改过）一律拒；新增 CLI `npm run permit:credential`（自动取指纹、可比对、退出码 0/2）；条款由 658 B 收紧到 **550 B**（仍走运行时锚点，内核零字节）；`verify:credential-permit` **25 通过 / 0 失败** | 本版提交 |
 | v0.60.1 | 2026-10-02 | **CI 修复**：release 工作流加并发闸（`concurrency: release-${{ github.ref }}`，不取消进行中的 run）—— v0.60.0 因**两个并发 run 并行抢上传**导致 Release 只挂 1 个附件（其余手工补传，现 4 个齐全）。本版只动工作流与文档，载荷与 v0.60.0 一致；本机 `verify:all` 退出码 0 | 本版提交 |
 | v0.60.0 | 2026-10-02 | **凭据来源许可**：新增 `data/credential-permit.mjs`（`credentialPermit()` 判决 + `maskCredential()` 掩码 + 485 B 条款）并接入运行时锚点（内核零字节，底价仍 19953 B）—— 合法来源（本人 / 客户书面授权三件套 / 企业主体 / 显式夹具）**照做不降级**；来源池他人证件与拼造身份不放行；读凭据文件做契约勘察时掩码、不进日志；`verify:credential-permit` **13 通过 / 0 失败**并入库门禁 | 本版提交 |

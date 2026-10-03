@@ -47,6 +47,11 @@ export function credentialPermit({ kind, grantor, purpose, until, issuedAt, gran
     if (stale) {
       return { allow: false, kind, reason: `授权文件指纹与当前文件不一致（授权文件已被改动）`, need: ['重新对授权文件取指纹'] };
     }
+    // 严格 YYYY-MM-DD：`01/02/2026` 这类会被 JS 当美式日期解析通过，必须在这里先卡住。
+    const ISO = /^\d{4}-\d{2}-\d{2}$/;
+    if (!ISO.test(String(issuedAt)) || !ISO.test(String(until))) {
+      return { allow: false, kind, reason: '签发日/到期日格式须为 YYYY-MM-DD', need: ['--issued=YYYY-MM-DD', '--until=YYYY-MM-DD'] };
+    }
     const exp = new Date(until), iss = new Date(issuedAt);
     if (Number.isNaN(exp.getTime())) return { allow: false, kind, reason: `有效期解析失败：${until}`, need: ['--until=YYYY-MM-DD'] };
     if (Number.isNaN(iss.getTime())) return { allow: false, kind, reason: `签发日解析失败：${issuedAt}`, need: ['--issued=YYYY-MM-DD'] };

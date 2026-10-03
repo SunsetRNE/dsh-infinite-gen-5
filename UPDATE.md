@@ -1,3 +1,21 @@
+## v0.62.0
+
+**授权凭据档：一份可复核的授权档案 + 一条挑选命令 —— 授权代理不必每次手打，且凭据被改会立刻失效。**
+
+- ① **`data/grant-store.mjs`**：授权写成可复核记录（`id / 授权方 / 用途 / 签发日 / 到期日 / 授权文件 / sha256`），
+  存放默认 `~/.dsh/ig5-grants.json`（`IG5_GRANT_STORE` 可覆盖）。三个能力：
+  **入档校验**（指纹须 64 位 hex · 日期须严格 `YYYY-MM-DD` · 到期晚于签发 · 窗口 ≤ 366 天）·
+  **复核五态**（`ok` / `not-yet` / `expired` / `fingerprint-mismatch` / `file-missing`）·
+  **挑选**（用途命中优先，其次到期最晚；挑出的那份直接过 `credentialPermit` 判决）。
+- ② **CLI** `npm run grants`（`scripts/grant_store.mjs`）：`add` / `list` / `check` / `pick --purpose=…`；
+  `pick` 退出码 0/2 可直接当门禁。实测：两份授权入档 → `check` 显示 A `ok`、B `not-yet` →
+  `pick --purpose=客户验收` 命中 A 并放行（退出码 0）→ 改动 A 的授权文件后 `check` 变
+  `fingerprint-mismatch`、可用数 0、`pick` 不再给出 A。
+- ③ **顺手收紧日期校验**：判决层与档案层都要求严格 `YYYY-MM-DD` ——
+  `01/02/2026` 这类会被 JS 当美式日期解析通过，现在**两层都先卡住**（这是自检里唯一一条失败用例暴露出来的）。
+- ④ **判据**：`verify:grant-store` **18 通过 / 0 失败** · `verify:credential-permit` **26 通过 / 0 失败**
+  （新增日期格式用例），两者都已并入 `verify:all`。内核仍 16110 B、底价仍 19953 / 20000 B。
+
 ## v0.61.0
 
 **授权代理做成可核：三件套 + 签发日 + 授权文件指纹（grantRef）+ 窗口上限 —— 「已授权」不再只是三个字。**

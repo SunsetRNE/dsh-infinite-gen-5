@@ -68,6 +68,7 @@ ok("内核字节未因本特性增长（条款走运行时锚点）", kernelByte
   ok("已过期 → 拒", credentialPermit({ ...base, issuedAt: "2020-01-01", until: "2020-12-31", grantRef: ref }).allow === false);
   ok(`窗口 > ${MAX_GRANT_DAYS} 天 → 拒`, credentialPermit({ ...base, issuedAt: "2026-01-01", until: "2100-01-01", grantRef: ref }).allow === false);
   ok("指纹与当前文件不一致（stale）→ 拒", credentialPermit({ ...base, grantRef: ref, stale: true }).allow === false);
+  ok("日期非 YYYY-MM-DD（如 01/02/2026）→ 拒", credentialPermit({ ...base, issuedAt: "01/02/2026", grantRef: ref }).allow === false);
 
   // 篡改检测：改了文件，指纹必然变（调用方据此置 stale）
   appendFileSync(grant, "（被改过一行）\n");
