@@ -23,7 +23,7 @@ if (cmd === 'add') {
   const store = loadStore()
   const res = addGrant(store, {
     grantor: kv.grantor, purpose: kv.purpose, kind: kv.kind || 'authorized',
-    issuedAt: kv.issued, until: kv.until, file: kv['grant-file'], sha256: kv.sha256, subject: kv.subject, id: kv.id,
+    issuedAt: kv.issued, until: kv.until, file: kv['grant-file'], sha256: kv.sha256, subject: kv.subject, id: kv.id, priority: kv.priority,
   })
   if (!res.ok) { console.log(JSON.stringify(res)); process.exit(2) }
   saveStore(res.store)
@@ -38,8 +38,9 @@ if (cmd === 'list' || cmd === 'check') {
   process.exit(0)
 }
 if (cmd === 'pick') {
-  const r = pickGrant(loadStore(), { purpose: kv.purpose, kind: kv.kind })
-  console.log(JSON.stringify(r, null, 2))
+  const r = pickGrant(loadStore(), { purpose: kv.purpose, subject: kv.subject, kind: kv.kind })
+  // 打印顺序：结论 → 胜出者 → 候选轨迹（谁为什么排在哪儿）
+  console.log(JSON.stringify({ ok: r.ok, grant: r.grant && { id: r.grant.id, subject: r.grant.subject, priority: r.grant.priority, until: r.grant.until, verdict: r.verdict && r.verdict.reason }, considered: r.considered }, null, 2))
   process.exit(r.ok ? 0 : 2)
 }
 console.log('用法：add | list | check | pick（加 --help 看注释顶部）')

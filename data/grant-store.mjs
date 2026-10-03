@@ -46,6 +46,10 @@ export function addGrant(store, grant, { sha256Of = sha256File } = {}) {
   if (exp <= iss) return { ok: false, error: '到期日须晚于签发日' }
   const days = Math.round((exp - iss) / 86400000)
   if (days > MAX_GRANT_DAYS) return { ok: false, error: `授权窗口 ${days} 天超过上限 ${MAX_GRANT_DAYS} 天` }
+  if (g.priority !== undefined && !Number.isFinite(Number(g.priority))) {
+    return { ok: false, error: 'priority 须是数字（越大越优先，缺省 0）' }
+  }
+  g.priority = Number(g.priority || 0)
   const grants = (store.grants || []).filter((x) => x.id !== g.id)
   grants.push(g)
   return { ok: true, store: { ...store, version: 1, grants }, grant: g, windowDays: days }
@@ -68,18 +72,46 @@ export function verifyStore(store, { now = new Date(), sha256Of = sha256File } =
   return { rows, active: rows.filter((r) => r.status === 'ok'), broken: rows.filter((r) => r.status !== 'ok') }
 }
 
-// 挑一份最合适的：优先 purpose 命中，其次到期最晚
-export function pickGrant(store, { purpose, now = new Date(), sha256Of = sha256File, kind } = {}) {
-  const { active } = verifyStore(store, { now, sha256Of })
-  const pool = active.filter((g) => (kind ? g.kind === kind : true))
-  if (!pool.length) return { ok: false, error: '没有当前可用的授权（过期 / 未生效 / 指纹对不上 / 文件不在）' }
-  const exact = purpose ? pool.filter((g) => g.purpose === purpose) : []
-  const list = exact.length ? exact : pool
-  list.sort((a, b) => new Date(b.until) - new Date(a.until))
-  const g = list[0]
+// 挑一份最合适的（v0.63.0 起带**多主体优先级**与**可解释轨迹**）：
+//   打分顺序：① 显式 priority（越大越优先）→ ② subject 与请求一致 → ③ purpose 精确命中 → ④ 到期更晚 → ⑤ id 稳定序
+//   返回里的 considered 会把每个候选「为什么排在这个位置」写出来，便于对账与复盘。
+export function pickGrant(store, { purpose, subject, now = new Date(), sha256Of = sha256File, kind } = {}) {
+  const { active, rows } = verifyStore(store, { now, sha256Of });
+  const pool = active.filter((g) => (kind ? g.kind === kind : true));
+  if (!pool.length) {
+    return {
+      ok: false,
+      error: '没有当前可用的授权（过期 / 未生效 / 指纹对不上 / 文件不在）',
+      considered: rows.map((r) => ({ id: r.id, status: r.status, why: `未进入候选：${r.status}` })),
+    };
+  }
+  const scored = pool.map((g) => {
+    const why = [];
+    let score = 0;
+    const pr = Number(g.priority || 0);
+    score += pr * 1e12;
+    if (pr) why.push(`priority=${pr}`);
+    if (subject && g.subject === subject) { score += 1e9; why.push('主体命中'); }
+    else if (subject && g.subject && g.subject !== subject) why.push(`主体不符（${g.subject}）`);
+    if (purpose && g.purpose === purpose) { score += 1e6; why.push('用途精确命中'); }
+    else if (purpose && g.purpose !== purpose) why.push(`用途不同（${g.purpose}）`);
+    score += Math.max(0, new Date(g.until) - now) / 1e6; // 到期更晚更优（量级远小于上一档）
+    why.push(`到期 ${g.until}`);
+    return { grant: g, score, why: why.join(' · ') };
+  });
+  scored.sort((a, b) => (b.score - a.score) || String(a.grant.id).localeCompare(String(b.grant.id)));
+  const winner = scored[0].grant;
   const verdict = credentialPermit({
-    kind: g.kind || 'authorized', grantor: g.grantor, purpose: g.purpose,
-    issuedAt: g.issuedAt, until: g.until, grantRef: g.sha256, subject: g.subject, now,
-  })
-  return { ok: verdict.allow, grant: g, verdict }
+    kind: winner.kind || 'authorized', grantor: winner.grantor, purpose: winner.purpose,
+    issuedAt: winner.issuedAt, until: winner.until, grantRef: winner.sha256, subject: winner.subject, now,
+  });
+  return {
+    ok: verdict.allow,
+    grant: winner,
+    verdict,
+    considered: [
+      ...scored.map((x, i) => ({ id: x.grant.id, status: 'active', rank: i + 1, why: x.why })),
+      ...rows.filter((r) => r.status !== 'ok').map((r) => ({ id: r.id, status: r.status, why: `未进入候选：${r.status}` })),
+    ],
+  };
 }

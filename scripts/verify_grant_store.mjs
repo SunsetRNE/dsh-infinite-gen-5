@@ -58,6 +58,39 @@ ok("复核：文件不在 → file-missing", missing.rows[0].status === "file-mi
 ok("落盘与读取往返一致", (() => { const p = join(dir, "s.json"); saveStore(store, p); return existsSync(p) && loadStore(p).grants.length === store.grants.length; })());
 ok("sha256File 与入档时一致", sha256File(fb) === addB.grant.sha256);
 
+
+// ⑲ 多主体优先级（v0.63.0）：priority → subject 命中 → purpose 精确 → 到期更晚 → id 稳定序
+{
+  const dir2 = mkdtempSync(join(tmpdir(), "grants-pri-"));
+  const mk = (id, body) => { const f = join(dir2, id + ".txt"); writeFileSync(f, body, "utf8"); return f };
+  let st = { version: 1, grants: [] };
+  const add = (g) => { const r = addGrant(st, g); if (!r.ok) throw new Error(r.error); st = r.store; };
+  add({ id: "low",  grantor: "G1", subject: "SUBJ_A", purpose: "客户验收", issuedAt: "2026-10-01", until: "2026-12-31", file: mk("low", "低优先\n"), priority: 0 });
+  add({ id: "high", grantor: "G2", subject: "SUBJ_B", purpose: "客户验收", issuedAt: "2026-10-01", until: "2026-11-15", file: mk("high", "高优先\n"), priority: 5 });
+  const n0 = new Date("2026-10-15T00:00:00Z");
+  const p1 = pickGrant(st, { purpose: "客户验收", now: n0 });
+  ok("priority 高者胜（即使到期更早）", p1.grant.id === "high", `选中 ${p1.grant.id}`);
+  ok("挑选用 considered 轨迹解释为什么", Array.isArray(p1.considered) && p1.considered[0].why.includes("priority=5"), JSON.stringify(p1.considered && p1.considered[0] && p1.considered[0].why));
+
+  // 换一份干净的档再比「同 priority」的次级规则 —— 上面那份里有 priority=5，会盖住这一切。
+  let st2 = { version: 1, grants: [] };
+  const add2 = (g) => { const r = addGrant(st2, g); if (!r.ok) throw new Error(r.error); st2 = r.store; };
+  add2({ id: "samepri-a", grantor: "G3", subject: "SUBJ_A", purpose: "月度巡检", issuedAt: "2026-10-01", until: "2026-12-31", file: mk("samepri-a", "同优先 A\n"), priority: 1 });
+  add2({ id: "samepri-b", grantor: "G4", subject: "SUBJ_B", purpose: "月度巡检", issuedAt: "2026-10-01", until: "2026-12-31", file: mk("samepri-b", "同优先 B\n"), priority: 1 });
+  const p2 = pickGrant(st2, { purpose: "月度巡检", subject: "SUBJ_B", now: n0 });
+  ok("同 priority 时主体命中者胜", p2.grant.id === "samepri-b", `选中 ${p2.grant.id}`);
+  const p3 = pickGrant(st2, { purpose: "月度巡检", now: n0 });
+  ok("不给主体时按 id 稳定序（可复现）", p3.grant.id === "samepri-a", `选中 ${p3.grant.id}`);
+
+  add2({ id: "longer", grantor: "G5", subject: "SUBJ_A", purpose: "别的用途", issuedAt: "2026-10-01", until: "2026-12-31", file: mk("longer", "用途不同但更晚\n"), priority: 1 });
+  const p4 = pickGrant(st2, { purpose: "月度巡检", now: n0 });
+  ok("purpose 精确命中优先于「到期更晚但用途不同」", p4.grant.purpose === "月度巡检", `选中 ${p4.grant.id}（用途 ${p4.grant.purpose}）`);
+
+  ok("priority 非数字 → 入档即拒", addGrant({ version: 1, grants: [] }, { grantor: "X", issuedAt: "2026-10-01", until: "2026-12-31", sha256: "a".repeat(64), priority: "高" }).ok === false);
+  const none = pickGrant({ version: 1, grants: [] }, { now: n0 });
+  ok("空档：明确失败并给出 considered", none.ok === false && Array.isArray(none.considered));
+}
+
 const failed = results.filter((r) => !r.ok);
 for (const r of results) console.log(`  ${r.ok ? "✅" : "❌"} ${r.claim}${r.detail ? " — " + r.detail : ""}`);
 console.log(`\n授权凭据档自检： ${results.length - failed.length} 通过 / ${failed.length} 失败（共 ${results.length} 项）`);

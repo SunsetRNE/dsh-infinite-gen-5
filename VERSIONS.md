@@ -30,6 +30,7 @@
 
 | 版本 | 日期 | 关键变更 | 提交 |
 | --- | --- | --- | --- |
+| v0.63.0 | 2026-10-02 | **多主体优先级**：`pickGrant` 按 priority → 主体命中 → 用途精确 → 到期更晚 → id 稳定序排序，并返回 `considered[]` 解释每个候选的位次（含未进入候选的原因）；CLI 支持 `--priority` / `--subject`；`verify:grant-store` **25/0**、`verify:credential-permit` **26/0**；仓库自带发版前自检 **失败 0**；内核与底价未变 | 本版提交 |
 | v0.62.0 | 2026-10-02 | **授权凭据档**：新增 `data/grant-store.mjs`（入档校验 / 复核五态 / 挑选）+ CLI `npm run grants`（add · list · check · pick，退出码 0/2 可做门禁）；授权文件被改动即 `fingerprint-mismatch` 并退出可用清单；判决层与档案层统一要求严格 `YYYY-MM-DD`；`verify:grant-store` **18/0**、`verify:credential-permit` **26/0** 均入 `verify:all`；内核与底价未变 | 本版提交 |
 | v0.61.0 | 2026-10-02 | **授权代理可核**：`authorized` 增加签发日 + 授权文件 sha256 指纹（64 位 hex）+ 窗口上限 366 天；未来签发日 / 过期 / 超窗口 / 指纹不一致（授权书被改过）一律拒；新增 CLI `npm run permit:credential`（自动取指纹、可比对、退出码 0/2）；条款由 658 B 收紧到 **550 B**（仍走运行时锚点，内核零字节）；`verify:credential-permit` **25 通过 / 0 失败** | 本版提交 |
 | v0.60.1 | 2026-10-02 | **CI 修复**：release 工作流加并发闸（`concurrency: release-${{ github.ref }}`，不取消进行中的 run）—— v0.60.0 因**两个并发 run 并行抢上传**导致 Release 只挂 1 个附件（其余手工补传，现 4 个齐全）。本版只动工作流与文档，载荷与 v0.60.0 一致；本机 `verify:all` 退出码 0 | 本版提交 |
