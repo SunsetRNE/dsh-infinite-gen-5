@@ -30,6 +30,7 @@
 
 | 版本 | 日期 | 关键变更 | 提交 |
 | --- | --- | --- | --- |
+| v0.65.15 | 2026-10-04 | **发布链自检件入库**：修 v0.65.14 的 `verify` 两次红 —— ①发布记录硬写当前版本号触发「未登记字面量」→ 登记进 `FROZEN_ARCHIVE_FILES`（该表按**完整文件路径**精确匹配，目录前缀无效，第一版修法据此返工）；②新增 `docs/` 文件后 `docs/INDEX.md` 过期 → 重跑 `tools:doc`；修复后 CI `43f62da` / `e2f0697` 均 success。新增 `tools/verify-release-assets.sh`（tag 指向 / 资产清单 / 包 sha256 与 SHA256SUMS / 包内件与 tag 树 blob，四项核验，v0.65.14 全过）、`tools/release-realign.sh`（tag 重接 + 资产重建，带 `--dry`）、`tools/preflight-ci.sh`（推前四条判据 + 文档索引幂等）。v0.65.14 tag 由 `aaf462f` 对齐到 `b95eff0`，Release 资产重建核验通过。**内核载荷字节未动** | 本版提交 |
 | v0.65.14 | 2026-10-04 | **Ubuntu 工作区专用路由层**：新增 `ig5-layer-04b-ubuntu-workspace`（5894 B / 87 行）—— 14 项变量表（`WORKSPACE_ROOT` 三级解析）+ 脚本/图片/插件包归位路由 + 命名格式 + 禁止清单 6 条，**只在 `ID=ubuntu` 命中装载、不改交付物形态**；**段内编号归一**（`04-env-bootstrap` → `15-env-bootstrap`，`RENAME` 表清空），发版自检编号判据由 WARN 转 OK；技能根扩到 `/root/.agents/skills`（17 层 + chain，`skills status` 由 `ok:false` 转 `ok:true`）；新增探针 `tools/ig5-ubuntu-detect.sh`（实测违规 0 / 退出码 0）；补 `origin` 并 `fetch` 全量历史（413 提交）后重做，避免旧树覆盖远端。**内核载荷字节未动** | 本版提交 |
 | v0.65.6 | 2026-10-03 | **作者自检清单入库**：新增 `docs/AUTHOR-CHECKLIST.md`（改前五问 / 改中三不 / 发版前四查（含 C5 发版前自检要单独跑）/ 装机后三验），每条带出处与可跑命令；已进 `docs/INDEX.md`；内核与底价未变 | 本版提交 |
 | v0.65.5 | 2026-10-03 | **契约同步（issue #1）**：`PZ_ORDER_FORK_DEFAULT` 10100 → **10120**（10100 与宿主内置 `WEB_SURFACE: 10100` 撞号，撞号时排序回退按段名比）；`arbitrationLine()` 数字改插值（原写死过 10100）；段序提取器认三种源码形状（上游 v0.22.0 改为 `DEFAULT_SECTION_ORDER` 常量形式，旧提取器读出 NaN）；判据 `verify_arbitration` **21/0**、复刻仓 `verify:cross` **23/0**、归档 `ok`（闭环） | 本版提交 |
