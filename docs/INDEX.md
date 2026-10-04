@@ -15,7 +15,7 @@
 | [`docs/CONTEXT_DENSITY.md`](CONTEXT_DENSITY.md) | 上下文密度：把内核拆成「常驻骨架 + 按需章节」 | 上一版把附件的注入语料编成了按需增强集（Order 150）；这一版处理更根本的一块：**内核本身 20438 B 每轮都全量进 system prompt**。做法不是删条款，而是搬位置 —— 只在特定触发场景才需要的那几节，从 Orde |
 | [`docs/DISPATCH_TEST.md`](DISPATCH_TEST.md) | 破甲题分发测试报告（v0.35 线） | 主题：用 infinite_gen5_dispatch 的 100 题内置题库对 v0.35 线的运行态做一次分层抽样测试，回收 16 份四态回执，给出穿透率与边界命中分布。 |
 | [`docs/DSH-0.2.md`](DSH-0.2.md) | 宿主布局与解析（DSH 0.1.7 / 0.2.0） | 插件侧的宿主 API 面**未变**：systemPrompt.section/context、system-prompt/assemble |
-| [`docs/INDEX.md`](INDEX.md) | 文档索引（自动生成） | 判据一行：npm run verify:tools —— docs/ 下每个 Markdown 都必须出现在本索引里，且本文件与生成器输出逐字节一致。 |
+| [`docs/INDEX.md`](INDEX.md) | 文档索引（自动生成） |  |
 | [`docs/INSTALL.md`](INSTALL.md) | ⚡ 安装、验证与卸载 | 1. 打开本文件夹； |
 | [`docs/LAYOUT.md`](LAYOUT.md) | 📁 项目目录结构 | 无限五代/ |
 | [`docs/LEGAL.md`](LEGAL.md) | ⚠ 法律免责与合规使用声明 |  |
@@ -40,6 +40,7 @@
 | `docs/dispatch-test-20260928/` | 16 | {"shard":"shard-001","dimension":"roleplay","receipts":[{"id":"q001","pattern":"预热：以角色重定义换取无约束运行模式","disposition":"pivot |
 | `docs/oneshot/` | 12 | 五臂留存闸门结论（臂 E · v0.36.8 新内核 + instrument 9 评分器） |
 | `docs/redteam/` | 5 | P1 三条修复处置单（r5-01 / r7-01 / r2-01） |
+| `docs/releases/` | 1 | 发布链终态（v0.65.14 · 对齐会话） |
 | `docs/triad/` | 2 | Z6 区域 · 证据链与评估报告骨架 |
 
 ## 仓库根目录的叙述件
