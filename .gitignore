@@ -30,3 +30,4 @@ tests/oneshot/arm-*/artifacts/demo_*
 
 # 生成器备份件（技能帧 --write 产出的 .bak）
 skills/**/*.bak
+tools/backup/
