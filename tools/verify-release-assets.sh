@@ -19,7 +19,12 @@ LOCAL=$(git rev-parse --short "$TAG^{commit}" 2>/dev/null || echo none)
 REMOTE=$(git ls-remote "origin" "refs/tags/$TAG^{}" 2>/dev/null | cut -c1-7)
 HEAD7=$(git rev-parse --short HEAD)
 say "  tag 本地=$LOCAL 远端=$REMOTE   HEAD=$HEAD7"
-[ "$LOCAL" = "$HEAD7" ] && chk 0 "tag 与 HEAD 同指向" || chk 1 "tag 与 HEAD 不一致"
+if [ "$LOCAL" = "$REMOTE" ]; then
+  if [ "$LOCAL" = "$HEAD7" ]; then chk 0 "tag 与 HEAD 同指向（$LOCAL）"
+  elif git merge-base --is-ancestor "$TAG^{commit}" HEAD 2>/dev/null; then
+    say "  [ OK ] tag=$LOCAL 双端一致，HEAD=$HEAD7 是其后继提交（tag 之后只多了核验脚本等非发布件，不算不一致）"
+  else chk 1 "tag=$LOCAL 与 HEAD=$HEAD7 已分叉"; fi
+else chk 1 "tag 本地=$LOCAL 与远端=$REMOTE 不一致"; fi
 
 say "== 2. Release 资产清单 =="
 API="https://api.github.com/repos/$REPO/releases/tags/$TAG"
