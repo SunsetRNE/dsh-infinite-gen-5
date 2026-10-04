@@ -108,6 +108,11 @@ export const FROZEN_ARCHIVE_FILES = [
   // 第三方应用当时那一版，与本插件当前版本同形纯属巧合。归档件逐字冻结，发版时既不改写
   // 也不该因它失败 —— 所以进冻结表，不进锚点表。
   "skills/ig5-layer-03-zhekk/refs/漏洞技能skill/references/h1-reports/by-weakness/privilege-escalation.md",
+  // 发布链终态记录（docs/releases/*）：写的是「该版本发布那一刻的对齐事实」——tag 指向哪个提交、
+  // 资产 sha256 是多少、当时哪条判据绿。它是存档不是锚点，发版时不该被 bump 改写。
+  // 注意：本表按**完整文件路径**精确匹配（verify_version.mjs 用 Set.has(rel)），
+  // 所以每新增一份发布记录就要在这里加一行，不能只写目录。
+  "docs/releases/RELEASE-ALIGN-v0.65.14.md",
 ];
 
 // 只扫这些后缀，避免把二进制、图片、用例产物当文本读。
