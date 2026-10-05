@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.65.16";
+        var VERSION = "v0.65.17";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -655,6 +655,35 @@
           ".dsh-armor5-drawer-foot{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;",
           "gap:8px;padding:6px 12px;border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.2));",
           "color:var(--dsw-alias-label-caption,#8b8b8b);font-size:10px;font-variant-numeric:tabular-nums}",
+          // v0.65.17：设置页与浮层统一为同一套「工作台」视觉语言。
+          ".armor5-console-choice{position:relative;min-height:48px;padding:10px 12px;border-radius:12px;background:var(--dsw-alias-bg-layer-2);border-color:var(--dsw-alias-border-l1);}",
+          ".armor5-console-choice:hover{transform:translateY(-1px);border-color:var(--dsw-alias-brand-primary);background:var(--dsw-alias-bg-overlay)}",
+          ".armor5-console-choice.is-active{border-color:var(--dsw-alias-brand-primary);background:color-mix(in srgb,var(--dsw-alias-brand-primary) 12%,var(--dsw-alias-bg-layer-1));box-shadow:0 0 0 1px color-mix(in srgb,var(--dsw-alias-brand-primary) 30%,transparent)}",
+          ".armor5-console-choice.is-active::after{content:'✓';position:absolute;top:8px;right:10px;color:var(--dsw-alias-brand-primary);font-weight:700}",
+          ".armor5-console-previews{gap:5px;padding:10px 12px;border-radius:12px;background:var(--dsw-alias-bg-base);border-color:var(--dsw-alias-border-l1)}",
+          ".armor5-console-preview{min-height:28px;padding:3px 0;border-bottom:1px solid var(--dsw-alias-border-l1)}",
+          ".armor5-console-preview:last-child{border-bottom:0}",
+          ".armor5-console-foot{align-items:center;gap:8px;flex-wrap:wrap}",
+          ".armor5-console-foot .armor5-console-btn{flex:1 1 140px}",
+          ".dsh-armor5-drawer{border:1px solid var(--dsw-alias-border-l1);border-bottom:0;border-radius:22px 22px 0 0;background:var(--dsw-alias-bg-base);box-shadow:0 -18px 50px rgba(0,0,0,.18);overflow:hidden}",
+          ".dsh-armor5-drawer-grip{background:var(--dsw-alias-bg-layer-1)}",
+          ".dsh-armor5-drawer-grip i{width:44px;height:5px;background:var(--dsw-alias-border-l2);opacity:.8}",
+          ".dsh-armor5-sheet-head{display:flex;align-items:center;padding:12px 16px 6px;background:linear-gradient(180deg,var(--dsw-alias-bg-layer-1),var(--dsw-alias-bg-base))}",
+          ".dsh-armor5-sheet-title{font-size:16px;font-weight:650;letter-spacing:-.02em;color:var(--dsw-alias-label-primary)}",
+          ".dsh-armor5-tabs{padding:4px 12px 0;background:var(--dsw-alias-bg-layer-1);border-bottom:1px solid var(--dsw-alias-border-l1)}",
+          ".dsh-armor5-tabs button{height:34px;padding:0 13px;border-radius:9px 9px 0 0;font-weight:550}",
+          ".dsh-armor5-tabs button[data-on='1']{color:var(--dsw-alias-label-primary);background:var(--dsw-alias-bg-base);box-shadow:inset 0 -2px 0 var(--dsw-alias-brand-primary)}",
+          ".dsh-armor5-head-right{gap:6px;padding-left:8px}",
+          ".dsh-armor5-badge{height:22px;padding:0 8px;border:1px solid var(--dsw-alias-border-l1);border-radius:999px}",
+          ".dsh-armor5-drawer-body{padding:14px 16px 18px;background:var(--dsw-alias-bg-base)}",
+          ".dsh-armor5-drawer-pane{gap:10px}",
+          ".dsh-armor5-sec{padding:12px 14px;margin-top:0;border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-1)}",
+          ".dsh-armor5-sec + .dsh-armor5-sec{margin-top:0;padding-top:12px;border-top:1px solid var(--dsw-alias-border-l1)}",
+          ".dsh-armor5-sec-title{font-size:11px;font-weight:650;letter-spacing:.02em;color:var(--dsw-alias-label-primary)}",
+          ".dsh-armor5-chip{border-radius:999px;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1)}",
+          ".dsh-armor5-field-card,.dsh-armor5-mem-card,.dsh-armor5-ident-card{border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-1)!important;box-shadow:none}",
+          ".dsh-armor5-hits-list .dsh-armor5-hgroup,.dsh-armor5-hits-list .dsh-armor5-hits li{border-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1)}",
+          ".dsh-armor5-drawer-foot{padding:10px 16px;border-top:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1)}",
         ].join("");
 
         // ── 样式表保活（v0.65.7） ──
