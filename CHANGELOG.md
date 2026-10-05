@@ -4,11 +4,39 @@
 版本段落按提交标题里的 `vX.Y.Z` 切分，未带版本号的提交归入最新段；
 每条末尾的短哈希是提交号，最新一条（HEAD）不标哈希 —— 它在「生成 → 提交」之间还会变。
 
+## v0.65.24 — 2026-10-05
+
+### ✨ 新特性
+
+- enforce workspace declaration checks
+
+## v0.65.23 — 2026-10-05
+
+### ✨ 新特性
+
+- add workspace declaration guidance（`aed68cd`）
+
+## v0.65.22 — 2026-10-05
+
+### ✨ 新特性
+
+- add customizable companion identity workflow（`fb050a1`）
+
+### 🐛 修复
+
+- register companion generation tools（`00bbdc0`）
+
+## v0.65.21 — 2026-10-05
+
+### ✨ 新特性
+
+- add E18 continuous engineering state（`9f48492`）
+
 ## v0.65.20 — 2026-10-05
 
 ### ✨ 新特性
 
-- add stealth injection test mode
+- add stealth injection test mode（`5426a6b`）
 
 ## v0.65.19 — 2026-10-05
 
