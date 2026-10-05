@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.65.18";
+        var VERSION = "v0.65.19";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -684,8 +684,14 @@
           ".dsh-armor5-field-card,.dsh-armor5-mem-card,.dsh-armor5-ident-card{border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-1)!important;box-shadow:none}",
           ".dsh-armor5-hits-list .dsh-armor5-hgroup,.dsh-armor5-hits-list .dsh-armor5-hits li{border-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1)}",
           // v0.65.18：命中页内部列表重绘——分组、条目、筛选与滚动反馈统一为可扫读的事件流。
-          ".dsh-armor5-hits-pane{max-height:min(58vh,520px);padding:0 2px 112px;scroll-padding:24px 0 112px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--dsw-alias-border-l2) transparent;background:var(--dsw-alias-bg-base)}",
-          ".dsh-armor5-hits-list{display:flex;flex-direction:column;gap:10px;padding:0 2px}",
+          ".dsh-armor5-hits-pane{display:block;position:relative;isolation:isolate;min-height:96px;height:auto;max-height:min(58vh,520px);padding:0 2px 112px;scroll-padding:24px 0 112px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--dsw-alias-border-l2) transparent;background:var(--dsw-alias-bg-base);mask-image:none;-webkit-mask-image:none}",
+          ".dsh-armor5-hits-list{display:block;position:relative;min-height:32px;visibility:visible;opacity:1;overflow:visible;padding:0 2px}",
+          ".dsh-armor5-hits-list>.dsh-armor5-mem{display:flex;visibility:visible;opacity:1;flex-direction:column;gap:8px}",
+          ".dsh-armor5-hits-pane,.dsh-armor5-hits-pane *{box-sizing:border-box}",
+          ".dsh-armor5-hits-pane>.dsh-armor5-hits-list,.dsh-armor5-hits-pane>.dsh-armor5-hits-foot{position:relative;z-index:1}",
+          ".dsh-armor5-hits-list .dsh-armor5-mem,.dsh-armor5-hits-list .dsh-armor5-sec,.dsh-armor5-hits-list .dsh-armor5-hgroup{visibility:visible;opacity:1;color:var(--dsw-alias-label-primary)}",
+          ".dsh-armor5-hits-list .dsh-armor5-sec{display:flex;min-height:32px;overflow:visible}",
+          ".dsh-armor5-hits-list .dsh-armor5-sec-title{display:block;visibility:visible;color:var(--dsw-alias-label-primary)}",
           ".dsh-armor5-hits-list>.dsh-armor5-mem{display:flex;flex-direction:column;gap:8px}",
           ".dsh-armor5-hits-list .dsh-armor5-hgroup{margin:0;padding:0;border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-1);overflow:visible}",
           ".dsh-armor5-hits-list .dsh-armor5-hgroup-head{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 12px;border:0;border-radius:13px 13px 0 0;background:linear-gradient(90deg,var(--dsw-alias-bg-layer-2),var(--dsw-alias-bg-layer-1));box-shadow:none}",
