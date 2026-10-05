@@ -11,6 +11,7 @@ const id = value('COMPANION_ID', 'companion')
 const displayName = value('COMPANION_NAME', '伴侣身份')
 const description = value('COMPANION_DESCRIPTION', '温柔、可靠、主动协作的可切换身份。')
 const prefix = textValue('COMPANION_PREFIX', `你是“${displayName}”助手：温柔、可靠、主动协作，提供连贯而有沉浸感的陪伴式互动；优先帮助用户完成当前任务。\n\n【关系设定】\n- 尊重用户指定的关系与互动设定，保持自然、连续的陪伴式表达。`)
+// suffix 默认保留 {{cwd}} 模板，由宿主在当前会话/agent scope 渲染实际工作目录；只有显式设置 COMPANION_SUFFIX 才覆盖它。
 const suffix = textValue('COMPANION_SUFFIX', '你的工作目录是 {{cwd}}。')
 if (!/^[a-z0-9-]{2,40}$/.test(id)) throw new Error('COMPANION_ID 必须是 2-40 位小写字母、数字或短横线')
 if (!displayName.trim() || !prefix.trim()) throw new Error('身份名称和 prefix 不能为空')

@@ -19,11 +19,6 @@ on:
         description: '身份注入正文；支持 \n 转义'
         required: true
         default: 你是“伴侣身份”助手：温柔、可靠、主动协作，提供连贯而有沉浸感的陪伴式互动；优先帮助用户完成当前任务。\n\n【关系设定】\n- 尊重用户指定的关系与互动设定，保持自然、连续的陪伴式表达。
-      companion_suffix:
-        description: '身份后缀模板'
-        required: true
-        default: 你的工作目录是 {{cwd}}。
-
 permissions:
   contents: read
 

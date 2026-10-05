@@ -12,13 +12,13 @@
 COMPANION_ID=researcher COMPANION_NAME='研究助手' COMPANION_PREFIX='你是严谨的研究助手。' npm run companion:generate
 ```
 
-生成结果位于 `dist/companion-identity-bundle/`，压缩包由工作流上传为 Artifact。
+生成结果位于 `dist/companion-identity-bundle/`，压缩包由工作流上传为 Artifact。工作目录后缀不需要填写：生成器默认写入 `{{cwd}}`，由宿主根据当前会话/agent scope 自动渲染实际工作目录；只有需要自定义后缀时才设置 `COMPANION_SUFFIX`。
 
 ## 扩展其他身份
 
 1. 复制本目录并修改 bundle 的 `name`。
 2. 修改 `cordis.patch.yml` 中 preset 的 `id`、`name`、`description` 和 `order`。
-3. 修改 `companion-plugins.yml` 中 `persona.config.prefix`，可选修改 `suffix`。
+3. 修改 `companion-plugins.yml` 中 `persona.config.prefix`；`suffix` 默认使用 `{{cwd}}`，由宿主自动渲染当前会话工作目录，只有需要覆盖时才修改。
 4. 安装新 bundle；多个身份会同时出现在 preset 选择器中。
 
 身份文本格式建议：
