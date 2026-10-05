@@ -1,6 +1,6 @@
 import { chmodSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { dirname as dirNameOf, join as joinPath } from "node:path";
+import { dirname as dirNameOf, isAbsolute, join as joinPath } from "node:path";
 import { randomBytes } from "node:crypto";
 // 领域标记表与领域包数据的唯一真源。历史上运行时的表与离线评测的表各自
 // 复制了一份，慢慢漂移成两个版本；现在两边都只 import 这一份。
@@ -118,7 +118,7 @@ import { credentialClauseLine } from "./data/credential-permit.mjs";
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.65.15";
+const PLUGIN_VERSION = "0.65.16";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -1136,7 +1136,7 @@ const bumpCount = (bag, key, by = 1) => {
 // ── SECRETS 协议（v0.51.20）：远端凭据只落 ~/.dsh 直下、0600、只写不回显 ─────────────
 // 为什么不放插件目录：更新=替换 plugin-src/<name>，放里面必丢。
 // 为什么不放统计库：/stats 会整份被面板读走，等于把 token 发给前端。
-const GITHUB_SECRET_FILE = () => `${statsHome()}/infinite-gen-5-github.json`;
+const GITHUB_SECRET_FILE = () => joinPath([statsHome(), "infinite-gen-5-github.json"]);
 const readGithubSecret = () => {
   try {
     const raw = readFileSync(GITHUB_SECRET_FILE(), "utf8");
@@ -2420,7 +2420,7 @@ export function apply(ctx, config) {
             // 「只给文件」的比赛口径：正文只有一个路径时，题量必须从文件里读出来。
             // 读不到就退回「题量未读」措辞，绝不编 min 兜底值当题量。
             readFile: (p) => {
-              const abs = p.startsWith("/") ? p : joinPath(process.cwd(), p);
+              const abs = isAbsolute(p) ? p : joinPath([process.cwd(), p]);
               if (statSync(abs).size > 4_000_000) throw new Error("bank file too large");
               return readFileSync(abs, "utf8");
             },

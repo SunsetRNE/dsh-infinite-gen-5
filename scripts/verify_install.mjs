@@ -118,7 +118,7 @@ const collectRuntimeFiles = (dir) => {
   return found;
 };
 
-const dshHome = resolve(argOf("--dsh-home", process.env.DSH_HOME || "/root/.dsh"));
+const dshHome = resolve(argOf("--dsh-home", process.env.DSH_HOME || join(homedir(), ".dsh")));
 const pidFile = resolve(argOf("--pid-file", join(homedir(), ".dsha-web.pid")));
 
 const report = () => {

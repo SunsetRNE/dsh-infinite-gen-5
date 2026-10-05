@@ -48,7 +48,7 @@
 | 文件 | 用途 |
 |---|---|
 | `README.md` | <p align="center"> |
-| `UPDATE.md` | *发布链自检件入库：核验器 + 对齐器 + 推前预检，CI 两次连红修到全绿。** |
+| `UPDATE.md` | *重绘无限五代设置面板：卡片化布局、主题令牌适配与更清晰的操作层级。** |
 | `VERSIONS.md` | *本文件是版本变更的压缩版**：一版 1–3 行，只留「改了什么 + 硬数字 + 提交」。 |
 | `CHANGELOG.md` | 版本段落按提交标题里的 vX.Y.Z 切分，未带版本号的提交归入最新段； |
 | `HARNESS_PLUGIN.md` | 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。 |

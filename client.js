@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.65.15";
+        var VERSION = "v0.65.16";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -342,8 +342,19 @@
           // 令牌全部取自设置页自己用的那一套（bg-layer-2 / border-l2 / label-* / business-primary），
           // 每个都带兜底色。比例按设置页的节奏调：可选块用两/三列网格，预览块是一块内嵌面板，
           // 只读块两栏对齐，按钮统一 30px 高。
-          ".armor5-console{box-sizing:border-box;display:flex;flex-direction:column;gap:12px;min-width:0;max-width:460px;padding:0 0 12px;color:var(--dsw-alias-label-secondary,#b4b4b4);font-size:var(--dsh-content-font-size-secondary,12px);line-height:17px}",
+          ".armor5-console{box-sizing:border-box;display:flex;flex-direction:column;gap:14px;min-width:0;max-width:560px;padding:2px 0 18px;color:var(--dsw-alias-label-secondary);font-size:var(--dsh-content-font-size-secondary,12px);line-height:18px}",
+          ".armor5-console-head{padding:14px 16px;border:1px solid var(--dsw-alias-border-l1);border-radius:16px;background:linear-gradient(135deg,var(--dsw-alias-bg-layer-1),var(--dsw-alias-bg-layer-2));box-shadow:0 10px 28px rgba(0,0,0,.08)}",
+          ".armor5-console-head .armor5-console-title{gap:8px}",
+          ".armor5-console-head .armor5-console-title b{font-size:16px;letter-spacing:-.01em}",
+          ".armor5-console-head .armor5-console-hint{font-size:11px;margin-top:3px}",
+          ".armor5-console-title::before{content:'✦';display:inline-grid;place-items:center;width:24px;height:24px;border-radius:8px;background:var(--dsw-alias-brand-primary);color:var(--dsw-alias-bg-base);font-size:13px}",
           ".armor5-console-head{display:flex;flex-direction:column;gap:2px}",
+          ".armor5-console>.armor5-console-group{padding:12px 14px;border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-1)}",
+          ".armor5-console>.armor5-console-group:nth-of-type(2){background:linear-gradient(180deg,var(--dsw-alias-bg-layer-1),var(--dsw-alias-bg-layer-2))}",
+          ".armor5-console>.armor5-console-group .armor5-console-group-title{font-size:12px;letter-spacing:.01em}",
+          ".armor5-console>.armor5-console-foot{padding:2px 2px 0}",
+          ".armor5-console .armor5-console-btn{min-height:32px;height:auto;padding:7px 12px;border-radius:9px;font-weight:500}",
+          ".armor5-console .armor5-console-btn.is-primary{box-shadow:0 4px 12px rgba(77,107,254,.22)}",
           ".armor5-console-title{display:flex;align-items:center;gap:6px}",
           ".armor5-console-title b{color:var(--dsw-alias-label-primary,#e6e6e6);font-size:13.5px;font-weight:600}",
           ".armor5-console-ver{display:inline-flex;align-items:center;height:15px;padding:0 6px;border-radius:999px;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.08));color:var(--dsw-alias-label-tertiary,#8b8b8b);font-size:10.5px;font-variant-numeric:tabular-nums}",
@@ -442,6 +453,7 @@
           ".armor5-console[data-panel='user'] .armor5-console-group{position:relative;padding:8px 0 6px;",
           "border-top:1px solid var(--dsw-alias-border-l2,rgba(127,127,127,.18))}",
           ".armor5-console[data-panel='user'] .armor5-console-group:first-of-type{border-top:0;padding-top:2px}",
+          ".armor5-console[data-panel='user']>.armor5-console-group{background:var(--dsw-alias-bg-layer-1)}",
           ".armor5-console[data-panel='user'] .armor5-console-group-title{font-weight:600;opacity:.9}",
           // v0.52.7：用户模式再精简一层 —— 每个选项下面那行 10.5px 小字（含英文取值名）整块隐藏，
           // 只留组标题 + 选项名；分组卡片化，把「一堵灰字墙」拆成可数的几块；面板收窄到 520px。
@@ -1973,7 +1985,7 @@
         // token 注入 index.html（window.__IG5_TUNING__）。改档位走 POST，服务端当场
         // 卸掉注入段再按新档重装 —— 页面不必刷新，进程不必重启。
         var TUNING_SOURCE_LABEL = { ui: "设置页", config: "profile config", env: "环境变量", default: "文件默认" };
-        var TUNING_PATH_FALLBACK = "/infinite-gen-5/tuning";
+        var TUNING_PATH_FALLBACK = "infinite-gen-5/tuning";
         var TUNING_YAML_HINT = [
           "# 宿主没给调参接口时，把下面这段贴进 profile 的 cordis.patch.yml（顶层，别写成 insert）：",
           "- id: dsh-infinite-gen-5",
@@ -2037,7 +2049,7 @@
           var legacy = w && w.__IG5_TUNING__;
           var token = (stats && stats.token) || (legacy && legacy.token);
           if (!token) return null;
-          var tuning = (stats && stats.tuningPath) || (legacy && legacy.path) || TUNING_PATH_FALLBACK;
+          var tuning = (stats && stats.tuningPath) || (legacy && legacy.path) || "/" + TUNING_PATH_FALLBACK;
           return {
             token: token,
             statsPath: (stats && stats.path) || null,
