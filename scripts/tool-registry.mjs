@@ -62,6 +62,8 @@ export const OVERLAY = {
   "h_audit.mjs": { cat: "审计" },
   "image-gen.mjs": { cat: "工具", note: "生图的在册入口：实现在 adapters/lib/image-api.mjs，--selftest 转跑公共层 E1–E7 判据" },
   "install_companion.mjs": { cat: "装机" },
+  "generate-companion-bundle.mjs": { cat: "构建" },
+  "verify-companion-generation.mjs": { cat: "门禁" },
   "kernel-lazy-split.mjs": { cat: "工具" },
   "lazy_candidate_scan.mjs": { cat: "惰性" },
   "lazy_coverage.mjs": { cat: "惰性" },

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// 伴侣身份生成器门禁：验证自定义身份元数据、persona 注入和输出文件完整性。
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'

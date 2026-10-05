@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// 伴侣身份 bundle 生成器：根据环境变量生成可安装 preset 与压缩包输入目录。
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 

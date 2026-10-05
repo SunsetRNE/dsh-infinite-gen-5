@@ -1,7 +1,7 @@
 # 工具与工具协议（自动生成）
 
 > 本文件由 `npm run tools:doc` 生成，**不要手改**：改代码或 `scripts/tool-registry.mjs` 后重跑。
-> 协议标识 `ig5-tool-registry-v1` · 在册工具 **141** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
+> 协议标识 `ig5-tool-registry-v1` · 在册工具 **143** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
 
 ## 一、工具协议总则（Tool ABI）
 
@@ -25,7 +25,7 @@
 「每个脚本都在册 / 在册路径都存在 / 声明的能力在文件里真的出现 / npm 别名真的存在 /
 本文件与生成器输出逐字节一致」。
 
-实测分布（现扫文件文本得出）：带 `--json` 的 **64** 个、带 `--selftest` 的 **31** 个、带 `--apply` 的 **10** 个、有 npm 别名的 **112** 个。
+实测分布（现扫文件文本得出）：带 `--json` 的 **64** 个、带 `--selftest` 的 **31** 个、带 `--apply` 的 **10** 个、有 npm 别名的 **114** 个。
 
 ## 二、命名协议注册表
 
@@ -44,12 +44,13 @@
 
 ## 三、工具清单
 
-### 门禁（41）
+### 门禁（42）
 
 *可判失败的检查件：退出码非零即「这棵树不对」，全部进 verify:all*
 
 | 工具 | 用途（读自文件头注释） | 调用 | 判据 | 能力 |
 |---|---|---|---|---|
+| `scripts/verify-companion-generation.mjs` <br>npm: `verify:companion-generation` `verify:companion` | 伴侣身份生成器门禁：验证自定义身份元数据、persona 注入和输出文件完整性。 | `node scripts/verify-companion-generation.mjs` | `npm run verify:companion-generation` | — |
 | `scripts/verify_armor.mjs` <br>npm: `verify:armor` | 无限五代 v0.37.0 首句层 + 压缩后再锚定 E2E 自检（真宿主演习台，离线、无需 API Key、不连网） | `node scripts/verify_armor.mjs` | `npm run verify:armor` | `--selftest` `--json` |
 | `scripts/verify_batch_arm.mjs` <br>npm: `verify:batch-arm` | 无限五代 v0.42.0 批量交付臂自检（真实宿主演习台，离线、无需 API Key、不连网） | `node scripts/verify_batch_arm.mjs` | `npm run verify:batch-arm` | `--json` |
 | `scripts/verify_boost.mjs` <br>npm: `verify:boost` | 无限五代 · 增强训练集自检（离线、不连网、不写盘） | `node scripts/verify_boost.mjs` | `npm run verify:boost` | — |
@@ -59,21 +60,21 @@
 | `scripts/verify_card_size.mjs` <br>npm: `verify:ui:size` | 浮层判决卡片的「整体大小」锚点。 | `node scripts/verify_card_size.mjs` | `npm run verify:ui:size` | — |
 | `scripts/verify_contracts.mjs` <br>npm: `verify:contracts` | 无限五代 · 服从性轴收口门禁（离线、确定性、无需 API Key、不写用户目录） | `node scripts/verify_contracts.mjs` | `npm run verify:contracts` | `--json` |
 | `scripts/verify_decay.mjs` <br>npm: `verify:triad` | 衰减轴（instrument 14）实测核验件：把 tests/decay/<区>/rounds/rN.md 的真实轮次重新算一遍。 | `node scripts/verify_decay.mjs` | `npm run verify:triad` | — |
-| `scripts/verify_dedupe.mjs` <br>npm: `verify:dedupe` | 无限五代 v0.65.19 注入去重行为回归（离线、确定性、无需 API Key） | `node scripts/verify_dedupe.mjs` | `npm run verify:dedupe` | `--json` |
+| `scripts/verify_dedupe.mjs` <br>npm: `verify:dedupe` | 无限五代 v0.65.22 注入去重行为回归（离线、确定性、无需 API Key） | `node scripts/verify_dedupe.mjs` | `npm run verify:dedupe` | `--json` |
 | `scripts/verify_density.mjs` <br>npm: `verify:density` | 无限五代 · 上下文密度自检（离线、不连网、不写盘） | `node scripts/verify_density.mjs` | `npm run verify:density` | `--json` |
 | `scripts/verify_dispatch.mjs` <br>npm: `verify:dispatch` | 无限五代 v0.33.0「分发内核」自检：题库真源 / 分片任务书 / 回执解析 / 四态评分 | `node scripts/verify_dispatch.mjs` | `npm run verify:dispatch` | — |
 | `scripts/verify_env.mjs` <br>npm: `verify:env` | 无限五代 · 运行环境探测离线自检（无依赖、不做任何出网请求） | `node scripts/verify_env.mjs` | `npm run verify:env` | `--json` `--out` |
 | `scripts/verify_eval.mjs` <br>npm: `verify:eval` | 离线评测闭环的自检 · scripts/verify_eval.mjs | `node scripts/verify_eval.mjs` | `npm run verify:eval` | `--json` `--write` `--dir` |
 | `scripts/verify_frame_budget.mjs` <br>npm: `verify:frame-budget` | 无限五代 · 技能目录帧预算门禁（只读） | `node scripts/verify_frame_budget.mjs` | `npm run verify:frame-budget` | `--json` |
 | `scripts/verify_h_audit.mjs` <br>npm: `verify:h-audit` | 无限五代 · 幻觉罚分（H）审计自检（离线、确定性、零依赖） | `node scripts/verify_h_audit.mjs` | `npm run verify:h-audit` | `--selftest` |
-| `scripts/verify_injection.mjs` <br>npm: `verify:injection` | 无限五代 v0.12.0 注入强度自检（真实宿主演习台，离线、无需 API Key、不连网） | `node scripts/verify_injection.mjs` | `npm run verify:injection` | `--json` |
+| `scripts/verify_injection.mjs` <br>npm: `verify:injection` | 无限五代 v0.65.21 注入强度自检（真实宿主演习台，离线、无需 API Key、不连网） | `node scripts/verify_injection.mjs` | `npm run verify:injection` | `--json` |
 | `scripts/verify_install.mjs` <br>npm: `verify:install` | 无限五代 · 安装与接线体检（verify_install） | `node scripts/verify_install.mjs` | `npm run verify:install` | `--json` |
 | `scripts/verify_kernel_v039.sh` | 无限五代内核拆分回归验证（离线、确定性、无需 API Key） | `bash scripts/verify_kernel_v039.sh` | `bash scripts/verify_kernel_v039.sh` | — |
 | `scripts/verify_lazy.mjs` <br>npm: `verify:lazy` | 无限五代 · 惰性章节自检（离线、不连网、不写盘） | `node scripts/verify_lazy.mjs` | `npm run verify:lazy` | `--json` |
 | `scripts/verify_prompt.mjs` | 无限五代 兼容回归校验（零工具面纯净版） | `node scripts/verify_prompt.mjs` | `node scripts/verify_prompt.mjs` | `--json` |
 | `scripts/verify_prompt_gen4.mjs` <br>npm: `verify:gen4` | ⚠️ 遗留重定向（legacy redirect）— 本文件已更名为 verify_prompt_gen5.mjs。 | `node scripts/verify_prompt_gen4.mjs` | `npm run verify:gen4` | — |
 | `scripts/verify_prompt_gen41.mjs` <br>npm: `verify:gen41` | ⚠️ 遗留重定向（legacy redirect）— 本文件已更名为 verify_prompt_gen51.mjs。 | `node scripts/verify_prompt_gen41.mjs` | `npm run verify:gen41` | — |
-| `scripts/verify_prompt_gen5.mjs` <br>npm: `verify` `verify:gen5` | 无限五代 v0.65.19 纯净破甲版离线确定性回归校验（无需 API Key） | `node scripts/verify_prompt_gen5.mjs` | `npm run verify` | `--json` |
+| `scripts/verify_prompt_gen5.mjs` <br>npm: `verify` `verify:gen5` | 无限五代 v0.65.22 纯净破甲版离线确定性回归校验（无需 API Key） | `node scripts/verify_prompt_gen5.mjs` | `npm run verify` | `--json` |
 | `scripts/verify_prompt_gen51.mjs` <br>npm: `verify:gen51` | 无限五代 v0.5.0 — 强化镜像层离线确定性回归校验 | `node scripts/verify_prompt_gen51.mjs` | `npm run verify:gen51` | — |
 | `scripts/verify_release_notes.mjs` <br>npm: `verify:notes` | 无限五代 · 发布正文压缩自检（离线、确定性、零依赖） | `node scripts/verify_release_notes.mjs` | `npm run verify:notes` | `--json` |
 | `scripts/verify_runtime_sync.mjs` <br>npm: `verify:runtime` | 无限五代 · 运行态同步核对（离线、只读、不写盘） | `node scripts/verify_runtime_sync.mjs` | `npm run verify:runtime` | — |
@@ -123,7 +124,7 @@
 | `scripts/retry_report.mjs` <br>npm: `retry:report` `retry:report:selftest` | retry_report — 「本会话到底报了几次 502、自愈了没有」的回执统计器。 | `node scripts/retry_report.mjs` | `npm run retry:report` | `--selftest` `--json` `--dir` |
 | `scripts/trim_request.mjs` <br>npm: `trim:request` `trim:request:selftest` | trim_request — 出站请求体的前置预算器（CLI）。 | `node scripts/trim_request.mjs` | `npm run trim:request` | `--selftest` `--json` `--dry-run` `--out` |
 
-### 构建（3）
+### 构建（4）
 
 *把真源数据编译成产物（技能帧、题库分片、邻接表、词汇表…）*
 
@@ -132,6 +133,7 @@
 | `scripts/build_skill.mjs` <br>npm: `build:skill-frame` `verify:skill-frame` | 无限五代 O1：技能帧（SKILL.md）生成与校验 —— 触发面收进仓库 | `node scripts/build_skill.mjs` | `npm run verify:skill-frame` | `--selftest` `--json` `--check` `--write` |
 | `scripts/build_stress100_neighbors.mjs` <br>npm: `build:stress-neighbors` | 邻接补轮（O4）编译件：把源邻接件表编译成插件自带的 tests/stress100/neighbors.json。 | `node scripts/build_stress100_neighbors.mjs` | `npm run build:stress-neighbors` | `--selftest` `--check` `--out` `--src` |
 | `scripts/build_stress100_shards.mjs` <br>npm: `verify:stress-shards` | 混合压力测试（100 题）分片重建器 —— 契约 v2。 | `node scripts/build_stress100_shards.mjs` | `npm run verify:stress-shards` | `--selftest` `--check` `--out` `--src` |
+| `scripts/generate-companion-bundle.mjs` <br>npm: `companion:generate` | 伴侣身份 bundle 生成器：根据环境变量生成可安装 preset 与压缩包输入目录。 | `node scripts/generate-companion-bundle.mjs` | `npm run companion:generate` | — |
 
 ### 惰性（2）
 
@@ -179,7 +181,7 @@
 | 工具 | 用途（读自文件头注释） | 调用 | 判据 | 能力 |
 |---|---|---|---|---|
 | `scripts/dev-link.mjs` <br>npm: `dev:link` `dev:status` | 无限五代 · 开发热链接（dev-link） | `node scripts/dev-link.mjs` | `npm run dev:link` | `--json` |
-| `scripts/install_companion.mjs` <br>npm: `companion:check` `companion:install` `verify:companion` | 伴生插件（companion）校验与装载 —— 当前只有一个：dsh-persona-volt。 | `node scripts/install_companion.mjs` | `npm run verify:companion` | `--selftest` `--json` `--apply` `--check` |
+| `scripts/install_companion.mjs` <br>npm: `companion:check` `companion:install` | 伴生插件（companion）校验与装载 —— 当前只有一个：dsh-persona-volt。 | `node scripts/install_companion.mjs` | `npm run companion:check` | `--selftest` `--json` `--apply` `--check` |
 | `scripts/patch-host-toolargs.mjs` | 宿主适配器容错补丁 [ig5-toolargs-patch rev=2] | `node scripts/patch-host-toolargs.mjs` | `node scripts/patch-host-toolargs.mjs` | `--check` |
 | `scripts/sync-local.mjs` <br>npm: `sync:local` `sync:local:apply` | 无限五代 · 本机安装树同步（sync:local） | `node scripts/sync-local.mjs` | `npm run sync:local` | `--json` `--yes` |
 
