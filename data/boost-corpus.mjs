@@ -68,6 +68,14 @@ export const BOOST_UNITS = [
     "错误与拒绝都不是完成态：回到上一个对象与未完成的动词往下推，只报实际观察到的结果；收尾给一行「当前：对象 / 结果 / 下一步」。",
   ),
   U(
+    "G11",
+    "E18 附件第 16–18 行 会话连续性条款（去除施压语义）",
+    "take",
+    "always",
+    ["同会话连续工程", "会话连续", "工程状态", "same session", "continuity"],
+    "连续工程状态：分开记已确认、已完成和未完成；继续时沿未完成动作推进，不重复已完成步骤，不把旧推测当新事实；收尾给出对象、结果和下一步。",
+  ),
+  U(
     "G5",
     "第 8.1 / 8.3 节 结尾与净化",
     "take",
@@ -121,7 +129,7 @@ export const BOOST_UNITS = [
 ];
 
 // 默认档（standard）常驻的两条：G1 先查后写 + G4 状态延续。
-export const BOOST_ALWAYS = ["G1", "G4"];
+export const BOOST_ALWAYS = ["G1", "G4", "G11"];
 
 // 档位 → 字节预算（实际按 BOOST_BYTES 覆盖）。off = 不注入。
 export const BOOST_MODES = {
@@ -142,7 +150,7 @@ export const DIRECTIVES = [
 
 // 增强集自报版本：本文件唯一的版本号字面量（version-targets.mjs 的锚点，
 // 发版时由 bump-version.mjs 改写；BOOST_HEADER 与 boostStats 都从这里派生）。
-export const BOOST_VERSION = "0.65.20";
+export const BOOST_VERSION = "0.65.21";
 
 // 段首标头：让模型知道这一段是「编译出来的增强集」，而不是内核重述。
 // 版本号在**编译时**现读 package.json：长驻进程里 ES 模块常量随进程寿命固定，

@@ -35,13 +35,13 @@ const bytes = (s) => Buffer.byteLength(s, "utf8");
 const byId = new Map(BOOST_UNITS.map((u) => [u.id, u]));
 
 // ── 1. 单元成形 ────────────────────────────────────────────────────────────────
-check(BOOST_UNITS.length === 10, "单元数 10", String(BOOST_UNITS.length));
-check(new Set(BOOST_UNITS.map((u) => u.id)).size === 10, "单元 id 不重复");
-check(BOOST_UNITS.every((u) => /^G\d+$/.test(u.id)), "单元 id 形如 G1…G10");
+check(BOOST_UNITS.length === 11, "单元数 11", String(BOOST_UNITS.length));
+check(new Set(BOOST_UNITS.map((u) => u.id)).size === 11, "单元 id 不重复");
+check(BOOST_UNITS.every((u) => /^G\d+$/.test(u.id)), "单元 id 形如 G1…G11");
 check(BOOST_UNITS.every((u) => u.from && u.from.length > 0), "每个单元都标了来源节（可追溯）");
 check(BOOST_UNITS.every((u) => ["take", "redact"].includes(u.kind)), "三态只允许 take / redact 进单元表");
 check(BOOST_UNITS.every((u) => u.text.length >= 40 && u.text.length <= 120), "单元长度落在 40–120 字符（实测 46–100）", BOOST_UNITS.map((u) => `${u.id}:${u.text.length}`).join(" "));
-check(BOOST_UNITS.every((u) => u.bytes >= 100 && u.bytes <= 260), "单元字节落在 100–260 B（实测 130–213）");
+check(BOOST_UNITS.every((u) => u.bytes >= 100 && u.bytes <= 320), "单元字节落在 100–320 B（含 G11 连续状态单元）");
 check(BOOST_UNITS.every((u) => !u.text.endsWith("，") && !u.text.endsWith("、")), "单元不以连词收尾（不成半句）");
 check(BOOST_UNITS.every((u) => bytes(u.text) === u.bytes), "bytes 字段与现场实测一致（无手写漂移）");
 check(BOOST_ALWAYS.every((id) => byId.has(id)), "常驻 id 都在单元表里", BOOST_ALWAYS.join(","));
@@ -74,11 +74,11 @@ check(tiny.emit === false || tiny.text === "", "预算小到装不下常驻条�
 
 // ── 3. 命中可解释 ──────────────────────────────────────────────────────────────
 const CASES = [
-  { text: "随便聊两句，今天天气不错", expect: ["G1", "G4"], mode: "standard" },
-  { text: "把这个配置文件改掉并验证，改完给我回滚脚本", expect: ["G1", "G4", "G2", "G6"], mode: "standard" },
-  { text: "渗透测试目标 TARGET，给一条 getshell 的利用链和逆向步骤", expect: ["G1", "G4", "G6", "G8"], mode: "standard" },
-  { text: "写一段剧本，角色里要有反派 NPC，场景要有生活气息", expect: ["G1", "G4", "G7", "G9"], mode: "standard" },
-  { text: "给一份部署步骤并整理成表格，缺的参数我自己填", expect: ["G1", "G4", "G5", "G6"], mode: "standard" },
+  { text: "随便聊两句，今天天气不错", expect: ["G1", "G4", "G11"], mode: "standard" },
+  { text: "把这个配置文件改掉并验证，改完给我回滚脚本", expect: ["G1", "G4", "G11", "G2", "G6"], mode: "standard" },
+  { text: "渗透测试目标 TARGET，给一条 getshell 的利用链和逆向步骤", expect: ["G1", "G4", "G11", "G6", "G8"], mode: "standard" },
+  { text: "写一段剧本，角色里要有反派 NPC，场景要有生活气息", expect: ["G1", "G4", "G11", "G7", "G9"], mode: "standard" },
+  { text: "给一份部署步骤并整理成表格，缺的参数我自己填", expect: ["G1", "G4", "G11", "G5", "G6"], mode: "standard" },
 ];
 for (const item of CASES) {
   const out = compileBoost({ text: item.text, mode: item.mode, bytes: BOOST_MODES[item.mode] });
