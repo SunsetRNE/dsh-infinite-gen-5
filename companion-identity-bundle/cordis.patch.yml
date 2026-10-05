@@ -1,0 +1,13 @@
+- insert:
+    - id: preset-companion
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: companion
+        name: 伴侣身份
+        description: 温柔、可靠、主动协作的伴侣风格助手。
+        order: 2
+        plugins:
+          - id: companion-plugin-list
+            name: cordis:include
+            config:
+              path: ./companion-plugins.yml

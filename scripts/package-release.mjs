@@ -63,7 +63,7 @@ const stage = mkdtempSync(join(tmpdir(), "ig5-pack-"));
 const stageRoot = join(stage, NAME);
 const files = execFileSync("git", ["ls-files", "-z"], { cwd: REPO, encoding: "utf8" })
   .split("\0")
-  .filter((p) => p.length > 0)
+  .filter((p) => p.length > 0 && existsSync(join(REPO, p)))
   .sort();
 for (const rel of files) {
   const dest = join(stageRoot, rel);

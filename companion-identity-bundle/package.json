@@ -1,0 +1,9 @@
+{
+  "name": "@local/dsh-companion-identity",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./index.js", "./package.json": "./package.json" },
+  "description": "可切换的标准化伴侣身份 preset：通过 Agent preset 选择器切换，并可按模板扩展其他身份。",
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
+}

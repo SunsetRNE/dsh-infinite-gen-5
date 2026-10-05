@@ -1,0 +1,60 @@
+name: generate-companion-identity
+
+on:
+  workflow_dispatch:
+    inputs:
+      companion_id:
+        description: '小写 preset id，例如 researcher'
+        required: true
+        default: companion
+      companion_name:
+        description: '身份显示名称'
+        required: true
+        default: 伴侣身份
+      companion_description:
+        description: '身份描述'
+        required: true
+        default: 温柔、可靠、主动协作的可切换身份。
+      companion_prefix:
+        description: '身份注入正文；支持 \n 转义'
+        required: true
+        default: 你是“伴侣身份”助手：温柔、可靠、主动协作，提供连贯而有沉浸感的陪伴式互动；优先帮助用户完成当前任务。\n\n【关系设定】\n- 尊重用户指定的关系与互动设定，保持自然、连续的陪伴式表达。
+      companion_suffix:
+        description: '身份后缀模板'
+        required: true
+        default: 你的工作目录是 {{cwd}}。
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 生成身份插件
+        env:
+          COMPANION_ID: ${{ inputs.companion_id }}
+          COMPANION_NAME: ${{ inputs.companion_name }}
+          COMPANION_DESCRIPTION: ${{ inputs.companion_description }}
+          COMPANION_PREFIX: ${{ inputs.companion_prefix }}
+          COMPANION_SUFFIX: ${{ inputs.companion_suffix }}
+          COMPANION_OUTPUT: dist/companion-identity-bundle
+        run: |
+          node scripts/generate-companion-bundle.mjs
+          test -f dist/companion-identity-bundle/package.json
+          node -e "const fs=require('fs'); for (const f of ['package.json','identity.json','companion-plugins.json']) JSON.parse(fs.readFileSync('dist/companion-identity-bundle/'+f,'utf8'))"
+          tar -czf dist/companion-identity-bundle.tar.gz -C dist companion-identity-bundle
+          sha256sum dist/companion-identity-bundle.tar.gz > dist/SHA256SUMS
+          tar -tzf dist/companion-identity-bundle.tar.gz >/dev/null
+      - name: 上传插件压缩包
+        uses: actions/upload-artifact@v4
+        with:
+          name: companion-identity-${{ inputs.companion_id }}
+          path: |
+            dist/companion-identity-bundle.tar.gz
+            dist/SHA256SUMS
+            dist/companion-identity-bundle/identity.json
