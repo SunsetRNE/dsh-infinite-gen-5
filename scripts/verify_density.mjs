@@ -88,7 +88,7 @@ check(BOOST_MODES.standard === BOOST_BYTES_MAX, "增强集 standard 档 = 2400 B
 check(boostQuiet.bytes <= BOOST_BYTES_MAX, "增强集闲聊轮不超预算", `${boostQuiet.bytes} B`);
 check(boostWork.bytes <= BOOST_BYTES_MAX, "增强集改动轮不超预算", `${boostWork.bytes} B`);
 check(boostHack.bytes <= BOOST_BYTES_MAX, "增强集渗透轮不超预算", `${boostHack.bytes} B`);
-check(bStats.units === 10, "增强集单元 10 个");
+check(bStats.units === 11, "增强集单元 11 个");
 
 // ── 4. 每轮成本表（本文的核心数字） ───────────────────────────────────────────
 const rows = [
