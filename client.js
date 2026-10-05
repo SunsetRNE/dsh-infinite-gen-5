@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.65.17";
+        var VERSION = "v0.65.18";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -683,6 +683,32 @@
           ".dsh-armor5-chip{border-radius:999px;background:var(--dsw-alias-bg-layer-2);border:1px solid var(--dsw-alias-border-l1)}",
           ".dsh-armor5-field-card,.dsh-armor5-mem-card,.dsh-armor5-ident-card{border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-1)!important;box-shadow:none}",
           ".dsh-armor5-hits-list .dsh-armor5-hgroup,.dsh-armor5-hits-list .dsh-armor5-hits li{border-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1)}",
+          // v0.65.18：命中页内部列表重绘——分组、条目、筛选与滚动反馈统一为可扫读的事件流。
+          ".dsh-armor5-hits-pane{max-height:min(58vh,520px);padding:0 2px 112px;scroll-padding:24px 0 112px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--dsw-alias-border-l2) transparent;background:var(--dsw-alias-bg-base)}",
+          ".dsh-armor5-hits-list{display:flex;flex-direction:column;gap:10px;padding:0 2px}",
+          ".dsh-armor5-hits-list>.dsh-armor5-mem{display:flex;flex-direction:column;gap:8px}",
+          ".dsh-armor5-hits-list .dsh-armor5-hgroup{margin:0;padding:0;border:1px solid var(--dsw-alias-border-l1);border-radius:14px;background:var(--dsw-alias-bg-layer-1);overflow:visible}",
+          ".dsh-armor5-hits-list .dsh-armor5-hgroup-head{display:flex;align-items:center;gap:8px;min-height:34px;padding:0 12px;border:0;border-radius:13px 13px 0 0;background:linear-gradient(90deg,var(--dsw-alias-bg-layer-2),var(--dsw-alias-bg-layer-1));box-shadow:none}",
+          ".dsh-armor5-hits-list .dsh-armor5-hgroup-title{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--dsw-alias-label-primary)}",
+          ".dsh-armor5-hits-list .dsh-armor5-hgroup-count{min-width:22px;padding:0 7px;text-align:center;line-height:20px;color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-base);border:1px solid var(--dsw-alias-border-l1)}",
+          ".dsh-armor5-hits-list .dsh-armor5-hits{gap:0;padding:4px 8px 8px}",
+          ".dsh-armor5-hits-list .dsh-armor5-hits li{display:grid;grid-template-columns:8px 42px minmax(0,1fr);gap:9px;align-items:center;min-height:48px;padding:8px 7px;border:0;border-bottom:1px solid var(--dsw-alias-border-l1);border-radius:0;background:transparent;transition:background-color .12s ease,transform .12s ease}",
+          ".dsh-armor5-hits-list .dsh-armor5-hits li:last-child{border-bottom:0}",
+          ".dsh-armor5-hits-list .dsh-armor5-hits li:hover{background:var(--dsw-alias-interactive-bg-hover);transform:translateX(2px)}",
+          ".dsh-armor5-hits-list .dsh-armor5-hits li[data-fresh='1']{background:color-mix(in srgb,var(--dsw-alias-brand-primary) 8%,transparent)}",
+          ".dsh-armor5-hits-list .dsh-armor5-hit-dot{width:8px;height:8px;border-radius:50%;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 14%,transparent)}",
+          ".dsh-armor5-hits-list .dsh-armor5-hit-time{align-self:start;padding-top:2px;color:var(--dsw-alias-label-caption);font-size:10px;font-variant-numeric:tabular-nums}",
+          ".dsh-armor5-hits-list .dsh-armor5-hit-body{display:flex;min-width:0;flex-direction:column;gap:3px}",
+          ".dsh-armor5-hits-list .dsh-armor5-hit-main{font-size:11.5px;line-height:16px;font-weight:650;letter-spacing:0;color:var(--dsw-alias-label-primary)}",
+          ".dsh-armor5-hits-list .dsh-armor5-hit-sub{font-size:10.5px;line-height:14px;color:var(--dsw-alias-label-secondary);opacity:.9}",
+          ".dsh-armor5-hits-list .dsh-armor5-hits-empty{display:block;padding:14px 10px;color:var(--dsw-alias-label-caption);font-size:11px;text-align:center}",
+          ".dsh-armor5-hits-foot{position:sticky;bottom:0;z-index:3;margin:10px 2px 0;padding:8px 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-bg-layer-1) 94%,transparent);backdrop-filter:blur(8px);font-size:10px}",
+          ".dsh-armor5-filters{position:sticky;top:0;z-index:4;display:flex;align-items:center;gap:8px;margin:0 2px 10px;padding:8px 10px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:color-mix(in srgb,var(--dsw-alias-bg-layer-1) 96%,transparent);backdrop-filter:blur(8px)}",
+          ".dsh-armor5-filters-label{flex:0 0 auto;color:var(--dsw-alias-label-caption);font-size:10px;font-weight:650}",
+          ".dsh-armor5-filters .dsh-armor5-chiprow{min-width:0;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}",
+          ".dsh-armor5-filters .dsh-armor5-chiprow::-webkit-scrollbar{display:none}",
+          ".dsh-armor5-filters .dsh-armor5-chip{min-height:26px;padding:0 9px;color:var(--dsw-alias-label-secondary);border-color:var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-base)}",
+          ".dsh-armor5-filters .dsh-armor5-chip[data-on='1']{color:var(--dsw-alias-label-primary);border-color:var(--dsw-alias-brand-primary);background:color-mix(in srgb,var(--dsw-alias-brand-primary) 12%,var(--dsw-alias-bg-base))}",
           ".dsh-armor5-drawer-foot{padding:10px 16px;border-top:1px solid var(--dsw-alias-border-l1);background:var(--dsw-alias-bg-layer-1)}",
         ].join("");
 
