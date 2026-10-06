@@ -116,7 +116,7 @@ import {
 import { arbitrationLine, IG5_TAIL_ORDER } from "./data/arbitration.mjs";
 import { createWakeStore, registerWakeFeatures } from "./data/wake-features.mjs";
 import { credentialClauseLine } from "./data/credential-permit.mjs";
-import { createIntentLock, protocolDecision, PROTOCOL_TEXT } from "./data/intent-protocol.mjs";
+import { createIntentLock, protocolDecision } from "./data/intent-protocol.mjs";
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
@@ -2297,15 +2297,6 @@ export function apply(ctx, config) {
   const sections = [];
   // 注入部分的可卸载句柄：设置页改档位 = 卸掉这些 effect 再装一遍，工具不重挂。
   const injectionHandles = [];
-  // 协议文本进入系统提示，执行前门禁仍是最终裁决。
-  // 这段只负责让模型知道拒绝原因和成功标准，不把提示词当权限边界。
-  if (ctx.systemPrompt && typeof ctx.systemPrompt.section === "function") {
-    injectionHandles.push(ctx.effect(() => ctx.systemPrompt.section({
-      name: "infinite-gen-5:intent-protocol",
-      order: 310,
-      text: PROTOCOL_TEXT,
-    })));
-  }
   // 每次挂载都是全新的实况：上一次挂载的让位记录不能漏进这一轮的报告。
   runtime.sections = [];
   runtime.skipped = [];
