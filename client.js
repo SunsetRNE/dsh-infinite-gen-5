@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.65.24";
+        var VERSION = "v0.65.25";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -2808,7 +2808,61 @@
          * 设置页里我们自己的那一页（settings.section，排在最顶部）。
          * 只读偏好 + 写偏好，改动立刻反映到状态条（同一个 prefs 源）。
          */
-        function ArmorConsolePage(props) {
+                 function WakeSettings() {
+           var bridge = statsBridge();
+           var loadedPair = react.useState(false), loaded = loadedPair[0], setLoaded = loadedPair[1];
+           var busyPair = react.useState(false), busy = busyPair[0], setBusy = busyPair[1];
+           var errorPair = react.useState(null), error = errorPair[0], setError = errorPair[1];
+           var enabledPair = react.useState(true), enabled = enabledPair[0], setEnabled = enabledPair[1];
+           var textPair = react.useState(""), text = textPair[0], setText = textPair[1];
+           var savedPair = react.useState(null), saved = savedPair[0], setSaved = savedPair[1];
+           var read = function () {
+             if (!bridge || !bridge.tasksPath) { setError("面板没有拿到配置入口，请刷新页面重试"); return; }
+             setBusy(true); setError(null);
+             panelFetch(bridge, bridge.tasksPath, "POST", { action: "getWakeSettings" }).then(function (r) {
+               var s = r && r.doc && r.doc.settings;
+               if (r && r.status === 200 && r.doc && r.doc.ok === true && s) { setEnabled(s.firstWakeEnabled !== false); setText(typeof s.identityText === "string" ? s.identityText : ""); setLoaded(true); }
+               else setError((r && r.doc && r.doc.error) || ("读取失败（HTTP " + (r && r.status) + "）"));
+             }).catch(function (e) { setError("读取异常：" + String((e && e.message) || e)); }).finally(function () { setBusy(false); });
+           };
+           react.useEffect(read, []);
+           var save = function () {
+             if (!bridge || !bridge.tasksPath) { setError("面板没有拿到配置入口，请刷新页面重试"); return; }
+             if (!text.trim()) { setError("人格文本不能为空"); return; }
+             if (utf8Len(text) > 4000) { setError("人格文本不能超过 4000 bytes"); return; }
+             setBusy(true); setError(null); setSaved(null);
+             panelFetch(bridge, bridge.tasksPath, "POST", { action: "setWakeSettings", settings: { firstWakeEnabled: enabled, identityText: text } }).then(function (r) {
+               var s = r && r.doc && r.doc.settings;
+               if (r && r.status === 200 && r.doc && r.doc.ok === true && s) { setEnabled(s.firstWakeEnabled !== false); setText(s.identityText || ""); setSaved("已保存；仅后续新会话首条消息使用"); }
+               else setError((r && r.doc && r.doc.error) || ("保存失败（HTTP " + (r && r.status) + "）"));
+             }).catch(function (e) { setError("保存异常：" + String((e && e.message) || e)); }).finally(function () { setBusy(false); });
+           };
+           var reset = function () {
+             if (!bridge || !bridge.tasksPath) return;
+             setBusy(true); setError(null); setSaved(null);
+             panelFetch(bridge, bridge.tasksPath, "POST", { action: "resetWakeSettings" }).then(function (r) {
+               var s = r && r.doc && r.doc.settings;
+               if (r && r.status === 200 && r.doc && r.doc.ok === true && s) { setEnabled(s.firstWakeEnabled !== false); setText(s.identityText || ""); setSaved("已恢复默认"); }
+               else setError((r && r.doc && r.doc.error) || ("恢复失败（HTTP " + (r && r.status) + "）"));
+             }).catch(function (e) { setError("恢复异常：" + String((e && e.message) || e)); }).finally(function () { setBusy(false); });
+           };
+           return react.createElement("div", { className: "armor5-console-group" },
+             react.createElement("div", { className: "armor5-console-group-title" }, "AI 身份与人格"),
+             react.createElement("div", { className: "armor5-console-hint" }, "唤醒词「亲爱的」仅在无历史新会话的首条消息生效；配置由服务端保存。只读自检词：无限第五代自检。"),
+             react.createElement("label", null, react.createElement("input", { type: "checkbox", checked: enabled, disabled: busy || !loaded, onChange: function (e) { setEnabled(e.target.checked); setSaved(null); } }), " 开启首轮身份唤醒（默认）"),
+             react.createElement("textarea", { className: "armor5-console-secret-input", rows: 6, maxLength: 4000, value: text, disabled: busy || !loaded, placeholder: "填写 AI 的身份、人格与回答风格…", onChange: function (e) { setText(e.target.value); setSaved(null); } }),
+             react.createElement("div", { className: "armor5-console-foot" },
+               react.createElement("button", { type: "button", className: "armor5-console-btn is-primary", disabled: busy || !loaded, onClick: save }, busy ? "处理中…" : "保存人格"),
+               react.createElement("button", { type: "button", className: "armor5-console-btn", disabled: busy, onClick: reset }, "恢复人格默认"),
+               react.createElement("button", { type: "button", className: "armor5-console-btn", disabled: busy, onClick: read }, "重新读取")
+             ),
+             !loaded && !error ? react.createElement("div", { className: "armor5-console-hint" }, "正在读取配置…") : null,
+             error ? react.createElement("div", { className: "armor5-console-hint" }, error) : null,
+             saved ? react.createElement("div", { className: "armor5-console-hint" }, saved) : null
+           );
+         }
+
+         function ArmorConsolePage(props) {
           var tuner = useTuning();
           var prefs = usePrefs();
           var mode = prefs.triggerMode;
@@ -2988,7 +3042,8 @@
                 }, "重新读取")
               )
             ),
-            liveGroup(tuner.state),
+            react.createElement(WakeSettings, null),
+             liveGroup(tuner.state),
             coverageGroup(tuner.state),
             react.createElement("div", { className: "armor5-console-group", "data-dev-only": "1" },
               react.createElement("div", { className: "armor5-console-group-title" }, "只读"),

@@ -93,8 +93,10 @@ check(toolNames.includes("infinite_gen5_dispatch"), "分发工具已注册（v0.
 // v0.36.8：ig5-relay-plugin.mjs 并回主干后，注册表多了 infinite_gen5_relay（端点通道 +
 // 自适应注入）与 infinite_gen5_skills（技能装载链）。两者都是**刻意并回**的，不是决策噪音；
 // 这里改成白名单全等判定 —— 数量放开到 6，但多出任何一个计划外的工具仍然判失败。
+// 现在额外注册只读 selfcheck；白名单仍做全等判定，防止计划外工具混入。
 const EXPECTED_TOOLS = [
   "infinite_gen5_profile",
+  "infinite_gen5_selfcheck",
   "infinite_gen5_scenario",
   "infinite_gen5_env",
   "infinite_gen5_dispatch",
@@ -104,7 +106,7 @@ const EXPECTED_TOOLS = [
 check(
   host.registeredTools.length === EXPECTED_TOOLS.length &&
     EXPECTED_TOOLS.every((n) => toolNames.includes(n)),
-  "只注册六个工具（profile / scenario / env / dispatch + relay / skills，无计划外工具）",
+  "只注册七个工具（profile / selfcheck / scenario / env / dispatch + relay / skills，无计划外工具）",
   JSON.stringify(toolNames),
 );
 

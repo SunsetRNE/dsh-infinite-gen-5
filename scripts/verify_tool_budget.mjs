@@ -130,8 +130,9 @@ const EXPECTED_TOOLS = [
   "infinite_gen5_profile",
   "infinite_gen5_scenario",
 ];
-const EXPECTED_ALL = [...EXPECTED_TOOLS, "infinite_gen5_relay", "infinite_gen5_skills"].sort().join(",");
-check(tools.length === 6, "注册了六个工具（4 资源 + relay/skills）", String(tools.length));
+// 现在额外包含只读 selfcheck；体积闸仍只对四名资源工具做参数/渲染断言。
+const EXPECTED_ALL = [...EXPECTED_TOOLS, "infinite_gen5_relay", "infinite_gen5_skills", "infinite_gen5_selfcheck"].sort().join(",");
+check(tools.length === 7, "注册了七个工具（4 资源 + selfcheck + relay/skills）", String(tools.length));
 check(toolNames === EXPECTED_ALL, "工具名齐全且无计划外工具", toolNames);
 const renderTools = tools.filter((t) => EXPECTED_TOOLS.includes(t.name));
 check(renderTools.length === EXPECTED_TOOLS.length, "四个资源工具都在注册面里", String(renderTools.length));

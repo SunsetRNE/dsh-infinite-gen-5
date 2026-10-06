@@ -4,11 +4,21 @@
 版本段落按提交标题里的 `vX.Y.Z` 切分，未带版本号的提交归入最新段；
 每条末尾的短哈希是提交号，最新一条（HEAD）不标哈希 —— 它在「生成 → 提交」之间还会变。
 
+## v0.65.25 — 2026-10-06
+
+### ✨ 新特性
+
+- add wake words and identity settings
+
 ## v0.65.24 — 2026-10-05
 
 ### ✨ 新特性
 
-- enforce workspace declaration checks
+- enforce workspace declaration checks（`5a436b0`）
+
+### 🧹 杂务与维护
+
+- regenerate changelog（`5fc5219`）
 
 ## v0.65.23 — 2026-10-05
 

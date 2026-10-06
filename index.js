@@ -114,11 +114,12 @@ import {
   selftest,
 } from "./dispatch.mjs";
 import { arbitrationLine, IG5_TAIL_ORDER } from "./data/arbitration.mjs";
+import { createWakeStore, registerWakeFeatures } from "./data/wake-features.mjs";
 import { credentialClauseLine } from "./data/credential-permit.mjs";
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.65.24";
+const PLUGIN_VERSION = "0.65.25";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -261,6 +262,11 @@ const runtimeAnchorText = (rev) => stealthText(
 const ASK_GATE_MODE = "proactive";
 const ASK_GATE_EVERY = 4; // 与 RUNTIME_ANCHOR_EVERY 同档，但独立可调
 const ASK_GATE_MODES = ["off", "auto", "proactive", "on"];
+
+// 可选唤醒词：只在用户明确说出短语时启用对应能力。
+const SELF_CHECK_WAKE_WORD = "无限第五代自检";
+const IDENTITY_WAKE_WORD = "亲爱的";
+const DEFAULT_IDENTITY_TEXT = "你是用户设定的亲密协作助手：温柔、可靠、主动，但仍以用户当前任务为准。";
 
 // 用户口风判据：只认两种显式口风，其余一律走内核默认（能自造的不问、直接产出）。
 const ASK_SUPPRESS_RE =
@@ -2259,6 +2265,8 @@ export const name = "dsh-infinite-gen-5";
 export const inject = ["tools", "systemPrompt"];
 
 export function apply(ctx, config) {
+  const wakeStore = createWakeStore();
+  const wakeFeatures = registerWakeFeatures(ctx, wakeStore);
   const PRIMARY = "infinite-gen-5:global-system-prompt";
   const LAYER2 = "infinite-gen-5:dual-layer-reinforce";
   const ownNames = new Set([PRIMARY, LAYER2, TAIL_SECTION, RUNTIME_ANCHOR_SECTION]);
@@ -3347,6 +3355,15 @@ export function apply(ctx, config) {
       const parsed = safeParseJson(raw, {});
       if (!parsed.ok) return sendJson(res, 400, { ok: false, error: `请求体不是合法 JSON（${parsed.reason}）` });
       const payload = parsed.value && typeof parsed.value === "object" ? parsed.value : {};
+      if (["getWakeSettings", "setWakeSettings", "resetWakeSettings"].includes(payload.action)) {
+        try {
+          const settings = payload.action === "getWakeSettings" ? wakeStore.get()
+            : payload.action === "resetWakeSettings" ? wakeStore.reset() : wakeStore.set(payload.settings);
+          return sendJson(res, 200, { ok: true, settings });
+        } catch (error) {
+          return sendJson(res, error instanceof TypeError ? 400 : 500, { ok: false, error: error.message });
+        }
+      }
       // v0.51.9：累计重置走**同一条**任务路由（加一个 action），不新增路由 —— 路由计数门禁不动。
       if (payload.action === "setGithubToken") {
         const r = writeGithubSecret(payload.token);
@@ -3474,6 +3491,40 @@ export function apply(ctx, config) {
   };
 
   ctx.effect(() => {
+    const dispose = ctx.tools.register(withContract(profileTool));
+    return typeof dispose === "function" ? dispose : () => {};
+  });
+
+  ctx.effect(() => {
+    const dispose = ctx.tools.register(withContract({
+    name: "infinite_gen5_selfcheck",
+    description: "只读检查当前 Host 的注入注册、工具可见性、面板路由和唤醒配置；不运行 shell、网络或 npm 门禁。" + contractShort(),
+    parameters: { type: "object", properties: {}, additionalProperties: false },
+    output: plainOutput,
+    isConcurrencySafe: () => true,
+    async execute(_args, exec) {
+      const requiredTools = ["infinite_gen5_selfcheck", "infinite_gen5_profile", "infinite_gen5_scenario", "infinite_gen5_env", "infinite_gen5_dispatch"];
+      const tools = requiredTools.map((name) => {
+        if (typeof ctx.tools.get !== "function") return { name, status: "unknown" };
+        try { return { name, status: ctx.tools.get(name, exec?.agent) ? "pass" : "fail" }; }
+        catch { return { name, status: "unknown" }; }
+      });
+      const sections = runtime.sections.map((section) => typeof section === "string" ? section : section.name ?? section.section ?? "unknown");
+      const checks = {
+        injection: { status: sections.length ? "pass" : "unknown", registeredSections: sections, evidence: "当前挂载注册回执；不代表已验证具体模型请求", skipped: runtime.skipped },
+        tools: { status: tools.some((tool) => tool.status === "fail") ? "fail" : tools.some((tool) => tool.status === "unknown") ? "unknown" : "pass", required: tools },
+        routes: { status: runtime.tuningEndpoint?.ok ? "pass" : "unknown", paths: runtime.tuningEndpoint?.ok ? [TUNING_PATH, STATS_PATH, TASKS_PATH, EVENTS_PATH] : [], evidence: "注册回执，未执行 HTTP 请求" },
+        config: { status: wakeStore.status().valid ? "pass" : "fail", settings: wakeStore.get(), error: wakeStore.status().error },
+        wake: { status: wakeFeatures.status.available ? "pass" : "unknown", scoped: true, activeAgents: wakeFeatures.status.agents, injected: wakeFeatures.status.injected },
+        fullGate: { status: "unknown", executed: false, reason: "本工具不运行 npm 全量门禁" },
+      };
+      return { ok: true, readOnly: true, version: PLUGIN_VERSION, checks, verdict: Object.values(checks).some((check) => check.status === "fail") ? "fail" : "partial" };
+    },
+    }));
+    return typeof dispose === "function" ? dispose : () => {};
+  });
+
+  ctx.effect(() => {
     // 每步注入（v0.51.24）：Order 118 的运行时锚点按节拍重述，两步之间仍可能丢阶段闸门；
     // 这里用宿主原生 agent/pre-step → agent.inject 把三行判据按 turn 补一次，缺 API 就地降级。
     if (IG5_CONFIG.STEP_INJECT_MODE !== "off" && typeof ctx.on === "function") {
@@ -3500,7 +3551,7 @@ export function apply(ctx, config) {
       });
       if (disposeStepInject) injectionHandles.push(disposeStepInject);
     }
-    ctx.tools.register(withContract(profileTool));
+    // profile 已在上方单独注册；此处只保留每步注入逻辑。
   });
 
   // 领域打法工具与运行环境探测工具：定义常驻（见 scenarioTool 的 deferLoading 实测说明），

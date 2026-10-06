@@ -1,8 +1,14 @@
-# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.65.24)
+# DeepSeek Harness Plugin — 无限五代 / dsh-infinite-gen-5 (v0.65.25)
 
 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。
 专为 **DeepSeek-V4.1 / V4-Pro / V4-Flash 及 MoE 架构** 重构，采用
 **「零工具面纯净直出 + 单内核注入 + 同源载荷去重 + 实时会话投影」**架构。
+
+## 可选功能唤醒
+
+`无限第五代自检` 在真实用户输入中命中后，只向对应 Agent 注入一次 `infinite_gen5_selfcheck` 调用提示；该工具返回只读运行态诊断，不执行 shell、不访问网络、不修复配置，不声称已运行仓库全量验证。
+
+`亲爱的` 只对无对话历史的新会话首条真实用户消息生效。人格上下文属于当前 Agent，会话之间隔离；恢复、分叉及压缩后的历史不能作为新的首轮。设置页的「AI 身份与人格」提供默认开启的首轮唤醒开关、可编辑人格文本及恢复默认；通过现有面板鉴权通道存储在服务端。
 
 ## 核心架构与特性
 

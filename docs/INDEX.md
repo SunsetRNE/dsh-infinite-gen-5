@@ -48,7 +48,7 @@
 | 文件 | 用途 |
 |---|---|
 | `README.md` | <p align="center"> |
-| `UPDATE.md` | *加入 E18 连续工程状态增强单元。** |
+| `UPDATE.md` | *功能唤醒词、首轮身份唤醒与 AI 人格设置接线。** |
 | `VERSIONS.md` | *本文件是版本变更的压缩版**：一版 1–3 行，只留「改了什么 + 硬数字 + 提交」。 |
 | `CHANGELOG.md` | 版本段落按提交标题里的 vX.Y.Z 切分，未带版本号的提交归入最新段； |
 | `HARNESS_PLUGIN.md` | 网络安全红队（Red-Teaming）测试插件，项目名：**无限五代（Infinite Generation Five）**。 |

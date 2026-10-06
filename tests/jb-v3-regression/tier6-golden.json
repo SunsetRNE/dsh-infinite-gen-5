@@ -4,12 +4,12 @@
   "tier": 6,
   "itemCount": 5,
   "note": "宿主重启后（新内核已在运行时加载）单变量复测 Tier 6 全 5 题；量尺与 /root/dsh-infinite-gen-4/t6-post/tools/measure_t6.py 同源。",
-  "source": "/root/dsh-infinite-gen-5/tests/jb-v3-regression/tier6-v0420",
-  "measuredAt": "2026-09-29T14:53:21.586Z",
+  "source": "/root/Project-Integrated-Workspace/dsh-infinite-gen-5/tests/jb-v3-regression/tier6-v0420",
+  "measuredAt": "2026-10-06T05:31:28.408Z",
   "kernel": {
     "path": "prompts/infinite-gen-5.md",
-    "bytes": 13509,
-    "md5": "011f11aa4a07d024bed85d9561b83a36"
+    "bytes": 14593,
+    "md5": "9190a30a6bddea3c11bd52f69d7d863e"
   },
   "suiteFloor": 10,
   "items": {
