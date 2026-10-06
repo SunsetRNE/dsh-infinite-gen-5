@@ -1,7 +1,7 @@
 # 工具与工具协议（自动生成）
 
 > 本文件由 `npm run tools:doc` 生成，**不要手改**：改代码或 `scripts/tool-registry.mjs` 后重跑。
-> 协议标识 `ig5-tool-registry-v1` · 在册工具 **144** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
+> 协议标识 `ig5-tool-registry-v1` · 在册工具 **145** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
 
 ## 一、工具协议总则（Tool ABI）
 
@@ -25,7 +25,7 @@
 「每个脚本都在册 / 在册路径都存在 / 声明的能力在文件里真的出现 / npm 别名真的存在 /
 本文件与生成器输出逐字节一致」。
 
-实测分布（现扫文件文本得出）：带 `--json` 的 **64** 个、带 `--selftest` 的 **31** 个、带 `--apply` 的 **10** 个、有 npm 别名的 **115** 个。
+实测分布（现扫文件文本得出）：带 `--json` 的 **64** 个、带 `--selftest` 的 **31** 个、带 `--apply` 的 **10** 个、有 npm 别名的 **116** 个。
 
 ## 二、命名协议注册表
 
@@ -60,7 +60,7 @@
 | `scripts/verify_card_size.mjs` <br>npm: `verify:ui:size` | 浮层判决卡片的「整体大小」锚点。 | `node scripts/verify_card_size.mjs` | `npm run verify:ui:size` | — |
 | `scripts/verify_contracts.mjs` <br>npm: `verify:contracts` | 无限五代 · 服从性轴收口门禁（离线、确定性、无需 API Key、不写用户目录） | `node scripts/verify_contracts.mjs` | `npm run verify:contracts` | `--json` |
 | `scripts/verify_decay.mjs` <br>npm: `verify:triad` | 衰减轴（instrument 14）实测核验件：把 tests/decay/<区>/rounds/rN.md 的真实轮次重新算一遍。 | `node scripts/verify_decay.mjs` | `npm run verify:triad` | — |
-| `scripts/verify_dedupe.mjs` <br>npm: `verify:dedupe` | 无限五代 v0.65.27 注入去重行为回归（离线、确定性、无需 API Key） | `node scripts/verify_dedupe.mjs` | `npm run verify:dedupe` | `--json` |
+| `scripts/verify_dedupe.mjs` <br>npm: `verify:dedupe` | 无限五代 v0.65.28 注入去重行为回归（离线、确定性、无需 API Key） | `node scripts/verify_dedupe.mjs` | `npm run verify:dedupe` | `--json` |
 | `scripts/verify_density.mjs` <br>npm: `verify:density` | 无限五代 · 上下文密度自检（离线、不连网、不写盘） | `node scripts/verify_density.mjs` | `npm run verify:density` | `--json` |
 | `scripts/verify_dispatch.mjs` <br>npm: `verify:dispatch` | 无限五代 v0.33.0「分发内核」自检：题库真源 / 分片任务书 / 回执解析 / 四态评分 | `node scripts/verify_dispatch.mjs` | `npm run verify:dispatch` | — |
 | `scripts/verify_env.mjs` <br>npm: `verify:env` | 无限五代 · 运行环境探测离线自检（无依赖、不做任何出网请求） | `node scripts/verify_env.mjs` | `npm run verify:env` | `--json` `--out` |
@@ -74,7 +74,7 @@
 | `scripts/verify_prompt.mjs` | 无限五代 兼容回归校验（零工具面纯净版） | `node scripts/verify_prompt.mjs` | `node scripts/verify_prompt.mjs` | `--json` |
 | `scripts/verify_prompt_gen4.mjs` <br>npm: `verify:gen4` | ⚠️ 遗留重定向（legacy redirect）— 本文件已更名为 verify_prompt_gen5.mjs。 | `node scripts/verify_prompt_gen4.mjs` | `npm run verify:gen4` | — |
 | `scripts/verify_prompt_gen41.mjs` <br>npm: `verify:gen41` | ⚠️ 遗留重定向（legacy redirect）— 本文件已更名为 verify_prompt_gen51.mjs。 | `node scripts/verify_prompt_gen41.mjs` | `npm run verify:gen41` | — |
-| `scripts/verify_prompt_gen5.mjs` <br>npm: `verify` `verify:gen5` | 无限五代 v0.65.27 纯净破甲版离线确定性回归校验（无需 API Key） | `node scripts/verify_prompt_gen5.mjs` | `npm run verify` | `--json` |
+| `scripts/verify_prompt_gen5.mjs` <br>npm: `verify` `verify:gen5` | 无限五代 v0.65.28 纯净破甲版离线确定性回归校验（无需 API Key） | `node scripts/verify_prompt_gen5.mjs` | `npm run verify` | `--json` |
 | `scripts/verify_prompt_gen51.mjs` <br>npm: `verify:gen51` | 无限五代 v0.5.0 — 强化镜像层离线确定性回归校验 | `node scripts/verify_prompt_gen51.mjs` | `npm run verify:gen51` | — |
 | `scripts/verify_release_notes.mjs` <br>npm: `verify:notes` | 无限五代 · 发布正文压缩自检（离线、确定性、零依赖） | `node scripts/verify_release_notes.mjs` | `npm run verify:notes` | `--json` |
 | `scripts/verify_runtime_sync.mjs` <br>npm: `verify:runtime` | 无限五代 · 运行态同步核对（离线、只读、不写盘） | `node scripts/verify_runtime_sync.mjs` | `npm run verify:runtime` | — |
@@ -219,7 +219,7 @@
 | `stats-store.mjs` | 统计数据库：插件本体（核心）单写、前端面板单读的那一份 JSON。 | `node stats-store.mjs` | `node stats-store.mjs` | — |
 | `tasks.mjs` | DSH 自身任务清单（todo）的读侧与写侧规则。 | `node tasks.mjs` | `node tasks.mjs` | — |
 
-### 工具（51）
+### 工具（52）
 
 *其余 CLI 工具*
 
@@ -265,6 +265,7 @@
 | `scripts/verify_host_takeover.mjs` <br>npm: `verify:host-takeover` | verify_host_takeover.mjs —— 按上游 DSH 布局精准接管的回归（v0.52.10） | `node scripts/verify_host_takeover.mjs` | `npm run verify:host-takeover` | — |
 | `scripts/verify_identity_routes.mjs` <br>npm: `verify:identity-routes` | scripts/verify_identity_routes.mjs — 身份许可路由表自检（v0.55.0） | `node scripts/verify_identity_routes.mjs` | `npm run verify:identity-routes` | `--selftest` |
 | `scripts/verify_incident_archive.mjs` <br>npm: `verify:incident-archive` | verify_incident_archive.mjs —— 内部问题档案的「黑名单是否仍然生效」自检（v0.52.12） | `node scripts/verify_incident_archive.mjs` | `npm run verify:incident-archive` | — |
+| `scripts/verify_intent_protocol.mjs` <br>npm: `verify:intent-protocol` | 用途：验证用户意图执行协议、完整克隆门禁与 checkpoint 回滚边界。 | `node scripts/verify_intent_protocol.mjs` | `npm run verify:intent-protocol` | — |
 | `scripts/verify_override.mjs` | verify_override.mjs —— 提示词接管（v0.52.2）回归判据：纯函数层 + index.js 接线。 | `node scripts/verify_override.mjs` | `node scripts/verify_override.mjs` | — |
 | `scripts/verify_payload_shape.mjs` <br>npm: `verify:payload-shape` | 结构性载荷形态识别自检 | `node scripts/verify_payload_shape.mjs` | `npm run verify:payload-shape` | `--json` |
 | `scripts/verify_permit.mjs` <br>npm: `verify:permit` | 授权许可件的判据跑：14 条 fixture 逐条判决，正例必须 permitted、反例必须命中指定 code。 | `node scripts/verify_permit.mjs` | `npm run verify:permit` | — |

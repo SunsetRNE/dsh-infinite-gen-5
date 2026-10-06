@@ -1,3 +1,4 @@
+// 用途：验证用户意图执行协议、完整克隆门禁与 checkpoint 回滚边界。
 import assert from "node:assert/strict";
 import { createIntentLock, inspectIntentAction, protocolDecision } from "../data/intent-protocol.mjs";
 
