@@ -2819,11 +2819,11 @@
            var read = function () {
              if (!bridge || !bridge.tasksPath) { setError("面板没有拿到配置入口，请刷新页面重试"); return; }
              setBusy(true); setError(null);
-             panelFetch(bridge, bridge.tasksPath, "POST", { action: "getWakeSettings" }).then(function (r) {
+             panelFetch(bridge, bridge.tasksPath, "GET").then(function (r) {
                var s = r && r.doc && r.doc.settings;
                if (r && r.status === 200 && r.doc && r.doc.ok === true && s) { setEnabled(s.firstWakeEnabled !== false); setText(typeof s.identityText === "string" ? s.identityText : ""); setLoaded(true); }
-               else setError((r && r.doc && r.doc.error) || ("读取失败（HTTP " + (r && r.status) + "）"));
-             }).catch(function (e) { setError("读取异常：" + String((e && e.message) || e)); }).finally(function () { setBusy(false); });
+               else setError((r && r.doc && r.doc.error) || ("读取失败：" + bridge.tasksPath + "（HTTP " + (r && r.status) + "）"));
+             }).catch(function (e) { setError("读取异常（" + bridge.tasksPath + "）：" + String((e && e.message) || e)); }).finally(function () { setBusy(false); });
            };
            react.useEffect(read, []);
            var save = function () {

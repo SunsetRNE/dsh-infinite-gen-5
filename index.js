@@ -3336,7 +3336,7 @@ export function apply(ctx, config) {
         return sendJson(res, 405, { ok: false, error: "只支持 GET：写入口在 /infinite-gen-5/tuning 与 /infinite-gen-5/tasks" });
       }
       const { doc, source } = panelDoc();
-      return sendJson(res, 200, { ...doc, ok: true, source });
+      return sendJson(res, 200, { ...doc, ok: true, source, settings: wakeStore.get() });
     } catch (error) {
       return sendJson(res, 500, { ok: false, error: String((error && error.message) || error) });
     }
@@ -3348,7 +3348,7 @@ export function apply(ctx, config) {
       const method = (req.method || "GET").toUpperCase();
       if (method === "GET") {
         const { doc, source } = panelDoc();
-        return sendJson(res, 200, { ok: true, source, tasks: doc.tasks ?? null, github: githubSecretStatus() });
+        return sendJson(res, 200, { ok: true, source, tasks: doc.tasks ?? null, settings: wakeStore.get(), github: githubSecretStatus() });
       }
       if (method !== "POST") return sendJson(res, 405, { ok: false, error: "只支持 GET / POST" });
       const raw = await readBody(req);
