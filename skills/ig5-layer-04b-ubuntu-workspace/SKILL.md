@@ -1,7 +1,7 @@
 ---
 name: ig5-layer-04c-ubuntu-workspace
 description: 无限五代 Ubuntu 工作区约束 层：识别到 Ubuntu 环境或 Ubuntu 工作区/路径约定/脚本归位/图片归位/替代工作区根目录等触发词即装载
-whenToUse: 识别到 Ubuntu 环境 · Ubuntu 工作区 · WORKSPACE_ROOT · 替代工作区根目录 · /root/home · PROJECT_ROOT · GLOBAL_SCRIPTS · PLUGIN_WORKDIR · scripts 归位 · 图片归位 · 公共图片 · 仓库内置图片 · 插件包导出 · 手机存储/Download · 禁止在根目录建仓库
+whenToUse: 识别到 Ubuntu 环境 · Ubuntu 工作区 · WORKSPACE_ROOT · 替代工作区根目录 · /root/home · default-workspace · dsh 0.2.0-rc.2 · PROJECT_ROOT · GLOBAL_SCRIPTS · PLUGIN_WORKDIR · scripts 归位 · 图片归位 · 公共图片 · 仓库内置图片 · 插件包导出 · 手机存储/Download · 禁止在根目录建仓库
 ---
 
 # ig5-layer-04c · Ubuntu 工作区专用路由层
@@ -23,7 +23,7 @@ uname -s; id -u
 
 | 变量 | 默认值 | 解析优先级 |
 |---|---|---|
-| `WORKSPACE_ROOT` | `/root/home` | ① 用户显式指定 ② `$WORKSPACE_ROOT` ③ 默认值 |
+| `WORKSPACE_ROOT` | 按 DSH 版本选择：`dsh 0.2.0-rc.2` 且无用户显式目录时为 `/root/Documents/deepseek-harness/default-workspace/`；旧版/未知版本为 `/root/home` | ① 用户显式指定 ② `$WORKSPACE_ROOT` ③ 当前版本官方默认 ④ 旧版兼容默认 |
 | `WORKSPACE_MARKER` | `README.workspace.md` 或 `.workspace-root` | 仅替代根目录时需要 |
 | `PROJECT_NAME` | 小写字母/数字/连字符，如 `my-project` | — |
 | `PROJECT_ROOT` | `${WORKSPACE_ROOT}/${PROJECT_NAME}/` | — |
@@ -39,9 +39,40 @@ uname -s; id -u
 | `TEST_IMAGES` | `${PROJECT_ROOT}/tests/fixtures/images/` | — |
 | `RUNTIME_IMAGES` | `${PROJECT_ROOT}/public/images/` 或 `src/assets/images/` | 按技术栈取一 |
 
-**硬规则**：`WORKSPACE_ROOT != /root/home` ⇒ 必须在该目录下建 `WORKSPACE_MARKER`，后续所有 `/root/home` 规则自动替换为实际根。相对路径一律相对 `WORKSPACE_ROOT` 展开。`/root/` 根目录与 `PLUGIN_WORKDIR` 永不作为 `WORKSPACE_ROOT`。
+**解析规则**：用户明确选择的目录始终优先；未明确选择时，`dsh 0.2.0-rc.2` 使用官方默认 `/root/Documents/deepseek-harness/default-workspace/`，旧版与未知版本回退 `/root/home`。显式目录记录为 `source=user-selected`，官方目录记录为 `source=official-default`，旧路径记录为 `source=legacy-default`，版本切换不得覆盖 `user-selected`。\n\n**硬规则**：`WORKSPACE_ROOT` 不论采用哪一个默认值，均必须是绝对路径；替代根目录需要在该目录下建 `WORKSPACE_MARKER`，后续路径规则自动替换为实际根。相对路径一律相对 `WORKSPACE_ROOT` 展开。`/root/` 根目录与 `PLUGIN_WORKDIR` 永不作为 `WORKSPACE_ROOT`。
 
-## 2. 归位路由表（脚本 / 图片 / 插件包）
+## 2. 默认工作区兼容判定
+
+将“之前训练过的文章所在根目录”视为工作区解析输入，不要把旧默认路径永久写死。每次新会话或工作区初始化按以下顺序判断：
+
+```text
+1. 用户明确选择的目录        → 直接使用，source=user-selected
+2. WORKSPACE_ROOT 环境变量   → 使用并记录 source=environment
+3. DSH 版本 == 0.2.0-rc.2   → /root/Documents/deepseek-harness/default-workspace/
+                                 source=official-default
+4. 旧版或未知版本             → /root/home
+                                 source=legacy-default
+```
+
+兼容约束：
+
+- 已有 `user-selected` 目录时，版本升级不得自动切换、复制、移动或覆盖文章。
+- 从旧版默认 `/root/home` 切到官方目录时，只生成迁移提示；新目录为空才允许作为默认工作区，不自动删除旧目录。
+- 新旧目录都存在文章时，不自动合并，要求用户明确选择；文章索引应保留 `root`、`source`、`dshVersion` 和 `explicit` 字段。
+- `dsh 0.2.0-rc.2` 是已知官方行为锚点；未来版本没有明确规则时继续走 `/root/home`，不得猜测为官方目录。
+
+建议记录形态：
+
+```json
+{
+  "root": "/root/Documents/deepseek-harness/default-workspace/",
+  "source": "official-default",
+  "dshVersion": "0.2.0-rc.2",
+  "explicit": false
+}
+```
+
+## 3. 归位路由表（脚本 / 图片 / 插件包）
 
 | 对象 | 落点 | 反例（禁止） |
 |---|---|---|

@@ -4,11 +4,17 @@
 版本段落按提交标题里的 `vX.Y.Z` 切分，未带版本号的提交归入最新段；
 每条末尾的短哈希是提交号，最新一条（HEAD）不标哈希 —— 它在「生成 → 提交」之间还会变。
 
+## v0.65.27 — 2026-10-06
+
+### ✨ 新特性
+
+- align official default workspace
+
 ## v0.65.26 — 2026-10-06
 
 ### 🐛 修复
 
-- repair wake settings read route
+- repair wake settings read route（`891c7cc`）
 
 ## v0.65.25 — 2026-10-06
 

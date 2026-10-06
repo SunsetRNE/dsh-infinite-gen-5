@@ -1,3 +1,11 @@
+## v0.65.27
+
+**兼容 DSH 0.2.0-rc.2 官方默认工作区。**
+
+- 工作区根目录解析明确为：用户显式选择优先，其次读取 `WORKSPACE_ROOT`，再按 DSH 版本选择官方默认值。
+- `dsh 0.2.0-rc.2` 且没有用户显式目录时使用 `/root/Documents/deepseek-harness/default-workspace/`。
+- 旧版与未知版本继续回退 `/root/home`，并通过来源标记区分 `user-selected`、`official-default` 与 `legacy-default`，版本切换不覆盖用户已选目录。
+
 ## v0.65.26
 
 **修复 AI 身份人格设置首次读取失败。**
