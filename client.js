@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.65.28";
+        var VERSION = "v0.65.29";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -2104,6 +2104,13 @@
         // 服务端在 /infinite-gen-5/stats 上只读地交出数据库快照；面板不再自己拼接口、
         // 不再问插件内部结构，读到什么就画什么。老宿主（没有 __IG5_STATS__）退回
         // __IG5_TUNING__，行为与 v0.13.8 一致，不会因为一次升级把面板打死。
+        // 支持反向代理子路径：/infinite-gen-5/* 必须相对当前 index.html 解析。
+        function panelUrl(path) {
+          if (!path) return null;
+          var d = typeof document !== "undefined" ? document : null;
+          if (!d || !d.baseURI) return path;
+          try { return new URL(String(path).replace(/^\/+/, ""), d.baseURI).href; } catch (_) { return path; }
+        }
         function statsBridge() {
           var w = typeof window !== "undefined" ? window : null;
           var stats = w && w.__IG5_STATS__;
@@ -2113,13 +2120,13 @@
           var tuning = (stats && stats.tuningPath) || (legacy && legacy.path) || "/" + TUNING_PATH_FALLBACK;
           return {
             token: token,
-            statsPath: (stats && stats.path) || null,
-            tasksPath: (stats && stats.tasksPath) || null,
-            tuningPath: tuning,
+            statsPath: panelUrl((stats && stats.path) || null),
+            tasksPath: panelUrl((stats && stats.tasksPath) || null),
+            tuningPath: panelUrl(tuning),
             database: Boolean(stats && stats.path),
             // v0.15.0：核心多给了一条推送路径（SSE），面板收到「库变了」的信号就立刻回读 /stats。
             // 没有这条路径的老宿主一切照旧，仍走轮询，不会因为一次升级把面板打死。
-            eventsPath: (stats && stats.eventsPath) || null
+            eventsPath: panelUrl((stats && stats.eventsPath) || null)
           };
         }
 

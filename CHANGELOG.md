@@ -8,7 +8,15 @@
 
 ### ✨ 新特性
 
-- add intent execution protocol
+- add intent execution protocol（`7ec39d5`）
+
+### 🐛 修复
+
+- align protocol docs and dedupe
+
+### 🧹 杂务与维护
+
+- regenerate changelog（`e1cb52d`）
 
 ## v0.65.27 — 2026-10-06
 
