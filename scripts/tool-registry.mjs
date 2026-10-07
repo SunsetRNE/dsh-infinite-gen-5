@@ -119,6 +119,8 @@ export const OVERLAY = {
   "verify_frame_budget.mjs": { cat: "门禁" },
   "verify_h_audit.mjs": { cat: "门禁" },
   "verify_injection.mjs": { cat: "门禁" },
+  // v0.66.0：监听器数量守恒（apply → N / rebuild → N / 卸载 → 0 / 再 apply → N）。
+  "verify_injection_lifecycle.mjs": { cat: "门禁" },
   "verify_install.mjs": { cat: "门禁" },
   "verify_kernel_v039.sh": { cat: "门禁" },
   "verify_lazy.mjs": { cat: "门禁" },
@@ -167,6 +169,8 @@ export const EXTRA_ROOTS = [
   "dispatch.mjs",
   "stats-store.mjs",
   "tasks.mjs",
+  // v0.66.0 注入策略真源：单元模型 + 计划器 + 配额账本 + TTL。
+  "data/injection-policy.mjs",
 ];
 
 // 命名协议：只在「实现里有字面量 + 有消费者 + 有判据」时才登记。

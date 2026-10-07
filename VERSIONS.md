@@ -3,6 +3,13 @@
 **本文件是版本变更的压缩版**：一版 1–3 行，只留「改了什么 + 硬数字 + 提交」。
 原先散在 `README.md` / `HARNESS_PLUGIN.md` / `package.json` 的 `description` 里的历代叙述，已收拢到这里 —— 那三处只讲**当前状态**，要提历史就指回本文件。
 
+## v0.66.0
+
+动态注入收成一条策略管线：`TurnFacts → InjectionUnit[] → planInjection() → 单一 assemble mutator → runtime.plan`。
+新增 `data/injection-policy.mjs`（单元模型 · 事实快照 · 计划器 · 分区配额账本 · TTL 台账 · 指纹）；默认 **observe** 档只出计划与旁路比对（一个字节不改装配），`INJECTION_POLICY=apply` 才落笔接管动态单元。
+策略参数 9 枚进调参目录（`INJECTION_PROFILE` 三档 minimal/balanced/full 等，三格配额与单元上限默认 0 = 跟随档位）；`runtime.plan` 与面板「注入计划」一行只放 id + digest + bytes + reason + ttl，不进正文。
+生命周期收口：自有监听器台账（apply → N / rebuild → N / 卸载 → 0 / 再 apply → N），新增 `verify:injection:lifecycle`（10 条）与 `verify:injection:planner`；`verify:injection` 56 → 98 条。
+
 ## v0.65.29
 
 反向代理子路径下，面板接口按当前页面 `baseURI` 解析；修复 AI 身份与人格设置读取出现 `Failed to fetch`。

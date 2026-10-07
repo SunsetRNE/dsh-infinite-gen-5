@@ -39,6 +39,95 @@ function check(ok, label, detail = "") {
   (ok ? passes : failures).push(`${label}${!ok && detail ? " — " + detail : ""}`);
 }
 
+// 注入计划读的是落盘的那份统计库（statsFile() 指到本脚本的 /tmp 落点）——
+// 面板读侧走的是同一条路：同一个文件、同一批字段，不在自检里另写一个计划器副本。
+function planOf() {
+  if (!currentStatsPath) return null;
+  try {
+    return JSON.parse(readFileSync(currentStatsPath, "utf8"))?.runtime?.plan ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 实况计划：读取路径与面板、模型工具完全一样（统计库读侧 / profile 工具），
+ * 但这里刻意先看「本进程刚出的那一份」——落盘侧有 250ms 合流窗口，而计划是在装配瀑布里
+ * 生成的；只读盘会在快速连改档位的断言里拿到 250ms 前的那份（看起来像「档位没生效」）。
+ * 两个来源取 seq 更大的那个，语义上就是「最新那份计划」，不需要再靠 sleep 猜时间。
+ */
+function livePlan() {
+  let disk = null;
+  try {
+    disk = planOf();
+  } catch {
+    disk = null;
+  }
+  let live = null;
+  try {
+    live = profileOf()?.injectionPlan ?? null;
+  } catch {
+    live = null;
+  }
+  if (disk && live) return Number(live.seq ?? 0) >= Number(disk.seq ?? 0) ? live : disk;
+  return live ?? disk;
+}
+
+/**
+ * 等落盘再读：统计库写侧有 250ms 合流窗口（STATS_FLUSH_MS），秒读会拿到上一份快照 ——
+ * 断言就会对着旧计划判，看着像「档位没生效」。这里等的是**内容**而不是固定时长：
+ * minSeq 之后的第一份计划一到就返回，超时则返回当下这一份（让断言自己报差异，而不是抛异常）。
+ */
+let lastBoot = null;      // 上一次读到的装配代数（每次 apply/rebuild 换一代）
+let lastPlanSeq = null;   // 上一次读到的装配序号：同一个台子上必须递增；换台子后重置
+let pendingBaseline = false;
+
+/**
+ * 读一份「这一轮真的出过的」计划：minSeq 之下不返回，并且（可选）认代数换新。
+ * pendingBaseline 只在对一个**已经存在的**演习台改档位时置 true —— 那种场合必须等到
+ * 新一代的第一份计划，否则读到的是改档位之前那一份，看起来就像「档位没生效」。
+ */
+async function planAfter(minSeq = 0, timeoutMs = 2500, want = null) {
+  const wantBootChange = pendingBaseline;
+  const staleBoot = lastBoot;
+  const deadline = Date.now() + timeoutMs;
+  const accept = (plan) => {
+    if (!plan) return false;
+    // want 是最强的一条判据：断言想读「某一档位下的那份计划」时直接写条件，
+    // 别靠「等若干个 seq」去猜 —— 猜错就会对着一份中间态判，红的是断言而不是插件。
+    if (typeof want === "function" && !want(plan)) return false;
+    // 换台子后 seq 从头算；但每个台子有自己的库文件，所以这里只需要「同台子递增」这一条。
+    // seq 给到就给足；不给时只要求「比上次读到的更新」。两个口径都防同一件事：
+    // 统计库写侧有合流窗口，秒读会拿到上一个演习台留下的旧快照。
+    const floor = Number(minSeq) > 0 ? Number(minSeq) : (lastPlanSeq ?? 0);
+    if (Number(plan.seq) < floor) return false;
+    if (lastPlanSeq !== null && Number(plan.seq) < Number(lastPlanSeq)) return false;
+    return true;
+  };
+  for (;;) {
+    const plan = livePlan();
+    if (accept(plan)) {
+      lastBoot = plan.boot;
+      lastPlanSeq = plan.seq;
+      pendingBaseline = false;
+      return plan;
+    }
+    if (Date.now() > deadline) {
+      // 到点了还差一口气：再让过一个合流窗口，然后如实返回盘上那一份（让断言自己报差异，
+      // 而不是在这里抛异常 —— 门禁的价值在于说出「差在哪」，不是死给你看）。
+      await new Promise((resolve) => setTimeout(resolve, FLUSH_SETTLE_MS));
+      const fallback = livePlan();
+      if (fallback) {
+        lastBoot = fallback.boot ?? lastBoot;
+        if (Number(fallback.seq) >= Number(lastPlanSeq ?? 0)) lastPlanSeq = fallback.seq;
+        pendingBaseline = false;
+      }
+      return fallback;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 40));
+  }
+}
+
 // 宿主服务自己会种三只默认段（harness:identity / deployment:persona-prefix /
 // deployment:persona-suffix），所以这里只补两只探针段来还原 10200 之后的段位。
 // 段位号抄宿主官方 SECTION_ORDERS 表：9000 交付物引用 / 9900 结构化输出 /
@@ -77,12 +166,54 @@ const SystemPrompt = promptModule.default;
 const { renderPrompt, joinContextSections, renderContextSections } = promptModule;
 const plugin = await import(new URL("../index.js", import.meta.url).href);
 const { IG5_CONFIG, askGateState } = plugin;
+// v0.66.0：注入计划读的就是面板读的那份统计库（同一个文件、同一条路），
+// 所以这里显式拿一次 stats-store 读写侧 —— 而不是另写一个计划器副本给自检用。
+const stats = await import(new URL("../stats-store.mjs", import.meta.url).href);
 
 const DEFAULTS = { ...IG5_CONFIG };
 const restore = () => Object.assign(IG5_CONFIG, DEFAULTS);
 
 // ── 演习台：真服务 + 模拟宿主自己的段位；apply() 用真 ctx（effect/on/tools 都是真的）──
+// 同一进程里连开多个演习台（多份 apply）时，旧台上的 effect/监听器还挂在旧 ctx 上。
+// cordis 的 Context 不 dispose 就一直活着，于是「上一台的计划器」会在本轮装配后二次落库 ——
+// 读到的就是旧代的计划（实测：改档位后 seq 涨了、cap 却还是旧值）。所以每次开新台之前先
+// 把上一台收掉；拿不到 dispose 就退化为「只保留最新一台写侧」，并如实记一条 SKIP。
+/**
+ * 同步点：统计库写侧有合流窗口（STATS_FLUSH_MS=250ms），本脚本的断言又跑得比它快。
+ * 唯一稳的读法是「等落盘」，而在无法从读侧拿到「本轮序号」时，最省的那条路就是让过一个
+ * 合流窗口再读 —— 但那样每读一次都要等 250ms，整条门禁会慢下来。
+ * 这里两条一起用：先给最小 seq 闸门，闸门不满足时按 40ms 轮询；轮询到点还差一口气时，
+ * 多等一个合流窗口再看一眼（而不是拿旧快照去判）。
+ */
+const FLUSH_SETTLE_MS = 320;
+const liveRigs = [];
+// 当前台子的库文件：每个台子一份（见 rig()），读侧必须跟着它走。
+let currentStatsPath = null;
+let profileOf = () => null;   // 当前台子的 profile 工具（读实况计划用）
+async function disposeRigs() {
+  while (liveRigs.length > 0) {
+    const app = liveRigs.pop();
+    try {
+      if (app && typeof app.dispose === "function") await app.dispose();
+      else if (app && typeof app.stop === "function") await app.stop();
+    } catch {
+      // 收尾失败不影响断言：退役的台子不再被读，只可能多写几次库。
+    }
+  }
+}
+
+let rigSeq = 0;
 async function rig({ config = {}, hostSections = null, userQuestions = false } = {}) {
+  await disposeRigs();
+  lastPlanSeq = null;   // 新台子的 seq 从 1 起算，别拿旧台子的高位值卡它
+  // 每个台子一份自己的统计库：本脚本要按「落盘的那份计划」判断言，而写侧有 250ms 合流窗口——
+  // 多台子共用一份文件时，新台子的第一读会撞上台子留下的旧快照（实测：seq 涨了、cap 还是旧值）。
+  // 一坑一文件之后，读到的计划必然出自本台子，交叉污染这一类假红从根上没了。
+  rigSeq += 1;
+  const statsPath = `/tmp/ig5-verify-injection-rig-${rigSeq}.json`;
+  rmSync(statsPath, { force: true });
+  process.env.IG5_STATS_FILE = statsPath;
+  currentStatsPath = statsPath;
   const app = new Context();
   await app.plugin(SystemPrompt, {});
   const sp = app.get("systemPrompt");
@@ -98,10 +229,16 @@ async function rig({ config = {}, hostSections = null, userQuestions = false } =
   }
   restore();
   Object.assign(IG5_CONFIG, config);
+  // 每个演习台都是新一次 apply（装配代数 +1）：读计划前先让读侧知道「要等新一代」。
+  pendingBaseline = true;
   plugin.apply(app, config);
+  liveRigs.push(app);
   const assemble = () => sp.assemble({ agent: {}, scope: {} });
   // profile 是运行期快照：必须等装配完再读，否则拿到的是注册那一瞬间的实况。
   const profile = () => tools.find((tool) => tool.name === "infinite_gen5_profile")?.execute();
+  profileOf = profile;   // livePlan() 用同一份实况（面板读的还是统计库那份）
+  pendingBaseline = true;
+  lastPlanSeq = null;
   return { app, sp, tools, assemble, profile, ctx: app };
 }
 
@@ -392,6 +529,231 @@ const last = (arr) => arr[arr.length - 1];
   } finally {
     writeFileSync(kernelPath, original);
   }
+}
+
+// ---- 14. 注入计划器（v0.66.0）：一份事实快照 → 一个计划 → 一个装配修改者 ----
+// 这一段判的不是「注入了什么」（上面十三条已经判过），而是「计划与线上那一份对不对得上」：
+// 计划说进了的段必须真在装配面上、bytes 必须与段文本一致、同一份事实快照的指纹必须稳定、
+// 每个选中/丢弃的单元都必须带 reason。observe 档（默认）只读不写 —— 所以这些断言同时也是
+// 「接线没改装配行为」的证据。
+{
+  const r = await rig();
+  const textIn = (assembly, id) =>
+    assembly.sections.find((s) => s.name === id)?.text
+    ?? assembly.contexts.find((c) => c.name === id)?.text
+    ?? null;
+  // 计划读的是统计库 runtime.plan（面板读的同一个文件、同一条路）—— 读侧不重算，
+  // 因为「第二个实现」迟早与线上漂移，而那正是这一版要消灭的那类问题。
+  const first = await r.assemble();
+  const p1 = await planAfter(0);   // rig() 已把 pendingBaseline 置上：等这一代的计划
+  lastPlanSeq = Number(p1?.seq ?? 0);
+  check(!!p1, "装配一轮后出了注入计划（统计库 runtime.plan）", JSON.stringify(p1)?.slice(0, 160));
+  check(p1?.mode === "observe", "默认档只观测（一个字节不改装配）", String(p1?.mode));
+  check(p1?.profile === "balanced", "默认策略档是 balanced", String(p1?.profile));
+  check(
+    typeof p1?.budget?.totalBytes === "number" && typeof p1?.budget?.ceiling === "number",
+    "计划带字节账本（ceiling / totalBytes）",
+    JSON.stringify(p1?.budget),
+  );
+
+  const selectedIds = (p1?.selected ?? []).map((row) => row.id);
+  check(new Set(selectedIds).size === selectedIds.length, "选中项 id 不重复", JSON.stringify(selectedIds));
+  check(
+    (p1?.selected ?? []).every((row) => typeof row.reason === "string" && row.reason !== ""),
+    "每个选中项都有 reason（面板要能回答「为什么注入」）",
+    JSON.stringify((p1?.selected ?? []).map((row) => `${row.id}:${row.reason}`)),
+  );
+  check(
+    (p1?.dropped ?? []).every((row) => typeof row.reason === "string" && row.reason !== ""),
+    "每个丢弃项都有 reason",
+    JSON.stringify(p1?.dropped),
+  );
+  check(
+    (p1?.selected ?? []).every((row) => ["session", "turn", "step", "event", "assemble"].includes(row.ttl)),
+    "每个选中项都带合法 ttl（残留到下一轮是最常见的错法）",
+    JSON.stringify((p1?.selected ?? []).map((row) => `${row.id}:${row.ttl}`)),
+  );
+
+  // 计划 ↔ 装配面：计划里的段必须在场，且 bytes 与段文本逐字对得上（运行时锚点走 context 槽）。
+  // LAZY 不在这一组里：它只在「命中触发词」时才拼回正文，本轮的输入为空、它渲染出空串 ——
+  // 计划因此把它按 empty-render 丢掉，而它在装配面上的那一段本来就是空的。这不是漂移，
+  // 断言口径必须区分「注册面恒在」（内核/首句层/任务态/批量臂/锚点）与「按触发词决定在不在」（惰性章节）。
+  const dynamicIds = [BOOST, BATCH, RUNTIME];
+  const missing = dynamicIds.filter((id) => !selectedIds.includes(id));
+  check(missing.length === 0, "恒在场动态单元都进了计划", JSON.stringify(selectedIds));
+  check(
+    dynamicIds.every((id) => textIn(first, id) !== null),
+    "计划说进了的段在装配面上真的在场",
+    JSON.stringify(dynamicIds.filter((id) => textIn(first, id) === null)),
+  );
+  check(
+    !selectedIds.includes(LAZY) && (p1?.dropped ?? []).some((row) => row.id === LAZY && row.reason === "empty-render"),
+    "没命中触发词时惰性章节按空渲染丢掉（而不是留一个空段）",
+    JSON.stringify((p1?.dropped ?? []).filter((row) => row.id === LAZY)),
+  );
+  const rowOf = (id) => (p1?.selected ?? []).find((row) => row.id === id);
+  const bytePairs = dynamicIds.map((id) => {
+    const text = textIn(first, id) ?? "";
+    return `${id}:${rowOf(id)?.bytes}/${Buffer.byteLength(text, "utf8")}`;
+  });
+  check(
+    dynamicIds.every((id) => rowOf(id)?.bytes === Buffer.byteLength(textIn(first, id) ?? "", "utf8")),
+    "计划里的 bytes 与线上那一份逐字一致（同一份事实快照）",
+    JSON.stringify(bytePairs),
+  );
+  check(
+    (p1?.audit?.owned ?? []).includes(BOOST) && (p1?.audit?.owned ?? []).includes(RUNTIME),
+    "计划自报归属清单（哪几个单元归它管）",
+    JSON.stringify(p1?.audit),
+  );
+  check(p1?.audit?.ok === true, "计划与现状一致（无缺段、无多段）", JSON.stringify(p1?.audit));
+
+  // 指纹：同一份事实快照重复装配 → 同一指纹；可选内容不变时选择也不变。
+  const second = await r.assemble();
+  const p2 = await planAfter(Number(p1?.seq ?? 1) + 1);
+  check(!!p2 && p2.fingerprint === p1.fingerprint, "同一份事实快照 → 同一指纹（计划可复现）",
+    `${p1?.fingerprint} vs ${p2?.fingerprint}`);
+  check(
+    Number(p2?.seq) > Number(p1?.seq),
+    "装配序号单调推进（seq = 装配跑了几次）",
+    JSON.stringify({ s1: p1?.seq, s2: p2?.seq }),
+  );
+  check(
+    Number(p2?.revision) >= 1 && Number.isFinite(Number(p2?.revision)),
+    "revision 是有限的正整数（同一份计划只 +1，不按装配次数暴涨）",
+    JSON.stringify({ r1: p1?.revision, r2: p2?.revision }),
+  );
+  check(
+    Number(p2?.seq) > Number(p1?.seq) && (p2?.selected ?? []).length === (p1?.selected ?? []).length,
+    "重复装配不会多挂或少挂单元（同一选择、更新的 seq）",
+    JSON.stringify({ s1: p1?.seq, s2: p2?.seq, n1: (p1?.selected ?? []).length, n2: (p2?.selected ?? []).length }),
+  );
+
+  // 单元数上限与命中率闸：都是「整单元」粒度，且必须留原因。
+  const beforeMax = IG5_CONFIG.MAX_UNITS_PER_TURN;
+  const beforeConf = IG5_CONFIG.MIN_TRIGGER_CONFIDENCE;
+  try {
+    // 单元数上限的口径是「档位给下限、调参只能放宽」：balanced 档 12 条，把键设成 20 才抬得动，
+    // 设成 2 不会把上限压到 2（压下去会把无条件基线也挤掉，那是另一类故障而不是省上下文）。
+    IG5_CONFIG.MAX_UNITS_PER_TURN = 20;
+    pendingBaseline = true;              // 改档位 → 必须等改档位之后那一份计划
+    await r.assemble();
+    const p3 = await planAfter(Number(p2?.seq ?? 0) + 1);
+    check(
+      Number(p3?.ledger?.maxUnitsPerTurn) === 20,
+      "单元数上限：调参放宽得动（档位是下限，不是上限）",
+      JSON.stringify({ cap: p3?.ledger?.maxUnitsPerTurn }),
+    );
+    check(
+      (p3?.selected ?? []).length === (p1?.selected ?? []).length && (p3?.selected ?? []).every((row) => row.bytes > 0),
+      "放宽上限不会改变本轮选择，且留下的是完整单元（bytes 不为 0，不截半句）",
+      JSON.stringify((p3?.selected ?? []).map((row) => `${row.id}:${row.bytes}`)),
+    );
+    IG5_CONFIG.MAX_UNITS_PER_TURN = 1;
+    pendingBaseline = true;
+    await r.assemble();
+    const p3b = await planAfter(Number(p3?.seq ?? 0) + 1);
+    check(
+      Number(p3b?.ledger?.maxUnitsPerTurn) === 12 &&
+        (p3b?.dropped ?? []).every((row) => row.reason !== "unit-cap"),
+      "调参想把上限压到档位之下时不生效（只放宽、不收紧，不会把无条件基线挤掉）",
+      JSON.stringify({ cap: p3b?.ledger?.maxUnitsPerTurn, dropped: (p3b?.dropped ?? []).map((d) => d.reason) }),
+    );
+
+    IG5_CONFIG.MAX_UNITS_PER_TURN = 12;
+    IG5_CONFIG.MIN_TRIGGER_CONFIDENCE = 1;
+    pendingBaseline = true;              // 同上：命中率闸变了，等新那一份
+    await r.assemble();
+    const p4 = await planAfter(Number(p3b?.seq ?? 1) + 1);
+    check(
+      (p4?.selected ?? []).some((row) => row.id === KERNEL) &&
+        !(p4?.selected ?? []).some((row) => row.id === RUNTIME),
+      "命中率闸拉满时基线仍在场、动态上下文被削（首句层/内核不能被挤掉）",
+      JSON.stringify((p4?.selected ?? []).map((row) => row.id)),
+    );
+    check(
+      (p4?.dropped ?? []).some((row) => row.reason === "low-confidence"),
+      "被命中率闸削掉的单元带 low-confidence 原因",
+      JSON.stringify((p4?.dropped ?? []).map((row) => `${row.id}:${row.reason}`)),
+    );
+  } finally {
+    IG5_CONFIG.MAX_UNITS_PER_TURN = beforeMax;
+    IG5_CONFIG.MIN_TRIGGER_CONFIDENCE = beforeConf;
+    await r.assemble();
+  }
+}
+
+// ---- 15. 注入计划器（v0.66.0）· apply 档：计划成为唯一动态写入者 ----
+// observe 档证明「计划认得出现状」；这一段证明「apply 档下计划仍然自洽、且档位往返不留残留」——
+// 这是整条链上唯一会改线上文本的档，所以单独判，且必须在同一个演习台上判（换台子等于换靶子）。
+{
+  const r = await rig();
+  const prev = {
+    mode: IG5_CONFIG.INJECTION_POLICY,
+    profile: IG5_CONFIG.INJECTION_PROFILE,
+    conf: IG5_CONFIG.MIN_TRIGGER_CONFIDENCE,
+  };
+  // 先取「换档前」的装配面与计划：这一段要判的是「同一台子、只换档位」的差异。
+  const baseline = await r.assemble();
+  const beforeNames = baseline.sections.map((s) => s.name).join(",");
+  const baselineSeq = Number((await planAfter(1))?.seq ?? 0);
+  let appliedSeq = baselineSeq;
+  try {
+    // 三个键一次性改齐再装配：分多次改会让「第一次装配读到半套档位」——
+    // 那是本脚本自己的竞态，不是插件的（断言会变成对着一份中间态判）。
+    IG5_CONFIG.INJECTION_POLICY = "apply";
+    IG5_CONFIG.INJECTION_PROFILE = "minimal";
+    IG5_CONFIG.MIN_TRIGGER_CONFIDENCE = 0.9;
+    pendingBaseline = true;                       // 换档 → 等新一档的第一份计划
+    const alt = await r.assemble();
+    // 等「真的按 apply + minimal 算出来的」那一份：mode/profile 是硬判据，
+    // 账本里的 domain 上限只是它的一个后果（下一段单独判）。
+    const p = await planAfter(baselineSeq + 1, 2500, (x) => x.mode === "apply" && x.profile === "minimal");
+    appliedSeq = Number(p?.seq ?? appliedSeq);
+    check(p?.mode === "apply", "apply 档下计划自报 mode=apply", String(p?.mode));
+    check(p?.profile === "minimal", "apply 档下策略档位如实汇报", String(p?.profile));
+    check(
+      (p?.selected ?? []).length > 0 && (p?.selected ?? []).every((row) => row.bytes > 0),
+      "apply 档下选中项都带真实字节数（不做空段）",
+      JSON.stringify((p?.selected ?? []).map((row) => `${row.id}:${row.bytes}`)),
+    );
+    check(
+      (p?.ledger?.totals?.units ?? 0) === (p?.selected ?? []).length,
+      "账本的单元数与选中项一致（账本不是另算一份）",
+      JSON.stringify(p?.ledger?.totals),
+    );
+    check(
+      (p?.budget?.totalBytes ?? 0) > 0 && (p?.budget?.totalBytes ?? 0) <= Math.max(1, IG5_CONFIG.SECTION_BUDGET_BYTES),
+      "总字节不超过天花板",
+      JSON.stringify(p?.budget),
+    );
+    check(
+      (p?.dropped ?? []).every((row) => typeof row.id === "string" && row.id !== "" && typeof row.reason === "string"),
+      "apply 档下丢弃项同样点名到单元 id + reason",
+      JSON.stringify(p?.dropped),
+    );
+    check(alt.sections.length > 0 && alt.contexts.length > 0, "apply 档不会把装配打空");
+    // minimal 档把动态格压到 6000 B：即便这一轮没削，账本也必须如实报出这一格的上限来
+    check(
+      (p?.ledger?.categories ?? []).some((row) => row.category === "domain" && row.cap === 6000),
+      "minimal 档把动态格上限压到 6000 B（账本如实报出）",
+      JSON.stringify((p?.ledger?.categories ?? []).map((row) => `${row.category}:${row.cap}`)),
+    );
+  } finally {
+    IG5_CONFIG.INJECTION_POLICY = prev.mode;
+    IG5_CONFIG.INJECTION_PROFILE = prev.profile;
+    IG5_CONFIG.MIN_TRIGGER_CONFIDENCE = prev.conf;
+    await r.assemble();
+  }
+  pendingBaseline = true;   // 调回默认档 → 同样等新一档的第一份计划
+  const back = await r.assemble();
+  const q = await planAfter(appliedSeq + 1);
+  check(q?.mode === "observe", "调回 observe 档后计划自报回到 observe", String(q?.mode));
+  check(
+    back.sections.map((s) => s.name).join(",") === beforeNames,
+    "档位往返后装配面回到原状（计划器不留残留）",
+    `${beforeNames} → ${back.sections.map((s) => s.name).join(",")}`,
+  );
 }
 
 const total = passes.length + failures.length;

@@ -54,7 +54,7 @@
           { id: "todo", label: "任务" }
         ];
 
-        var VERSION = "v0.65.29";
+        var VERSION = "v0.66.0";
         var TITLE = "无限五代 " + VERSION;
         // 判决**不再自动淡出**：投影里的 verdict 一直有效，直到用户下一条发言
         // 才被重置成「执行中」。原先 3.2 秒后回落成空闲态，实际观感就是
@@ -2635,7 +2635,22 @@
               (boot.nativePluginManager ? "（DSHA 原生闸门：确认不进 profile，本行由本体自证）" : "")],
             ["健康", "库 v" + String((db && db.version) || "?") + " · pid " + String(boot.pid || "?") + " · 落盘 " +
               (age === null ? "未知" : age + " 秒前") + " · 锚点已发 " + (runtime.anchorEmissions || 0) + " 版 · 注入 " +
-              (runtime.placements || []).length + " 处"]
+              (runtime.placements || []).length + " 处"],
+            // v0.66.0 注入计划：面板只读计划器写下的那一份（id / bytes / reason），不自己重算。
+            // 漂移与丢弃原因各占一截，省得再翻 console。
+            ["注入计划", (runtime.plan ? (
+              (runtime.plan.profile || "?") + "/" + (runtime.plan.mode || "?") +
+              " · 进 " + ((runtime.plan.selected || []).length) + " 段（" + (((runtime.plan.budget || {}).totalBytes) || 0) + " B）" +
+              " · 丢 " + ((runtime.plan.dropped || []).length) +
+              " · " + String(runtime.plan.fingerprint || "无指纹") +
+              ((runtime.plan.audit && runtime.plan.audit.ok === false)
+                ? " · 漂移：缺 " + (((runtime.plan.audit || {}).missing || []).join(",") || "无") +
+                  ((((runtime.plan.audit || {}).extra || []).length) ? " / 多 " + ((runtime.plan.audit || {}).extra || []).join(",") : "")
+                : " · 与现状一致") +
+              (((runtime.plan.dropped || []).length)
+                ? " · 丢因 " + [...new Set((runtime.plan.dropped || []).map(function (d) { return d.reason; }))].join("/")
+                : "")
+            ) : "本轮还没出计划（默认只观测：装配一次就有）")]
           ];
           return react.createElement("div", { className: "armor5-console-group" },
             react.createElement("div", { className: "armor5-console-group-title" },

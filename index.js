@@ -117,10 +117,23 @@ import { arbitrationLine, IG5_TAIL_ORDER } from "./data/arbitration.mjs";
 import { createWakeStore, registerWakeFeatures } from "./data/wake-features.mjs";
 import { credentialClauseLine } from "./data/credential-permit.mjs";
 import { createIntentLock, protocolDecision } from "./data/intent-protocol.mjs";
+// 注入策略唯一真源（v0.66.0）：动态注入不再由多个 assemble handler 各自改 sections，
+// 而是先过 planInjection() 出一份带 reason/ttl/bytes 的计划，再由一个 mutator 按计划落笔。
+// 本文件只负责「供事实、供单元、消费计划」，决策一律在 data/injection-policy.mjs 里。
+import {
+  createTtlLedger,
+  planInjection,
+  snapshotFacts,
+  compareWithLive,
+  clampNumber as clampPolicyNumber,
+  digestOf as policyDigest,
+  PROFILE_VALUES as INJECTION_PROFILES,
+  CHANNELS as INJECTION_CHANNELS,
+} from "./data/injection-policy.mjs";
 
 // ── 无限五代内核载荷（v0.11.1） ────────────────────────────────────────────────────
 // 版本单一真源：下面两处引用它，verify_dedupe.mjs 会核对它与 package.json 一致。
-const PLUGIN_VERSION = "0.65.29";
+const PLUGIN_VERSION = "0.66.0";
 const KERNEL_VERSION = PLUGIN_VERSION;
 // Order 100 = 通用内核；Order 200 = 默认只放一段短「末位锚点」。
 //
@@ -537,6 +550,28 @@ const BATCH_ARM_ORDER = 170;
 // 检测窗口：题库可能一次性贴进来，扫描上限给到 20000 字符（只用于判别与计数，不落盘、不外发）。
 const BATCH_SCAN_CAP = 20000;
 
+// 注入策略参数（v0.66.0）：决策搬到 data/injection-policy.mjs 之后，这里只留「策略参数」——
+// 配置解析负责得到最终值，绝不直接决定注入；真正的选择必须经过计划器，这样「配置来源」与
+// 「注入理由」不会混在一起。三档预置见 INJECTION_PROFILES（minimal / balanced / full）。
+const INJECTION_PROFILE = String(process.env.IG5_INJECTION_PROFILE ?? "balanced").trim().toLowerCase();
+let INJECTION_PROFILE_SAFE = Object.prototype.hasOwnProperty.call(INJECTION_PROFILES, INJECTION_PROFILE)
+  ? INJECTION_PROFILE
+  : "balanced";
+// observe（默认）= 计划器只出审计、不改装配：先证明「计划与现状一致」再动刀。
+// apply = 计划器接管动态单元的最终文本（多条单元一次落笔，不许第二个写入者）。
+let INJECTION_POLICY_MODE = ["observe", "apply", "off"].includes(String(process.env.IG5_INJECTION_POLICY ?? "observe").trim().toLowerCase())
+  ? String(process.env.IG5_INJECTION_POLICY ?? "observe").trim().toLowerCase()
+  : "observe";
+const BASELINE_PROTECTED = String(process.env.IG5_BASELINE_PROTECTED ?? "on").trim().toLowerCase() !== "off";
+// 三格配额与单元数上限的默认值都是 0 = 「跟随档位」（与 LAZY_BYTES=0 同一套写法）：
+// 填 0 时由 INJECTION_PROFILE 给出该档的配额，填了正整数就是显式放宽（只放宽、不收紧）。
+const DYNAMIC_MAX_BYTES = Number.parseInt(process.env.IG5_DYNAMIC_MAX_BYTES ?? "0", 10) || 0;
+const CONTEXT_MAX_BYTES = Number.parseInt(process.env.IG5_CONTEXT_MAX_BYTES ?? "0", 10) || 0;
+const MAX_UNITS_PER_TURN = Number.parseInt(process.env.IG5_MAX_UNITS_PER_TURN ?? "0", 10) || 0;
+const MIN_TRIGGER_CONFIDENCE = Number.parseFloat(process.env.IG5_MIN_TRIGGER_CONFIDENCE ?? "0.6");
+const DROP_EMPTY_UNITS = String(process.env.IG5_DROP_EMPTY_UNITS ?? "on").trim().toLowerCase() !== "off";
+const TRACE_INJECTION_PLAN = String(process.env.IG5_TRACE_INJECTION_PLAN ?? "off").trim().toLowerCase() === "on";
+
 // 低可见性注入测试（v0.65.20）：只影响观测面，不改变宿主安全边界。
 // 开启后仍保留原有注入段，避免把“用户看不见”误当成“载荷不存在”；同时把运行时锚点
 // 提升为每步重发，减少长对话/压缩后的命中抖动。通过 IG5_STEALTH_MODE=on 开启。
@@ -587,6 +622,16 @@ const TUNABLE_KEYS = [
   "SECTION_BUDGET_MODE",
   "SECTION_BUDGET_BYTES",
   "SECTION_BUDGET_SHARE",
+  // v0.66.0 注入策略参数（设置页可点；IG5_* 环境变量同名可覆盖；真正的注入选择仍由计划器做）。
+  "INJECTION_PROFILE",
+  "INJECTION_POLICY",
+  "BASELINE_PROTECTED",
+  "DYNAMIC_MAX_BYTES",
+  "CONTEXT_MAX_BYTES",
+  "MAX_UNITS_PER_TURN",
+  "MIN_TRIGGER_CONFIDENCE",
+  "DROP_EMPTY_UNITS",
+  "TRACE_INJECTION_PLAN",
 ];
 const ENV_OF_KEY = {
   LAYER2_MODE: "IG5_LAYER2_MODE",
@@ -609,12 +654,30 @@ const ENV_OF_KEY = {
   // 硬塞进去会牵动 TUNABLE_KEYS 与条目数断言（同 verify_tuning 里 boost/lazy 目录外开关的口径）。
   OVERRIDE_CLAUSE: "IG5_OVERRIDE_CLAUSE",
   EVAL_LAYER: "IG5_EVAL_LAYER",
+  INJECTION_PROFILE: "IG5_INJECTION_PROFILE",
+  INJECTION_POLICY: "IG5_INJECTION_POLICY",
+  BASELINE_PROTECTED: "IG5_BASELINE_PROTECTED",
+  DYNAMIC_MAX_BYTES: "IG5_DYNAMIC_MAX_BYTES",
+  CONTEXT_MAX_BYTES: "IG5_CONTEXT_MAX_BYTES",
+  MAX_UNITS_PER_TURN: "IG5_MAX_UNITS_PER_TURN",
+  MIN_TRIGGER_CONFIDENCE: "IG5_MIN_TRIGGER_CONFIDENCE",
+  DROP_EMPTY_UNITS: "IG5_DROP_EMPTY_UNITS",
+  TRACE_INJECTION_PLAN: "IG5_TRACE_INJECTION_PLAN",
 };
 // 只有真布尔键走 true/false 转换；档位键（LAYER2_MODE / TAIL_MODE / RUNTIME_ANCHOR_MODE /
 // ASK_GATE_MODE）的 "off"/"auto"/"on" 是字符串取值，不能被布尔化，否则 off 档会静默失效。
-const BOOL_KEYS = new Set(["DEDUPE_PAYLOAD", "EXCLUSIVE_SECTION", "OVERRIDE_CLAUSE", "EVAL_LAYER"]);
+const BOOL_KEYS = new Set([
+  "DEDUPE_PAYLOAD",
+  "EXCLUSIVE_SECTION",
+  "OVERRIDE_CLAUSE",
+  "EVAL_LAYER",
+  // v0.66.0 策略参数里的三个纯布尔：保护的基线、空单元丢弃、计划留痕。
+  "BASELINE_PROTECTED",
+  "DROP_EMPTY_UNITS",
+  "TRACE_INJECTION_PLAN",
+]);
 // 档位键的合法取值（越界一律判「本次不使用」，回落下一来源 —— 与数值键同一口径）。
-const MODE_KEYS = Object.freeze({ OVERRIDE_MODE: OVERRIDE_MODES });
+const MODE_KEYS = Object.freeze({ OVERRIDE_MODE: OVERRIDE_MODES, INJECTION_PROFILE: Object.keys(INJECTION_PROFILES), INJECTION_POLICY: ["off", "observe", "apply"] });
 // 数值键的合法区间。越界值不是「更省」，而是静默把功能掐死：实测 BOOST_BYTES=4 会让
 // 增强集每个单元都超预算 → 整条丢弃 → 段内 0 B、hits 空（重启后 profile 才看出来）。
 // 因此越界一律判为「本次不使用」，回落到下一来源，最终落到文件默认值。
@@ -626,6 +689,12 @@ const NUMERIC_RANGES = Object.freeze({
   // 系统提示段预算：0 = 不设限（等价于 off 的轻度版：只量不改）
   SECTION_BUDGET_BYTES: [0, 8 * 1024 * 1024],
   SECTION_BUDGET_SHARE: [1, 100], // 单位 %：系统提示最多占窗口这么多
+  // v0.66.0 策略参数：三格配额与单元数上限。0 = 该格不设限（交给总天花板兜底）。
+  DYNAMIC_MAX_BYTES: [0, 262144],
+  CONTEXT_MAX_BYTES: [0, 65536],
+  MAX_UNITS_PER_TURN: [0, 64],
+  // 命中率闸：0 = 全放行（等价于关掉置信度筛选），1 = 只放行无条件的基线单元。
+  MIN_TRIGGER_CONFIDENCE: [0, 1],
 });
 const coerce = (key, raw) => {
   const range = NUMERIC_RANGES[key];
@@ -690,6 +759,21 @@ const IG5_DEFAULTS = Object.freeze({
   SECTION_BUDGET_MODE,
   SECTION_BUDGET_BYTES,
   SECTION_BUDGET_SHARE,
+  // v0.66.0 注入策略参数（进调参目录：档位、保护位、三格配额、单元数上限、命中率闸、留痕）。
+  // 这两个键必须走 getter：自检与调试会就地改 IG5_CONFIG.INJECTION_PROFILE / POLICY 来摆姿势，
+  // 而模块级绑定的初值也是从同一对常量来的。写成值拷贝的话，改 IG5_CONFIG 不会带着常量走，
+  // 于是「同一时刻两处记录两个档位」—— 面板显示 balanced、实际跑的却是 minimal。
+  get INJECTION_PROFILE() { return INJECTION_PROFILE_SAFE; },
+  set INJECTION_PROFILE(value) { INJECTION_PROFILE_SAFE = value; },
+  get INJECTION_POLICY() { return INJECTION_POLICY_MODE; },
+  set INJECTION_POLICY(value) { INJECTION_POLICY_MODE = value; },
+  BASELINE_PROTECTED,
+  DYNAMIC_MAX_BYTES,
+  CONTEXT_MAX_BYTES,
+  MAX_UNITS_PER_TURN,
+  MIN_TRIGGER_CONFIDENCE: Number.isFinite(MIN_TRIGGER_CONFIDENCE) ? MIN_TRIGGER_CONFIDENCE : 0.6,
+  DROP_EMPTY_UNITS,
+  TRACE_INJECTION_PLAN,
 });
 
 // 三档来源：设置页 UI（持久化）> profile config > 环境变量 > 文件默认。
@@ -952,6 +1036,88 @@ const TUNING_CATALOG = [
       { value: false, label: "关", hint: "只让位、不加裁决句" },
     ],
   },
+  {
+    key: "INJECTION_PROFILE",
+    label: "注入策略档（v0.66.0）",
+    hint: "动态注入的三档预置：基线永远保留，差的只是动态内容与上下文锚点的松紧",
+    options: [
+      { value: "minimal", label: "极简", hint: "只留高置信命中（0.85），动态格 6000 B / 上下文 1600 B，长对话最省" },
+      { value: "balanced", label: "均衡（默认）", hint: "boost/lazy 正常参与，运行时锚点按节拍重锚" },
+      { value: "full", label: "全开", hint: "命中闸放到 0.4、动态格 16000 B，调试与回归用" },
+    ],
+  },
+  {
+    key: "INJECTION_POLICY",
+    label: "注入计划器（v0.66.0）",
+    hint: "动态注入是否由计划器落笔：observe 只出审计（先证明计划与现状一致），apply 才接管装配文本",
+    options: [
+      { value: "observe", label: "只观测（默认）", hint: "计划器算一遍并与实际装配比对，漂移进 runtime.injectionPlan，一个字节不改" },
+      { value: "apply", label: "接管装配", hint: "计划器成为唯一动态写入者：按计划整单元进 / 整单元丢，禁止第二个 handler 改 sections" },
+      { value: "off", label: "关", hint: "计划器完全不参与（回到 v0.65.x 的路径）" },
+    ],
+  },
+  {
+    key: "BASELINE_PROTECTED",
+    kind: "bool",
+    label: "基线受保护",
+    hint: "首句层 / 内核 / 末位锚点不被预算抢占 —— 关掉会让超长领域包能把内核挤出去",
+    options: [
+      { value: true, label: "开（默认）", hint: "基线先占、可选后抢；预算不足只丢可选整单元" },
+      { value: false, label: "关", hint: "全部单元平等竞争（排查用，不建议常开）" },
+    ],
+  },
+  {
+    key: "DYNAMIC_MAX_BYTES",
+    kind: "number",
+    min: 0,
+    max: 262144,
+    label: "动态内容格（字节）",
+    hint: "增强集 / 惰性章节 / 领域包合计上限；超格按「整单元」丢弃，绝不截半句。0 = 跟随档位（默认），填正整数＝在档位之上放宽",
+  },
+  {
+    key: "CONTEXT_MAX_BYTES",
+    kind: "number",
+    min: 0,
+    max: 65536,
+    label: "运行时上下文格（字节）",
+    hint: "运行时锚点 / 事件信号合计上限；长对话里它是最容易被截的一格。0 = 跟随档位（默认），填正整数＝放宽",
+  },
+  {
+    key: "MAX_UNITS_PER_TURN",
+    kind: "number",
+    min: 0,
+    max: 64,
+    label: "每轮单元数上限",
+    hint: "单轮允许进装配的注入单元总数（含基线）；超了按丢弃次序整单元走。0 = 跟随档位（默认）",
+  },
+  {
+    key: "MIN_TRIGGER_CONFIDENCE",
+    kind: "number",
+    min: 0,
+    max: 1,
+    label: "命中置信度闸",
+    hint: "低于这个值的动态单元不进装配（0 = 全放行，1 = 只留无条件条款）；调试时可配合 full 档降到 0.4",
+  },
+  {
+    key: "DROP_EMPTY_UNITS",
+    kind: "bool",
+    label: "空单元丢弃",
+    hint: "渲染出来是空的单元不进装配（不留空段、不留空指针）",
+    options: [
+      { value: true, label: "开（默认）", hint: "empty-render 的单元直接丢，并把原因写进计划" },
+      { value: false, label: "关", hint: "空文本也进（保留占位，仅排查用）" },
+    ],
+  },
+  {
+    key: "TRACE_INJECTION_PLAN",
+    kind: "bool",
+    label: "注入计划留痕",
+    hint: "每次出计划打一行 console（只报 id / bytes / reason，不落原文），排查「这轮为什么少了这一段」",
+    options: [
+      { value: false, label: "关（默认）", hint: "只在漂移时 warn 一次" },
+      { value: true, label: "开", hint: "每轮出一行计划摘要" },
+    ],
+  },
 ];
 
 // 注入配置的唯一读取口：apply() 一律从这里取值，自检因此可以直接改它来驱动各档行为。
@@ -1020,6 +1186,16 @@ export const IG5_CONFIG = {
   SECTION_BUDGET_MODE,
   SECTION_BUDGET_BYTES,
   SECTION_BUDGET_SHARE,
+  // 注入策略参数（v0.66.0）：与 TUNABLE_KEYS 一一对应，applyResolved 按这份名单就地写回。
+  INJECTION_PROFILE: INJECTION_PROFILE_SAFE,
+  INJECTION_POLICY: INJECTION_POLICY_MODE,
+  BASELINE_PROTECTED,
+  DYNAMIC_MAX_BYTES,
+  CONTEXT_MAX_BYTES,
+  MAX_UNITS_PER_TURN,
+  MIN_TRIGGER_CONFIDENCE,
+  DROP_EMPTY_UNITS,
+  TRACE_INJECTION_PLAN,
   // 批量交付臂（v0.42.0）：只读环境变量档位，不进 TUNABLE_KEYS。
   BATCH_ARM_MODE,
   BATCH_ARM_MIN,
@@ -1048,6 +1224,37 @@ const runtime = {
   // 系统提示段预算实况（v0.47.0）：这一段默认只观测，所以「量到了什么」必须留在案上 ——
   // 面板与 stats 都从这里读，丢了它就只剩一句 console.warn。
   sectionBudget: null,
+  // 注入计划实况（v0.66.0）：本轮每个动态单元的 selected/dropped + reason + bytes + ttl，
+  // 以及「计划 ↔ 现状」的旁路比对结果。面板与 profile 只读这一份，不在读侧现算。
+  injectionPlan: null,
+  assembleSeq: 0,   // 装配序号（本轮 step 的单调口径）
+  anchorText: null, // 运行时锚点的「只读」入口：读宿主刚装配出去的那一份，不推进节拍
+  anchorEmissionKey: null,
+  ttl: null,        // TTL 台账快照（谁在哪一轮真的进过装配）
+  listeners: null,  // 自有监听器台账（registered / disposed / live）
+  planMode: null,   // 当前注入计划器档位（mode / profile / 生效时刻）
+};
+
+// 自有监听器台账（v0.66.0）：模块级而不是 apply 级 —— 台账要能回答的是
+// 「本进程里这个插件现在挂着几条监听器、有没有重复 apply 挂成两份」，
+// 而每次 apply 一份的局部计数器答不了这个（旧台子卸载销账、新台子重新计数，
+// 两次 apply 之间互相覆盖，读到的永远是最后那个 0）。
+// 判据：apply → registered N / live N；rebuild → 不变；卸载 → live 0 且 disposed = N；
+// 再 apply → registered 2N / live N（不是 4N）。
+const listenerLedger = { registered: 0, disposed: 0, live: new Set() };
+/**
+ * 台账闸口：既是写（把三个数落进 runtime，供面板与统计库读），也是读（调用方拿到的永远是
+ * 调用那一刻的三个数）。读侧必须走它 —— 直接读 runtime.listeners 会拿到上一次刷新时的快照，
+ * 而注册与销账都可能发生在那之后（实测：卸载销账后直接读，读到的还是卸载前的 live=2）。
+ */
+const publishListenerCount = () => {
+  runtime.listeners = {
+    registered: listenerLedger.registered,
+    disposed: listenerLedger.disposed,
+    live: listenerLedger.live.size,
+    at: Date.now(),
+  };
+  return { ...runtime.listeners };
 };
 
 // 统一解析入口（v0.13.8）：插件不控制任何外部文本 —— 调参文件、HTTP 请求体，
@@ -1497,6 +1704,12 @@ const plainOutput = {
 // 直接驱动，而不是只能靠真挂载碰运气 —— scripts/verify_tool_budget.mjs 会逐个用例调它们。
 // 注意位置：必须在 capResult / safeParseJson 定义之后，否则模块求值就撞 TDZ。
 export const IG5_BUDGET = { capResult, safeParseJson, RESULT_BUDGET_BYTES, RESULT_DROP_FIRST };
+// 监听器台账的只读句柄（v0.66.0）：门禁与面板读同一份事实，不经过 profile 的快照路径。
+export const ig5ListenerSnapshot = () => ({
+  registered: listenerLedger.registered,
+  disposed: listenerLedger.disposed,
+  live: listenerLedger.live.size,
+});
 
 // 运行时元数据工具：返回插件版本与能力清单
 const profileTool = {
@@ -1520,6 +1733,7 @@ const profileTool = {
         "prompts/infinite-gen-5.1-flash.md",
       ],
       lineage: [
+        `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 注入策略管线：动态注入从「多处各自拼字符串」收成「一份事实快照 → 一个计划器 → 一个装配修改者 → 一份审计」。新增 data/injection-policy.mjs：InjectionUnit（id/channel/scope/ttl/priority/protected/dependsOn/conflictsWith/when/render/reason）+ snapshotFacts() 冻结本轮事实 + planInjection() 做筛选/去重/依赖/冲突/TTL/最小置信度/分区配额账本（整单元丢弃，绝不截半句）+ fingerprint（同事实同指纹，稳定可复现）+ createTtlLedger（once/message 档失效记账）。接入侧：system-prompt/assemble 上只加一个 plannedAssembly mutator，默认 observe 档（只出计划与旁路比对，一个字节不改装配），INJECTION_POLICY=apply 才落笔；内核热加载 / 段落预算 / 接管 / 末位锚点四条既有瀑布保持不变。策略参数 9 枚进调参目录（INJECTION_PROFILE 三档 minimal/balanced/full、INJECTION_POLICY、BASELINE_PROTECTED、DYNAMIC_MAX_BYTES、CONTEXT_MAX_BYTES、MAX_UNITS_PER_TURN、MIN_TRIGGER_CONFIDENCE、DROP_EMPTY_UNITS、TRACE_INJECTION_PLAN，默认 0 = 跟随档位）；runtime.plan 分区与面板「注入计划」一行（selected/dropped/reason/bytes/ttl/ledger/fingerprint，只有 id+digest 不进正文）。生命周期收口：自有监听器台账（apply → N / rebuild → N / 卸载 → 0 / 再 apply → N，不再靠推断），新增门禁 verify:injection:lifecycle 与 verify:injection:planner；verify:injection 56 → 98 条（第 14/15 节专判计划↔装配一致性、指纹稳定、单元上限、命中率闸、apply 档往返）`,
         `dsh-infinite-gen-5 (v${PLUGIN_VERSION}) — 用户向选择（主动档）：把「该用户拍板的地方」做成可点按钮，而不是正文里的问句。ASK_GATE_MODE 三值 → 四值（off / auto / proactive / on）并默认 proactive —— 三个必问时刻（①任务输入：本轮有两条以上互斥路线 / 范围对象不明 / 关键参数未定；②执行中的重大决策：不可逆或破坏性动作、方向分叉、影响面大的取舍；③输出收尾：明确的下一步分支）在主动档下不受节拍约束：第 1 步必开（reason「任务输入：先给选择」）、多步任务在跑时每一步都开（reason「多步任务在跑：重大决策必问」），只有闲聊/单步退回 auto 那套 rev % ASK_GATE_EVERY 节拍。合同分两档省 token：入口 / 用户点名要建议 / 节拍到点发全文合同（header ≤15 字点题、questions 只放 1 个、2–5 个互斥穷尽选项、label 动词短语 ≤12 字、description 必写「这是什么 + 代价收益 + 什么情况选它」、推荐项第一并标 (Recommended) 且给理由、留「你来定」兜底项、可多选才设 multi_select），多步任务中间的每一步只发压缩复述；反滥用口径不变（能自造占位符或已有可回滚默认解的直接做、同一轮最多问一次、同一分叉不重复问、用户说「别问 / 自己定」即全局静默）。内核三份文件仍零改动（同源 SHA256 与体积预算没碰），调参键数目不变（仍是八个，改的是档位取值）；verify_injection 56 → 60`,
         `dsh-infinite-gen-5 (v0.20.0) — 询问/阶段闸门：不新开注入位，只把条件压在运行时锚点尾部（与 L2 域包同一个条件注入层）—— 能力闸 ctx.get('userQuestions') / 用户口风闸 decideAskIntent(lastUserText) / 频次闸 rev % ASK_GATE_EVERY 三道全成立才拼一段窄契约：只在信息缺口导致方向分叉（互斥路径 / 范围对象不明 / 破坏性动作待确认）时用 ask_user_question 问一次，一次一个问题、2–5 个选项、推荐项第一；能自造占位符（TARGET / HOST / TOKEN / OFFSET / PAYLOAD / SERIAL / ROLE_A / ROLE_B）的一律不问，用户说「别问 / 自己定 / 直接做」即全局静默，说「建议 / 怎么选 / 拿不准」当步提前开。多步任务另拿阶段契约：每阶段收尾给「做法 / 判据 / 产物」三行并同步清单，正文不报百分比（百分比只由面板按清单事实显示）。调参键 6 → 8（ASK_GATE_MODE / ASK_GATE_EVERY），内核三份文件零改动（同源 SHA256 与体积预算没碰）；verify_injection 41 → 56、verify_tuning 45 → 49、verify_ui 186 → 187｜过期（有效期到 v0.52.13，依据 index.js lineage 自身：当前 PLUGIN_VERSION）`,
         `dsh-infinite-gen-5 (v0.12.3) — 运行期调参：六个注入开关（LAYER2_MODE / DEDUPE_PAYLOAD / TAIL_MODE / RUNTIME_ANCHOR_MODE / RUNTIME_ANCHOR_EVERY / EXCLUSIVE_SECTION）不再写死在代码里 —— apply(ctx, config) 的 profile config > IG5_* 环境变量 > 文件内默认，三级覆盖就地写回 IG5_CONFIG，profile 工具新增 configOverrides 如实汇报「这个值是谁给的」；管理器式安装只要在 profile 的 cordis.patch.yml 里加一条只带 config 的定向覆盖（没有 insert，因此不算双接线）。默认运行时锚点节拍 6 → 4 步（长任务里重述更跟得上）；自检改成从 IG5_CONFIG 读默认档，以后调默认值不必回头改断言。verify_injection 34 → 41（真实宿主上验证 profile config / 环境变量 / 用完还原），verify_dedupe 81 → 82｜过期（有效期到 v0.52.13，依据 index.js lineage 自身：当前 PLUGIN_VERSION）`,
@@ -1545,6 +1759,13 @@ const profileTool = {
       batch: runtime.batch,
       // v0.47.0 系统提示段预算实况：默认只观测，所以「量到了什么、该丢谁」必须能被面板读到。
       sectionBudget: runtime.sectionBudget,
+      // v0.66.0 注入计划实况：本轮每个动态单元进没进、为什么、多大、什么时候失效，
+      // 以及「计划 ↔ 现状」的旁路比对。面板与离线门禁读的都是这一份。
+      injectionPlan: runtime.injectionPlan,
+      // 台账是模块级活对象（registered / disposed / live），读侧直接给引用：
+      // 复制一份会把「读的那一刻之前最后一次刷新」冻在返回值里，正是本门禁要杜绝的假读数。
+      listeners: runtime.listeners ?? null,
+      injectionPolicy: runtime.planMode ? { ...runtime.planMode } : null,
       injectionStrength: {
         exclusive: IG5_CONFIG.EXCLUSIVE_SECTION === true,
         tail:
@@ -2417,12 +2638,43 @@ export function apply(ctx, config) {
     // 同一格早已被 bump("sessions.events") 置脏，所以写它不会多出一次落盘。
     stats.patch("sessions", { lastId: id, lastAt: new Date().toISOString() });
   };
+  // ── 统一 disposer 台账（v0.66.0）─────────────────────────────────────────────
+  // 本文件里有两类监听器，归属必须分开记清楚：
+  //   · 注入侧：走 ctx.effect(() => ctx.on(...))，句柄进 injectionHandles，rebuildInjection 逐个撤销；
+  //   · 会话侧：直接 ctx.on(...)，宿主 ctx 卸载时本来就会回收。
+  // 后者以前没有任何本地台账，于是「rebuild 会不会把监听器挂成两份 / 卸载后还剩几个」
+  // 只能靠推断。这里补一份台账：注册时入账，卸载时逐个销账，并把数量写进 runtime 供面板与门禁读。
+  const ownListener = (target, event, handler) => {
+    if (typeof target?.on !== "function") return () => {};
+    const raw = target.on(event, handler);
+    const record = { event, disposed: false };
+    const undo = typeof raw === "function" ? raw : () => {};
+    listenerLedger.registered += 1;
+    listenerLedger.live.add(record);
+    record.dispose = () => {
+      if (record.disposed) return;
+      record.disposed = true;
+      listenerLedger.disposed += 1;
+      listenerLedger.live.delete(record);
+      try {
+        undo();
+      } catch {
+        // 收尾阶段保持幂等：撤销失败不抛，也不重复计数。
+      }
+    };
+    return record.dispose;
+  };
+  // 卸载时销账（effect 的清理在宿主 ctx 卸载时一定被调用；顺序与注册相反）。
+  ctx.effect(() => () => {
+    for (const record of [...listenerLedger.live].reverse()) record.dispose();
+  }, "infinite-gen-5: 自有监听器销账");
+
   if (typeof ctx.on === "function") {
-    ctx.on("session/created", (session) => {
+    ownListener(ctx, "session/created", (session) => {
       rememberSession(session);
       mirrorTasks(session, "session/created");
     });
-    ctx.on("session/event", (session, event) => {
+    ownListener(ctx, "session/event", (session, event) => {
       if (!session || !event) return;
       rememberSession(session);
       stats.bump("sessions.events");
@@ -2708,6 +2960,21 @@ export function apply(ctx, config) {
       return lastText;
     };
     const spec = { name: RUNTIME_ANCHOR_SECTION, order: RUNTIME_ANCHOR_ORDER, text };
+    // v0.66.0：计划器要先算一遍才能决定这一格进不进装配，而 text() 是有状态的（每调一次 tick +1）。
+    // 直接让计划器去调它，同一份快照会被读成两份不同的文本。于是显式分成两个入口：
+    //   spec.text()            宿主用：每次调用仍推进节拍、按节拍换文本（装配面语义一字未改）。
+    //   runtime.anchorText()   计划器用：只读「宿主刚刚装配出去的那一份」，不推进节拍。
+    // 计划器因此永远与线上那一份逐字一致，也不会因为「多看两眼」把节拍带快。
+    const anchorEmission = { key: null, text: "" };
+    spec.text = () => {
+      const key = `e${tick + 1}`;
+      const value = text();
+      anchorEmission.key = key;
+      anchorEmission.text = value;
+      return value;
+    };
+    runtime.anchorText = () => anchorEmission.text;
+    runtime.anchorEmissionKey = () => anchorEmission.key;
     try {
       injectionHandles.push(ctx.effect(() => ctx.systemPrompt.context(spec)));
     } catch (error) {
@@ -3011,6 +3278,271 @@ export function apply(ctx, config) {
     }
 
     if (primaryOk) {
+      // ── 注入计划器（v0.66.0）：所有动态单元先过 planInjection()，再由唯一 mutator 落笔 ──
+      // 分工写死在这里，别再往别处加「顺手改一下 sections」的 handler：
+      //   registerBoost / registerLazy / registerKernel / sectionBudget 各自只提供「本轮文本」
+      //   或「对现状的度量」；**该不该进装配**由计划器一个人说了算，
+      //   而**改装配**只有 plannedAssembly 一个 handler（INJECTION_POLICY=apply 时）。
+      const ttlLedger = createTtlLedger();
+      runtime.ttlLedger = ttlLedger;
+      // 三档预置 ⊕ 调参现值：档位给松紧，三格配额与单元数上限取两者较大者（档位是下限，不是上限），
+      // 命中率闸取较小者（谁更严谁说了算）。配置解析只负责得到值，不直接决定注入。
+      const injectionPolicy = () => {
+        const profile = INJECTION_PROFILES[CFG.INJECTION_PROFILE] ?? INJECTION_PROFILES.balanced;
+        return {
+          mode: CFG.INJECTION_POLICY,
+          profile: CFG.INJECTION_PROFILE,
+          ledger: {
+            ceiling: Number(CFG.SECTION_BUDGET_BYTES) || 0,
+            baselineBytes: 0, // 0 = 由计划器按 protected 单元现算
+            // 0（默认）= 跟随档位；填了正整数就是显式放宽（Math.max 保证只放宽、不收紧 ——
+            // 把配额调小会把无条件基线也挤掉，那是另一类故障而不是省上下文）。
+            dynamicMaxBytes: Math.max(Number(profile.dynamicMaxBytes) || 0, Number(CFG.DYNAMIC_MAX_BYTES) || 0),
+            contextMaxBytes: Math.max(Number(profile.contextMaxBytes) || 0, Number(CFG.CONTEXT_MAX_BYTES) || 0),
+            maxUnitsPerTurn: Math.max(Number(profile.maxUnitsPerTurn) || 0, Number(CFG.MAX_UNITS_PER_TURN) || 0),
+            // 基线受保护关掉时，baseline 格被抬到等于「不设限」——由可选择单元自己竞争总天花板。
+            taskMaxBytes: Number(CFG.SECTION_BUDGET_BYTES) || 4096,
+          },
+          // 命中率闸取两者较大者：档位给的是「默认松紧」，调参只能把它调严，不能调松到
+          // 档位之下 —— 否则 minimal 档会被一条配置悄悄放回全量动态注入（档位就成了摆设）。
+          minTriggerConfidence: clampPolicyNumber(
+            Math.max(Number(profile.minTriggerConfidence ?? 0.6), Number(CFG.MIN_TRIGGER_CONFIDENCE ?? 0.6)),
+            0,
+            1,
+          ),
+        };
+      };
+      // 动态单元清单：id 即装配面段名（boost / lazy / KERNEL 各自的 section 常量），
+      // 面板与 profile 因此可以拿 id 直接对回线上那一段，不需要再维护一张映射表。
+      const buildInjectionUnits = (facts) => {
+        return [
+          {
+            id: PRIMARY,
+            channel: "section",
+            category: "baseline",
+            order: 100,
+            priority: 1000,
+            scope: "session",
+            ttl: "session",
+            protected: CFG.BASELINE_PROTECTED === true,
+            source: "index.js:registerSection",
+            reason: "基线内核（唯一真源 prompts/*.md）",
+            render: () => kernelText(PROMPT_URL),
+          },
+          {
+            id: FIRST_LINE_SECTION,
+            channel: "section",
+            category: "baseline",
+            order: FIRST_LINE_ORDER,
+            priority: 990,
+            scope: "session",
+            ttl: "session",
+            // 依附内核：内核让位给同源宿主时，首句层不单独挂（脱离正文它只是一句孤令）。
+            dependsOn: [PRIMARY],
+            protected: CFG.BASELINE_PROTECTED === true,
+            source: "index.js:firstLineText",
+            reason: "服从性契约，排在宿主身份段之前",
+            render: () => firstLineText(),
+          },
+          {
+            id: TASK_MODE_SECTION,
+            channel: "section",
+            category: "task",
+            order: TASK_MODE_ORDER,
+            priority: 80,
+            scope: "session",
+            ttl: "session",
+            enabled: IG5_CONFIG.TASK_MODE !== "off",
+            source: "index.js:TASK_MODE_TEXT",
+            reason: "本轮取向（构建 / 分析 / 评测）+ 五槽骨架",
+            render: () => TASK_MODE_TEXT,
+          },
+          {
+            id: BOOST_SECTION,
+            channel: "section",
+            category: "domain",
+            order: BOOST_ORDER,
+            priority: 60,
+            scope: "turn",
+            ttl: "turn",
+            dependsOn: [PRIMARY],
+            confidence: facts.userText.trim() !== "" ? 0.9 : 0.3,
+            source: "data/boost-corpus.mjs",
+            reason: "按当前用户输入编译增强集",
+            render: () => boostLive().text,
+          },
+          {
+            id: LAZY_SECTION,
+            channel: "section",
+            category: "domain",
+            order: LAZY_ORDER,
+            priority: 50,
+            scope: "turn",
+            ttl: "turn",
+            dependsOn: [PRIMARY],
+            confidence: facts.userText.trim() !== "" ? 0.9 : 0.3,
+            source: "data/lazy-sections.mjs",
+            reason: `命中触发词才拼回内核被搬走的 ${lazyStats().units} 段原文`,
+            render: () => lazyLive().text,
+          },
+          {
+            id: BATCH_ARM_SECTION,
+            channel: "section",
+            category: "batch",
+            order: BATCH_ARM_ORDER,
+            priority: 70,
+            scope: "session",
+            ttl: "session",
+            // 常驻合同段不依赖是否已经贴题：比赛评分器看不见，模型看得见。
+            // disabled 时才真的不在场（那时连 registerSection 都不会跑）。
+            enabled: CFG.BATCH_ARM_MODE !== "off" && buildInjectionUnits.batchRegistered === true,
+            confidence: facts.batch?.armed === true ? 0.95 : 0.7,
+            source: "data/batch-arm.mjs",
+            reason: facts.batch?.armed === true ? "批量输入已武装" : "常驻合同（兜底宿主不重发 context）",
+            render: () => renderBatchClause({ min: CFG.BATCH_ARM_MIN }),
+          },
+          {
+            id: RUNTIME_ANCHOR_SECTION,
+            channel: "context",
+            category: "context",
+            order: RUNTIME_ANCHOR_ORDER,
+            priority: 90,
+            scope: "step",
+            ttl: "step",
+            enabled: CFG.RUNTIME_ANCHOR_MODE !== "off" && typeof runtime.anchorText === "function",
+            // 读的是宿主刚装配出去的那一份（同一步幂等、不推进节拍），所以计划里的 bytes
+            // 与线上那一格逐字对得上。
+            confidence: 0.8,
+            source: "index.js:runtimeAnchorText",
+            reason:
+              facts.rearm || facts.compacted
+                ? "压缩 / 重锚后强制重述"
+                : `锚点节拍（每 ${CFG.RUNTIME_ANCHOR_EVERY} 步换文本重发）`,
+            render: () => (typeof runtime.anchorText === "function" ? runtime.anchorText() : ""),
+          },
+        ];
+      };
+      buildInjectionUnits.batchRegistered = CFG.BATCH_ARM_MODE !== "off";
+
+      const buildTurnFacts = () => snapshotFacts({
+        turn: sessionMemory.turns ?? 0,
+        step: runtime.assembleSeq ?? 0,
+        userText: typeof liveState.lastUserText === "string" ? liveState.lastUserText : "",
+        sessionId: taskMirror.sessionId ?? null,
+        batch: runtime.batch,
+        taskState: taskMirror.lastKnown ? { inProgress: taskMirror.lastKnown.counts?.inProgress ?? 0 } : null,
+        compacted: armorState.pendingRearm === true,
+        rearm: armorState.pendingRearm === true,
+        lastEventKind: liveState.lastKind ?? null,
+        configRevision: runtime.rebuilds ?? 0,
+        revision: (runtime.injectionPlan?.revision ?? 0) + 1,
+        marks: ttlLedger.snapshot(),
+      });
+
+      // 唯一的动态装配 mutator。observe 档只读不写（先证明计划认得出现状），
+      // apply 档才落笔 —— 两条路径用的是同一份计划，所以「看得见的」与「生效的」永远是一个数。
+      const plannedAssembly = async (_assembly, _context, next) => {
+        const out = await next();
+        if (!out || !Array.isArray(out.sections)) return out;
+        // 装配序号 = 本轮 step 的单调口径：每出一次装配 +1，计划与面板都用它对齐。
+        // 注意它只是「这一轮是第几次装配」的标号 —— 节拍推进仍由运行时锚点自己的 tick 管，
+        // 计划器只读那一格，不替它数数。
+        runtime.assembleSeq = (runtime.assembleSeq ?? 0) + 1;
+        const facts = buildTurnFacts();
+        const units = buildInjectionUnits(facts);
+        const policy = injectionPolicy();
+        // 计划器只读、不推进节拍：读到的 anchorEmission 就是宿主刚装配出去的那一份。
+        const plan = planInjection(facts, units, {
+          mode: policy.mode,
+          ledger: policy.ledger,
+          minTriggerConfidence: policy.minTriggerConfidence,
+          neverDropped: CFG.BASELINE_PROTECTED === true ? undefined : ["tail"],
+        });
+        const dynamic = new Map(plan.selected.map((row) => [row.id, row]));
+
+        // 旁路比对：计划里的动态单元必须在装配面上真的在场（上下文槽也算在场）。
+        // 漂移不静默 —— 它意味着「面板说注入了、线上却少了一段」，正是这一版要消灭的那类故障。
+        // 两个口径要分开：**不在场**（注册层的问题）与**在场但本轮渲染为空**（这一轮就是没有它，
+        // 例如没命中触发词的惰性章节）。后者不是漂移，别拿它刷警告。
+        const liveById = new Map();
+        for (const row of out.sections) liveById.set(String(row?.name ?? ""), String(row?.text ?? ""));
+        const liveContexts = new Set(
+          (Array.isArray(out.contexts) ? out.contexts : []).map((row) => String(row?.name ?? "")),
+        );
+        const liveIds = new Set([...liveById.keys(), ...liveContexts]);
+        const owned = units.map((unit) => unit.id);
+        const audit = (() => {
+          const missing = [];
+          const extra = [];
+          for (const unit of units) {
+            const want = dynamic.has(unit.id) && unit.channel !== "context";
+            const present = liveIds.has(unit.id);
+            const nonEmpty = (liveById.get(unit.id) ?? "").trim() !== "";
+            // 选中但没注册 → 缺；注册了且本轮非空、计划却没选 → 多。
+            if (want && !present) missing.push(unit.id);
+            if (!want && present && nonEmpty && unit.channel !== "context") extra.push(unit.id);
+          }
+          return { ok: missing.length === 0 && extra.length === 0, missing, extra, owned };
+        })();
+        const drifted = audit.missing.length > 0 && plan.dropped.length === 0;
+        if (drifted) {
+          // 计划里明明选中了却不在装配面上：只可能是装配链路的问题，留痕但不阻断（装配是热路径）。
+          console.warn(`[infinite-gen-5] 注入计划与装配面漂移：缺 ${audit.missing.join(", ")}`);
+        }
+
+        let sections = out.sections;
+        let mutated = false;
+        if (policy.mode === "apply") {
+          sections = out.sections.map((row) => {
+            const unit = dynamic.get(String(row?.name ?? ""));
+            if (!unit) return row;
+            if (row.text === unit.text) return row;
+            mutated = true;
+            return { ...row, text: unit.text, order: unit.order ?? row.order };
+          });
+          // 选中但注册层没有的段（例如档位后加的分支）不在这里凭空造 —— 装配面缺口由上一条 warn 报出。
+        }
+
+        // revision 的口径：同一份事实快照重复装配不涨 —— 它记的是「计划变了几次」，
+        // 不是「装配跑了几次」（那是 seq）。两个数分开，面板才分得清「重算」与「换计划」。
+        const planChanged = runtime.injectionPlan?.fingerprint !== plan.report.fingerprint;
+        runtime.injectionPlan = {
+          ...plan.report,
+          revision: planChanged ? (runtime.injectionPlan?.revision ?? 0) + 1 : (runtime.injectionPlan?.revision ?? 1),
+          seq: facts.step,
+          // 装配代数（v0.66.0）：每次 apply / rebuild 换一代。计划落到盘上之后，
+          // 读侧靠这个数分得清「这是不是当前这一代的计划」—— 也是生命周期回归的判据之一。
+          boot: runtime.rebuilds ?? 0,
+          at: Date.now(),
+          audit,
+          applied: policy.mode === "apply" && mutated,
+          mode: policy.mode,
+          profile: policy.profile,
+          ledger: plan.ledger,
+          marks: ttlLedger.size,
+        };
+        if (policy.mode === "apply" || TRACE_INJECTION_PLAN === true) ttlLedger.commit(plan, { turn: facts.turn, step: facts.step });
+        runtime.ttl = { marks: ttlLedger.size };
+        if (TRACE_INJECTION_PLAN === true) {
+          console.info(
+            `[infinite-gen-5] 注入计划 ${plan.report.fingerprint}（${policy.profile}/${policy.mode}）：` +
+              `进 ${plan.selected.length} · 丢 ${plan.dropped.length} · 共 ${plan.totalBytes} B` +
+              (plan.dropped.length ? ` · 丢因 ${[...new Set(plan.dropped.map((d) => d.reason))].join("/")}` : ""),
+          );
+        }
+        publishStats();
+        return mutated ? { ...out, sections } : out;
+      };
+      try {
+        injectionHandles.push(ctx.effect(() => ctx.on("system-prompt/assemble", plannedAssembly)));
+      } catch (error) {
+        console.warn(
+          `[infinite-gen-5] 无法挂载注入计划器（${String(error?.message ?? error)}）；` +
+            `动态注入回到各 handler 各自改装配的老路径，runtime.injectionPlan 不再更新。`,
+        );
+      }
+      runtime.planMode = { mode: CFG.INJECTION_POLICY, profile: CFG.INJECTION_PROFILE, at: Date.now() };
+
       if (CFG.TAIL_MODE === "waterfall") registerTailWaterfall();
       else if (CFG.TAIL_MODE === "order") {
         registerSection(
@@ -3050,13 +3582,25 @@ export function apply(ctx, config) {
     runtime.skipped = [];
     runtime.placements = [];
     runtime.anchorEmissions = 0;
+    // v0.66.0：换档重建 = 新一次装载，计划与 TTL 台账都要从头开始，别把上一档的「谁进过」
+    // 带进新档 —— 残留标记会静默吞掉本该注入的一段，比不记账更坏。
+    runtime.ttlLedger?.clear?.();
+    runtime.assembleSeq = 0;
+    runtime.injectionPlan = null;
+    runtime.ttl = null;
     runtime.role = "unknown";
     runtime.rebuilds += 1;
     mountInjection();
+    // 重装后记一次自有监听器台账：rebuild 不该把会话侧监听器挂成两份（2 → 4 就是回归）。
+    publishListenerCount();
+    publishStats();
   };
 
   // 设置页调参入口：持久化 + 重解析 + 立即重装注入。
   const tuningState = (persistedDoc) => {
+    // 监听器台账在每次读的时候现刷一遍：注册发生在 apply 的很早一段，只靠注册那一刻刷的话，
+    // 后面注册的那几条（会话侧两个监听器就在台账初始化之后）永远不会进这份快照。
+    publishListenerCount();
     const store = persistedDoc === undefined ? readTuning() : null;
     const persisted = persistedDoc === undefined ? store.overrides : persistedDoc;
     const resolved = resolveTuning(config, persisted);
@@ -3080,6 +3624,9 @@ export function apply(ctx, config) {
         rebuilds: runtime.rebuilds,
         sections: runtime.sections.map((s) => `${s.label}（order ${s.order} · ${s.chars} 字符）`),
         placements: runtime.placements.map((p) => `${p.label} @ order ${p.order} · ${p.chars} 字符`),
+        // v0.66.0：注入计划随 live 一起出去 —— 面板与离线门禁读的都是这一份，
+        // 读侧不在自己的进程里重算一遍计划（那等于第二个实现，迟早与线上漂移）。
+        plan: runtime.injectionPlan,
       },
     };
   };
@@ -3097,6 +3644,45 @@ export function apply(ctx, config) {
       hostSupportsAsk: runtime.hostSupportsAsk === true,
       sections: runtime.sections.map((s) => `${s.label}（order ${s.order} · ${s.chars} 字符）`),
       placements: runtime.placements.map((p) => `${p.label} @ order ${p.order} · ${p.chars} 字符`),
+      // v0.66.0 生命周期台账：apply 之后自有监听器几条、rebuild 后仍是几条、卸载后是否归零。
+      // 这几格是给「重复 apply / HMR / 停用」这类场景留的可核判据，不是装饰数字。
+      listeners: publishListenerCount(),
+      // v0.66.0 注入计划（面板读的那一份）：只放 id / bytes / digest / reason / ttl，
+      // 绝不把 prompt 原文写进统计库 —— 面板要知道的是「注入了什么、为什么、多大」。
+      plan: runtime.injectionPlan
+        ? {
+            revision: runtime.injectionPlan.revision,
+            seq: runtime.injectionPlan.seq,
+            turn: runtime.injectionPlan.turn,
+            step: runtime.injectionPlan.step,
+            mode: runtime.injectionPlan.mode,
+            profile: runtime.injectionPlan.profile,
+            fingerprint: runtime.injectionPlan.fingerprint,
+            configRevision: runtime.injectionPlan.configRevision,
+            applied: runtime.injectionPlan.applied === true,
+            at: runtime.injectionPlan.at,
+            selected: (runtime.injectionPlan.selected ?? []).map((row) => ({
+              id: row.id, channel: row.channel, category: row.category, order: row.order,
+              bytes: row.bytes, digest: row.digest, priority: row.priority, ttl: row.ttl, reason: row.reason,
+            })),
+            dropped: (runtime.injectionPlan.dropped ?? []).map((row) => ({
+              id: row.id, reason: row.reason, detail: row.detail ?? null, bytes: row.bytes ?? null,
+            })),
+            budget: runtime.injectionPlan.budget,
+            audit: runtime.injectionPlan.audit,
+            // 分区账本留给面板的那几格：每格用了多少、上限多少、几个单元。
+            // 面板不重算账本 —— 重算等于第二个实现，迟早与线上漂移。
+            ledger: runtime.injectionPlan.ledger
+              ? {
+                  totals: runtime.injectionPlan.ledger.totals,
+                  categories: runtime.injectionPlan.ledger.categories,
+                  maxUnitsPerTurn: runtime.injectionPlan.ledger.maxUnitsPerTurn,
+                  minTriggerConfidence: runtime.injectionPlan.ledger.minTriggerConfidence,
+                  ceiling: runtime.injectionPlan.ledger.ceiling,
+                }
+              : null,
+          }
+        : null,
     });
     stats.set("tuning", tuningState());
     // v0.56.0：身份台账进 live 快照 —— 实时页一行「本步身份」，明细页一张「身份（本步 + 过往）」。
