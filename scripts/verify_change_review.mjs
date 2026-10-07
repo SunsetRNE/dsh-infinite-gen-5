@@ -119,7 +119,12 @@ process.env.IG5_EVAL_LAYER = "off";
 // ---- 5) 源码级：这两个开关的默认档与目录/区间必须对得上 ----
 check("默认档：评估层默认关（用户要的「默认不评估」）",
   /const EVAL_LAYER = process\.env\.IG5_EVAL_LAYER[\s\S]{0,80}?\?\? false/.test(src) || /EVAL_LAYER: false/.test(src) || /IG5_CONFIG\.EVAL_LAYER === true/.test(src));
-check("默认档：接管档在 MODE_KEYS 里、取值来自 OVERRIDE_MODES", /const MODE_KEYS = Object\.freeze\(\{ OVERRIDE_MODE: OVERRIDE_MODES \}\)/.test(src));
+check(
+  "默认档：接管档在 MODE_KEYS 里、取值来自 OVERRIDE_MODES",
+  // v0.66.0 起 MODE_KEYS 还收了 INJECTION_PROFILE / INJECTION_POLICY 两个档位键，
+  // 所以断言从「整行逐字相等」改成「这一行里 OVERRIDE_MODE 绑的是 OVERRIDE_MODES」。
+  /const MODE_KEYS = Object\.freeze\(\{[^}]*OVERRIDE_MODE: OVERRIDE_MODES[^}]*\}\)/.test(src),
+);
 check("默认档：接管档默认 resident（默认常驻、不剔宿主段）", /const OVERRIDE_MODE = normalizeOverrideMode\(process\.env\.IG5_OVERRIDE_MODE \?\? "resident"\)/.test(src));
 check("apply() 会按 env/profile/文件默认重解析配置（所以开关走 env/面板，不走改对象）",
   /IG5_CONFIG/.test(src) && typeof IG5_CONFIG === "object");
