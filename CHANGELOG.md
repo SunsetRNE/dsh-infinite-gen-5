@@ -4,6 +4,18 @@
 版本段落按提交标题里的 `vX.Y.Z` 切分，未带版本号的提交归入最新段；
 每条末尾的短哈希是提交号，最新一条（HEAD）不标哈希 —— 它在「生成 → 提交」之间还会变。
 
+## v0.66.0 — 2026-10-07
+
+### ✨ 新特性
+
+- add injection planner pipeline
+
+## v0.65.29 — 2026-10-07
+
+### 🐛 修复
+
+- support mounted web panel routes（`70e69a3`）
+
 ## v0.65.28 — 2026-10-06
 
 ### ✨ 新特性
@@ -12,7 +24,7 @@
 
 ### 🐛 修复
 
-- align protocol docs and dedupe
+- align protocol docs and dedupe（`ed02a31`）
 
 ### 🧹 杂务与维护
 
