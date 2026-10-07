@@ -1,6 +1,6 @@
 {
   "protocol": "stress100-single-agent-v1",
-  "root": "/root/Project-Integrated-Workspace/dsh-infinite-gen-5/tests/stress100",
+  "root": "/root/Documents/deepseek-harness/default-workspace/dsh-infinite-gen-5-v2/dsh-infinite-gen-5/tests/stress100",
   "files": {
     "bank-100.txt": {
       "bytes": 15652,

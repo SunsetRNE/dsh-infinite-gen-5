@@ -4,6 +4,8 @@ tests/runs/
 .DS_Store
 Thumbs.db
 ui-preview/
+# 架构总览预览产物（v0.66.0 生成，无脚本/门禁引用）：本机可看，不入仓。
+docs/plugin-architecture.html
 
 # 内部问题档案（docs/incidents/）—— 只在本机/内网留档，不上传 GitHub。
 # 黑名单明细见 docs/incidents/BLACKLIST.md；新增留档先写黑名单再写这里，最后跑 verify:incident-archive。
