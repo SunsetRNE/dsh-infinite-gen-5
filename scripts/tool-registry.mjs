@@ -171,6 +171,11 @@ export const EXTRA_ROOTS = [
   "tasks.mjs",
   // v0.66.0 注入策略真源：单元模型 + 计划器 + 配额账本 + TTL。
   "data/injection-policy.mjs",
+  // 垂直切片（本期新增）：统计 Service 与两条只读投影/查询模块（无 CLI 入口，
+  // 判据在 verify:stats-service / verify:stats-http / verify:scenario-tool 里）。
+  "services/stats-service.mjs",
+  "data/stats-api.mjs",
+  "data/scenario-service.mjs",
 ];
 
 // 命名协议：只在「实现里有字面量 + 有消费者 + 有判据」时才登记。

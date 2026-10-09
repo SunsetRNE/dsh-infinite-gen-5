@@ -35,6 +35,7 @@ const argOf = (n, d) => {
 const OUT = resolve(REPO, argOf("--out", "dist"));
 const wantZip = !argv.includes("--no-zip");
 const doVerify = !argv.includes("--skip-verify");
+const useWorktree = argv.includes("--worktree");
 
 const NAME = JSON.parse(readFileSync(join(REPO, "package.json"), "utf8")).name;
 const version = JSON.parse(readFileSync(join(REPO, "package.json"), "utf8")).version;
@@ -61,16 +62,60 @@ mkdirSync(OUT, { recursive: true });
 // ---------- 1) 按 git 跟踪清单摆一份干净的暂存树 ----------
 const stage = mkdtempSync(join(tmpdir(), "ig5-pack-"));
 const stageRoot = join(stage, NAME);
-const files = execFileSync("git", ["ls-files", "-z"], { cwd: REPO, encoding: "utf8" })
+// --worktree：按工作树打包（跟踪文件 + 未跟踪且未被忽略的文件），用于「还没提交先验包」。
+// 默认走跟踪面 —— 正式发版必须与 tag 内容一致，否则归档里有 tag 上没有的文件。
+const lsArgs = useWorktree
+  ? ["ls-files", "-z", "--cached", "--others", "--exclude-standard"]
+  : ["ls-files", "-z"];
+const files = execFileSync("git", lsArgs, { cwd: REPO, encoding: "utf8" })
   .split("\0")
   .filter((p) => p.length > 0 && existsSync(join(REPO, p)))
   .sort();
+const tracked = new Set(
+  execFileSync("git", ["ls-files", "-z"], { cwd: REPO, encoding: "utf8" }).split("\0").filter(Boolean),
+);
+
+// release:pack 只打 git 跟踪文件；若运行时 import 留成未跟踪，旧实现会
+// 「解包复检通过」但启动时才 ERR_MODULE_NOT_FOUND。先核对 index/client 的
+// 相对静态 import 闭包，宁可提前失败，也不产出假绿归档。
+const importRe = /from\s+["'](\.\/[^"']+)["']|import\s+["'](\.\/[^"']+)["']|import\(\s*["'](\.\/[^"']+)["']\s*\)/g;
+const runtimeFiles = new Set();
+const pendingRuntime = ["index.js", "client.js"];
+while (pendingRuntime.length > 0) {
+  const rel = pendingRuntime.pop();
+  if (runtimeFiles.has(rel)) continue;
+  runtimeFiles.add(rel);
+  const source = readFileSync(join(REPO, rel), "utf8");
+  let match;
+  while ((match = importRe.exec(source))) {
+    const spec = match[1] || match[2] || match[3];
+    if (spec.includes("${")) continue;
+    let dep = join(dirname(rel), spec).replaceAll("\\", "/");
+    if (!/\.[cm]?js$/.test(dep)) dep += ".js";
+    if (!existsSync(join(REPO, dep))) throw new Error(`运行时 import 指向不存在文件：${rel} -> ${dep}`);
+    pendingRuntime.push(dep);
+  }
+}
+const untrackedRuntime = [...runtimeFiles].filter((p) => !tracked.has(p)).sort();
+if (untrackedRuntime.length > 0 && !useWorktree) {
+  console.error("✗ release:pack 拒绝：运行时 import 闭包中有未 git 跟踪文件，当前归档会缺文件：");
+  for (const rel of untrackedRuntime) console.error(`    ${rel}`);
+  console.error("  先 git add/commit 这些生产文件，再重新运行 release:pack；不会自动改动 git index。");
+  console.error("  只想本地预验包内容，可加 --worktree（把未跟踪文件一起打包，不能当发版产物）。");
+  process.exit(2);
+}
+if (untrackedRuntime.length > 0) {
+  console.log(`  ! --worktree：把 ${untrackedRuntime.length} 个未跟踪运行时文件一起打包（本地预验用）`);
+  for (const rel of untrackedRuntime) console.log(`      ${rel}`);
+}
 for (const rel of files) {
   const dest = join(stageRoot, rel);
   mkdirSync(dirname(dest), { recursive: true });
   copyFileSync(join(REPO, rel), dest);
 }
-console.log(`  ✓ 暂存 ${files.length} 个跟踪文件（ui-preview / node_modules / .git 不在内）`);
+console.log(
+  `  ✓ 暂存 ${files.length} 个文件（${useWorktree ? "工作树面：跟踪 + 未跟踪" : "git 跟踪面"}；ui-preview / node_modules / .git 不在内）`,
+);
 
 // ---------- 2) RELEASE-NOTES.md = 当前版本段的压缩版（只留最近更新 + 指回《更新文档》）----------
 let notes = "";

@@ -326,6 +326,9 @@ node scripts/install_companion.mjs --install --apply                   # 装到 
 │   ├── client.js                # 客户端半体（原生状态条 + 设置台：只读统计库，含任务进度条、「领域覆盖 · 词表 · 预算」与「实时」显示组；推送优先、断线回落自适应轮询）
 │   ├── stats-store.mjs          # 统计数据库（原子写 + 防抖；核心只写、面板只读；boot 时填 coverage 分区；落盘序号 + 变更订阅，SSE 的触发源；schema ig5-stats/1）
 │   ├── tasks.mjs                # 任务清单规则（读宿主 todos 投影 / 写 todo/write 事件 / 单 in_progress 策略）
+│   ├── services/stats-service.mjs # Host 统计 Service（stats-store 的最小显式适配层：读写/订阅/生命周期；set/bump/push 兼容别名待删）
+│   ├── data/stats-api.mjs       # 统计 HTTP/SSE 只读投影（statsReadResponse / statsEventCounts；纯函数、不做 IO）
+│   ├── data/scenario-service.mjs # 场景查询 Service（领域包索引与单域打法；命中/未命中记账由调用方注入）
 │   ├── data/scenarios.mjs       # 107 个领域包 × 7 族 + 领域标记表（运行时与评测共用的唯一真源）
 │   ├── data/vocabulary.mjs      # 命中词汇的规则与护栏：形态校验 / 白名单 / 跨族签字 / 预算常量
 │   ├── data/vocabulary-data.mjs # 扩展词条生成物（源在 data/vocab/*.json，由 vocab-build 合成，别手改）

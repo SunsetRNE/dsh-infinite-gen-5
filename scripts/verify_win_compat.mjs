@@ -177,9 +177,13 @@ const runtimeDefects = byKind("runtime").filter((f) => f.scope === "code" || f.s
 const counted = (kind, scope) => findings.filter((f) => f.kind === kind && f.scope === scope).length;
 
 {
-  // 闸门 1：核心运行时（index.js / dispatch.mjs / tasks.mjs / stats-store.mjs / client.js）
-  // 不得出现 shell-posix / spawn-shell —— 这两类在 win 上是硬崩，垫片兜不住调用点。
-  const CORE = ["index.js", "dispatch.mjs", "tasks.mjs", "stats-store.mjs", "client.js"];
+  // 闸门 1：核心运行时（index.js / dispatch.mjs / tasks.mjs / stats-store.mjs / client.js
+  //  + 本期切片新增的 services/data 模块）不得出现 shell-posix / spawn-shell ——
+  //  这两类在 win 上是硬崩，垫片兜不住调用点。
+  const CORE = [
+    "index.js", "dispatch.mjs", "tasks.mjs", "stats-store.mjs", "client.js",
+    "services/stats-service.mjs", "data/stats-api.mjs", "data/scenario-service.mjs",
+  ];
   const coreHard = findings.filter((f) => CORE.includes(f.file) && ["shell-posix", "spawn-shell"].includes(f.rule));
   ok(coreHard.length === 0, "核心运行时无硬崩 shell 调用", coreHard.map((f) => `${f.file}:${f.line}`).join(","));
 

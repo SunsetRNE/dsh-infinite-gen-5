@@ -1901,10 +1901,10 @@ if (process.argv.includes("--emit-html")) {
     serverSrc.includes("topCounts(sessionMemory.markers"));
   ok("换会话即清空标识记忆",
     serverSrc.includes("resetSessionMemory(id)"));
-  ok("跨重启累计写进 ~/.dsh 统计库（bump 三处）",
-    serverSrc.includes('statsSink.bump("hits.total")') &&
-    serverSrc.includes('statsSink.bump(["hits", scored && scored.verdict === "pass" ? "pass" : "block"])') &&
-    serverSrc.includes('statsSink.bump(["hits", "byDomain", tallyDomain])'));
+  ok("跨重启累计写进 ~/.dsh 统计库（count 三处）",
+    serverSrc.includes('statsSink.count("hits.total")') &&
+    serverSrc.includes('statsSink.count(["hits", scored && scored.verdict === "pass" ? "pass" : "block"])') &&
+    serverSrc.includes('statsSink.count(["hits", "byDomain", tallyDomain])'));
   ok("跨重启累计读回时逐层探形状（读不到返回 null）",
     serverSrc.includes("const lifetimeHits = ()") && serverSrc.includes("[doc, doc?.counters, doc?.stats, doc?.store]"));
 }

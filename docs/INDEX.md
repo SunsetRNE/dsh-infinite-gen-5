@@ -4,6 +4,7 @@
 
 | 文档 | 标题 | 讲什么 |
 |---|---|---|
+| [`docs/architecture-ownership.md`](architecture-ownership.md) | 无限五代插件：功能归属与架构改造路线 | 记录现有功能在 Host、Client、Agent、MCP 之间的职责归属，明确数据权威、调用边界和后续迁移次序。本文是按当前工作区源码做的静态盘点；未声称已核实每个功能在所有运行 profile 中的启用状态。 |
 | [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) | 🧠 架构与注入机制 | 旧版的 Order 200 只放了约 200 字节的「末位锚点」，但宿主官方段位表 |
 | [`docs/ARMOR.md`](ARMOR.md) | 服从性注入落地回执（v0.37.1） | 针对三条要求（长对话压缩后「用户指令最高优先级」这条容易随摘要一起被稀释）： |
 | [`docs/AUTHOR-CHECKLIST.md`](AUTHOR-CHECKLIST.md) | 作者自检清单（改动前 / 改动中 / 发版前 / 装机后） | npm run verify:all                 # 聚合自检（CI 等价） |

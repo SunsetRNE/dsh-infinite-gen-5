@@ -1,0 +1,36 @@
+
+> dsh-infinite-gen-5@0.66.0 verify:stats-http
+> node scripts/verify_stats_http.mjs --json
+
+{
+ "host": "/usr/local/lib/node_modules/@deepseek-ai/dsh",
+ "passed": 24,
+ "failed": 0,
+ "passes": [
+  "真实 dsh-host-webserver 在临时 loopback 端口监听",
+  "第一次 apply 后真实 WebServer 精确路由数为 4",
+  "真实 WebServer 路由集合与四条目标路径完全一致",
+  "真实 index injection 提供面板 token",
+  "真实 Host apply 后 Stats Service 存活 1 份",
+  "真实 HTTP /infinite-gen-5/tuning 带 header token 返回 200 + ok:true",
+  "真实 HTTP /infinite-gen-5/stats 带 header token 返回 200 + ok:true",
+  "真实 HTTP /infinite-gen-5/tasks 带 header token 返回 200 + ok:true",
+  "非 SSE 路由不接受 query token（仍要求 x-ig5-token）",
+  "真实 HTTP 缺少 header token 返回 401",
+  "真实 SSE query token 握手返回 200",
+  "真实 SSE 返回 text/event-stream",
+  "真实 SSE 返回 no-store",
+  "真实 SSE 响应提供可读 body",
+  "真实 SSE 首帧包含 retry 与 hello",
+  "真实插件暴露可写 Stats Service 句柄",
+  "真实 Stats 落盘后 SSE 收到 stats 通知帧",
+  "真实 SSE 错误 query token 返回 401",
+  "第一次真实 Host unload 后四条路由全部移除",
+  "第一次真实 Host unload 后 Stats Service 恰好销账一次",
+  "第二次真实 Host apply 后恢复 4 条路由",
+  "第二次 apply 重新注入新的面板 token",
+  "跨真实 apply 为 2 次登记 / 1 次销账 / 1 份存活",
+  "第二次 apply 后真实 /stats 仍可读"
+ ],
+ "failures": []
+}

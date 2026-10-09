@@ -161,7 +161,7 @@ ok("index.js 已接入身份路由", indexSrc.includes("identity-routes.mjs")
   && indexSrc.includes("matchIdentity") && indexSrc.includes("prioritiseByIdentity"));
 ok("index.js 有身份台账与投影（本步 + 过往）", indexSrc.includes("const identitySeen = new Map()")
   && indexSrc.includes("function noteIdentity(") && indexSrc.includes("function identityState(")
-  && indexSrc.includes('stats.set("identity", identityState())'));
+  && indexSrc.includes('stats.publish("identity", identityState())'));
 ok("客户端消费 liveDoc.identity（实时行 + 明细卡）", (() => {
   const c = readFileSync(join(__dirname, "..", "client.js"), "utf8");
   return c.includes("liveState.liveDoc.identity") && c.includes('"本步身份"') && c.includes("dsh-armor5-ident-card");

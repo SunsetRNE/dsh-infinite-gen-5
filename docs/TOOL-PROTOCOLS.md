@@ -1,7 +1,7 @@
 # 工具与工具协议（自动生成）
 
 > 本文件由 `npm run tools:doc` 生成，**不要手改**：改代码或 `scripts/tool-registry.mjs` 后重跑。
-> 协议标识 `ig5-tool-registry-v1` · 在册工具 **147** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
+> 协议标识 `ig5-tool-registry-v1` · 在册工具 **154** 个 · 另有 9 个文件按理由排除（见文末）· 命名协议 **6** 条。
 
 ## 一、工具协议总则（Tool ABI）
 
@@ -25,7 +25,7 @@
 「每个脚本都在册 / 在册路径都存在 / 声明的能力在文件里真的出现 / npm 别名真的存在 /
 本文件与生成器输出逐字节一致」。
 
-实测分布（现扫文件文本得出）：带 `--json` 的 **65** 个、带 `--selftest` 的 **32** 个、带 `--apply` 的 **10** 个、有 npm 别名的 **117** 个。
+实测分布（现扫文件文本得出）：带 `--json` 的 **67** 个、带 `--selftest` 的 **32** 个、带 `--apply` 的 **10** 个、有 npm 别名的 **121** 个。
 
 ## 二、命名协议注册表
 
@@ -209,7 +209,7 @@
 | `scripts/oneshot_harness.mjs` <br>npm: `verify:oneshot` | 无限五代 · 一次性子代理实验台（发题器） | `node scripts/oneshot_harness.mjs` | `npm run verify:oneshot` | `--selftest` `--bank` |
 | `scripts/oneshot_report.mjs` <br>npm: `verify:oneshot` | 一次性子代理实验 · 多臂报告生成器 | `node scripts/oneshot_report.mjs` | `npm run verify:oneshot` | `--selftest` `--out` |
 
-### 插件模块（5）
+### 插件模块（8）
 
 *插件运行时本体（被 index.js / 宿主直接调用）*
 
@@ -217,11 +217,14 @@
 |---|---|---|---|---|
 | `anchor-armor.mjs` | 无限五代 v0.37.0 · 首句层 + 压缩后再锚定（anchor-armor） | `node anchor-armor.mjs` | `node anchor-armor.mjs --selftest` | `--selftest` `--json` |
 | `data/injection-policy.mjs` | 无限五代 · 注入策略唯一真源（v0.66.0） | `node data/injection-policy.mjs` | `node data/injection-policy.mjs` | — |
+| `data/scenario-service.mjs` | Host-side scenario query service. Pure response shaping; callers inject hit accounting. */ | `node data/scenario-service.mjs` | `node data/scenario-service.mjs` | — |
+| `data/stats-api.mjs` | Read-only projections for the statistics HTTP/SSE surface. | `node data/stats-api.mjs` | `node data/stats-api.mjs` | — |
 | `dispatch.mjs` | 无限五代 · 破甲题分发内核（纯规则层 + 题库解析 + 汇总打分） | `node dispatch.mjs` | `node dispatch.mjs` | `--out` `--bank` |
+| `services/stats-service.mjs` | Host 统计 Service：对 stats-store 的最小显式适配层。 | `node services/stats-service.mjs` | `node services/stats-service.mjs` | — |
 | `stats-store.mjs` | 统计数据库：插件本体（核心）单写、前端面板单读的那一份 JSON。 | `node stats-store.mjs` | `node stats-store.mjs` | — |
 | `tasks.mjs` | DSH 自身任务清单（todo）的读侧与写侧规则。 | `node tasks.mjs` | `node tasks.mjs` | — |
 
-### 工具（52）
+### 工具（56）
 
 *其余 CLI 工具*
 
@@ -269,9 +272,13 @@
 | `scripts/verify_incident_archive.mjs` <br>npm: `verify:incident-archive` | verify_incident_archive.mjs —— 内部问题档案的「黑名单是否仍然生效」自检（v0.52.12） | `node scripts/verify_incident_archive.mjs` | `npm run verify:incident-archive` | — |
 | `scripts/verify_intent_protocol.mjs` <br>npm: `verify:intent-protocol` | 用途：验证用户意图执行协议、完整克隆门禁与 checkpoint 回滚边界。 | `node scripts/verify_intent_protocol.mjs` | `npm run verify:intent-protocol` | — |
 | `scripts/verify_override.mjs` | verify_override.mjs —— 提示词接管（v0.52.2）回归判据：纯函数层 + index.js 接线。 | `node scripts/verify_override.mjs` | `node scripts/verify_override.mjs` | — |
+| `scripts/verify_package_closure.mjs` <br>npm: `verify:package-closure` | 发布前运行时闭包门禁：检查 npm pack 产物包含 index/client 的静态相对 import 闭包。 | `node scripts/verify_package_closure.mjs` | `npm run verify:package-closure` | `--json` `--dry-run` |
 | `scripts/verify_payload_shape.mjs` <br>npm: `verify:payload-shape` | 结构性载荷形态识别自检 | `node scripts/verify_payload_shape.mjs` | `npm run verify:payload-shape` | `--json` |
 | `scripts/verify_permit.mjs` <br>npm: `verify:permit` | 授权许可件的判据跑：14 条 fixture 逐条判决，正例必须 permitted、反例必须命中指定 code。 | `node scripts/verify_permit.mjs` | `npm run verify:permit` | — |
 | `scripts/verify_regression.mjs` <br>npm: `verify:regression` | 回归复查（仓库内可移植版）—— 把本仓侧的关键判据一次跑完；外部的（兼容仓 / 闸门目录）在场才跑。 | `node scripts/verify_regression.mjs` | `npm run verify:regression` | — |
+| `scripts/verify_stats_alias_gate.mjs` <br>npm: `verify:stats-alias-gate` | 用途：静态门禁 —— 扫描全仓，禁止在 Service 实现、stats-store 与兼容验证之外出现旧统计别名调用。 | `node scripts/verify_stats_alias_gate.mjs` | `npm run verify:stats-alias-gate` | — |
+| `scripts/verify_stats_http.mjs` <br>npm: `verify:stats-http` | Stats HTTP/SSE 请求级门禁：真实 dsh-host-webserver + 真实插件路由。 | `node scripts/verify_stats_http.mjs` | `npm run verify:stats-http` | `--json` |
+| `scripts/verify_stats_service.mjs` <br>npm: `verify:stats-service` | 用途：门禁 —— 验证 Host 统计 Service 的委托（publish/patch/count/append/read）、订阅退订、 | `node scripts/verify_stats_service.mjs` | `npm run verify:stats-service` | — |
 | `scripts/verify_step_inject.mjs` | verify_step_inject.mjs — 回归判据：每步注入进收件箱的消息必须带 source，且默认档位是 off。 | `node scripts/verify_step_inject.mjs` | `node scripts/verify_step_inject.mjs` | — |
 | `scripts/verify_tool_registry.mjs` <br>npm: `verify:tools` | 无限五代 · 工具注册表门禁（scripts/verify_tool_registry.mjs） | `node scripts/verify_tool_registry.mjs` | `npm run verify:tools` | `--selftest` `--json` `--apply` |
 | `scripts/verify_visual.mjs` <br>npm: `verify:visual` | verify_visual.mjs —— 运行时浮点渲染规则回归（v0.52.8） | `node scripts/verify_visual.mjs` | `npm run verify:visual` | — |

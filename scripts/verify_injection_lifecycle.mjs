@@ -4,10 +4,12 @@
 // 最容易出、又最难从线上现象倒推的一类回归：监听器挂了两份，装配被跑两遍、事件被计两次、
 // 计划落库两次，而面板上的每个数字看起来都正常。
 //
-// 三条判据（缺一条都不算过）：
+// 判据（缺一条都不算过）：
 //   ① apply 之后：自有监听器登记 N 条、存活 N 条；
 //   ② rebuildInjection（设置页改档位走的就是它）：仍是 N 条 —— 不是 2N；
-//   ③ 卸载销账：登记过的那些全部 disposed，存活归零；再次 apply 回到 N（而不是 2N）。
+//   ③ 卸载销账：登记过的那些全部 disposed，存活归零；再次 apply 回到 N（而不是 2N）；
+//   ④ Host Web 资源逐项守恒：四条路由各 1 条、SSE 订阅 1 条、live/heartbeat 各 1 个、Stats disposer 1 次；
+//      unload 后全部为 0，再次 apply 仍各 1 条而不是 2 条。
 //
 // 判据取的是运行期台账（runtime.listeners），不是源码正则：正则只能证明「写了销账」，
 // 台账能证明「销账真的发生过、数量真的守恒」。
@@ -18,6 +20,7 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { reportHostMiss, resolveHost } from "./lib/host-resolve.mjs";
+import { statsServiceSnapshot } from "../services/stats-service.mjs";
 
 // 自检不碰用户真实统计库 / 调参档（与 verify_injection 同一套约定）。
 process.env.IG5_HOME = "/tmp/ig5-home-lifecycle";
@@ -85,54 +88,112 @@ async function rig() {
   const app = new Context();
   await app.plugin(SystemPrompt, {});
   const effects = [];
-  const realEffect = app.effect.bind(app);
-  // ctx.effect 有同步与异步两种用法（本项目两种都出现）。这里按同步回调接管：
-  // 回调返回函数即清理函数 → 入账；返回 promise 不接管（交给宿主自己跑）。
+  const effectErrors = [];
+  const realSetInterval = globalThis.setInterval;
+  const realClearInterval = globalThis.clearInterval;
+  const timers = { registered: [], active: new Map(), disposed: 0 };
+  globalThis.setInterval = function trackedSetInterval(callback, delay, ...args) {
+    const handle = Reflect.apply(realSetInterval, this, [callback, delay, ...args]);
+    const row = { handle, delay: Number(delay), live: true };
+    timers.registered.push(row);
+    timers.active.set(handle, row);
+    return handle;
+  };
+  globalThis.clearInterval = function trackedClearInterval(handle) {
+    const row = timers.active.get(handle);
+    if (row?.live) {
+      row.live = false;
+      timers.active.delete(handle);
+      timers.disposed += 1;
+    }
+    return Reflect.apply(realClearInterval, this, [handle]);
+  };
+  const restoreTimers = () => {
+    globalThis.setInterval = realSetInterval;
+    globalThis.clearInterval = realClearInterval;
+  };
+  // ctx.effect 有同步与异步两种用法（本项目两种都出现）。同步清理函数入账，
+  // 保留 effect 标签，后续分别核对 SSE 订阅与 Stats/定时器资源 disposer。
   app.effect = (fn, ...rest) => {
+    const label = String(rest[0] ?? "");
     let cleanup = null;
     try {
       cleanup = fn();
     } catch (error) {
-      cleanup = null;
+      effectErrors.push({ label, error: String(error?.message ?? error) });
     }
-    if (typeof cleanup === "function") {
-      effects.push({ cleanup, label: String(rest[0] ?? "") });
-      return cleanup;
-    }
-    return cleanup;
+    if (typeof cleanup !== "function") return cleanup;
+    const row = { label, cleanup, cleanupCalls: 0, active: true };
+    const runCleanup = () => {
+      if (!row.active) return;
+      row.active = false;
+      row.cleanupCalls += 1;
+      return cleanup();
+    };
+    row.runCleanup = runCleanup;
+    effects.push(row);
+    return runCleanup;
   };
   const tools = [];
   app.provide("tools", { register: (tool) => tools.push(tool) });
   const routes = new Map();
+  const routeRegistrations = [];
+  const liveRoutes = new Set();
   app.provide("webServer", {
     register(spec) {
+      const row = { path: spec.path, spec, live: true };
+      routeRegistrations.push(row);
+      liveRoutes.add(row);
       routes.set(spec.path, spec);
-      return () => routes.delete(spec.path);
+      return () => {
+        if (!row.live) return;
+        row.live = false;
+        liveRoutes.delete(row);
+        if (routes.get(spec.path) === spec) routes.delete(spec.path);
+      };
     },
   });
   Object.assign(IG5_CONFIG, DEFAULTS);
   plugin.apply(app, {});
   const profile = () => tools.find((row) => row.name === "infinite_gen5_profile")?.execute();
   const assemble = () => app.get("systemPrompt").assemble({ agent: {}, scope: {} });
-  return { app, effects, tools, routes, profile, assemble, realEffect };
+  const routeCounts = () => {
+    const paths = [...new Set(routeRegistrations.map((row) => row.path))];
+    return Object.fromEntries(paths.map((path) => {
+      const rows = routeRegistrations.filter((row) => row.path === path);
+      return [path, { registered: rows.length, live: rows.filter((row) => row.live).length, disposed: rows.filter((row) => !row.live).length }];
+    }));
+  };
+  const effectsWith = (needle) => effects.filter((row) => row.label.includes(needle));
+  const timerSnapshot = () => ({
+    registered: timers.registered.length,
+    disposed: timers.disposed,
+    live: timers.active.size,
+    delays: timers.registered.map((row) => row.delay).sort((a, b) => a - b),
+    liveDelays: [...timers.active.values()].map((row) => row.delay).sort((a, b) => a - b),
+  });
+  return { app, effects, effectErrors, tools, routes, routeRegistrations, liveRoutes, routeCounts, effectsWith, timers: timerSnapshot, profile, assemble, restoreTimers };
 }
 
-// 一次「卸载」：把收集到的清理函数按注册的逆序跑一遍（与 cordis 的回收次序一致）。
+// 一次「卸载」：逆序执行 effect 清理，之后还原计时器捕获器。
 function unload(rigCtx) {
   let ran = 0;
-  for (const { cleanup } of [...rigCtx.effects].reverse()) {
+  for (const row of [...rigCtx.effects].reverse()) {
+    if (!row.active) continue;
     try {
-      cleanup();
+      row.runCleanup();
       ran += 1;
     } catch {
       // 清理阶段保持幂等：单个清理抛错不影响其余销账。
     }
   }
+  rigCtx.restoreTimers();
   return ran;
 }
 
 // ---- 1. apply 之后：自有监听器登记 N 条、存活 N 条 ----
 {
+  const baseStatsServices = statsServiceSnapshot();
   const r = await rig();
   await r.assemble();
   const first = plugin.ig5ListenerSnapshot();
@@ -144,6 +205,42 @@ function unload(rigCtx) {
   );
   check(Number(first?.disposed) === 0, "apply 之后没有已销账记录（没有重复注册）", JSON.stringify(first));
   const expected = Number(first?.registered);
+  const webPaths = [
+    "/infinite-gen-5/tuning",
+    "/infinite-gen-5/stats",
+    "/infinite-gen-5/tasks",
+    "/infinite-gen-5/events",
+  ];
+  const firstRoutes = r.routeCounts();
+  const routeExactlyOnce = (snapshot, { live = 1, disposed = 0 } = {}) =>
+    webPaths.every((path) => snapshot[path]?.registered === 1 && snapshot[path]?.live === live && snapshot[path]?.disposed === disposed) &&
+    Object.keys(snapshot).length === webPaths.length;
+  check(
+    routeExactlyOnce(firstRoutes),
+    "apply 后四条 Host Web 路由各注册 1 条（tuning/stats/tasks/events）",
+    JSON.stringify(firstRoutes),
+  );
+  const firstTimers = r.timers();
+  check(
+    firstTimers.registered === 2 && firstTimers.live === 2 && firstTimers.disposed === 0 && new Set(firstTimers.delays).size === 2,
+    "apply 后 live/heartbeat 定时器各 1 份",
+    JSON.stringify(firstTimers),
+  );
+  const firstSseEffects = r.effectsWith("统计库变更广播（SSE）");
+  check(
+    firstSseEffects.length === 1 && firstSseEffects[0].active && firstSseEffects[0].cleanupCalls === 0,
+    "apply 后 Stats SSE 订阅恰好 1 份",
+    JSON.stringify(firstSseEffects),
+  );
+  const firstStatsServices = statsServiceSnapshot();
+  check(
+    firstStatsServices.registered === baseStatsServices.registered + 1 &&
+      firstStatsServices.live === baseStatsServices.live + 1 &&
+      firstStatsServices.disposed === baseStatsServices.disposed &&
+      firstStatsServices.disposeCalls === baseStatsServices.disposeCalls,
+    "apply 后 Stats Service 恰好存活 1 份",
+    JSON.stringify({ before: baseStatsServices, after: firstStatsServices }),
+  );
 
   // ---- 2. rebuild：仍是 N 条，不是 2N ----
   // 走设置页同一条路（POST /infinite-gen-5/tuning 的 rebuild 分支），而不是调内部函数 ——
@@ -178,6 +275,13 @@ function unload(rigCtx) {
     "rebuild 之后自有监听器仍是 N 条（不是 2N）",
     JSON.stringify({ expected, after: afterRebuild }),
   );
+  const rebuiltRoutes = r.routeCounts();
+  const rebuiltTimers = r.timers();
+  check(
+    routeExactlyOnce(rebuiltRoutes) && rebuiltTimers.registered === 2 && rebuiltTimers.live === 2,
+    "重复 Host apply/rebuild 不重复注册路由或定时器",
+    JSON.stringify({ routes: rebuiltRoutes, timers: rebuiltTimers }),
+  );
 
   // ---- 3. 卸载销账：全部 disposed、存活归零；再 apply 回到 N ----
   const ran = unload(r);
@@ -190,6 +294,34 @@ function unload(rigCtx) {
     "卸载后登记过的监听器全部销账、存活归零",
     JSON.stringify({ expected, after: afterUnload }),
   );
+  const unloadedRoutes = r.routeCounts();
+  const unloadedTimers = r.timers();
+  const unloadedSseEffects = r.effectsWith("统计库变更广播（SSE）");
+  const unloadedStatsServices = statsServiceSnapshot();
+  check(
+    routeExactlyOnce(unloadedRoutes, { live: 0, disposed: 1 }),
+    "卸载后四条 Host Web 路由全部销账",
+    JSON.stringify(unloadedRoutes),
+  );
+  check(
+    unloadedTimers.registered === 2 && unloadedTimers.live === 0 && unloadedTimers.disposed === 2,
+    "卸载后 live/heartbeat 定时器全部停止",
+    JSON.stringify(unloadedTimers),
+  );
+  check(
+    unloadedSseEffects.length === 1 && !unloadedSseEffects[0].active && unloadedSseEffects[0].cleanupCalls === 1,
+    "卸载后 Stats SSE 订阅恰好清理 1 次",
+    JSON.stringify(unloadedSseEffects),
+  );
+  check(
+    unloadedStatsServices.registered === baseStatsServices.registered + 1 &&
+      unloadedStatsServices.live === baseStatsServices.live &&
+      unloadedStatsServices.disposed === baseStatsServices.disposed + 1 &&
+      unloadedStatsServices.disposeCalls === baseStatsServices.disposeCalls + 1,
+    "卸载后 Stats disposer 只执行 1 次且不留存活句柄",
+    JSON.stringify({ before: baseStatsServices, after: unloadedStatsServices }),
+  );
+  check(unload(r) === 0, "重复 unload 不重复执行 disposer", JSON.stringify(statsServiceSnapshot()));
 
   const r2 = await rig();
   await r2.assemble();
@@ -211,6 +343,45 @@ function unload(rigCtx) {
     Number(second?.registered) === expected * 2 && Number(second?.disposed) === expected,
     "台账跨 apply 累积：登记 2N、其中 N 条已销账、存活 N",
     JSON.stringify({ expected, after: second }),
+  );
+  const secondRoutes = r2.routeCounts();
+  const secondTimers = r2.timers();
+  const secondSseEffects = r2.effectsWith("统计库变更广播（SSE）");
+  const secondStatsServices = statsServiceSnapshot();
+  check(
+    routeExactlyOnce(secondRoutes) && secondTimers.registered === 2 && secondTimers.live === 2,
+    "再次 apply 后四条路由与两个定时器仍各 1 份",
+    JSON.stringify({ routes: secondRoutes, timers: secondTimers }),
+  );
+  check(
+    secondSseEffects.length === 1 && secondSseEffects[0].active && secondSseEffects[0].cleanupCalls === 0,
+    "再次 apply 后 Stats SSE 订阅仍仅 1 份",
+    JSON.stringify(secondSseEffects),
+  );
+  check(
+    secondStatsServices.registered === baseStatsServices.registered + 2 &&
+      secondStatsServices.disposed === baseStatsServices.disposed + 1 &&
+      secondStatsServices.live === baseStatsServices.live + 1 &&
+      secondStatsServices.disposeCalls === baseStatsServices.disposeCalls + 1,
+    "跨 apply Stats Service 为 2 次登记 / 1 次销账 / 1 份存活",
+    JSON.stringify({ before: baseStatsServices, after: secondStatsServices }),
+  );
+  const secondUnloadRan = unload(r2);
+  const finalStatsServices = statsServiceSnapshot();
+  check(secondUnloadRan > 0, "二次 apply 演习台可执行完整卸载", String(secondUnloadRan));
+  check(
+    r2.timers().live === 0 && r2.routeCounts() && routeExactlyOnce(r2.routeCounts(), { live: 0, disposed: 1 }) &&
+      r2.effectsWith("统计库变更广播（SSE）").every((row) => !row.active && row.cleanupCalls === 1),
+    "二次 apply 卸载后路由、定时器与 SSE 全部归零",
+    JSON.stringify({ routes: r2.routeCounts(), timers: r2.timers(), sse: r2.effectsWith("统计库变更广播（SSE)") }),
+  );
+  check(
+    finalStatsServices.registered === baseStatsServices.registered + 2 &&
+      finalStatsServices.disposed === baseStatsServices.disposed + 2 &&
+      finalStatsServices.live === baseStatsServices.live &&
+      finalStatsServices.disposeCalls === baseStatsServices.disposeCalls + 2,
+    "两次 apply 完整卸载后 Stats Service 无存活句柄",
+    JSON.stringify({ before: baseStatsServices, after: finalStatsServices }),
   );
 }
 

@@ -1,0 +1,23 @@
+
+> dsh-infinite-gen-5@0.66.0 verify:boot
+> node scripts/verify_boot_attest.mjs
+
+✅ 首启写入世代号 — generation=31
+✅ 首启写入 startup uuid — startup=STARTUP_A
+✅ 首启 previous 为空（不臆造） — previous=null
+✅ 识别 DSHA 原生闸门 — dsha=true npm=true
+✅ 重启后世代号更新 — generation=32
+✅ 重启后 startup 换新 — startup=STARTUP_B
+✅ 保留上次确认（startup） — previous.startup=STARTUP_A
+✅ 保留上次确认（世代） — previous.generation=31
+✅ 保留上次确认（时刻） — previous.at=2026-09-29T10:00:00.000Z
+✅ 盘上 schema 未变 — schema=ig5-stats/1
+✅ 盘上 boot 是本次启动 — disk.boot.startup=STARTUP_B
+✅ 盘上启动历史按序累积 — boots=31→32
+✅ 旧 store 兼容回退 — calls=set:boot,push:boots
+✅ 旧库升级后不臆造上次确认 — previous=null
+✅ Service 优先于旧别名 — calls=publish:boot,append:boots
+✅ 骨架保留 boot 全键 — 缺=无
+✅ 骨架保留 boots 分区 — boots=[]
+
+boot_attest 门禁通过（共 17 条 · 世代保留 / 跨重启上次确认 / 旧库不臆造 / 读侧键齐全）

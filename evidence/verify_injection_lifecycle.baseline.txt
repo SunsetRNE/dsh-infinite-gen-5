@@ -1,0 +1,39 @@
+
+> dsh-infinite-gen-5@0.66.0 verify:injection:lifecycle
+> node scripts/verify_injection_lifecycle.mjs --selftest && node scripts/verify_injection_lifecycle.mjs --json
+
+LIFECYCLE_SELFTEST_OK
+{
+ "host": "/usr/local/lib/node_modules/@deepseek-ai/dsh",
+ "passed": 26,
+ "failed": 0,
+ "passes": [
+  "profile 汇报自有监听器台账",
+  "apply 之后登记数与存活数一致（没有一条注册完就丢账）",
+  "apply 之后没有已销账记录（没有重复注册）",
+  "apply 后四条 Host Web 路由各注册 1 条（tuning/stats/tasks/events）",
+  "apply 后 live/heartbeat 定时器各 1 份",
+  "apply 后 Stats SSE 订阅恰好 1 份",
+  "apply 后 Stats Service 恰好存活 1 份",
+  "调参路由已注册（rebuild 的入口存在）",
+  "rebuild 之后自有监听器仍是 N 条（不是 2N）",
+  "重复 Host apply/rebuild 不重复注册路由或定时器",
+  "演习台收集到了可执行的清理函数（否则这一步等于没测）",
+  "卸载后登记过的监听器全部销账、存活归零",
+  "卸载后四条 Host Web 路由全部销账",
+  "卸载后 live/heartbeat 定时器全部停止",
+  "卸载后 Stats SSE 订阅恰好清理 1 次",
+  "卸载后 Stats disposer 只执行 1 次且不留存活句柄",
+  "重复 unload 不重复执行 disposer",
+  "profile 读侧与台账句柄同值（面板数字不出第二个源）",
+  "再次 apply 之后存活恢复为 N（不是 2N）",
+  "台账跨 apply 累积：登记 2N、其中 N 条已销账、存活 N",
+  "再次 apply 后四条路由与两个定时器仍各 1 份",
+  "再次 apply 后 Stats SSE 订阅仍仅 1 份",
+  "跨 apply Stats Service 为 2 次登记 / 1 次销账 / 1 份存活",
+  "二次 apply 演习台可执行完整卸载",
+  "二次 apply 卸载后路由、定时器与 SSE 全部归零",
+  "两次 apply 完整卸载后 Stats Service 无存活句柄"
+ ],
+ "failures": []
+}

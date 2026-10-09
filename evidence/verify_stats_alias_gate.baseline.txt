@@ -1,0 +1,5 @@
+
+> dsh-infinite-gen-5@0.66.0 verify:stats-alias-gate
+> node scripts/verify_stats_alias_gate.mjs
+
+verify_stats_alias_gate: PASS scanned=243 allowed=service/store/compat-tests

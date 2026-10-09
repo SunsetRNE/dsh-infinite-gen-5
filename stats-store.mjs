@@ -314,7 +314,8 @@ export const createStatsStore = (options = {}) => {
  *
  * 抽成独立导出是为了让门禁（scripts/verify_boot_attest.mjs）测的是这段真代码，而不是副本。
  *
- * @param {object} store createStatsStore(...) 的返回值
+ * @param {object} store Stats Service 或 createStatsStore(...) 的返回值；Service 需要提供
+ *   snapshot/publish/append 与 file/version 元数据，旧 store 仍支持 set/push 回退。
  * @param {object} [options]
  * @param {object} [options.env] 环境变量表（默认 process.env；门禁注入假世代用）
  * @param {string} [options.startup] 本次启动 id（默认 randomUUID）
@@ -350,7 +351,13 @@ export const recordBoot = (store, options = {}) => {
       }
       : null,
   };
-  store.set("boot", boot);
-  store.push("boots", { at, startup, generation, version: boot.version, pid: boot.pid }, options.keep ?? 20);
+  // 优先走 Host Stats Service 的业务命名接口；旧 store 仍可直接运行，便于回滚。
+  const publish = typeof store.publish === "function" ? store.publish : store.set;
+  const append = typeof store.append === "function" ? store.append : store.push;
+  if (typeof publish !== "function" || typeof append !== "function") {
+    throw new TypeError("recordBoot 需要提供 publish/append 或 set/push 接口");
+  }
+  publish.call(store, "boot", boot);
+  append.call(store, "boots", { at, startup, generation, version: boot.version, pid: boot.pid }, options.keep ?? 20);
   return boot;
 };

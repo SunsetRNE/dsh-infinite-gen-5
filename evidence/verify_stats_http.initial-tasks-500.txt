@@ -1,0 +1,9 @@
+Observed first request-level run before the fix:
+
+npm run verify:stats-http -- --json
+passed=23
+failed=1
+failure=真实 HTTP /infinite-gen-5/tasks 带 header token 返回 200 + ok:true — 500 {"ok":false,"error":"The \\"path\\" argument must be of type string. Received an instance of Array"}
+
+Root cause observed in index.js: GITHUB_SECRET_FILE() called path.join with [statsHome(), "infinite-gen-5-github.json"] instead of separate arguments.
+Fix applied: joinPath(statsHome(), "infinite-gen-5-github.json").

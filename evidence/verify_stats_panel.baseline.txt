@@ -1,0 +1,6 @@
+
+> dsh-infinite-gen-5@0.66.0 verify:stats-panel
+> node scripts/verify_stats_panel.mjs
+
+无限五代 统计库与面板自检： 120 通过 / 0 失败
+  数据库 schema=ig5-stats/1 · 路由 4 条（其中 1 条 SSE 推送）· 面板只读

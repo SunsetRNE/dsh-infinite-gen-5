@@ -12,9 +12,7 @@ import {
   rankDomains,
   findScenarios,
   renderScenario,
-  lookupScenario,
   scenarioIndexText,
-  toolchainOf,
   TOOLCHAIN_PROTOCOL,
 } from "./data/scenarios.mjs";
 // L2 域包的唯一真源（v0.18.0）：域包正文怎么渲染 —— 含「构建 / 分析」取向分向 ——
@@ -82,6 +80,9 @@ import {
 } from "./anchor-armor.mjs";
 // 统计数据库：插件本体单写、前端面板单读。面板不参与任何计算，也不认识插件内部形态。
 import { createStatsStore, emptyStats, recordBoot, statsFile, statsHome, STATS_SCHEMA } from "./stats-store.mjs";
+import { createStatsService } from "./services/stats-service.mjs";
+import { statsEventCounts, statsReadResponse } from "./data/stats-api.mjs";
+import { queryScenario } from "./data/scenario-service.mjs";
 import * as ig5RelayFs from "node:fs";
 import * as ig5RelayCrypto from "node:crypto";
 import * as ig5RelayOs from "node:os";
@@ -1369,7 +1370,7 @@ const bumpCount = (bag, key, by = 1) => {
 // ── SECRETS 协议（v0.51.20）：远端凭据只落 ~/.dsh 直下、0600、只写不回显 ─────────────
 // 为什么不放插件目录：更新=替换 plugin-src/<name>，放里面必丢。
 // 为什么不放统计库：/stats 会整份被面板读走，等于把 token 发给前端。
-const GITHUB_SECRET_FILE = () => joinPath([statsHome(), "infinite-gen-5-github.json"]);
+const GITHUB_SECRET_FILE = () => joinPath(statsHome(), "infinite-gen-5-github.json");
 const readGithubSecret = () => {
   try {
     const raw = readFileSync(GITHUB_SECRET_FILE(), "utf8");
@@ -1514,10 +1515,10 @@ const recordToolResult = (toolName, capped, raw) => {
   const degraded = capped !== raw;
   const at = new Date().toISOString();
   const bytes = utf8Bytes(text);
-  statsSink.bump("tools.total");
-  statsSink.bump(["tools", "calls", name]);
-  if (degraded) statsSink.bump("tools.capped");
-  if (capped && capped.truncated === true) statsSink.bump("tools.truncated");
+  statsSink.count("tools.total");
+  statsSink.count(["tools", "calls", name]);
+  if (degraded) statsSink.count("tools.capped");
+  if (capped && capped.truncated === true) statsSink.count("tools.truncated");
   statsSink.patch("tools", {
     lastCall: {
       tool: name,
@@ -1536,7 +1537,7 @@ const recordToolResult = (toolName, capped, raw) => {
 /** 领域工具取用了哪个包：面板据此显示「模型实际读了哪些域」（v0.14.1）。 */
 export const recordDomainHit = (id) => {
   if (statsSink === null || !id) return;
-  statsSink.bump(["coverage", "hits", String(id)]);
+  statsSink.count(["coverage", "hits", String(id)]);
 };
 
 /**
@@ -1918,48 +1919,12 @@ const scenarioTool = {
   },
   output: budgetedOutput("infinite_gen5_scenario"),
   execute(args) {
-    const query = typeof args?.scenario === "string" ? args.scenario.trim() : "";
-    const family = typeof args?.family === "string" ? args.family.trim() : "";
-    if (!query) {
-      return {
-        ok: true,
-        domains: SCENARIOS.length,
-        families: FAMILIES.map((f) => ({
-          id: f.id,
-          label: f.label,
-          count: SCENARIOS.filter((s) => s.family === f.id).length,
-        })),
-        index: scenarioIndexText(family),
-        toolProtocol: TOOLCHAIN_PROTOCOL,
-        hint: "带 scenario 参数取某个领域的完整打法：五槽映射 + 输出骨架 + 领域注意点 + 工具链（装/验命令）。id、别名或用户原话都可以。",
-      };
-    }
-    const found = lookupScenario(query);
-    if (!found.ok) {
-      // 未命中也要记账：面板上「取用分布」旁边的 miss 数就是它（v0.14.1）。
-      if (statsSink !== null) statsSink.bump(["coverage", "misses"]);
-      return {
-        ok: false,
-        query,
-        reason: "no-match",
-        message: "没有匹配到领域包。挑一个 id 重试，或直接按五槽骨架自行展开。",
-        index: scenarioIndexText(),
-        toolProtocol: TOOLCHAIN_PROTOCOL,
-      };
-    }
-    recordDomainHit(found.scenario);
-    return {
-      ok: true,
-      query,
-      scenario: found.scenario,
-      label: found.label,
-      family: found.family,
-      playbook: found.playbook,
-      toolchain: found.toolchain ?? toolchainOf(found.scenario),
-      toolProtocol: TOOLCHAIN_PROTOCOL,
-      alternatives: found.alternatives,
-      hint: "把 ROLE/OBJECT/ACTION/SCOPE/SHAPE 与输出骨架落实到本次交付物里，只保留与任务相关的行；需要工具而本地没有时，按工具链一节装完先验证再跑，把版本与降级点写进正文。",
-    };
+    return queryScenario(args, {
+      onMiss: () => {
+        if (statsSink !== null) statsSink.count(["coverage", "misses"]);
+      },
+      onHit: (scenario) => recordDomainHit(scenario),
+    });
   },
 };
 
@@ -2342,9 +2307,9 @@ function armorProjectionApply(state, event) {
       bumpCount(sessionMemory.risks, risk);
     }
     if (statsSink !== null) {
-      statsSink.bump("hits.total");
-      statsSink.bump(["hits", scored && scored.verdict === "pass" ? "pass" : "block"]);
-      statsSink.bump(["hits", "byDomain", tallyDomain]);
+      statsSink.count("hits.total");
+      statsSink.count(["hits", scored && scored.verdict === "pass" ? "pass" : "block"]);
+      statsSink.count(["hits", "byDomain", tallyDomain]);
     }
     hitRing.push({
       session: activeSessionId,
@@ -2551,7 +2516,8 @@ export function apply(ctx, config) {
   // ── 统计数据库（v0.13.9）：插件本体单写，前端面板单读 ────────────────────────
   // 面板过去拿的是「点一下现算一份 state」，等于间接依赖插件内部形态；现在核心把要说的话
   // 写进这份 JSON，面板只读它。读侧不触发任何计算，写侧失败也不抛（统计是旁路信息）。
-  const stats = createStatsStore({ version: PLUGIN_VERSION, autoLoad: true, flushMs: STATS_FLUSH_MS });
+  const statsStore = createStatsStore({ version: PLUGIN_VERSION, autoLoad: true, flushMs: STATS_FLUSH_MS });
+  const stats = createStatsService({ store: statsStore });
   attachStatsSink(stats);
   // ── 启动自证（v0.38.3）──────────────────────────────────────────────────────
   // 背景：DSHA 环境下引擎每次启动换一个 DSHA_WEB_GENERATION，而插件管理器的「确认/审阅」事务
@@ -2562,7 +2528,7 @@ export function apply(ctx, config) {
   recordBoot(stats, { statsFile: statsFile() });
   // 领域覆盖分区（v0.14.1）：面板的「领域 / 词表 / 预算」显示组只读这一份。
   // 注意顺序：先 set 分区，之后 recordDomainHit 的 bump 才落进 coverage.hits。
-  stats.set("coverage", coverageSnapshot());
+  stats.publish("coverage", coverageSnapshot());
   // 面板读侧：优先读盘上那份（证明它读的是数据库，不是内存里的插件）；还没落盘就用内存快照。
   const panelDoc = () => {
     const disk = stats.read();
@@ -2630,7 +2596,7 @@ export function apply(ctx, config) {
     if (id === null) return;
     if (id !== taskMirror.sessionId) {
       taskMirror.sessionId = id;
-      stats.bump("sessions.seen");
+      stats.count("sessions.seen");
     }
     activeSessionId = id;   // v0.50.3：命中环用它区分「本对话 / 更早的对话」
     if (sessionMemory.sessionId !== id) resetSessionMemory(id);   // v0.50.4：换会话即清空标识记忆
@@ -2677,7 +2643,7 @@ export function apply(ctx, config) {
     ownListener(ctx, "session/event", (session, event) => {
       if (!session || !event) return;
       rememberSession(session);
-      stats.bump("sessions.events");
+      stats.count("sessions.events");
       // v0.15.0：live 分区的时间戳与类型 —— 面板的「本轮进行中」只读这一圈，不自己推算。
       const nowMs = Date.now();
       const lastMs = liveState.lastEventAt === null ? null : Date.parse(liveState.lastEventAt);
@@ -3684,9 +3650,9 @@ export function apply(ctx, config) {
           }
         : null,
     });
-    stats.set("tuning", tuningState());
+    stats.publish("tuning", tuningState());
     // v0.56.0：身份台账进 live 快照 —— 实时页一行「本步身份」，明细页一张「身份（本步 + 过往）」。
-    stats.set("identity", identityState());
+    stats.publish("identity", identityState());
     return stats;
   };
 
@@ -3795,8 +3761,8 @@ export function apply(ctx, config) {
     }
     const label = action === "restore" ? "恢复" : "写入";
     noteTask(`${label}清单 ${normalized.todos.length} 条${normalized.repairs.length > 0 ? `（本地修正 ${normalized.repairs.length} 处）` : ""}`);
-    stats.bump("tasks.writes_total");
-    stats.push("tasks.writes", {
+    stats.count("tasks.writes_total");
+    stats.append("tasks.writes", {
       at,
       action,
       count: normalized.todos.length,
@@ -3945,7 +3911,7 @@ export function apply(ctx, config) {
         return sendJson(res, 405, { ok: false, error: "只支持 GET：写入口在 /infinite-gen-5/tuning 与 /infinite-gen-5/tasks" });
       }
       const { doc, source } = panelDoc();
-      return sendJson(res, 200, { ...doc, ok: true, source, settings: wakeStore.get() });
+      return sendJson(res, 200, statsReadResponse(doc, { source, settings: wakeStore.get() }));
     } catch (error) {
       return sendJson(res, 500, { ok: false, error: String((error && error.message) || error) });
     }
@@ -4005,16 +3971,7 @@ export function apply(ctx, config) {
       return false;
     }
   };
-  const sseCounts = () => {
-    const doc = stats.snapshot() ?? {};
-    const counts = (doc.tasks ?? {}).counts ?? {};
-    return {
-      tools: (doc.tools ?? {}).total ?? 0,
-      events: (doc.sessions ?? {}).events ?? 0,
-      tasks: { completed: counts.completed ?? 0, total: counts.total ?? 0 },
-      anchors: (doc.runtime ?? {}).anchorEmissions ?? 0,
-    };
-  };
+  const sseCounts = () => statsEventCounts(stats.snapshot());
   const dropSseClient = (client) => {
     if (!sseClients.delete(client)) return;
     try { client.res.end(); } catch { /* 对端已经走了 */ }
@@ -4226,7 +4183,7 @@ export function apply(ctx, config) {
   if (typeof sseHeartbeat.unref === "function") sseHeartbeat.unref();
   // 库一落盘就广播：帧里只有序号与几个计数，正文由面板回读 /stats（读路径永远只有一条）。
   ctx.effect(
-    () => stats.onChange((info) => {
+    () => stats.subscribe((info) => {
       publishLive();
       // 计数是整库深拷贝（stats.snapshot()），算一次给所有客户端用，别放进循环里按客户端重复算。
       const counts = sseClients.size > 0 ? sseCounts() : null;
@@ -4247,7 +4204,7 @@ export function apply(ctx, config) {
     closeSseClients();
     clearInterval(liveTimer);
     clearInterval(sseHeartbeat);
-    stats.flush(true);
+    stats.dispose();
   }, "infinite-gen-5: 实时化资源回收");
 
   registerTuningEndpoint();

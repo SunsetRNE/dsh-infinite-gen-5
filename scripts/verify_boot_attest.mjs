@@ -21,6 +21,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { createStatsStore, emptyStats, recordBoot, STATS_SCHEMA } from "../stats-store.mjs";
+import { createStatsService } from "../services/stats-service.mjs";
 
 const dir = mkdtempSync(join(tmpdir(), "ig5-boot-attest-"));
 const file = join(dir, "infinite-gen-5-stats.json");
@@ -36,7 +37,8 @@ const DSHA_ENV = { DSHA_WEB_GENERATION: "31", DSHA_NATIVE_PLUGIN_MANAGER: "1", D
 try {
   // ── 1. 首次启动：写上本次世代与 startup，且不编造「上次」 ────────────────────
   const s1 = createStatsStore({ version: "T.0.0", file, autoLoad: true, flushMs: 0 });
-  const b1 = recordBoot(s1, { env: DSHA_ENV, startup: "STARTUP_A", at: "2026-09-29T10:00:00.000Z", statsFile: file });
+  const stats1 = createStatsService({ store: s1 });
+  const b1 = recordBoot(stats1, { env: DSHA_ENV, startup: "STARTUP_A", at: "2026-09-29T10:00:00.000Z", statsFile: file });
   check("首启写入世代号", b1.generation === "31", `generation=${b1.generation}`);
   check("首启写入 startup uuid", b1.startup === "STARTUP_A", `startup=${b1.startup}`);
   check("首启 previous 为空（不臆造）", b1.previous === null, `previous=${JSON.stringify(b1.previous)}`);
@@ -44,7 +46,8 @@ try {
 
   // ── 2. 重启一次：上一次确认快照必须跨进程保留 ──────────────────────────────
   const s2 = createStatsStore({ version: "T.0.0", file, autoLoad: true, flushMs: 0 });
-  const b2 = recordBoot(s2, {
+  const stats2 = createStatsService({ store: s2 });
+  const b2 = recordBoot(stats2, {
     env: { ...DSHA_ENV, DSHA_WEB_GENERATION: "32" },
     startup: "STARTUP_B",
     at: "2026-09-29T11:00:00.000Z",
@@ -70,8 +73,35 @@ try {
   legacyDoc.boot = { at: "2026-09-29T09:00:00.000Z", pid: 1234, version: "LEGACY.0.0" };
   writeFileSync(legacyFile, `${JSON.stringify(legacyDoc, null, 2)}\n`, "utf8");
   const s3 = createStatsStore({ version: "T.0.0", file: legacyFile, autoLoad: true, flushMs: 0 });
-  const b3 = recordBoot(s3, { env: DSHA_ENV, startup: "STARTUP_C", at: "2026-09-29T12:00:00.000Z", statsFile: legacyFile });
+  const stats3 = createStatsService({ store: s3 });
+  const b3 = recordBoot(stats3, { env: DSHA_ENV, startup: "STARTUP_C", at: "2026-09-29T12:00:00.000Z", statsFile: legacyFile });
+
+  // ── 4b. 旧 store 回退：保留可回滚路径，不要求兼容层实现业务命名 API ────────
+  const legacyCalls = [];
+  const legacyStore = {
+    file: legacyFile,
+    version: "T.0.0",
+    snapshot: () => ({ boot: null }),
+    set: (section, value) => legacyCalls.push(["set", section, value]),
+    push: (path, entry, keep) => legacyCalls.push(["push", path, entry, keep]),
+  };
+  const b4 = recordBoot(legacyStore, { env: DSHA_ENV, startup: "STARTUP_D", at: "2026-09-29T13:00:00.000Z", statsFile: legacyFile, keep: 3 });
+  check("旧 store 兼容回退", b4.startup === "STARTUP_D" && legacyCalls[0]?.[0] === "set" && legacyCalls[1]?.[0] === "push" && legacyCalls[1]?.[3] === 3, `calls=${legacyCalls.map(([method, path]) => `${method}:${path}`).join(",")}`);
   check("旧库升级后不臆造上次确认", b3.previous === null, `previous=${JSON.stringify(b3.previous)}`);
+
+  // ── 4c. Service 优先级：新业务命名 API 存在时不得触碰旧别名 ───────────────
+  const serviceCalls = [];
+  const servicePreferred = {
+    file,
+    version: "T.0.0",
+    snapshot: () => ({ boot: null }),
+    publish: (section, value) => serviceCalls.push(["publish", section, value]),
+    append: (path, entry, keep) => serviceCalls.push(["append", path, entry, keep]),
+    set: () => { throw new Error("recordBoot 不应调用 set 回退"); },
+    push: () => { throw new Error("recordBoot 不应调用 push 回退"); },
+  };
+  const b5 = recordBoot(servicePreferred, { env: DSHA_ENV, startup: "STARTUP_E", at: "2026-09-29T14:00:00.000Z", statsFile: file, keep: 4 });
+  check("Service 优先于旧别名", b5.startup === "STARTUP_E" && serviceCalls[0]?.[0] === "publish" && serviceCalls[1]?.[0] === "append" && serviceCalls[1]?.[3] === 4, `calls=${serviceCalls.map(([method, path]) => `${method}:${path}`).join(",")}`);
 
   // ── 5. 读侧键齐全（面板不必判 undefined）───────────────────────────────────
   const skeleton = emptyStats("T.0.0");

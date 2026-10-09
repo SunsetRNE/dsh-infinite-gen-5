@@ -1,0 +1,5 @@
+
+> dsh-infinite-gen-5@0.66.0 verify:stats-service
+> node scripts/verify_stats_service.mjs
+
+verify_stats_service: PASS schema=ig5-stats/1 notifications=1 lifecycle=apply-dispose-apply upgrade=ok failure-isolated

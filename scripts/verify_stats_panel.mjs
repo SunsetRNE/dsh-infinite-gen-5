@@ -82,6 +82,8 @@ check(readBack !== null && readBack.schema === STATS_SCHEMA, "read() 读得到�
 check(debounced.writes === writesBeforeRead && debounced.dirty === false, "read() 纯读：不写盘、不置脏");
 rmSync(STATS_B, { force: true });
 check(debounced.read() === null, "盘上没有库时 read() 返回 null（不编一个假库出来）");
+debounced.dispose();
+check(debounced.dirty === false, "dispose() 刷新剩余脏状态并停止防抖计时器");
 
 // 写失败只记录不抛（统计是旁路信息，绝不能把本体搞坏）
 // 注意：别拿 /proc/... 当「不可写」样本 —— 本机对 procfs 的 mkdir 会直接卡死（实测 20s 无返回），
@@ -843,14 +845,14 @@ const indexSrc = readFileSync(join(ROOT, "index.js"), "utf8");
 const clientSrc = readFileSync(join(ROOT, "client.js"), "utf8");
 check((indexSrc.match(/JSON\.parse\(/g) || []).length === 1, "index.js 仍然只有一个 JSON.parse（唯一解析入口没被破坏）");
 check(indexSrc.includes("session.append(TODOS_EVENT"), "index.js 的写侧走的是 todo/write 事件");
-check(indexSrc.includes('stats.set("tuning"') && indexSrc.includes("publishStats"), "档位状态由核心发布进库（面板不再让服务端现算）");
+check(indexSrc.includes('stats.publish("tuning"') && indexSrc.includes("publishStats"), "档位状态由核心发布进库（面板不再让服务端现算）");
 check(clientSrc.includes("__IG5_STATS__") && clientSrc.includes("statsBridge") && clientSrc.includes("panelFetch"),
   "面板读的是注入的统计库桥（不是插件内部结构）");
 check(clientSrc.includes("coverageGroup") && clientSrc.includes("db.coverage") && clientSrc.includes("armor5-cov-bar"),
   "面板新增「领域覆盖 · 词表 · 预算」显示组，画的都是库里 coverage 分区的数字");
 check(clientSrc.includes("EventSource") && clientSrc.includes("eventsPath") && clientSrc.includes("encodeURIComponent"),
   "面板订阅统计库推送（EventSource + 查询串 token：EventSource 带不了自定义请求头）");
-check(indexSrc.includes("text/event-stream") && indexSrc.includes("stats.onChange") && indexSrc.includes('stats.patch("live"'),
+check(indexSrc.includes("text/event-stream") && indexSrc.includes("stats.subscribe") && indexSrc.includes('stats.patch("live"'),
   "推送与 live 分区都由本体发布（面板不自己造数据）");
 check(indexSrc.includes("allowQueryToken") && /guardPanelRequest\(req, res, \{ allowQueryToken: true \}\)/.test(indexSrc),
   "?token= 这个口子只开在推送路由上（其余读/写路由仍旧只认请求头）");

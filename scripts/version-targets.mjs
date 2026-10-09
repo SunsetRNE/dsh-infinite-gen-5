@@ -95,7 +95,7 @@ export const PROSE_ALLOWED_FILES = [
 // tests/ = 题库、一次性子代理产物与三轴/六臂证据（tests/oneshot/**、tests/triad/**）。
 // 这些文件记录的是「被审计对象在本轮是什么版本」，不是可发布物的版本锚点：
 // 把它们登记成锚点会让每次升版都被迫改写历史证据，所以整目录跳过。
-export const SCAN_SKIP_DIRS = [".git", "node_modules", "ui-preview", "runs", ".dsh", "dist", "tests"];
+export const SCAN_SKIP_DIRS = [".git", "node_modules", "ui-preview", "runs", ".dsh", "dist", "tests", "evidence"];
 
 // 冻结归档件：内容是「某个已发布版本的根 README 逐字存档」，用途是回溯当时写了什么。
 // 它与 PROSE_ALLOWED_FILES 的区别在方向：那些文件写的是**当前**版本（发版时必须跟着改），
