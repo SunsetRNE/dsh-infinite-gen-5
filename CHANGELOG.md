@@ -4,11 +4,22 @@
 版本段落按提交标题里的 `vX.Y.Z` 切分，未带版本号的提交归入最新段；
 每条末尾的短哈希是提交号，最新一条（HEAD）不标哈希 —— 它在「生成 → 提交」之间还会变。
 
-## v0.66.0 — 2026-10-07
+## v0.66.0 — 2026-10-09
 
 ### ✨ 新特性
 
-- add injection planner pipeline
+- land stats/scenario Service slice and close wiring gaps（`5f2a0e7`）
+- add injection planner pipeline（`b4a45be`）
+
+### 🐛 修复
+
+- recognize accessor and pair keys in IG5_DEFAULTS
+
+### 🧹 杂务与维护
+
+- refresh stress100 evidence path and ignore local preview（`9cb8208`）
+- wire planner gates into verify:all（`96f727c`）
+- regenerate changelog（`730939e`）
 
 ## v0.65.29 — 2026-10-07
 
