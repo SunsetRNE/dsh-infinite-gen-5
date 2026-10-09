@@ -26,9 +26,15 @@ const argv = process.argv.slice(2);
 const yes = argv.includes("--yes");
 const releaseOnly = argv.includes("--release-only");
 const wantRelease = argv.includes("--release") || releaseOnly;
+// 两种写法都收：--flag=value 与 --flag value。
+// 旧实现只认等号形式，而本文件自己的帮助/报错文案推荐的是空格形式 ——
+// 照着文案敲 --token-file /path/.token 会静默拿到默认值（空），发布凭据因此被判「没有」。
 const argOf = (n, d) => {
-  const hit = argv.find((a) => a.startsWith(n + "="));
-  return hit ? hit.slice(n.length + 1) : d;
+  const eq = argv.find((a) => a.startsWith(n + "="));
+  if (eq) return eq.slice(n.length + 1);
+  const i = argv.indexOf(n);
+  const next = i >= 0 ? argv[i + 1] : undefined;
+  return next && !next.startsWith("--") ? next : d;
 };
 const notesOut = argOf("--notes-out", "");
 const tokenFileArg = argOf("--token-file", "");

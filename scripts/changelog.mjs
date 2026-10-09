@@ -18,9 +18,13 @@ import { fileURLToPath } from "node:url";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const argv = process.argv.slice(2);
+// 两种写法都收：--flag=value 与 --flag value（旧实现只认等号形式，与帮助文案不一致）。
 const argOf = (n, d) => {
-  const hit = argv.find((a) => a.startsWith(n + "="));
-  return hit ? hit.slice(n.length + 1) : d;
+  const eq = argv.find((a) => a.startsWith(n + "="));
+  if (eq) return eq.slice(n.length + 1);
+  const i = argv.indexOf(n);
+  const next = i >= 0 ? argv[i + 1] : undefined;
+  return next && !next.startsWith("--") ? next : d;
 };
 const toStdout = argv.includes("--stdout");
 const out = resolve(REPO, argOf("--out", "CHANGELOG.md"));
