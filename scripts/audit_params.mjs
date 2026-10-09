@@ -32,7 +32,23 @@ const ids = (text) => [...text.matchAll(/"([A-Z][A-Z0-9_]+)"/g)].map((m) => m[1]
 const uniq = (a) => [...new Set(a)];
 
 const defaultsText = block("const IG5_DEFAULTS = Object.freeze(");
-const defaultKeys = uniq(defaultsText.split("\n").map((l) => l.trim().replace(/,$/, "")).filter((l) => /^[A-Z][A-Z0-9_]+$/.test(l)));
+// 键名有两种写法：裸标识符（简写属性）与访问器（get KEY() { } / set KEY(v) { }）。
+// v0.66.0 的 INJECTION_PROFILE / INJECTION_POLICY 是故意写成 getter 的（见 index.js 里那段注释：
+// 写成值拷贝会让面板显示的档位与实际跑的档位分家）。只认裸标识符会把它们误判成
+// 「在 TUNABLE_KEYS 里、却没有文件默认值」——那是审计自己的漏判，不是接线缺口。
+const defaultKeys = uniq(
+  defaultsText
+    .split("\n")
+    .map((l) => l.trim().replace(/,$/, ""))
+    .map((l) => {
+      if (/^[A-Z][A-Z0-9_]+$/.test(l)) return l;
+      const accessor = /^(?:get|set)\s+([A-Z][A-Z0-9_]+)\s*\(/.exec(l);
+      if (accessor) return accessor[1];
+      const pair = /^([A-Z][A-Z0-9_]+)\s*:/.exec(l);
+      return pair ? pair[1] : null;
+    })
+    .filter(Boolean),
+);
 const tunableKeys = uniq(ids(arrBlock("const TUNABLE_KEYS = [")));
 const catalogKeys = uniq([...src.matchAll(/key: "([A-Z][A-Z0-9_]+)"/g)].map((m) => m[1]));
 const envKeys = uniq([...src.matchAll(/^\s{2}([A-Z][A-Z0-9_]+): "IG5_[A-Z0-9_]+",?$/gm)].map((m) => m[1]));
